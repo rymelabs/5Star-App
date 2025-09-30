@@ -19,33 +19,53 @@ export const registerUser = async (email, password, userData) => {
       displayName: userData.name
     });
 
-    // Create user document in Firestore
+    // Create user document in Firestore with role
     const userDoc = {
       uid: user.uid,
       name: userData.name,
       email: user.email,
-      role: 'user', // Default role
+      role: userData.role || 'user', // Use provided role or default to 'user'
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     await setDoc(doc(db, 'users', user.uid), userDoc);
 
+    console.log('✅ User registered successfully:', {
+      uid: user.uid,
+      email: user.email,
+      name: userData.name,
+      role: userData.role || 'user'
+    });
+
     return {
       uid: user.uid,
       email: user.email,
       name: userData.name,
-      role: 'user'
+      role: userData.role || 'user'
     };
   } catch (error) {
-    console.error('Registration error:', error);
-    throw new Error(error.message);
+    console.error('❌ Registration error:', error);
+    
+    // Provide more user-friendly error messages
+    let errorMessage = error.message;
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'An account with this email already exists.';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'Password should be at least 6 characters.';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'Please enter a valid email address.';
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 
-// Login user
+// Login user (unchanged but with better logging)
 export const loginUser = async (email, password) => {
   try {
+    console.log('🔐 Attempting login for:', email);
+    
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -53,24 +73,42 @@ export const loginUser = async (email, password) => {
     const userDocRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
     
+    let userData;
     if (userDoc.exists()) {
-      return {
+      userData = {
         uid: user.uid,
         email: user.email,
         ...userDoc.data()
       };
     } else {
       // Fallback user data
-      return {
+      userData = {
         uid: user.uid,
         email: user.email,
         name: user.displayName || 'User',
         role: 'user'
       };
     }
+
+    console.log('✅ Login successful:', userData);
+    return userData;
+    
   } catch (error) {
-    console.error('Login error:', error);
-    throw new Error(error.message);
+    console.error('❌ Login error:', error);
+    
+    // Provide more user-friendly error messages
+    let errorMessage = error.message;
+    if (error.code === 'auth/user-not-found') {
+      errorMessage = 'No account found with this email address.';
+    } else if (error.code === 'auth/wrong-password') {
+      errorMessage = 'Incorrect password.';
+    } else if (error.code === 'auth/invalid-credential') {
+      errorMessage = 'Invalid email or password. Please check your credentials or create an account.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Too many failed login attempts. Please try again later.';
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 
@@ -78,8 +116,9 @@ export const loginUser = async (email, password) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
+    console.log('✅ User logged out successfully');
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('❌ Logout error:', error);
     throw new Error(error.message);
   }
 };
@@ -89,6 +128,8 @@ export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, async (user) => {
     if (user) {
       // User is signed in
+      console.log('👤 User state changed - signed in:', user.email);
+      
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       
@@ -108,6 +149,7 @@ export const onAuthStateChange = (callback) => {
       }
     } else {
       // User is signed out
+      console.log('👤 User state changed - signed out');
       callback(null);
     }
   });

@@ -17,22 +17,32 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log('🔄 Setting up auth state listener...');
+    
     const unsubscribe = onAuthStateChange((userData) => {
+      console.log('🔄 Auth state changed:', userData ? `User: ${userData.email}` : 'No user');
       setUser(userData);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('🔄 Cleaning up auth state listener');
+      unsubscribe();
+    };
   }, []);
 
   const register = async (userData) => {
     try {
       setError(null);
       setLoading(true);
-      const user = await registerUser(userData.email, userData.password, userData);
-      setUser(user);
-      return user;
+      console.log('🔄 Registering user:', userData.email);
+      
+      const newUser = await registerUser(userData.email, userData.password, userData);
+      console.log('✅ Registration successful, setting user state:', newUser);
+      setUser(newUser);
+      return newUser;
     } catch (error) {
+      console.error('❌ Registration failed:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -44,10 +54,14 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setLoading(true);
-      const user = await loginUser(email, password);
-      setUser(user);
-      return user;
+      console.log('🔄 Logging in user:', email);
+      
+      const userData = await loginUser(email, password);
+      console.log('✅ Login successful, setting user state:', userData);
+      setUser(userData);
+      return userData;
     } catch (error) {
+      console.error('❌ Login failed:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -58,13 +72,24 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
+      console.log('🔄 Logging out user');
+      
       await logoutUser();
       setUser(null);
+      console.log('✅ Logout successful');
     } catch (error) {
+      console.error('❌ Logout failed:', error);
       setError(error.message);
       throw error;
     }
   };
+
+  // Debug current state
+  console.log('🔍 AuthContext current state:', {
+    user: user ? `${user.email} (${user.role})` : 'null',
+    loading,
+    error
+  });
 
   const value = {
     user,

@@ -1,379 +1,234 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Calendar, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
+import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Clock, MapPin, Users, MessageCircle, Send, Heart } from 'lucide-react';
-import { formatDate, formatTime, getRelativeTime } from '../utils/dateUtils';
 
 const FixtureDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fixtures, updateFixture } = useFootball();
+  const { fixtures } = useFootball();
+  const { getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
   const { user } = useAuth();
-  
   const [fixture, setFixture] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [comment, setComment] = useState('');
-  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
 
   useEffect(() => {
-    const foundFixture = fixtures.find(f => f.id === parseInt(id));
-    if (foundFixture) {
-      setFixture(foundFixture);
-      setComments(foundFixture.comments || []);
-    }
+    const foundFixture = fixtures.find(f => f.id === id);
+    setFixture(foundFixture);
   }, [id, fixtures]);
 
-  const handleAddComment = () => {
-    if (!comment.trim() || !user) return;
+  useEffect(() => {
+    if (id) {
+      // Load comments
+      getCommentsForItem('fixture', id);
+      
+      // Subscribe to real-time comments
+      const unsubscribe = subscribeToComments('fixture', id);
+      return () => unsubscribe();
+    }
+  }, [id]);
 
-    const newComment = {
-      id: Date.now(),
-      text: comment.trim(),
-      author: user.name,
-      authorAvatar: user.avatar,
-      authorId: user.id,
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      replies: [],
-    };
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
 
-    const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    setComment('');
-
-    // Update fixture in context
-    updateFixture(fixture.id, { comments: updatedComments });
-  };
-
-  const handleLikeComment = (commentId) => {
-    const updatedComments = comments.map(c => 
-      c.id === commentId 
-        ? { ...c, likes: c.likes + 1 }
-        : c
-    );
-    setComments(updatedComments);
-    updateFixture(fixture.id, { comments: updatedComments });
+    try {
+      setIsCommenting(true);
+      await addComment('fixture', id, {
+        content: newComment.trim(),
+        userId: user.uid,
+        userName: user.name
+      });
+      setNewComment('');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setIsCommenting(false);
+    }
   };
 
   if (!fixture) {
     return (
-      <div className="p-4 text-center text-gray-400">
-        <div className="animate-pulse">Loading fixture...</div>
+      <div className="p-6 text-center">
+        <div className="text-red-400 mb-4">❌ Fixture not found</div>
+        <button onClick={() => navigate('/fixtures')} className="btn-primary">
+          Back to Fixtures
+        </button>
       </div>
     );
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'live': return 'bg-red-600 text-white';
-      case 'completed': return 'bg-gray-600 text-white';
-      case 'scheduled': return 'bg-primary-600 text-white';
-      default: return 'bg-gray-600 text-white';
-    }
-  };
-
-  const getStatusText = () => {
-    if (fixture.status === 'live') return `LIVE • ${fixture.liveData?.minute || 0}'`;
-    if (fixture.status === 'completed') return 'Full Time';
-    return formatTime(fixture.dateTime);
-  };
+  const fixtureComments = comments[`fixture_${id}`] || [];
+  const isLive = fixture.status === 'live';
+  const isCompleted = fixture.status === 'completed';
 
   return (
-    <div className="pb-6">
-      {/* Header */}
-      <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate('/fixtures')}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
-          <h1 className="ml-2 text-lg font-semibold text-white">Match Details</h1>
-        </div>
-      </div>
+    <div className="p-6 pb-24">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/fixtures')}
+        className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Fixtures
+      </button>
 
-      {/* Match Info */}
-      <div className="px-4 py-6 bg-gradient-to-b from-dark-800 to-dark-900">
-        <div className="text-center mb-6">
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(fixture.status)} mb-4`}>
-            {fixture.status === 'live' && (
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-2"></div>
+      {/* Match Header */}
+      <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
+        {/* Status Badge */}
+        <div className="flex justify-center mb-4">
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            isLive ? 'bg-red-500 text-white animate-pulse' :
+            isCompleted ? 'bg-accent-500 text-white' :
+            'bg-gray-600 text-gray-300'
+          }`}>
+            {isLive ? 'LIVE' : isCompleted ? 'FULL TIME' : 'UPCOMING'}
+          </span>
+        </div>
+
+        {/* Teams and Score */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-center flex-1">
+            <div className="w-16 h-16 bg-dark-700 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="text-xl font-bold text-primary-500">
+                {fixture.homeTeam.charAt(0)}
+              </span>
+            </div>
+            <h2 className="font-semibold text-white">{fixture.homeTeam}</h2>
+          </div>
+
+          <div className="text-center px-8">
+            {isLive || isCompleted ? (
+              <div className="text-3xl font-bold text-white">
+                {fixture.homeScore} - {fixture.awayScore}
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-gray-400">VS</div>
             )}
-            {getStatusText()}
+            <div className="text-sm text-gray-400 mt-1">
+              {isLive && `${fixture.minute || 0}'`}
+            </div>
           </div>
-          
-          <div className="text-sm text-gray-400 mb-2">
-            {formatDate(fixture.dateTime, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+          <div className="text-center flex-1">
+            <div className="w-16 h-16 bg-dark-700 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="text-xl font-bold text-primary-500">
+                {fixture.awayTeam.charAt(0)}
+              </span>
+            </div>
+            <h2 className="font-semibold text-white">{fixture.awayTeam}</h2>
           </div>
-          
+        </div>
+
+        {/* Match Info */}
+        <div className="space-y-3 text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-2">
+            <Calendar className="w-4 h-4" />
+            {new Date(fixture.dateTime).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
           {fixture.venue && (
-            <div className="flex items-center justify-center text-sm text-gray-500">
-              <MapPin className="w-4 h-4 mr-1" />
+            <div className="flex items-center justify-center gap-2">
+              <MapPin className="w-4 h-4" />
               {fixture.venue}
             </div>
           )}
-        </div>
-
-        {/* Teams */}
-        <div className="flex items-center justify-between">
-          {/* Home Team */}
-          <div className="flex-1 text-center">
-            <img
-              src={fixture.homeTeam.logo}
-              alt={fixture.homeTeam.name}
-              className="w-16 h-16 object-contain mx-auto mb-3"
-              onError={(e) => e.target.style.display = 'none'}
-            />
-            <div className="font-semibold text-white text-lg">
-              {fixture.homeTeam.name}
+          {fixture.league && (
+            <div className="flex items-center justify-center gap-2">
+              <Users className="w-4 h-4" />
+              {fixture.league}
             </div>
-          </div>
-
-          {/* Score */}
-          <div className="px-6">
-            {fixture.status === 'completed' || fixture.status === 'live' ? (
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-1">
-                  {fixture.homeScore} - {fixture.awayScore}
-                </div>
-                {fixture.status === 'live' && fixture.liveData?.events && (
-                  <div className="text-sm text-gray-400">
-                    {fixture.liveData.events.length} events
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-400 mb-1">VS</div>
-                <div className="text-sm text-gray-500">
-                  {formatTime(fixture.dateTime)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Away Team */}
-          <div className="flex-1 text-center">
-            <img
-              src={fixture.awayTeam.logo}
-              alt={fixture.awayTeam.name}
-              className="w-16 h-16 object-contain mx-auto mb-3"
-              onError={(e) => e.target.style.display = 'none'}
-            />
-            <div className="font-semibold text-white text-lg">
-              {fixture.awayTeam.name}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-4 py-4">
-        <div className="flex bg-dark-800 rounded-lg p-1">
-          {[
-            { key: 'overview', label: 'Overview' },
-            { key: 'lineup', label: 'Lineup' },
-            { key: 'comments', label: 'Comments', count: comments.length },
-          ].map((tab) => (
+      {/* Live Commentary */}
+      {isLive && fixture.commentary && (
+        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Live Commentary</h3>
+          <div className="space-y-3">
+            {fixture.commentary.map((event, index) => (
+              <div key={index} className="flex gap-3">
+                <span className="text-xs text-gray-400 min-w-[30px]">{event.minute}'</span>
+                <p className="text-gray-300 text-sm">{event.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Match Stats */}
+      {(isLive || isCompleted) && fixture.stats && (
+        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Match Statistics</h3>
+          <div className="space-y-4">
+            {Object.entries(fixture.stats).map(([stat, values]) => (
+              <div key={stat} className="flex items-center justify-between">
+                <span className="text-white font-medium">{values.home}</span>
+                <span className="text-gray-400 text-sm capitalize">{stat}</span>
+                <span className="text-white font-medium">{values.away}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comments Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-gray-400" />
+          <h3 className="text-lg font-semibold text-white">
+            Match Discussion ({fixtureComments.length})
+          </h3>
+        </div>
+
+        {/* Add Comment Form */}
+        {user && (
+          <form onSubmit={handleAddComment} className="space-y-4">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Share your thoughts on this match..."
+              className="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-gray-400 resize-none"
+              rows="3"
+            />
             <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-primary-600 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              type="submit"
+              disabled={isCommenting || !newComment.trim()}
+              className="btn-primary"
             >
-              {tab.label}
-              {tab.count !== undefined && (
-                <span className="ml-1 bg-dark-600 px-1.5 py-0.5 rounded text-xs">
-                  {tab.count}
-                </span>
-              )}
+              {isCommenting ? 'Posting...' : 'Post Comment'}
             </button>
-          ))}
+          </form>
+        )}
+
+        {/* Comments List */}
+        <div className="space-y-4">
+          {fixtureComments.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">No comments yet. Be the first to share your thoughts!</p>
+          ) : (
+            fixtureComments.map((comment) => (
+              <div key={comment.id} className="bg-dark-800 border border-dark-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-white">{comment.userName}</span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-gray-300">{comment.content}</p>
+              </div>
+            ))
+          )}
         </div>
-      </div>
-
-      {/* Tab Content */}
-      <div className="px-4">
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Match Events */}
-            {fixture.liveData?.events && fixture.liveData.events.length > 0 && (
-              <div className="card p-4">
-                <h3 className="font-semibold text-white mb-4">Match Events</h3>
-                <div className="space-y-3">
-                  {fixture.liveData.events.map((event, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-8 text-center text-sm font-medium text-gray-400">
-                        {event.minute}'
-                      </div>
-                      <div className="flex-1 text-sm text-white">
-                        {event.type}: {event.player} ({event.team})
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Match Stats */}
-            <div className="card p-4">
-              <h3 className="font-semibold text-white mb-4">Match Statistics</h3>
-              <div className="space-y-4">
-                {[
-                  { label: 'Possession', home: '58%', away: '42%' },
-                  { label: 'Shots', home: '12', away: '8' },
-                  { label: 'Shots on Target', home: '6', away: '3' },
-                  { label: 'Corners', home: '7', away: '4' },
-                  { label: 'Fouls', home: '11', away: '9' },
-                ].map((stat, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="text-sm text-white font-medium w-16 text-center">
-                      {stat.home}
-                    </div>
-                    <div className="flex-1 text-center text-sm text-gray-400">
-                      {stat.label}
-                    </div>
-                    <div className="text-sm text-white font-medium w-16 text-center">
-                      {stat.away}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'lineup' && (
-          <div className="space-y-6">
-            {/* Starting XI */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="card p-4">
-                <h3 className="font-semibold text-white mb-4 text-center">
-                  {fixture.homeTeam.name}
-                </h3>
-                <div className="space-y-2">
-                  {[1,2,3,4,5,6,7,8,9,10,11].map((num) => (
-                    <div key={num} className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                        {num}
-                      </div>
-                      <div className="text-sm text-white">
-                        Player {num}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="card p-4">
-                <h3 className="font-semibold text-white mb-4 text-center">
-                  {fixture.awayTeam.name}
-                </h3>
-                <div className="space-y-2">
-                  {[1,2,3,4,5,6,7,8,9,10,11].map((num) => (
-                    <div key={num} className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-accent-600 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                        {num}
-                      </div>
-                      <div className="text-sm text-white">
-                        Player {num}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'comments' && (
-          <div className="space-y-6">
-            {/* Add Comment */}
-            {user && (
-              <div className="card p-4">
-                <div className="flex space-x-3">
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <textarea
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="Share your thoughts about this match..."
-                      className="input-field w-full h-20 resize-none"
-                      rows="3"
-                    />
-                    <div className="flex justify-end mt-2">
-                      <button
-                        onClick={handleAddComment}
-                        disabled={!comment.trim()}
-                        className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Send className="w-4 h-4 mr-2" />
-                        Post Comment
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Comments List */}
-            <div className="space-y-4">
-              {comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div key={comment.id} className="card p-4">
-                    <div className="flex space-x-3">
-                      <img
-                        src={comment.authorAvatar}
-                        alt={comment.author}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium text-white text-sm">
-                            {comment.author}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {getRelativeTime(comment.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-gray-300 text-sm mb-2">
-                          {comment.text}
-                        </p>
-                        <div className="flex items-center space-x-4">
-                          <button
-                            onClick={() => handleLikeComment(comment.id)}
-                            className="flex items-center space-x-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
-                          >
-                            <Heart className="w-3 h-3" />
-                            <span>{comment.likes}</span>
-                          </button>
-                          <button className="text-xs text-gray-500 hover:text-white transition-colors">
-                            Reply
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No comments yet</p>
-                  <p className="text-sm">Be the first to share your thoughts!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

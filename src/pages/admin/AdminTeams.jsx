@@ -92,20 +92,22 @@ const AdminTeams = () => {
             </div>
           </div>
           
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setShowBulkUpload(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              className="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 flex items-center justify-center min-w-[140px]"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Bulk Upload
+              <Upload className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <span>Bulk Upload</span>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/20 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
             <button
               onClick={() => setShowAddForm(true)}
-              className="btn-primary"
+              className="group relative px-6 py-3 bg-gradient-to-r from-primary-600 to-orange-600 hover:from-primary-700 hover:to-orange-700 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25 flex items-center justify-center min-w-[140px]"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Team
+              <Plus className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <span>Add Team</span>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400/20 to-primary-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
           </div>
         </div>
@@ -201,21 +203,24 @@ const AdminTeams = () => {
                 />
               </div>
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium tracking-tight transition-all duration-200 transform hover:scale-105"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !formData.name.trim()}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Adding...' : 'Add Team'}
+                  <Save className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+                  <span>{loading ? 'Adding...' : 'Add Team'}</span>
+                  {!loading && (
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  )}
                 </button>
               </div>
             </form>

@@ -1,144 +1,152 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
+    password: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('👤 User already logged in, redirecting...');
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    if (error) setError('');
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
     try {
-      const result = await login(formData.email, formData.password);
-      if (result.success) {
-        navigate('/');
+      setLoading(true);
+      console.log('🔄 Attempting login...');
+      
+      const userData = await login(formData.email, formData.password);
+      console.log('✅ Login successful, user data:', userData);
+      
+      // Small delay to ensure auth state updates
+      setTimeout(() => {
+        console.log('🔄 Navigating to home page...');
+        navigate('/', { replace: true });
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      
+      // More specific error messages
+      if (error.message.includes('invalid-credential')) {
+        setError('No account found with these credentials. Please register first or check your email/password.');
+      } else if (error.message.includes('user-not-found')) {
+        setError('No account found with this email address. Please register first.');
+      } else if (error.message.includes('wrong-password')) {
+        setError('Incorrect password. Please try again.');
+      } else if (error.message.includes('too-many-requests')) {
+        setError('Too many failed attempts. Please wait a moment and try again.');
       } else {
-        setError(result.error || 'Login failed');
+        setError(error.message || 'Login failed. Please try again.');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary-500 mb-2">5Star</h1>
-          <p className="text-gray-400">Welcome back to your sports hub</p>
-        </div>
+  // Show loading if user is being checked
+  if (user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-primary-500">Redirecting...</div>
+      </div>
+    );
+  }
 
-        {/* Login Form */}
-        <div className="card p-6">
-          <h2 className="text-2xl font-semibold text-white mb-6 text-center">Log In</h2>
-          
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-8 shadow-xl">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-primary-500 tracking-tight">5Star</h1>
+            <p className="text-gray-400 mt-2">Sign in to your account</p>
+          </div>
+
           {error && (
-            <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-3 mb-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="input-field pl-10 w-full"
-                  placeholder="Enter your email"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="input w-full"
+                placeholder="Enter your email"
+                autoComplete="email"
+              />
             </div>
 
-            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="input-field pl-10 pr-10 w-full"
-                  placeholder="Enter your password"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="input w-full"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="btn-primary w-full"
             >
-              {isLoading ? 'Logging in...' : 'Log In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-6 p-4 bg-dark-700 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Demo accounts:</p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>User: user@demo.com / password123</p>
-              <p>Admin: admin@demo.com / password123</p>
-            </div>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-400">
-              Don't have an account?{' '}
-              <Link to="/auth/register" className="text-primary-500 hover:text-primary-400 font-medium">
-                Sign up
-              </Link>
-            </p>
+          <div className="mt-6 text-center space-y-3">
+            <Link to="/register" className="block text-primary-400 hover:text-primary-300 text-sm">
+              Don't have an account? Create one
+            </Link>
+            
+            {/* Development helper */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-blue-400 text-xs mb-2">🛠️ Development Mode</p>
+                <p className="text-gray-400 text-xs">
+                  No account yet? <Link to="/register" className="text-primary-400 underline">Register first</Link> to create your admin account.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

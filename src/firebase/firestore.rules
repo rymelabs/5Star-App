@@ -1,0 +1,49 @@
+Users/mac/Desktop/5Star App/firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+    }
+    
+    // Teams collection
+    match /teams/{teamId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Fixtures collection
+    match /fixtures/{fixtureId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Articles collection
+    match /articles/{articleId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if true; // Public read access
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    // League table collection
+    match /leagueTable/{teamId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}
