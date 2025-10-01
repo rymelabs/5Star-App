@@ -10,6 +10,10 @@ import NewsArticle from './pages/NewsArticle';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import AuthLanding from './pages/AuthLanding';
+import EmailAuth from './pages/EmailAuth';
+import PhoneAuth from './pages/PhoneAuth';
+import ProfileSetup from './pages/ProfileSetup';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -49,9 +53,14 @@ const AppContent = () => {
   if (!user) {
     return (
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/auth" element={<AuthLanding />} />
+        <Route path="/email-auth" element={<EmailAuth />} />
+        <Route path="/phone-auth" element={<PhoneAuth />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
+        {/* Legacy routes for backward compatibility */}
+        <Route path="/login" element={<Navigate to="/auth" replace />} />
+        <Route path="/register" element={<Navigate to="/auth" replace />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     );
   }
@@ -71,7 +80,14 @@ const AppContent = () => {
           <Route path="/fixture/:id" element={<FixtureDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
-          <Route path="/profile" element={<Profile />} />
+          
+          {/* Profile setup for new users */}
+          <Route path="/profile-setup" element={<ProfileSetup />} />
+          
+          {/* Profile page - not available for anonymous users */}
+          {!user.isAnonymous && (
+            <Route path="/profile" element={<Profile />} />
+          )}
           
           {/* Admin Routes - Only accessible to admins */}
           {user.role === 'admin' && (
@@ -84,8 +100,16 @@ const AppContent = () => {
           )}
           
           {/* Redirect auth pages if already logged in */}
+          <Route path="/auth" element={<Navigate to="/" replace />} />
+          <Route path="/email-auth" element={<Navigate to="/" replace />} />
+          <Route path="/phone-auth" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/register" element={<Navigate to="/" replace />} />
+          
+          {/* Anonymous users trying to access restricted pages */}
+          {user.isAnonymous && (
+            <Route path="/profile" element={<Navigate to="/auth" replace />} />
+          )}
           
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />

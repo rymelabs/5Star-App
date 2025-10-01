@@ -95,19 +95,17 @@ const AdminTeams = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setShowBulkUpload(true)}
-              className="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 flex items-center justify-center min-w-[140px]"
+              className="group px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center"
             >
-              <Upload className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <Upload className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>Bulk Upload</span>
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/20 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
             <button
               onClick={() => setShowAddForm(true)}
-              className="group relative px-6 py-3 bg-gradient-to-r from-primary-600 to-orange-600 hover:from-primary-700 hover:to-orange-700 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25 flex items-center justify-center min-w-[140px]"
+              className="group px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center"
             >
-              <Plus className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <Plus className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>Add Team</span>
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400/20 to-primary-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
           </div>
         </div>
@@ -281,26 +279,7 @@ const AdminTeams = () => {
               <Plus className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">No teams yet</h3>
-            <p className="text-gray-400 mb-6">Get started by adding teams individually or in bulk</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="btn-primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Single Team
-              </button>
-              <button
-                onClick={() => setShowBulkUpload(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Bulk Upload Teams
-              </button>
-            </div>
-            <p className="text-gray-500 text-sm mt-4">
-              💡 Tip: Use bulk upload to add multiple teams at once using CSV or JSON format
-            </p>
+            <p className="text-gray-400">Get started by adding teams individually or in bulk</p>
           </div>
         )}
       </div>

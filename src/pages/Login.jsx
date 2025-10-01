@@ -83,9 +83,9 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-8 shadow-xl">
+        <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-primary-500 tracking-tight">5Star</h1>
+            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-16 h-16 mx-auto mb-4" />
             <p className="text-gray-400 mt-2">Sign in to your account</p>
           </div>
 
@@ -97,28 +97,26 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="input w-full"
+                className="w-full bg-transparent border-2 border-gray-600 hover:border-gray-500 focus:border-gray-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors duration-200"
                 placeholder="Enter your email"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="input w-full"
+                className="w-full bg-transparent border-2 border-gray-600 hover:border-gray-500 focus:border-gray-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors duration-200"
                 placeholder="Enter your password"
                 autoComplete="current-password"
               />

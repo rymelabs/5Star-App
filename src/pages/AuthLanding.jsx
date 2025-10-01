@@ -1,0 +1,136 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Mail, Phone, Chrome, User, AlignJustify, TextAlignJustify } from 'lucide-react';
+
+const AuthLanding = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signInWithGoogle, signInAnonymously } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      await signInWithGoogle();
+      navigate('/profile-setup');
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      setError('Failed to sign in with Google. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnonymousSignIn = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      await signInAnonymously();
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Anonymous sign-in error:', error);
+      setError('Failed to sign in anonymously. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const authOptions = [
+    {
+      id: 'email',
+      icon: Mail,
+      title: 'Continue with Email',
+      description: '',
+      onClick: () => navigate('/email-auth'),
+      borderColor: 'border-blue-300',
+      textColor: 'text-white',
+      hoverBorderColor: 'hover:border-blue-400',
+      hoverTextColor: 'hover:text-blue-400'
+    },
+    {
+      id: 'phone',
+      icon: Phone,
+      title: 'Continue with Phone',
+      description: '',
+      onClick: () => navigate('/phone-auth'),
+      borderColor: 'border-green-300',
+      textColor: 'text-white',
+      hoverBorderColor: 'hover:border-green-400',
+      hoverTextColor: 'hover:text-green-400',
+    },
+    {
+      id: 'google',
+      icon: Chrome,
+      title: 'Continue with Google',
+      description: '',
+      onClick: handleGoogleSignIn,
+      borderColor: 'border-red-300',
+      textColor: 'text-white',
+      hoverBorderColor: 'hover:border-red-400',
+      hoverTextColor: 'hover:text-red-400'
+    },
+    {
+      id: 'anonymous',
+      icon: User,
+      title: 'Browse as Guest',
+      description: 'Limited access',
+      onClick: handleAnonymousSignIn,
+      borderColor: 'border-gray-500',
+      textColor: 'text-gray-500',
+      hoverBorderColor: 'hover:border-gray-400',
+      hoverTextColor: 'hover:text-gray-400'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
+          <div className="text-center mb-8">
+            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6" />
+            <h1 className="text-2xl font-bold text-left text-white tracking-tight mb-2"></h1>
+            <p className="text-gray-400 text-center">Choose how you'd like to get started</p>
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {authOptions.map((option) => {
+              const IconComponent = option.icon;
+              return (
+                <button
+                  key={option.id}
+                  onClick={option.onClick}
+                  disabled={loading}
+                  className={`w-full group bg-transparent border-2 ${option.borderColor} ${option.hoverBorderColor} rounded-[9px] p-3 transition-all duration-200 flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <div className={`flex-shrink-0 p-1.5 border ${option.borderColor} ${option.hoverBorderColor} rounded-md`}>
+                    <IconComponent className={`w-4 h-4 ${option.textColor} ${option.hoverTextColor} group-hover:scale-105 transition-transform duration-200`} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className={`font-medium tracking-tight ${option.textColor} ${option.hoverTextColor}`}>{option.title}</h3>
+                    <p className="text-sm text-gray-400 mt-0.5">{option.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 text-sm">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLanding;

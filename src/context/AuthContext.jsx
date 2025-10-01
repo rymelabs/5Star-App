@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { registerUser, loginUser, logoutUser, onAuthStateChange } from '../firebase/auth';
+import { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  onAuthStateChange,
+  signInWithGoogle,
+  signInWithPhone,
+  verifyPhoneCode,
+  signInAnonymous,
+  updateUserProfile
+} from '../firebase/auth';
 
 const AuthContext = createContext();
 
@@ -19,16 +29,30 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     console.log('🔄 Setting up auth state listener...');
     
-    const unsubscribe = onAuthStateChange((userData) => {
-      console.log('🔄 Auth state changed:', userData ? `User: ${userData.email}` : 'No user');
-      setUser(userData);
+    // Check if Firebase is configured
+    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      console.warn('🔥 Firebase not configured - auth will not work');
       setLoading(false);
-    });
+      setError('Firebase configuration missing. Please set up your .env file.');
+      return;
+    }
+    
+    try {
+      const unsubscribe = onAuthStateChange((userData) => {
+        console.log('🔄 Auth state changed:', userData ? `User: ${userData.email}` : 'No user');
+        setUser(userData);
+        setLoading(false);
+      });
 
-    return () => {
-      console.log('🔄 Cleaning up auth state listener');
-      unsubscribe();
-    };
+      return () => {
+        console.log('🔄 Cleaning up auth state listener');
+        unsubscribe();
+      };
+    } catch (error) {
+      console.error('❌ Error setting up auth listener:', error);
+      setLoading(false);
+      setError('Failed to initialize authentication');
+    }
   }, []);
 
   const register = async (userData) => {
@@ -91,13 +115,111 @@ export const AuthProvider = ({ children }) => {
     error
   });
 
+  const signInWithGoogleProvider = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      console.log('🔄 Signing in with Google');
+      
+      const userData = await signInWithGoogle();
+      console.log('✅ Google sign-in successful:', userData);
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('❌ Google sign-in failed:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithPhoneProvider = async (phoneNumber) => {
+    try {
+      setError(null);
+      console.log('🔄 Signing in with phone:', phoneNumber);
+      
+      const confirmationResult = await signInWithPhone(phoneNumber);
+      console.log('✅ Phone verification sent');
+      return confirmationResult;
+    } catch (error) {
+      console.error('❌ Phone sign-in failed:', error);
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const verifyPhoneCodeProvider = async (confirmationResult, code) => {
+    try {
+      setError(null);
+      setLoading(true);
+      console.log('🔄 Verifying phone code');
+      
+      const userData = await verifyPhoneCode(confirmationResult, code);
+      console.log('✅ Phone verification successful:', userData);
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('❌ Phone verification failed:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInAnonymousProvider = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      console.log('🔄 Signing in anonymously');
+      
+      const userData = await signInAnonymous();
+      console.log('✅ Anonymous sign-in successful:', userData);
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('❌ Anonymous sign-in failed:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (updates) => {
+    try {
+      setError(null);
+      setLoading(true);
+      console.log('🔄 Updating profile:', updates);
+      
+      const updatedUser = await updateUserProfile(updates);
+      console.log('✅ Profile updated successfully:', updatedUser);
+      
+      // Update local user state
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      return updatedUser;
+    } catch (error) {
+      console.error('❌ Profile update failed:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     loading,
     error,
     register,
     login,
-    logout
+    logout,
+    signInWithGoogle: signInWithGoogleProvider,
+    signInWithPhone: signInWithPhoneProvider,
+    verifyPhoneCode: verifyPhoneCodeProvider,
+    signInAnonymously: signInAnonymousProvider,
+    updateProfile
   };
 
   return (

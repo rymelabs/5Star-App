@@ -3,7 +3,12 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  signInAnonymously
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './config';
@@ -153,4 +158,195 @@ export const onAuthStateChange = (callback) => {
       callback(null);
     }
   });
+};
+
+// Google Sign In
+export const signInWithGoogle = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Check if user document exists
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      // Create user document for new Google user
+      const newUserDoc = {
+        uid: user.uid,
+        name: user.displayName || '',
+        email: user.email,
+        role: 'user',
+        authProvider: 'google',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', user.uid), newUserDoc);
+    }
+
+    return {
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName || '',
+      role: userDoc.exists() ? userDoc.data().role : 'user',
+      authProvider: 'google'
+    };
+  } catch (error) {
+    console.error('❌ Google sign-in error:', error);
+    throw error;
+  }
+};
+
+// Phone Number Sign In
+export const signInWithPhone = async (phoneNumber) => {
+  try {
+    console.log('📱 Setting up phone authentication for:', phoneNumber);
+    
+    // Clear any existing reCAPTCHA verifier
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {
+        console.log('⚠️ Error clearing previous reCAPTCHA:', e);
+      }
+      window.recaptchaVerifier = null;
+    }
+
+    // Setup reCAPTCHA verifier - use normal size for better reliability
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'normal',
+      callback: (response) => {
+        console.log('✅ reCAPTCHA solved:', response);
+      },
+      'expired-callback': () => {
+        console.log('⚠️ reCAPTCHA expired');
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        }
+      },
+      'error-callback': (error) => {
+        console.error('❌ reCAPTCHA error:', error);
+      }
+    });
+
+    // Render the reCAPTCHA
+    try {
+      await window.recaptchaVerifier.render();
+      console.log('✅ reCAPTCHA rendered successfully');
+    } catch (renderError) {
+      console.error('❌ reCAPTCHA render error:', renderError);
+      throw new Error('Failed to initialize security verification. Please refresh the page and try again.');
+    }
+
+    console.log('📱 Sending verification SMS...');
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+    console.log('✅ SMS sent successfully');
+    return confirmationResult;
+  } catch (error) {
+    console.error('❌ Phone sign-in error:', error);
+    
+    // Clean up on error
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {
+        console.log('⚠️ Error clearing reCAPTCHA on error:', e);
+      }
+      window.recaptchaVerifier = null;
+    }
+    
+    throw error;
+  }
+};
+
+// Verify Phone Code
+export const verifyPhoneCode = async (confirmationResult, code) => {
+  try {
+    const result = await confirmationResult.confirm(code);
+    const user = result.user;
+
+    // Check if user document exists
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      // Create user document for new phone user
+      const newUserDoc = {
+        uid: user.uid,
+        name: '',
+        email: user.email || '',
+        phoneNumber: user.phoneNumber,
+        role: 'user',
+        authProvider: 'phone',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', user.uid), newUserDoc);
+    }
+
+    return {
+      uid: user.uid,
+      email: user.email || '',
+      phoneNumber: user.phoneNumber,
+      name: userDoc.exists() ? userDoc.data().name : '',
+      role: userDoc.exists() ? userDoc.data().role : 'user',
+      authProvider: 'phone'
+    };
+  } catch (error) {
+    console.error('❌ Phone verification error:', error);
+    throw error;
+  }
+};
+
+// Anonymous Sign In
+export const signInAnonymous = async () => {
+  try {
+    const result = await signInAnonymously(auth);
+    const user = result.user;
+
+    return {
+      uid: user.uid,
+      email: null,
+      name: 'Guest User',
+      role: 'anonymous',
+      authProvider: 'anonymous',
+      isAnonymous: true
+    };
+  } catch (error) {
+    console.error('❌ Anonymous sign-in error:', error);
+    throw error;
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (updates) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No authenticated user');
+
+    // Update Firebase Auth profile
+    if (updates.displayName) {
+      await updateProfile(user, {
+        displayName: updates.displayName
+      });
+    }
+
+    // Update Firestore document
+    const userDocRef = doc(db, 'users', user.uid);
+    await setDoc(userDocRef, {
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    return {
+      uid: user.uid,
+      email: user.email,
+      ...updates
+    };
+  } catch (error) {
+    console.error('❌ Profile update error:', error);
+    throw error;
+  }
 };

@@ -20,16 +20,33 @@ export const FootballProvider = ({ children }) => {
 
   // Load initial data
   useEffect(() => {
+    // Check if Firebase is initialized
+    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      console.warn('🔥 Firebase not configured - using mock data');
+      setLoading(false);
+      setError('Firebase configuration missing. Please set up your .env file.');
+      return;
+    }
+    
     loadInitialData();
   }, []);
 
   // Real-time fixtures updates
   useEffect(() => {
-    const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
-      setFixtures(updatedFixtures);
-    });
+    // Skip real-time updates if Firebase not configured
+    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      return;
+    }
 
-    return () => unsubscribe();
+    try {
+      const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
+        setFixtures(updatedFixtures);
+      });
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Error setting up fixtures listener:', error);
+    }
   }, []);
 
   const loadInitialData = async () => {

@@ -16,12 +16,21 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 
+// Helper function to check if Firebase is initialized
+const checkFirebaseInit = () => {
+  if (!db) {
+    throw new Error('Firebase is not initialized. Please check your .env configuration.');
+  }
+  return db;
+};
+
 // Teams collection functions
 export const teamsCollection = {
   // Get all teams
   getAll: async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'teams'));
+      const database = checkFirebaseInit();
+      const querySnapshot = await getDocs(collection(database, 'teams'));
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
