@@ -377,7 +377,7 @@ export const newsCollection = {
 
 // Comments collection functions
 export const commentsCollection = {
-  // Get comments for a specific item (fixture or article)
+    // Get comments for an item
   getForItem: async (itemType, itemId) => {
     try {
       const database = checkFirebaseInit();
@@ -396,6 +396,23 @@ export const commentsCollection = {
     } catch (error) {
       console.error('Error fetching comments:', error);
       throw error;
+    }
+  },
+
+  // Get comment count for an item
+  getCountForItem: async (itemType, itemId) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'comments'),
+        where('itemType', '==', itemType),
+        where('itemId', '==', itemId)
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.size;
+    } catch (error) {
+      console.error('Error fetching comment count:', error);
+      return 0;
     }
   },
 

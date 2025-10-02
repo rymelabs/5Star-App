@@ -25,7 +25,19 @@ export const NewsProvider = ({ children }) => {
     try {
       setLoading(true);
       const articlesData = await newsCollection.getAll();
-      setArticles(articlesData);
+      
+      // Get comment counts for all articles
+      const articlesWithCounts = await Promise.all(
+        articlesData.map(async (article) => {
+          const commentCount = await commentsCollection.getCountForItem('article', article.id);
+          return {
+            ...article,
+            commentCount
+          };
+        })
+      );
+      
+      setArticles(articlesWithCounts);
     } catch (error) {
       console.error('Error loading articles:', error);
       setError(error.message);
