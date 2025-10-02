@@ -135,6 +135,28 @@ export const NewsProvider = ({ children }) => {
     }
   };
 
+  const toggleLike = async (articleId, userId) => {
+    try {
+      const result = await newsCollection.toggleLike(articleId, userId);
+      // Update local state
+      setArticles(prev => prev.map(article => 
+        article.id === articleId 
+          ? { 
+              ...article, 
+              likes: result.likes,
+              likedBy: result.liked 
+                ? [...(article.likedBy || []), userId]
+                : (article.likedBy || []).filter(id => id !== userId)
+            } 
+          : article
+      ));
+      return result;
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
+  };
+
   const subscribeToComments = (itemType, itemId) => {
     return commentsCollection.onSnapshot(itemType, itemId, (updatedComments) => {
       const key = `${itemType}_${itemId}`;
@@ -155,6 +177,7 @@ export const NewsProvider = ({ children }) => {
     addArticle,
     updateArticle,
     deleteArticle,
+    toggleLike,
     getCommentsForItem,
     addComment,
     subscribeToComments,

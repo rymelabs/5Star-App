@@ -303,6 +303,50 @@ export const newsCollection = {
       console.error('Error deleting article:', error);
       throw error;
     }
+  },
+
+  // Toggle like on article
+  toggleLike: async (articleId, userId) => {
+    try {
+      const database = checkFirebaseInit();
+      const articleRef = doc(database, 'articles', articleId);
+      const articleSnap = await getDoc(articleRef);
+      
+      if (!articleSnap.exists()) {
+        throw new Error('Article not found');
+      }
+      
+      const articleData = articleSnap.data();
+      const likedBy = articleData.likedBy || [];
+      const likes = articleData.likes || 0;
+      
+      let newLikedBy;
+      let newLikes;
+      
+      if (likedBy.includes(userId)) {
+        // Unlike - remove user from array
+        newLikedBy = likedBy.filter(id => id !== userId);
+        newLikes = Math.max(0, likes - 1);
+      } else {
+        // Like - add user to array
+        newLikedBy = [...likedBy, userId];
+        newLikes = likes + 1;
+      }
+      
+      await updateDoc(articleRef, {
+        likedBy: newLikedBy,
+        likes: newLikes,
+        updatedAt: serverTimestamp()
+      });
+      
+      return {
+        liked: !likedBy.includes(userId),
+        likes: newLikes
+      };
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
   }
 };
 

@@ -7,13 +7,14 @@ import { useAuth } from '../context/AuthContext';
 const NewsArticle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
+  const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments, toggleLike } = useNews();
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     loadArticle();
@@ -64,6 +65,27 @@ const NewsArticle = () => {
       console.error('Error adding comment:', error);
     } finally {
       setIsCommenting(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user || !article?.id || isLiking) return;
+
+    try {
+      setIsLiking(true);
+      const result = await toggleLike(article.id, user.uid);
+      // Update local article state
+      setArticle(prev => ({
+        ...prev,
+        likes: result.likes,
+        likedBy: result.liked 
+          ? [...(prev.likedBy || []), user.uid]
+          : (prev.likedBy || []).filter(id => id !== user.uid)
+      }));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -150,9 +172,21 @@ const NewsArticle = () => {
 
       {/* Article Actions */}
       <div className="flex items-center gap-4 py-4 border-t border-dark-700 mb-8">
-        <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors">
-          <Heart className="w-5 h-5" />
-          <span>Like</span>
+        <button 
+          onClick={handleLike}
+          disabled={!user || isLiking}
+          className={`flex items-center gap-2 transition-colors ${
+            article.likedBy?.includes(user?.uid)
+              ? 'text-red-500 hover:text-red-600'
+              : 'text-gray-400 hover:text-red-400'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <Heart 
+            className={`w-5 h-5 ${
+              article.likedBy?.includes(user?.uid) ? 'fill-current' : ''
+            }`} 
+          />
+          <span>{article.likes || 0} {article.likedBy?.includes(user?.uid) ? 'Liked' : 'Like'}</span>
         </button>
         <button className="flex items-center gap-2 text-gray-400 hover:text-primary-400 transition-colors">
           <Share2 className="w-5 h-5" />
