@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { User, Camera, Save } from 'lucide-react';
+import AuthBackground from '../components/AuthBackground';
 
 const ProfileSetup = () => {
   const [formData, setFormData] = useState({
@@ -61,9 +62,10 @@ const ProfileSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-50">
+        <div className="bg-transparent rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
             <img src="/5StarLogo.svg" alt="5Star Logo" className="w-16 h-16 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white tracking-tight mb-2">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Chrome, User, AlignJustify, TextAlignJustify } from 'lucide-react';
+import AuthBackground from '../components/AuthBackground';
 
 const AuthLanding = () => {
   const [loading, setLoading] = useState(false);
@@ -74,13 +75,14 @@ const AuthLanding = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-50">
+        <div className="backdrop-blur-md rounded-2xl p-8 border-primary-600 border-2">
           <div className="text-center mb-8">
             <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6" />
             <h1 className="text-2xl font-bold text-left text-white tracking-tight mb-2"></h1>
-            <p className="text-gray-400 text-center">Choose how you'd like to get started</p>
+            <p className="text-gray-400 text-center"></p>
           </div>
 
           {error && (

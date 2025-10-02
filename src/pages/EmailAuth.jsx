@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
+import AuthBackground from '../components/AuthBackground';
 
 const EmailAuth = () => {
   const [isSignUp, setIsSignUp] = useState(true);
@@ -80,9 +81,10 @@ const EmailAuth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-50">
+        <div className="bg-transparent rounded-2xl p-8 shadow-xl">
           <div className="flex items-center mb-6">
             <button
               onClick={() => navigate('/auth')}
