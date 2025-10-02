@@ -3,6 +3,47 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
 
+// Error Boundary Component
+class PhoneAuthErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('PhoneAuth Error Boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-dark-900 rounded-2xl p-8 shadow-xl">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white mb-4">Something went wrong</h1>
+              <p className="text-gray-400 mb-6">
+                There was an error with phone authentication. Please try again.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="btn-primary w-full"
+              >
+                Reload Page
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const PhoneAuth = () => {
   const [step, setStep] = useState('phone'); // 'phone' or 'verification'
   const [formData, setFormData] = useState({
@@ -11,20 +52,130 @@ const PhoneAuth = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
   
   const { signInWithPhone, verifyPhoneCode } = useAuth();
   const navigate = useNavigate();
 
-  // Cleanup reCAPTCHA on component unmount
-  useEffect(() => {
-    return () => {
+  // Setup reCAPTCHA by calling the Firebase auth function (which handles it properly)
+  const setupRecaptcha = async () => {
+    try {
+      console.log('🔧 Setting up reCAPTCHA via Firebase auth...');
+      
+      // Check if container exists
+      const container = document.getElementById('recaptcha-container');
+      if (!container) {
+        console.error('❌ reCAPTCHA container not found');
+        setError('reCAPTCHA container missing. Please refresh the page.');
+        return;
+      }
+
+      // Use a dummy phone number to trigger reCAPTCHA setup without actually sending SMS
+      // This is a safer approach than manually creating RecaptchaVerifier
+      
+      // First, let's check if Firebase is properly initialized
+      const { auth } = await import('../firebase/config');
+      console.log('🔧 Firebase auth object:', !!auth);
+      
+      if (!auth) {
+        console.error('❌ Firebase auth not initialized');
+        setError('Firebase not configured. Please check your environment variables.');
+        return;
+      }
+
+      // Clear existing verifier safely
       if (window.recaptchaVerifier) {
         try {
-          window.recaptchaVerifier.clear();
+          if (container && container.children.length > 0) {
+            window.recaptchaVerifier.clear();
+          }
+        } catch (e) {
+          console.log('⚠️ Error clearing previous reCAPTCHA:', e);
+        }
+        window.recaptchaVerifier = null;
+      }
+
+      // Import and create RecaptchaVerifier with proper error handling
+      const { RecaptchaVerifier } = await import('firebase/auth');
+      
+      console.log('🔧 Creating RecaptchaVerifier with proper auth object...');
+      
+      // Create RecaptchaVerifier with explicit parameters
+      const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'normal',
+        theme: 'light',
+        callback: (response) => {
+          console.log('✅ reCAPTCHA solved:', response);
+          setRecaptchaReady(true);
+          setError(''); // Clear any previous errors
+        },
+        'expired-callback': () => {
+          console.log('⚠️ reCAPTCHA expired');
+          setRecaptchaReady(false);
+          setError('reCAPTCHA expired. Please try again.');
+        },
+        'error-callback': (error) => {
+          console.error('❌ reCAPTCHA callback error:', error);
+          setRecaptchaReady(false);
+          setError('reCAPTCHA error. Please refresh the page and try again.');
+        }
+      });
+
+      // Store globally for cleanup
+      window.recaptchaVerifier = recaptchaVerifier;
+
+      console.log('🔧 Rendering reCAPTCHA widget...');
+      
+      // Render the reCAPTCHA
+      await recaptchaVerifier.render();
+      console.log('✅ reCAPTCHA rendered successfully');
+      
+      // Clear any setup messages
+      setError('');
+      
+    } catch (error) {
+      console.error('❌ Error setting up reCAPTCHA:', error);
+      console.error('❌ Full error object:', error);
+      
+      let errorMessage = 'Failed to load security verification. ';
+      
+      if (error.code === 'auth/argument-error') {
+        errorMessage += 'Firebase configuration issue. Please check your setup.';
+        console.error('❌ Argument error - check Firebase auth initialization');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage += 'Domain not authorized. Please check Firebase Console settings.';
+      } else if (error.message && error.message.includes('network')) {
+        errorMessage += 'Network error. Please check your connection.';
+      } else {
+        errorMessage += 'Please refresh the page and try again.';
+      }
+      
+      setError(errorMessage);
+    }
+  };
+
+  // Setup reCAPTCHA automatically when component mounts
+  useEffect(() => {
+    console.log('🎯 PhoneAuth component mounted');
+    
+    // Let's not auto-setup reCAPTCHA, wait for user to click button
+    // This avoids the argument error on component mount
+    
+    return () => {
+      // Better cleanup to prevent React DOM errors
+      if (window.recaptchaVerifier) {
+        try {
+          // Check if the DOM element still exists before clearing
+          const container = document.getElementById('recaptcha-container');
+          if (container && container.children.length > 0) {
+            window.recaptchaVerifier.clear();
+          }
           window.recaptchaVerifier = null;
         } catch (e) {
           console.log('⚠️ Error cleaning up reCAPTCHA:', e);
+          // Force cleanup
+          window.recaptchaVerifier = null;
         }
       }
     };
@@ -33,10 +184,15 @@ const PhoneAuth = () => {
   const refreshRecaptcha = () => {
     if (window.recaptchaVerifier) {
       try {
-        window.recaptchaVerifier.clear();
+        // Check if the DOM element still exists before clearing
+        const container = document.getElementById('recaptcha-container');
+        if (container && container.children.length > 0) {
+          window.recaptchaVerifier.clear();
+        }
         window.recaptchaVerifier = null;
       } catch (e) {
         console.log('⚠️ Error clearing reCAPTCHA:', e);
+        window.recaptchaVerifier = null;
       }
     }
     setError('');
@@ -56,6 +212,8 @@ const PhoneAuth = () => {
     e.preventDefault();
     setError('');
 
+    console.log('📱 Phone submit started');
+
     if (!formData.phoneNumber) {
       setError('Please enter your phone number');
       return;
@@ -68,18 +226,64 @@ const PhoneAuth = () => {
       return;
     }
 
+    // Check Firebase configuration before proceeding
     try {
+      console.log('🔧 Checking Firebase configuration...');
+      
+      // Import and check Firebase config
+      const { auth } = await import('../firebase/config');
+      console.log('🔧 Firebase auth object:', auth);
+      console.log('🔧 Environment variables:', {
+        API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'SET' : 'MISSING',
+        AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'SET' : 'MISSING',
+        PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'SET' : 'MISSING',
+        APP_ID: import.meta.env.VITE_FIREBASE_APP_ID ? 'SET' : 'MISSING'
+      });
+      
+      if (!auth) {
+        throw new Error('Firebase auth not initialized. Check environment variables.');
+      }
+      
       setLoading(true);
+      console.log('🔄 Starting phone authentication (will setup reCAPTCHA automatically)...');
+      
+      // Check if reCAPTCHA container exists before proceeding
+      const container = document.getElementById('recaptcha-container');
+      console.log('🔧 Checking reCAPTCHA container:', {
+        exists: !!container,
+        element: container,
+        innerHTML: container?.innerHTML,
+        parentNode: container?.parentNode?.tagName
+      });
+      
+      if (!container) {
+        throw new Error('reCAPTCHA container not found in DOM. Please refresh the page and try again.');
+      }
+      
+      // Small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const confirmation = await signInWithPhone(formData.phoneNumber);
+      
+      console.log('✅ Phone authentication successful, received confirmation:', !!confirmation);
       setConfirmationResult(confirmation);
       setStep('verification');
+      console.log('✅ Step changed to verification');
     } catch (error) {
-      console.error('Phone auth error:', error);
-      
-      // More specific error messages
+      console.error('❌ Phone auth error caught in component:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack
+      });
+
+      // More specific error messages including timeout handling
       let errorMessage = 'Failed to send verification code. Please try again.';
       
-      if (error.code === 'auth/invalid-phone-number') {
+      if (error.code === 'auth/timeout' || error.name === 'TimeoutError' || (error.message && error.message.includes('timed out'))) {
+        errorMessage = 'Request timed out after 30 seconds. Please check your internet connection and try again.';
+      } else if (error.code === 'auth/invalid-phone-number') {
         errorMessage = 'Invalid phone number format. Please include country code (e.g., +1234567890)';
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Too many requests. Please wait a moment before trying again.';
@@ -89,15 +293,19 @@ const PhoneAuth = () => {
         errorMessage = 'Security verification failed. Please complete the reCAPTCHA below and try again.';
       } else if (error.code === 'auth/app-not-authorized') {
         errorMessage = 'App not authorized for phone authentication. Please contact support.';
+      } else if (error.code === 'auth/argument-error') {
+        errorMessage = 'Firebase configuration error. Please refresh the page and try again.';
+      } else if (error.message && error.message.includes('network')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
       }
       
       setError(errorMessage);
+      console.log('❌ Error set:', errorMessage);
     } finally {
       setLoading(false);
+      console.log('🔄 Loading state reset');
     }
-  };
-
-  const handleVerificationSubmit = async (e) => {
+  };  const handleVerificationSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -148,8 +356,45 @@ const PhoneAuth = () => {
     }
   };
 
+  console.log('🎨 PhoneAuth rendering - step:', step, 'loading:', loading, 'error:', error);
+  console.log('🔧 Environment check on render:', {
+    NODE_ENV: import.meta.env.MODE,
+    FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'LOADED' : 'MISSING',
+    FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
+  });
+
+  // Test Firebase initialization on render
+  React.useEffect(() => {
+    const testFirebase = async () => {
+      try {
+        const { auth } = await import('../firebase/config');
+        console.log('🔥 Firebase test on render:', {
+          authExists: !!auth,
+          authApp: auth?.app?.name || 'NO_APP',
+          authConfig: auth?.app?.options?.projectId || 'NO_PROJECT_ID'
+        });
+      } catch (error) {
+        console.error('🔥 Firebase import error:', error);
+      }
+    };
+    testFirebase();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative">
+      {/* Loading Overlay - Only show during SMS sending */}
+      {loading && (
+        <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-dark-900 rounded-2xl p-6 flex flex-col items-center">
+            <div className="w-8 h-8 border-2 border-primary-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-white text-sm">
+              {step === 'phone' ? 'Sending verification code...' : 'Verifying code...'}
+            </p>
+          </div>
+        </div>
+      )}
+      
       <div className="w-full max-w-md">
         <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
           <div className="flex items-center mb-6">
@@ -221,19 +466,31 @@ const PhoneAuth = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full"
+                className="btn-primary w-full relative"
               >
-                {loading ? 'Sending Code...' : 'Send Verification Code'}
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                <span className={loading ? 'opacity-0' : 'opacity-100'}>
+                  {loading ? 'Setting up verification...' : 'Send Verification Code'}
+                </span>
               </button>
 
               {/* reCAPTCHA container - visible for better reliability */}
               <div className="mt-4">
-                <p className="text-gray-500 text-sm text-center mb-2">Security verification required:</p>
+                <p className="text-gray-500 text-sm text-center mb-2">
+                  Security verification will appear here:
+                </p>
                 <div id="recaptcha-container" className="flex justify-center min-h-[78px] items-center">
-                  {loading && (
-                    <div className="text-gray-500 text-sm">Loading security verification...</div>
-                  )}
+                  <div className="text-gray-500 text-sm text-center">
+                    Click "Send Verification Code" to load security verification
+                  </div>
                 </div>
+                <p className="text-gray-400 text-xs text-center mt-2">
+                  You'll need to complete a security check before receiving your verification code.
+                </p>
                 {import.meta.env.DEV && (
                   <div className="mt-2 text-xs text-gray-500 text-center">
                     <p>If reCAPTCHA doesn't load:</p>
@@ -266,9 +523,16 @@ const PhoneAuth = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full"
+                className="btn-primary w-full relative"
               >
-                {loading ? 'Verifying...' : 'Verify Code'}
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                <span className={loading ? 'opacity-0' : 'opacity-100'}>
+                  {loading ? 'Verifying...' : 'Verify Code'}
+                </span>
               </button>
 
               <div className="text-center">
@@ -289,4 +553,10 @@ const PhoneAuth = () => {
   );
 };
 
-export default PhoneAuth;
+const PhoneAuthWithErrorBoundary = () => (
+  <PhoneAuthErrorBoundary>
+    <PhoneAuth />
+  </PhoneAuthErrorBoundary>
+);
+
+export default PhoneAuthWithErrorBoundary;

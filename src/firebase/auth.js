@@ -6,12 +6,14 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   signInAnonymously
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from './config';
+import { getFirebaseAuth, getFirebaseDb, isDevelopment, getDomainInfo } from './config';
+
+// Get auth and db instances
+const auth = getFirebaseAuth();
+const db = getFirebaseDb();
 
 // Register new user
 export const registerUser = async (email, password, userData) => {
@@ -194,108 +196,6 @@ export const signInWithGoogle = async () => {
     };
   } catch (error) {
     console.error('❌ Google sign-in error:', error);
-    throw error;
-  }
-};
-
-// Phone Number Sign In
-export const signInWithPhone = async (phoneNumber) => {
-  try {
-    console.log('📱 Setting up phone authentication for:', phoneNumber);
-    
-    // Clear any existing reCAPTCHA verifier
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch (e) {
-        console.log('⚠️ Error clearing previous reCAPTCHA:', e);
-      }
-      window.recaptchaVerifier = null;
-    }
-
-    // Setup reCAPTCHA verifier - use normal size for better reliability
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'normal',
-      callback: (response) => {
-        console.log('✅ reCAPTCHA solved:', response);
-      },
-      'expired-callback': () => {
-        console.log('⚠️ reCAPTCHA expired');
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = null;
-        }
-      },
-      'error-callback': (error) => {
-        console.error('❌ reCAPTCHA error:', error);
-      }
-    });
-
-    // Render the reCAPTCHA
-    try {
-      await window.recaptchaVerifier.render();
-      console.log('✅ reCAPTCHA rendered successfully');
-    } catch (renderError) {
-      console.error('❌ reCAPTCHA render error:', renderError);
-      throw new Error('Failed to initialize security verification. Please refresh the page and try again.');
-    }
-
-    console.log('📱 Sending verification SMS...');
-    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
-    console.log('✅ SMS sent successfully');
-    return confirmationResult;
-  } catch (error) {
-    console.error('❌ Phone sign-in error:', error);
-    
-    // Clean up on error
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch (e) {
-        console.log('⚠️ Error clearing reCAPTCHA on error:', e);
-      }
-      window.recaptchaVerifier = null;
-    }
-    
-    throw error;
-  }
-};
-
-// Verify Phone Code
-export const verifyPhoneCode = async (confirmationResult, code) => {
-  try {
-    const result = await confirmationResult.confirm(code);
-    const user = result.user;
-
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
-    if (!userDoc.exists()) {
-      // Create user document for new phone user
-      const newUserDoc = {
-        uid: user.uid,
-        name: '',
-        email: user.email || '',
-        phoneNumber: user.phoneNumber,
-        role: 'user',
-        authProvider: 'phone',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      await setDoc(doc(db, 'users', user.uid), newUserDoc);
-    }
-
-    return {
-      uid: user.uid,
-      email: user.email || '',
-      phoneNumber: user.phoneNumber,
-      name: userDoc.exists() ? userDoc.data().name : '',
-      role: userDoc.exists() ? userDoc.data().role : 'user',
-      authProvider: 'phone'
-    };
-  } catch (error) {
-    console.error('❌ Phone verification error:', error);
     throw error;
   }
 };

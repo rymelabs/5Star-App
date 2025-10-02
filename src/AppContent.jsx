@@ -12,7 +12,6 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
-import PhoneAuth from './pages/PhoneAuth';
 import ProfileSetup from './pages/ProfileSetup';
 
 // Admin components with lazy loading to avoid import errors
@@ -55,7 +54,6 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<AuthLanding />} />
         <Route path="/email-auth" element={<EmailAuth />} />
-        <Route path="/phone-auth" element={<PhoneAuth />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
         {/* Legacy routes for backward compatibility */}
         <Route path="/login" element={<Navigate to="/auth" replace />} />

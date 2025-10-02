@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Phone, Chrome, User, AlignJustify, TextAlignJustify } from 'lucide-react';
+import { Mail, Chrome, User, AlignJustify, TextAlignJustify } from 'lucide-react';
 
 const AuthLanding = () => {
   const [loading, setLoading] = useState(false);
@@ -48,17 +48,6 @@ const AuthLanding = () => {
       textColor: 'text-white',
       hoverBorderColor: 'hover:border-blue-400',
       hoverTextColor: 'hover:text-blue-400'
-    },
-    {
-      id: 'phone',
-      icon: Phone,
-      title: 'Continue with Phone',
-      description: '',
-      onClick: () => navigate('/phone-auth'),
-      borderColor: 'border-green-300',
-      textColor: 'text-white',
-      hoverBorderColor: 'hover:border-green-400',
-      hoverTextColor: 'hover:text-green-400',
     },
     {
       id: 'google',

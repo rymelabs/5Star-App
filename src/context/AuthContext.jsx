@@ -5,8 +5,6 @@ import {
   logoutUser, 
   onAuthStateChange,
   signInWithGoogle,
-  signInWithPhone,
-  verifyPhoneCode,
   signInAnonymous,
   updateUserProfile
 } from '../firebase/auth';
@@ -134,39 +132,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signInWithPhoneProvider = async (phoneNumber) => {
-    try {
-      setError(null);
-      console.log('🔄 Signing in with phone:', phoneNumber);
-      
-      const confirmationResult = await signInWithPhone(phoneNumber);
-      console.log('✅ Phone verification sent');
-      return confirmationResult;
-    } catch (error) {
-      console.error('❌ Phone sign-in failed:', error);
-      setError(error.message);
-      throw error;
-    }
-  };
 
-  const verifyPhoneCodeProvider = async (confirmationResult, code) => {
-    try {
-      setError(null);
-      setLoading(true);
-      console.log('🔄 Verifying phone code');
-      
-      const userData = await verifyPhoneCode(confirmationResult, code);
-      console.log('✅ Phone verification successful:', userData);
-      setUser(userData);
-      return userData;
-    } catch (error) {
-      console.error('❌ Phone verification failed:', error);
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const signInAnonymousProvider = async () => {
     try {
@@ -216,8 +182,6 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     signInWithGoogle: signInWithGoogleProvider,
-    signInWithPhone: signInWithPhoneProvider,
-    verifyPhoneCode: verifyPhoneCodeProvider,
     signInAnonymously: signInAnonymousProvider,
     updateProfile
   };
