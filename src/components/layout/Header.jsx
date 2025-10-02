@@ -8,13 +8,13 @@ const Header = ({ onSearchClick, onProfileClick }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-md border-b border-dark-700">
       <div className="flex items-center mt-8 justify-between px-4 py-3">
-        {/* App Name */}
+        {/* App Logo */}
         <div className="flex items-center">
-          <h1 className="text-xl items-baseline leading-none tracking-tighter font-black">
-            <span className="text-gray text-[15px]">Merrybet</span>
-            <span className="text-gray text-[25px]"><br/>5Stars</span>
-            <span className="text-gray text-[10px]"><br/>Premier League</span>
-          </h1>
+          <img 
+            src="/5StarLogo.svg" 
+            alt="5Star" 
+            className="h-12 w-auto"
+          />
         </div>
 
         {/* Right Section - Search and Profile */}

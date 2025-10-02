@@ -13,7 +13,11 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-[26px] border-b border-gray-800/50 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-primary-500 tracking-tight">5Star</h1>
+          <img 
+            src="/5StarLogo.svg" 
+            alt="5Star" 
+            className="h-8 w-auto"
+          />
           
           <div className="flex items-center space-x-3">
             <button
