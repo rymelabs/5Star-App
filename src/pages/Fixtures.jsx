@@ -7,7 +7,7 @@ import { formatScore, groupBy, sortBy, abbreviateTeamName, isFixtureLive } from 
 
 const Fixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, leagueTable, currentSeason } = useFootball();
+  const { fixtures, leagueTable, leagueSettings } = useFootball();
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -242,47 +242,40 @@ const Fixtures = () => {
         </div>
       ) : (
         /* League Table */
-        <div className="card overflow-hidden">
-          {currentSeason && (
-            <div className="px-4 py-3 bg-dark-700 border-b border-dark-600">
-              <h3 className="font-medium text-white">{currentSeason.name}</h3>
-            </div>
-          )}
+        <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-dark-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
-            <div className="col-span-1">#</div>
-            <div className="col-span-5">Team</div>
-            <div className="col-span-1 text-center">P</div>
-            <div className="col-span-1 text-center">W</div>
-            <div className="col-span-1 text-center">D</div>
-            <div className="col-span-1 text-center">L</div>
-            <div className="col-span-1 text-center">GD</div>
-            <div className="col-span-2 text-center">Pts</div>
+          <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide\">\n            <div className="text-left">#</div>
+            <div className="text-left">Team</div>
+            <div className="text-center w-8">P</div>
+            <div className="text-center w-8">W</div>
+            <div className="text-center w-8">D</div>
+            <div className="text-center w-8">L</div>
+            <div className="text-center w-10">GD</div>
+            <div className="text-center w-10">Pts</div>
           </div>
           
           {/* Table Body */}
-          <div className="divide-y divide-dark-700">
+          <div className="divide-y divide-gray-700/50">
             {leagueTable.map((team) => (
               <div
                 key={team.team.id}
-                className="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-dark-700 transition-colors duration-200"
+                className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
               >
-                <div className="col-span-1 flex items-center">
+                <div className="flex items-center">
                   <span className={`text-sm font-medium ${
-                    team.position <= 4 ? 'text-primary-400' :
-                    team.position <= 6 ? 'text-accent-400' :
-                    team.position >= 18 ? 'text-red-400' : 'text-white'
+                    team.position <= leagueSettings.qualifiedPosition ? 'text-primary-400' :
+                    team.position >= leagueSettings.relegationPosition ? 'text-red-400' : 'text-white'
                   }`}>
                     {team.position}
                   </span>
                 </div>
                 
-                <div className="col-span-5 flex items-center space-x-2">
+                <div className="flex items-center space-x-2 min-w-0">
                   <img
                     src={team.team.logo}
                     alt={team.team.name}
-                    className="w-5 h-5 object-contain"
+                    className="w-5 h-5 object-contain flex-shrink-0"
                     onError={(e) => e.target.style.display = 'none'}
                   />
                   <span className="text-sm font-medium text-white truncate">
@@ -290,23 +283,23 @@ const Fixtures = () => {
                   </span>
                 </div>
                 
-                <div className="col-span-1 text-center">
+                <div className="text-center w-8 flex items-center justify-center">
                   <span className="text-sm text-gray-300">{team.played}</span>
                 </div>
                 
-                <div className="col-span-1 text-center">
+                <div className="text-center w-8 flex items-center justify-center">
                   <span className="text-sm text-gray-300">{team.won}</span>
                 </div>
                 
-                <div className="col-span-1 text-center">
+                <div className="text-center w-8 flex items-center justify-center">
                   <span className="text-sm text-gray-300">{team.drawn}</span>
                 </div>
                 
-                <div className="col-span-1 text-center">
+                <div className="text-center w-8 flex items-center justify-center">
                   <span className="text-sm text-gray-300">{team.lost}</span>
                 </div>
                 
-                <div className="col-span-1 text-center">
+                <div className="text-center w-10 flex items-center justify-center">
                   <span className={`text-sm ${
                     team.goalDifference > 0 ? 'text-accent-400' : 
                     team.goalDifference < 0 ? 'text-red-400' : 'text-gray-300'
@@ -315,7 +308,7 @@ const Fixtures = () => {
                   </span>
                 </div>
                 
-                <div className="col-span-2 text-center">
+                <div className="text-center w-10 flex items-center justify-center">
                   <span className="text-sm font-semibold text-white">
                     {team.points}
                   </span>
@@ -325,19 +318,15 @@ const Fixtures = () => {
           </div>
           
           {/* Table Legend */}
-          <div className="px-4 py-3 bg-dark-700 border-t border-dark-600">
+          <div className="px-4 py-3 bg-dark-800/30 border-t border-gray-700">
             <div className="flex flex-wrap gap-4 text-xs text-gray-400">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                Champions League
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-accent-600 rounded mr-2"></div>
-                Europa League
+                Qualified (Top {leagueSettings.qualifiedPosition})
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                Relegation
+                Eliminated (Bottom {21 - leagueSettings.relegationPosition})
               </div>
             </div>
           </div>

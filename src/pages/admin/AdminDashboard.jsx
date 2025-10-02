@@ -113,11 +113,11 @@ const AdminDashboard = () => {
       onClick: () => navigate('/admin/news'),
     },
     {
-      title: 'Update Table',
-      description: 'Modify league standings',
-      icon: Trophy,
+      title: 'League Settings',
+      description: 'Configure qualification positions',
+      icon: Settings,
       color: 'text-yellow-400',
-      onClick: () => navigate('/admin/table'),
+      onClick: () => navigate('/admin/league-settings'),
     },
   ];
 

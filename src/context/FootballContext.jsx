@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection } from '../firebase/firestore';
+import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const FootballContext = createContext();
@@ -17,6 +17,11 @@ export const FootballProvider = ({ children }) => {
   const [teams, setTeams] = useState([]);
   const [fixtures, setFixtures] = useState([]);
   const [leagueTable, setLeagueTable] = useState([]);
+  const [leagueSettings, setLeagueSettings] = useState({
+    qualifiedPosition: 4,
+    relegationPosition: 18,
+    totalTeams: 20
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -64,13 +69,15 @@ export const FootballProvider = ({ children }) => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [teamsData, fixturesData, leagueData] = await Promise.all([
+      const [teamsData, fixturesData, leagueData, settingsData] = await Promise.all([
         teamsCollection.getAll(),
         fixturesCollection.getAll(),
-        leagueTableCollection.getCurrent()
+        leagueTableCollection.getCurrent(),
+        leagueSettingsCollection.get()
       ]);
 
       setTeams(teamsData);
+      setLeagueSettings(settingsData);
       
       // Populate fixtures with team data
       const populatedFixtures = fixturesData.map(fixture => {
@@ -252,10 +259,21 @@ export const FootballProvider = ({ children }) => {
     }
   };
 
+  const updateLeagueSettings = async (settings) => {
+    try {
+      await leagueSettingsCollection.save(settings);
+      setLeagueSettings(settings);
+    } catch (error) {
+      console.error('Error updating league settings:', error);
+      throw error;
+    }
+  };
+
   const value = {
     teams,
     fixtures,
     leagueTable,
+    leagueSettings,
     loading,
     error,
     addTeam,
@@ -265,6 +283,7 @@ export const FootballProvider = ({ children }) => {
     addFixture,
     updateFixture,
     updateLeagueTable,
+    updateLeagueSettings,
     refreshData: loadInitialData
   };
 
