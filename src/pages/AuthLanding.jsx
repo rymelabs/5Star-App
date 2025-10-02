@@ -77,32 +77,33 @@ const AuthLanding = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <AuthBackground />
-      <div className="w-full max-w-md relative z-50">
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2">
+      <div className="w-full max-w-md relative z-50 animate-[fadeInUp_0.6s_ease-out]">
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2 shadow-2xl hover:shadow-primary-500/20 transition-shadow duration-300">
           <div className="text-center mb-8">
-            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6" />
+            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6 animate-[fadeIn_0.8s_ease-out]" />
             <h1 className="text-2xl font-bold text-left text-white tracking-tight mb-2"></h1>
             <p className="text-gray-400 text-center"></p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6 animate-[slideInDown_0.3s_ease-out]">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           <div className="space-y-4">
-            {authOptions.map((option) => {
+            {authOptions.map((option, index) => {
               const IconComponent = option.icon;
               return (
                 <button
                   key={option.id}
                   onClick={option.onClick}
                   disabled={loading}
-                  className={`w-full group bg-transparent border-2 ${option.borderColor} ${option.hoverBorderColor} rounded-[9px] p-3 transition-all duration-200 flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`w-full group bg-transparent border-2 ${option.borderColor} ${option.hoverBorderColor} rounded-[9px] p-3 transition-all duration-300 flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] hover:shadow-lg hover:bg-white/5 active:scale-[0.98]`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className={`flex-shrink-0 p-1.5 border ${option.borderColor} ${option.hoverBorderColor} rounded-md`}>
-                    <IconComponent className={`w-4 h-4 ${option.textColor} ${option.hoverTextColor} group-hover:scale-105 transition-transform duration-200`} />
+                  <div className={`flex-shrink-0 p-1.5 border ${option.borderColor} ${option.hoverBorderColor} rounded-md group-hover:rotate-12 transition-all duration-300`}>
+                    <IconComponent className={`w-4 h-4 ${option.textColor} ${option.hoverTextColor} group-hover:scale-125 transition-transform duration-300`} />
                   </div>
                   <div className="flex-1 text-left">
                     <h3 className={`font-medium tracking-tight ${option.textColor} ${option.hoverTextColor}`}>{option.title}</h3>
