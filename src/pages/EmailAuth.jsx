@@ -84,7 +84,7 @@ const EmailAuth = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <AuthBackground />
       <div className="w-full max-w-md relative z-50">
-        <div className="bg-transparent rounded-2xl p-8 shadow-xl">
+        <div className="backdrop-blur-md rounded-2xl p-8 border-primary-600 border-2">
           <div className="flex items-center mb-6">
             <button
               onClick={() => navigate('/auth')}
@@ -98,10 +98,10 @@ const EmailAuth = () => {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
+            <h1 className="text-[30px] font-bold text-primary-600 tracking-tight mb-1">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-400 text-[15px]">
               {isSignUp ? 'Sign up with your email address' : 'Sign in to your account'}
             </p>
           </div>
