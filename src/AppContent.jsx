@@ -10,6 +10,7 @@ import NewsArticle from './pages/NewsArticle';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
@@ -87,6 +88,11 @@ const AppContent = () => {
             <Route path="/profile" element={<Profile />} />
           )}
           
+          {/* Settings page - not available for anonymous users */}
+          {!user.isAnonymous && (
+            <Route path="/settings" element={<Settings />} />
+          )}
+          
           {/* Admin Routes - Only accessible to admins */}
           {user.role === 'admin' && (
             <>
@@ -106,7 +112,10 @@ const AppContent = () => {
           
           {/* Anonymous users trying to access restricted pages */}
           {user.isAnonymous && (
-            <Route path="/profile" element={<Navigate to="/auth" replace />} />
+            <>
+              <Route path="/profile" element={<Navigate to="/auth" replace />} />
+              <Route path="/settings" element={<Navigate to="/auth" replace />} />
+            </>
           )}
           
           {/* Catch all route */}
