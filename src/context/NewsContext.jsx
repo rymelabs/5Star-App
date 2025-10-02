@@ -126,11 +126,34 @@ export const NewsProvider = ({ children }) => {
 
   const deleteArticle = async (articleId) => {
     try {
+      console.log('NewsContext: Deleting article:', articleId);
+      
+      // Delete from Firestore first
       await newsCollection.delete(articleId);
-      setArticles(prev => prev.filter(article => article.id !== articleId));
+      
+      // Convert both to strings for comparison (handles numeric IDs)
+      const articleIdStr = String(articleId);
+      
+      // Update local state - filter out the deleted article
+      setArticles(prev => {
+        const filtered = prev.filter(article => String(article.id) !== articleIdStr);
+        console.log('NewsContext: Filtered articles:', {
+          before: prev.length,
+          after: filtered.length,
+          deletedId: articleIdStr
+        });
+        return filtered;
+      });
+      
+      console.log('NewsContext: Article deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting article:', error);
+      console.error('NewsContext: Error deleting article:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        articleId: articleId
+      });
       throw error;
     }
   };
