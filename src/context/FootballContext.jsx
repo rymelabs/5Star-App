@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { teamsCollection, fixturesCollection, leagueTableCollection } from '../firebase/firestore';
+import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection } from '../firebase/firestore';
+import { useAuth } from './AuthContext';
 
 const FootballContext = createContext();
 
@@ -12,6 +13,7 @@ export const useFootball = () => {
 };
 
 export const FootballProvider = ({ children }) => {
+  const { user } = useAuth();
   const [teams, setTeams] = useState([]);
   const [fixtures, setFixtures] = useState([]);
   const [leagueTable, setLeagueTable] = useState([]);
@@ -96,6 +98,19 @@ export const FootballProvider = ({ children }) => {
       const teamId = await teamsCollection.add(teamData);
       const newTeam = { id: teamId, ...teamData };
       setTeams(prev => [...prev, newTeam]);
+      
+      // Log activity
+      if (user) {
+        await adminActivityCollection.log({
+          action: 'add',
+          type: 'team',
+          itemId: teamId,
+          itemName: teamData.name,
+          userId: user.uid,
+          userName: user.displayName || user.email
+        });
+      }
+      
       return newTeam;
     } catch (error) {
       console.error('Error adding team:', error);
@@ -121,6 +136,19 @@ export const FootballProvider = ({ children }) => {
       setTeams(prev => prev.map(team => 
         team.id === teamId ? { ...team, ...updates } : team
       ));
+      
+      // Log activity
+      if (user) {
+        const team = teams.find(t => t.id === teamId);
+        await adminActivityCollection.log({
+          action: 'update',
+          type: 'team',
+          itemId: teamId,
+          itemName: team?.name || 'Unknown Team',
+          userId: user.uid,
+          userName: user.displayName || user.email
+        });
+      }
     } catch (error) {
       console.error('Error updating team:', error);
       throw error;
@@ -129,8 +157,21 @@ export const FootballProvider = ({ children }) => {
 
   const deleteTeam = async (teamId) => {
     try {
+      const team = teams.find(t => t.id === teamId);
       await teamsCollection.delete(teamId);
       setTeams(prev => prev.filter(team => team.id !== teamId));
+      
+      // Log activity
+      if (user) {
+        await adminActivityCollection.log({
+          action: 'delete',
+          type: 'team',
+          itemId: teamId,
+          itemName: team?.name || 'Unknown Team',
+          userId: user.uid,
+          userName: user.displayName || user.email
+        });
+      }
     } catch (error) {
       console.error('Error deleting team:', error);
       throw error;
@@ -154,6 +195,19 @@ export const FootballProvider = ({ children }) => {
       };
       
       setFixtures(prev => [...prev, newFixture].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)));
+      
+      // Log activity
+      if (user) {
+        await adminActivityCollection.log({
+          action: 'add',
+          type: 'fixture',
+          itemId: fixtureId,
+          itemName: `${homeTeam?.name || 'Unknown'} vs ${awayTeam?.name || 'Unknown'}`,
+          userId: user.uid,
+          userName: user.displayName || user.email
+        });
+      }
+      
       return newFixture;
     } catch (error) {
       console.error('Error adding fixture:', error);
@@ -167,6 +221,19 @@ export const FootballProvider = ({ children }) => {
       setFixtures(prev => prev.map(fixture => 
         fixture.id === fixtureId ? { ...fixture, ...updates } : fixture
       ));
+      
+      // Log activity
+      if (user) {
+        const fixture = fixtures.find(f => f.id === fixtureId);
+        await adminActivityCollection.log({
+          action: 'update',
+          type: 'fixture',
+          itemId: fixtureId,
+          itemName: `${fixture?.homeTeam?.name || 'Unknown'} vs ${fixture?.awayTeam?.name || 'Unknown'}`,
+          userId: user.uid,
+          userName: user.displayName || user.email
+        });
+      }
     } catch (error) {
       console.error('Error updating fixture:', error);
       throw error;

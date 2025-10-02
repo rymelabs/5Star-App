@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import { useNews } from '../../context/NewsContext';
+import { adminActivityCollection } from '../../firebase/firestore';
 import { 
   ArrowLeft, 
   BarChart3, 
@@ -14,7 +15,8 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Activity
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -25,6 +27,19 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const { teams, fixtures, leagueTable } = useFootball();
   const { articles } = useNews();
+  const [recentActivities, setRecentActivities] = useState([]);
+
+  // Fetch recent activities
+  useEffect(() => {
+    // Only fetch activities if user is admin
+    if (!user || user.role !== 'admin') return;
+
+    const unsubscribe = adminActivityCollection.onSnapshot(10, (activities) => {
+      setRecentActivities(activities);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -247,41 +262,73 @@ const AdminDashboard = () => {
         <div className="mt-8">
           <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
           <div className="space-y-3">
-            <div className="card p-4">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-accent-600 rounded-full flex items-center justify-center mr-3">
-                  <Calendar className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm">Added new fixture: Arsenal vs Chelsea</p>
-                  <p className="text-gray-500 text-xs">2 hours ago</p>
-                </div>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity) => {
+                // Determine icon and color based on activity type
+                let Icon, bgColor;
+                switch (activity.type) {
+                  case 'team':
+                    Icon = Users;
+                    bgColor = 'bg-blue-600';
+                    break;
+                  case 'fixture':
+                    Icon = Calendar;
+                    bgColor = 'bg-accent-600';
+                    break;
+                  case 'news':
+                  case 'article':
+                    Icon = Newspaper;
+                    bgColor = 'bg-purple-600';
+                    break;
+                  default:
+                    Icon = Activity;
+                    bgColor = 'bg-gray-600';
+                }
+
+                // Format action text
+                let actionText = '';
+                if (activity.action === 'add') actionText = 'Added';
+                else if (activity.action === 'update') actionText = 'Updated';
+                else if (activity.action === 'delete') actionText = 'Deleted';
+                else actionText = activity.action;
+
+                // Format time ago
+                const timeAgo = (date) => {
+                  const seconds = Math.floor((new Date() - date) / 1000);
+                  if (seconds < 60) return 'just now';
+                  const minutes = Math.floor(seconds / 60);
+                  if (minutes < 60) return `${minutes}m ago`;
+                  const hours = Math.floor(minutes / 60);
+                  if (hours < 24) return `${hours}h ago`;
+                  const days = Math.floor(hours / 24);
+                  if (days < 7) return `${days}d ago`;
+                  return date.toLocaleDateString();
+                };
+
+                return (
+                  <div key={activity.id} className="card p-4">
+                    <div className="flex items-center">
+                      <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center mr-3 flex-shrink-0`}>
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm truncate">
+                          {actionText} {activity.type}: {activity.itemName}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          {timeAgo(activity.createdAt)} • by {activity.userName}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="card p-8 text-center">
+                <Activity className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No recent activity</p>
               </div>
-            </div>
-            
-            <div className="card p-4">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-3">
-                  <Newspaper className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm">Published article: Transfer Window Updates</p>
-                  <p className="text-gray-500 text-xs">5 hours ago</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="card p-4">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                  <Trophy className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm">Updated league table standings</p>
-                  <p className="text-gray-500 text-xs">1 day ago</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
