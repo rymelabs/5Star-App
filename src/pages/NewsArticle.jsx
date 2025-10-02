@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const NewsArticle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments, toggleLike } = useNews();
+  const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments, toggleLike, incrementArticleView } = useNews();
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,9 @@ const NewsArticle = () => {
 
   useEffect(() => {
     if (article?.id) {
+      // Increment view count
+      incrementArticleView(article.id);
+      
       // Load comments using the article's document ID
       getCommentsForItem('article', article.id);
       

@@ -365,7 +365,7 @@ const AdminNews = () => {
                       </span>
                       <span className="flex items-center space-x-1">
                         <Eye className="w-3 h-3" />
-                        <span>{article.views} views</span>
+                        <span>{article.views || 0} views</span>
                       </span>
                     </div>
 

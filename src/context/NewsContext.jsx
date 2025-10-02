@@ -192,6 +192,24 @@ export const NewsProvider = ({ children }) => {
     }
   };
 
+  const incrementArticleView = async (articleId) => {
+    try {
+      const newViewCount = await newsCollection.incrementView(articleId);
+      // Update local state
+      if (newViewCount) {
+        setArticles(prev => prev.map(article => 
+          article.id === articleId 
+            ? { ...article, views: newViewCount } 
+            : article
+        ));
+      }
+      return newViewCount;
+    } catch (error) {
+      console.error('Error incrementing view:', error);
+      // Don't throw - view tracking shouldn't break the app
+    }
+  };
+
   const subscribeToComments = (itemType, itemId) => {
     return commentsCollection.onSnapshot(itemType, itemId, (updatedComments) => {
       const key = `${itemType}_${itemId}`;
@@ -213,6 +231,7 @@ export const NewsProvider = ({ children }) => {
     updateArticle,
     deleteArticle,
     toggleLike,
+    incrementArticleView,
     getCommentsForItem,
     addComment,
     subscribeToComments,
