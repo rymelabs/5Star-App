@@ -47,6 +47,28 @@ export const abbreviateTeamName = (teamName) => {
   return abbreviation;
 };
 
+// Check if a fixture is currently live
+export const isFixtureLive = (fixture) => {
+  if (!fixture) return false;
+  
+  // If admin marked it as live or playing, it's live
+  if (fixture.status === 'live' || fixture.status === 'playing') {
+    return true;
+  }
+  
+  // Check if match time has started but less than 2 hours have passed
+  const matchTime = new Date(fixture.dateTime);
+  const now = new Date();
+  const timeDiff = now - matchTime; // milliseconds
+  
+  // Match is live if:
+  // - Current time is after match start time
+  // - Less than 2 hours (7200000 ms) have passed since match start
+  const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+  
+  return timeDiff >= 0 && timeDiff <= twoHours;
+};
+
 // Number utilities
 export const formatNumber = (num) => {
   if (num >= 1000000) {

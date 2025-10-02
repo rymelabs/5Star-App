@@ -4,7 +4,7 @@ import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { ChevronRight, Calendar, Trophy } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
-import { truncateText, formatScore, abbreviateTeamName } from '../utils/helpers';
+import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 
 const Latest = () => {
   const navigate = useNavigate();
@@ -149,12 +149,20 @@ const Latest = () => {
                     {/* VS / Time / Date */}
                     <div className="flex flex-col items-center px-4 flex-shrink-0">
                       <div className="text-sm font-semibold text-primary-500">VS</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
-                      </div>
+                      {isFixtureLive(fixture) ? (
+                        <div className="text-sm font-bold animate-live-pulse mt-1">
+                          LIVE
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
+                          </div>
+                        </>
+                      )}
                     </div>
                     
                     {/* Away Team */}
