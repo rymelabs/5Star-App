@@ -84,7 +84,7 @@ const EmailAuth = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <AuthBackground />
       <div className="w-full max-w-md relative z-50">
-        <div className="backdrop-blur-md rounded-2xl p-8 border-primary-600 border-2">
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2">
           <div className="flex items-center mb-6">
             <button
               onClick={() => navigate('/auth')}
@@ -93,11 +93,11 @@ const EmailAuth = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="flex-1 text-center">
-              <img src="/5StarLogo.svg" alt="5Star Logo" className="w-12 h-12 mx-auto" />
+              <img src="/5StarLogo.svg" alt="5Star Logo" className="w-36 h-36 mx-auto" />
             </div>
           </div>
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-1">
             <h1 className="text-[30px] font-bold text-primary-600 tracking-tight mb-1">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h1>

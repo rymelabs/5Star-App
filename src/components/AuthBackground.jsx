@@ -4,12 +4,11 @@ const AuthBackground = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Media files from public/LandingPageBG folder
+  // Media files from public/LandingPageBG folder (optimized)
   const mediaFiles = [
-    { type: 'image', src: '/LandingPageBG/5STARSRB-06.png' },
-    { type: 'video', src: '/LandingPageBG/BackgroundVid1.mp4' },
-    { type: 'image', src: '/LandingPageBG/PHOTO-2024-06-11-08-28-38.jpg' },
-    { type: 'image', src: '/LandingPageBG/PHOTO-2024-12-31-19-43-49.jpg' },
+    { type: 'image', src: '/LandingPageBG/bg1.jpg' },
+    { type: 'image', src: '/LandingPageBG/bg2.jpg' },
+    { type: 'image', src: '/LandingPageBG/bg3.jpg' },
   ];
 
   useEffect(() => {
@@ -65,8 +64,8 @@ const AuthBackground = () => {
         );
       })}
 
-      {/* Red to black gradient overlay */}
-      <div className="absolute inset-0 bg-black/90 z-[2] max-w-full" />
+      {/* Red to black gradient overlay with 90% transparency */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-900/90 via-red-950/90 to-black/90 z-[2]" />
 
       {/* Slideshow indicators */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-[4]">

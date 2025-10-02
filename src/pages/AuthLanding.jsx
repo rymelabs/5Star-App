@@ -78,7 +78,7 @@ const AuthLanding = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <AuthBackground />
       <div className="w-full max-w-md relative z-50">
-        <div className="backdrop-blur-md rounded-2xl p-8 border-primary-600 border-2">
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2">
           <div className="text-center mb-8">
             <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6" />
             <h1 className="text-2xl font-bold text-left text-white tracking-tight mb-2"></h1>
