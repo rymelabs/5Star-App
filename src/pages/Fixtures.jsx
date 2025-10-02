@@ -50,7 +50,6 @@ const Fixtures = () => {
   const getStatusText = (fixture) => {
     if (fixture.status === 'live') return 'LIVE';
     if (fixture.status === 'completed') return 'FT';
-    if (new Date(fixture.dateTime) > new Date()) return formatTime(fixture.dateTime);
     return 'Scheduled';
   };
 
@@ -194,17 +193,14 @@ const Fixtures = () => {
                           </div>
                         </div>
                         
-                        {/* Status/Venue */}
-                        <div className="ml-6 text-right flex-shrink-0">
-                          <div className={`px-2 py-1 rounded text-xs font-medium inline-block ${getStatusColor(fixture.status)}`}>
-                            {getStatusText(fixture)}
-                          </div>
-                          {fixture.venue && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[100px]">
+                        {/* Venue */}
+                        {fixture.venue && (
+                          <div className="ml-6 text-right flex-shrink-0">
+                            <div className="text-xs text-gray-500 truncate max-w-[100px]">
                               {fixture.venue}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Live indicators */}
