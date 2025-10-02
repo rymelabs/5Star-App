@@ -159,10 +159,13 @@ const Fixtures = () => {
                                 <div className="text-lg font-bold text-white">
                                   {fixture.homeScore} - {fixture.awayScore}
                                 </div>
+                                <div className="text-xs text-gray-500 mt-1">FT</div>
                               </div>
                             ) : isFixtureLive(fixture) ? (
                               <div className="text-center">
-                                <div className="text-sm font-semibold text-primary-500">VS</div>
+                                <div className="text-lg font-bold text-white">
+                                  {fixture.homeScore || 0} - {fixture.awayScore || 0}
+                                </div>
                                 <div className="text-sm font-bold animate-live-pulse mt-1">
                                   LIVE
                                 </div>

@@ -146,22 +146,34 @@ const Latest = () => {
                       />
                     </div>
                     
-                    {/* VS / Time / Date */}
+                    {/* VS / Score / Time / Date */}
                     <div className="flex flex-col items-center px-4 flex-shrink-0">
-                      <div className="text-sm font-semibold text-primary-500">VS</div>
-                      {isFixtureLive(fixture) ? (
-                        <div className="text-sm font-bold animate-live-pulse mt-1">
-                          LIVE
+                      {fixture.status === 'completed' ? (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-white">
+                            {fixture.homeScore} - {fixture.awayScore}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">FT</div>
+                        </div>
+                      ) : isFixtureLive(fixture) ? (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-white">
+                            {fixture.homeScore || 0} - {fixture.awayScore || 0}
+                          </div>
+                          <div className="text-sm font-bold animate-live-pulse mt-1">
+                            LIVE
+                          </div>
                         </div>
                       ) : (
-                        <>
+                        <div className="text-center">
+                          <div className="text-sm font-semibold text-primary-500">VS</div>
                           <div className="text-xs text-gray-400 mt-1">
                             {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">
                             {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                     
