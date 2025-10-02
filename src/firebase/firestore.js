@@ -689,3 +689,73 @@ export const competitionsCollection = {
     });
   }
 };
+
+// League Settings collection functions
+export const leagueSettingsCollection = {
+  // Get league settings
+  get: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const settingsRef = doc(database, 'leagueSettings', 'current');
+      const settingsDoc = await getDoc(settingsRef);
+      
+      if (settingsDoc.exists()) {
+        return settingsDoc.data();
+      } else {
+        // Return default settings if none exist
+        return {
+          qualifiedPosition: 4,
+          relegationPosition: 18,
+          totalTeams: 20
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching league settings:', error);
+      // Return defaults on error
+      return {
+        qualifiedPosition: 4,
+        relegationPosition: 18,
+        totalTeams: 20
+      };
+    }
+  },
+
+  // Save/Update league settings
+  save: async (settings) => {
+    try {
+      const database = checkFirebaseInit();
+      const settingsRef = doc(database, 'leagueSettings', 'current');
+      await updateDoc(settingsRef, {
+        ...settings,
+        updatedAt: serverTimestamp()
+      }).catch(async () => {
+        // If document doesn't exist, create it
+        await addDoc(collection(database, 'leagueSettings'), {
+          ...settings,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+    } catch (error) {
+      console.error('Error saving league settings:', error);
+      throw error;
+    }
+  },
+
+  // Real-time settings
+  onSnapshot: (callback) => {
+    const database = checkFirebaseInit();
+    const settingsRef = doc(database, 'leagueSettings', 'current');
+    return onSnapshot(settingsRef, (doc) => {
+      if (doc.exists()) {
+        callback(doc.data());
+      } else {
+        callback({
+          qualifiedPosition: 4,
+          relegationPosition: 18,
+          totalTeams: 20
+        });
+      }
+    });
+  }
+};

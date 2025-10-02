@@ -216,34 +216,34 @@ const Latest = () => {
             </button>
           </div>
           
-          <div className="card overflow-hidden">
+          <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-dark-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
-              <div className="col-span-1">#</div>
-              <div className="col-span-5">Team</div>
-              <div className="col-span-2 text-center">P</div>
-              <div className="col-span-2 text-center">GD</div>
-              <div className="col-span-2 text-center">Pts</div>
+            <div className="grid grid-cols-[auto_1fr_repeat(3,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
+              <div className="text-left">#</div>
+              <div className="text-left">Team</div>
+              <div className="text-center w-10">P</div>
+              <div className="text-center w-10">GD</div>
+              <div className="text-center w-10">Pts</div>
             </div>
             
             {/* Table Body */}
-            <div className="divide-y divide-dark-700">
+            <div className="divide-y divide-gray-700/50">
               {topTeams.map((team, index) => (
                 <div
                   key={team.team.id}
-                  className="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-dark-700 transition-colors duration-200"
+                  className="grid grid-cols-[auto_1fr_repeat(3,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
                 >
-                  <div className="col-span-1 flex items-center">
+                  <div className="flex items-center">
                     <span className="text-sm font-medium text-white">
                       {team.position}
                     </span>
                   </div>
                   
-                  <div className="col-span-5 flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 min-w-0">
                     <img
                       src={team.team.logo}
                       alt={team.team.name}
-                      className="w-5 h-5 object-contain"
+                      className="w-5 h-5 object-contain flex-shrink-0"
                       onError={(e) => {
                         e.target.style.display = 'none';
                       }}
@@ -253,11 +253,11 @@ const Latest = () => {
                     </span>
                   </div>
                   
-                  <div className="col-span-2 text-center">
+                  <div className="text-center w-10 flex items-center justify-center">
                     <span className="text-sm text-gray-300">{team.played}</span>
                   </div>
                   
-                  <div className="col-span-2 text-center">
+                  <div className="text-center w-10 flex items-center justify-center">
                     <span className={`text-sm ${
                       team.goalDifference > 0 ? 'text-accent-400' : 
                       team.goalDifference < 0 ? 'text-red-400' : 'text-gray-300'
@@ -266,7 +266,7 @@ const Latest = () => {
                     </span>
                   </div>
                   
-                  <div className="col-span-2 text-center">
+                  <div className="text-center w-10 flex items-center justify-center">
                     <span className="text-sm font-semibold text-white">
                       {team.points}
                     </span>
