@@ -172,6 +172,47 @@ export const fixturesCollection = {
       }));
       callback(fixtures);
     });
+  },
+
+  // Toggle like on a fixture
+  toggleLike: async (fixtureId, userId) => {
+    try {
+      const database = checkFirebaseInit();
+      const fixtureRef = doc(database, 'fixtures', fixtureId);
+      const fixtureDoc = await getDoc(fixtureRef);
+      
+      if (!fixtureDoc.exists()) {
+        throw new Error('Fixture not found');
+      }
+
+      const fixtureData = fixtureDoc.data();
+      const likedBy = fixtureData.likedBy || [];
+      const isLiked = likedBy.includes(userId);
+
+      let updatedLikedBy;
+      let updatedLikes;
+
+      if (isLiked) {
+        // Unlike
+        updatedLikedBy = likedBy.filter(id => id !== userId);
+        updatedLikes = Math.max(0, (fixtureData.likes || 0) - 1);
+      } else {
+        // Like
+        updatedLikedBy = [...likedBy, userId];
+        updatedLikes = (fixtureData.likes || 0) + 1;
+      }
+
+      await updateDoc(fixtureRef, {
+        likes: updatedLikes,
+        likedBy: updatedLikedBy,
+        updatedAt: serverTimestamp()
+      });
+
+      return { likes: updatedLikes, isLiked: !isLiked };
+    } catch (error) {
+      console.error('Error toggling fixture like:', error);
+      throw error;
+    }
   }
 };
 

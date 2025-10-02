@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
 import { Calendar, Clock, Filter, Trophy, Users } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel, isToday } from '../utils/dateUtils';
-import { formatScore, groupBy, sortBy, abbreviateTeamName } from '../utils/helpers';
+import { formatScore, groupBy, sortBy, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 
 const Fixtures = () => {
   const navigate = useNavigate();
@@ -158,6 +158,13 @@ const Fixtures = () => {
                               <div className="text-center">
                                 <div className="text-lg font-bold text-white">
                                   {fixture.homeScore} - {fixture.awayScore}
+                                </div>
+                              </div>
+                            ) : isFixtureLive(fixture) ? (
+                              <div className="text-center">
+                                <div className="text-sm font-semibold text-primary-500">VS</div>
+                                <div className="text-sm font-bold animate-live-pulse mt-1">
+                                  LIVE
                                 </div>
                               </div>
                             ) : (

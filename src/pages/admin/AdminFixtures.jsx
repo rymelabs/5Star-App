@@ -5,8 +5,9 @@ import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X } from 
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, teams, addFixture } = useFootball();
+  const { fixtures, teams, addFixture, updateFixture } = useFootball();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     homeTeam: '',
     awayTeam: '',
@@ -84,6 +85,58 @@ const AdminFixtures = () => {
       status: 'scheduled'
     });
     setShowAddForm(false);
+    setEditingId(null);
+  };
+
+  const handleEdit = (fixture) => {
+    // Extract date and time from fixture.dateTime
+    const dateTime = new Date(fixture.dateTime);
+    const date = dateTime.toISOString().split('T')[0];
+    const time = dateTime.toTimeString().slice(0, 5);
+    
+    setFormData({
+      homeTeam: fixture.homeTeamId || fixture.homeTeam?.id || '',
+      awayTeam: fixture.awayTeamId || fixture.awayTeam?.id || '',
+      date: date,
+      time: time,
+      venue: fixture.venue || '',
+      competition: fixture.competition || 'Premier League',
+      round: fixture.round || '',
+      status: fixture.status || 'scheduled'
+    });
+    setEditingId(fixture.id);
+    setShowAddForm(false);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editingId || !formData.homeTeam || !formData.awayTeam || !formData.date || !formData.time) return;
+
+    setLoading(true);
+    try {
+      const dateTimeString = `${formData.date}T${formData.time}`;
+      const dateTime = new Date(dateTimeString);
+      
+      const updates = {
+        homeTeamId: formData.homeTeam,
+        awayTeamId: formData.awayTeam,
+        dateTime: dateTime,
+        venue: formData.venue || '',
+        competition: formData.competition || 'Premier League',
+        round: formData.round || '',
+        status: formData.status || 'scheduled'
+      };
+      
+      await updateFixture(editingId, updates);
+      
+      // Reset form
+      handleCancel();
+    } catch (error) {
+      console.error('Error updating fixture:', error);
+      alert('Failed to update fixture: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -140,11 +193,13 @@ const AdminFixtures = () => {
       </div>
 
       <div className="px-4 py-6">
-        {/* Add Fixture Form */}
-        {showAddForm && (
+        {/* Add/Edit Fixture Form */}
+        {(showAddForm || editingId) && (
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Add New Fixture</h3>
+              <h3 className="text-lg font-semibold text-white">
+                {editingId ? 'Edit Fixture' : 'Add New Fixture'}
+              </h3>
               <button
                 onClick={handleCancel}
                 className="p-2 rounded-full hover:bg-dark-700 transition-colors"
@@ -153,7 +208,7 @@ const AdminFixtures = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={editingId ? handleUpdate : handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -278,7 +333,8 @@ const AdminFixtures = () => {
                   >
                     <option value="scheduled">Scheduled</option>
                     <option value="live">Live</option>
-                    <option value="finished">Finished</option>
+                    <option value="playing">Playing</option>
+                    <option value="completed">Completed</option>
                     <option value="postponed">Postponed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
@@ -299,7 +355,7 @@ const AdminFixtures = () => {
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Adding...' : 'Add Fixture'}
+                  {loading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Fixture' : 'Add Fixture')}
                 </button>
               </div>
             </form>
@@ -339,8 +395,9 @@ const AdminFixtures = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => navigate(`/admin/fixtures/edit/${fixture.id}`)}
+                      onClick={() => handleEdit(fixture)}
                       className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      title="Edit fixture"
                     >
                       <Edit className="w-4 h-4" />
                     </button>

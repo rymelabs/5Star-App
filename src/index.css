@@ -46,6 +46,22 @@
 }
 
 @layer utilities {
+  /* Live Match Pulse Animation */
+  @keyframes livePulse {
+    0%, 100% {
+      color: rgb(239, 68, 68); /* red-500 */
+      text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    }
+    50% {
+      color: rgb(59, 130, 246); /* blue-500 */
+      text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+  }
+  
+  .animate-live-pulse {
+    animation: livePulse 2s ease-in-out infinite;
+  }
+
   /* Fade In Animation */
   @keyframes fadeIn {
     from {
