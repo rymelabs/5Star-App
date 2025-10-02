@@ -4,7 +4,7 @@ import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { ChevronRight, Calendar, Trophy } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
-import { truncateText, formatScore } from '../utils/helpers';
+import { truncateText, formatScore, abbreviateTeamName } from '../utils/helpers';
 
 const Latest = () => {
   const navigate = useNavigate();
@@ -126,49 +126,50 @@ const Latest = () => {
               <div
                 key={fixture.id}
                 onClick={() => handleFixtureClick(fixture)}
-                className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200"
+                className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden"
               >
                 <div className="flex items-center justify-between">
                   {/* Teams */}
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-6 flex-1 min-w-0">
+                    {/* Home Team */}
+                    <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                      <span className="font-medium text-white text-sm truncate">
+                        {abbreviateTeamName(fixture.homeTeam.name)}
+                      </span>
                       <img
                         src={fixture.homeTeam.logo}
                         alt={fixture.homeTeam.name}
-                        className="w-6 h-6 object-contain"
+                        className="w-10 h-10 object-contain rounded-full flex-shrink-0"
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
                       />
-                      <span className="font-medium text-white text-sm">
-                        {fixture.homeTeam.name}
-                      </span>
                     </div>
                     
-                    <span className="text-gray-400 text-sm">vs</span>
+                    {/* VS / Time / Date */}
+                    <div className="flex flex-col items-center px-4 flex-shrink-0">
+                      <div className="text-sm font-semibold text-primary-500">VS</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
+                      </div>
+                    </div>
                     
-                    <div className="flex items-center space-x-2">
+                    {/* Away Team */}
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
                       <img
                         src={fixture.awayTeam.logo}
                         alt={fixture.awayTeam.name}
-                        className="w-6 h-6 object-contain"
+                        className="w-10 h-10 object-contain rounded-full flex-shrink-0"
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
                       />
-                      <span className="font-medium text-white text-sm">
-                        {fixture.awayTeam.name}
+                      <span className="font-medium text-white text-sm truncate">
+                        {abbreviateTeamName(fixture.awayTeam.name)}
                       </span>
-                    </div>
-                  </div>
-                  
-                  {/* Date & Time */}
-                  <div className="text-right">
-                    <div className="text-sm text-gray-400">
-                      {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
                     </div>
                   </div>
                 </div>

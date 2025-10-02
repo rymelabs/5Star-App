@@ -26,6 +26,27 @@ export const formatScore = (homeScore, awayScore) => {
   return `${homeScore} - ${awayScore}`;
 };
 
+// Abbreviate team names
+export const abbreviateTeamName = (teamName) => {
+  if (!teamName || typeof teamName !== 'string') return '';
+  
+  const words = teamName.trim().split(/\s+/);
+  
+  // Single word team name - return first 3 letters
+  if (words.length === 1) {
+    return teamName.substring(0, 3).toUpperCase();
+  }
+  
+  // Multi-word team name - first letter of first word + first letters of other words
+  const firstWord = words[0];
+  const otherWords = words.slice(1);
+  
+  const abbreviation = firstWord.charAt(0).toUpperCase() + 
+    otherWords.map(word => word.charAt(0).toUpperCase()).join('');
+  
+  return abbreviation;
+};
+
 // Number utilities
 export const formatNumber = (num) => {
   if (num >= 1000000) {
