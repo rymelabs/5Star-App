@@ -14,10 +14,11 @@ import {
   serverTimestamp,
   writeBatch
 } from 'firebase/firestore';
-import { db } from './config';
+import { getFirebaseDb } from './config';
 
 // Helper function to check if Firebase is initialized
 const checkFirebaseInit = () => {
+  const db = getFirebaseDb();
   if (!db) {
     throw new Error('Firebase is not initialized. Please check your .env configuration.');
   }
@@ -44,7 +45,8 @@ export const teamsCollection = {
   // Add new team
   add: async (teamData) => {
     try {
-      const docRef = await addDoc(collection(db, 'teams'), {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'teams'), {
         ...teamData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -59,8 +61,9 @@ export const teamsCollection = {
   // Bulk add teams
   addBulk: async (teams) => {
     try {
-      const batch = writeBatch(db);
-      const teamsCollection = collection(db, 'teams');
+      const database = checkFirebaseInit();
+      const batch = writeBatch(database);
+      const teamsCollection = collection(database, 'teams');
       
       teams.forEach((team) => {
         const docRef = doc(teamsCollection);
@@ -82,7 +85,8 @@ export const teamsCollection = {
   // Update team
   update: async (teamId, updates) => {
     try {
-      const teamRef = doc(db, 'teams', teamId);
+      const database = checkFirebaseInit();
+      const teamRef = doc(database, 'teams', teamId);
       await updateDoc(teamRef, {
         ...updates,
         updatedAt: serverTimestamp()
@@ -96,7 +100,8 @@ export const teamsCollection = {
   // Delete team
   delete: async (teamId) => {
     try {
-      await deleteDoc(doc(db, 'teams', teamId));
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'teams', teamId));
     } catch (error) {
       console.error('Error deleting team:', error);
       throw error;
@@ -109,7 +114,8 @@ export const fixturesCollection = {
   // Get all fixtures
   getAll: async () => {
     try {
-      const q = query(collection(db, 'fixtures'), orderBy('dateTime', 'desc'));
+      const database = checkFirebaseInit();
+      const q = query(collection(database, 'fixtures'), orderBy('dateTime', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -125,7 +131,8 @@ export const fixturesCollection = {
   // Add new fixture
   add: async (fixtureData) => {
     try {
-      const docRef = await addDoc(collection(db, 'fixtures'), {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
         dateTime: new Date(fixtureData.dateTime),
         createdAt: serverTimestamp(),
@@ -141,7 +148,8 @@ export const fixturesCollection = {
   // Update fixture (for live scores)
   update: async (fixtureId, updates) => {
     try {
-      const fixtureRef = doc(db, 'fixtures', fixtureId);
+      const database = checkFirebaseInit();
+      const fixtureRef = doc(database, 'fixtures', fixtureId);
       await updateDoc(fixtureRef, {
         ...updates,
         updatedAt: serverTimestamp()
@@ -154,7 +162,8 @@ export const fixturesCollection = {
 
   // Real-time fixture updates
   onSnapshot: (callback) => {
-    const q = query(collection(db, 'fixtures'), orderBy('dateTime', 'desc'));
+    const database = checkFirebaseInit();
+    const q = query(collection(database, 'fixtures'), orderBy('dateTime', 'desc'));
     return onSnapshot(q, (querySnapshot) => {
       const fixtures = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -171,7 +180,8 @@ export const newsCollection = {
   // Get all articles
   getAll: async () => {
     try {
-      const q = query(collection(db, 'articles'), orderBy('publishedAt', 'desc'));
+      const database = checkFirebaseInit();
+      const q = query(collection(database, 'articles'), orderBy('publishedAt', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -187,7 +197,8 @@ export const newsCollection = {
   // Get article by ID
   getById: async (articleId) => {
     try {
-      const docRef = doc(db, 'articles', articleId);
+      const database = checkFirebaseInit();
+      const docRef = doc(database, 'articles', articleId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -197,6 +208,8 @@ export const newsCollection = {
           publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
         };
       }
+      
+      console.warn(`Article not found with ID: ${articleId}`);
       return null;
     } catch (error) {
       console.error('Error fetching article:', error);
@@ -207,7 +220,8 @@ export const newsCollection = {
   // Add new article
   add: async (articleData) => {
     try {
-      const docRef = await addDoc(collection(db, 'articles'), {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'articles'), {
         ...articleData,
         publishedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
@@ -226,8 +240,9 @@ export const commentsCollection = {
   // Get comments for a specific item (fixture or article)
   getForItem: async (itemType, itemId) => {
     try {
+      const database = checkFirebaseInit();
       const q = query(
-        collection(db, 'comments'),
+        collection(database, 'comments'),
         where('itemType', '==', itemType),
         where('itemId', '==', itemId),
         orderBy('createdAt', 'desc')
@@ -247,7 +262,8 @@ export const commentsCollection = {
   // Add new comment
   add: async (commentData) => {
     try {
-      const docRef = await addDoc(collection(db, 'comments'), {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'comments'), {
         ...commentData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -261,8 +277,9 @@ export const commentsCollection = {
 
   // Real-time comments
   onSnapshot: (itemType, itemId, callback) => {
+    const database = checkFirebaseInit();
     const q = query(
-      collection(db, 'comments'),
+      collection(database, 'comments'),
       where('itemType', '==', itemType),
       where('itemId', '==', itemId),
       orderBy('createdAt', 'desc')
@@ -283,8 +300,9 @@ export const leagueTableCollection = {
   // Get current league table
   getCurrent: async () => {
     try {
+      const database = checkFirebaseInit();
       const q = query(
-        collection(db, 'leagueTable'),
+        collection(database, 'leagueTable'),
         orderBy('position', 'asc')
       );
       const querySnapshot = await getDocs(q);
@@ -301,7 +319,8 @@ export const leagueTableCollection = {
   // Update team position
   updateTeam: async (teamId, stats) => {
     try {
-      const teamRef = doc(db, 'leagueTable', teamId);
+      const database = checkFirebaseInit();
+      const teamRef = doc(database, 'leagueTable', teamId);
       await updateDoc(teamRef, {
         ...stats,
         updatedAt: serverTimestamp()
