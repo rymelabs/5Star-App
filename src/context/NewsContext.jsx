@@ -43,6 +43,15 @@ export const NewsProvider = ({ children }) => {
     }
   };
 
+  const getArticleBySlug = async (slug) => {
+    try {
+      return await newsCollection.getBySlug(slug);
+    } catch (error) {
+      console.error('Error getting article by slug:', error);
+      throw error;
+    }
+  };
+
   const addArticle = async (articleData) => {
     try {
       const articleId = await newsCollection.add(articleData);
@@ -102,6 +111,30 @@ export const NewsProvider = ({ children }) => {
     }
   };
 
+  const updateArticle = async (articleId, articleData) => {
+    try {
+      await newsCollection.update(articleId, articleData);
+      setArticles(prev => prev.map(article => 
+        article.id === articleId ? { ...article, ...articleData } : article
+      ));
+      return true;
+    } catch (error) {
+      console.error('Error updating article:', error);
+      throw error;
+    }
+  };
+
+  const deleteArticle = async (articleId) => {
+    try {
+      await newsCollection.delete(articleId);
+      setArticles(prev => prev.filter(article => article.id !== articleId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      throw error;
+    }
+  };
+
   const subscribeToComments = (itemType, itemId) => {
     return commentsCollection.onSnapshot(itemType, itemId, (updatedComments) => {
       const key = `${itemType}_${itemId}`;
@@ -118,7 +151,10 @@ export const NewsProvider = ({ children }) => {
     loading,
     error,
     getArticleById,
+    getArticleBySlug,
     addArticle,
+    updateArticle,
+    deleteArticle,
     getCommentsForItem,
     addComment,
     subscribeToComments,

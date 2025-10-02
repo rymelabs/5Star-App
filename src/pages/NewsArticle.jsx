@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const NewsArticle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getArticleById, getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
+  const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,20 +20,21 @@ const NewsArticle = () => {
   }, [id]);
 
   useEffect(() => {
-    if (id) {
-      // Load comments
-      getCommentsForItem('article', id);
+    if (article?.id) {
+      // Load comments using the article's document ID
+      getCommentsForItem('article', article.id);
       
       // Subscribe to real-time comments
-      const unsubscribe = subscribeToComments('article', id);
+      const unsubscribe = subscribeToComments('article', article.id);
       return () => unsubscribe();
     }
-  }, [id]);
+  }, [article?.id]);
 
   const loadArticle = async () => {
     try {
       setLoading(true);
-      const articleData = await getArticleById(id);
+      // Fetch article by slug (from URL param)
+      const articleData = await getArticleBySlug(id);
       if (articleData) {
         setArticle(articleData);
       } else {
@@ -49,11 +50,11 @@ const NewsArticle = () => {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !article?.id) return;
 
     try {
       setIsCommenting(true);
-      await addComment('article', id, {
+      await addComment('article', article.id, {
         content: newComment.trim(),
         userId: user.uid,
         userName: user.name
@@ -89,7 +90,7 @@ const NewsArticle = () => {
     );
   }
 
-  const articleComments = comments[`article_${id}`] || [];
+  const articleComments = comments[`article_${article.id}`] || [];
 
   return (
     <div className="p-6 pb-24">

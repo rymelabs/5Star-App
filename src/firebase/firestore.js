@@ -217,6 +217,50 @@ export const newsCollection = {
     }
   },
 
+  // Get article by slug (or ID for backward compatibility)
+  getBySlug: async (slugOrId) => {
+    try {
+      const database = checkFirebaseInit();
+      
+      // First, try to find by slug
+      const q = query(collection(database, 'articles'), where('slug', '==', slugOrId));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        return {
+          id: docSnap.id,
+          ...docSnap.data(),
+          publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
+        };
+      }
+      
+      // If not found by slug, try by document ID (for old articles without slugs)
+      console.log(`Article not found with slug "${slugOrId}", trying by document ID...`);
+      try {
+        const docRef = doc(database, 'articles', slugOrId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          return {
+            id: docSnap.id,
+            ...docSnap.data(),
+            publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
+          };
+        }
+      } catch (idError) {
+        // If it's not a valid document ID, just continue
+        console.log('Not a valid document ID either');
+      }
+      
+      console.warn(`Article not found with slug or ID: ${slugOrId}`);
+      return null;
+    } catch (error) {
+      console.error('Error fetching article:', error);
+      throw error;
+    }
+  },
+
   // Add new article
   add: async (articleData) => {
     try {
@@ -230,6 +274,33 @@ export const newsCollection = {
       return docRef.id;
     } catch (error) {
       console.error('Error adding article:', error);
+      throw error;
+    }
+  },
+
+  // Update article
+  update: async (articleId, articleData) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = doc(database, 'articles', articleId);
+      await updateDoc(docRef, {
+        ...articleData,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating article:', error);
+      throw error;
+    }
+  },
+
+  // Delete article
+  delete: async (articleId) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = doc(database, 'articles', articleId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('Error deleting article:', error);
       throw error;
     }
   }

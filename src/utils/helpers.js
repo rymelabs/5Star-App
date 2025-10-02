@@ -1,5 +1,6 @@
 // String utilities
 export const truncateText = (text, maxLength = 100) => {
+  if (!text || typeof text !== 'string') return '';
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).trim() + '...';
 };

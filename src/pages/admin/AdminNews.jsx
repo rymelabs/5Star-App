@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../../context/NewsContext';
+import { slugify } from '../../utils/helpers';
 import { ArrowLeft, Plus, Edit, Trash2, Image, FileText, Save, X, Eye, Calendar } from 'lucide-react';
 
 const AdminNews = () => {
   const navigate = useNavigate();
-  const { articles, addArticle } = useNews();
+  const { articles, addArticle, deleteArticle } = useNews();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -32,21 +33,24 @@ const AdminNews = () => {
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      const excerpt = formData.summary || formData.content.substring(0, 150) + '...';
+      const slug = slugify(formData.title);
       
       const newArticle = {
-        id: Date.now(),
         title: formData.title,
-        summary: formData.summary || formData.content.substring(0, 150) + '...',
+        slug: slug,
+        excerpt: excerpt,
+        summary: excerpt,
         content: formData.content,
         image: formData.image || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop',
         category: formData.category,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         author: 'Admin',
-        publishedAt: new Date().toISOString(),
+        publishedAt: new Date(),
         featured: formData.featured,
         readTime: Math.ceil(formData.content.split(' ').length / 200),
         views: 0,
+        likes: 0,
         comments: []
       };
       
@@ -301,7 +305,7 @@ const AdminNews = () => {
                     
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => navigate(`/news/${article.id}`)}
+                        onClick={() => navigate(`/news/${article.slug || article.id}`)}
                         className="p-2 rounded-lg bg-accent-600 text-white hover:bg-accent-700 transition-colors"
                         title="View Article"
                       >
@@ -315,9 +319,15 @@ const AdminNews = () => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
-                            console.log('Delete article:', article.id);
+                            try {
+                              await deleteArticle(article.id);
+                              console.log('Article deleted successfully');
+                            } catch (error) {
+                              console.error('Failed to delete article:', error);
+                              alert('Failed to delete article. Please try again.');
+                            }
                           }
                         }}
                         className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
@@ -333,7 +343,7 @@ const AdminNews = () => {
                   </h3>
 
                   <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                    {article.summary}
+                    {article.excerpt || article.summary}
                   </p>
 
                   <div className="flex items-center justify-between text-xs text-gray-500">

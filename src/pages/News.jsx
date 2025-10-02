@@ -25,8 +25,8 @@ const News = () => {
     if (searchQuery.trim()) {
       filtered = filtered.filter(article =>
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        (article.excerpt || article.summary || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (article.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -122,7 +122,7 @@ const News = () => {
                       {article.title}
                     </h2>
                     <p className="text-gray-400 mb-4 line-clamp-3">
-                      {article.excerpt}
+                      {article.excerpt || article.summary}
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -136,7 +136,7 @@ const News = () => {
                         </div>
                         <div className="flex items-center">
                           <Heart className="w-4 h-4 mr-1" />
-                          <span>{article.likes}</span>
+                          <span>{article.likes || 0}</span>
                         </div>
                       </div>
                       <span className="text-sm font-medium text-gray-400">
@@ -168,7 +168,7 @@ const News = () => {
                       {article.title}
                     </h3>
                     <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                      {truncateText(article.excerpt, 100)}
+                      {truncateText(article.excerpt || article.summary, 100)}
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3 text-xs text-gray-500">
@@ -178,7 +178,7 @@ const News = () => {
                         </div>
                         <div className="flex items-center">
                           <Heart className="w-3 h-3 mr-1" />
-                          <span>{article.likes}</span>
+                          <span>{article.likes || 0}</span>
                         </div>
                       </div>
                       <span className="text-xs text-gray-500">
