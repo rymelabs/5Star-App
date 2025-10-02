@@ -132,7 +132,7 @@ const News = () => {
                         </div>
                         <div className="flex items-center">
                           <MessageCircle className="w-4 h-4 mr-1" />
-                          <span>{article.comments?.length || 0}</span>
+                          <span>{article.commentCount || 0}</span>
                         </div>
                         <div className="flex items-center">
                           <Heart className="w-4 h-4 mr-1" />
@@ -174,7 +174,7 @@ const News = () => {
                       <div className="flex items-center space-x-3 text-xs text-gray-500">
                         <div className="flex items-center">
                           <MessageCircle className="w-3 h-3 mr-1" />
-                          <span>{article.comments?.length || 0}</span>
+                          <span>{article.commentCount || 0}</span>
                         </div>
                         <div className="flex items-center">
                           <Heart className="w-3 h-3 mr-1" />
