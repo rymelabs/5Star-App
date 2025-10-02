@@ -559,3 +559,133 @@ export const leagueTableCollection = {
     }
   }
 };
+
+// Admin Activity collection functions
+export const adminActivityCollection = {
+  // Log an admin action
+  log: async (actionData) => {
+    try {
+      const database = checkFirebaseInit();
+      const activityRef = await addDoc(collection(database, 'adminActivity'), {
+        ...actionData,
+        createdAt: serverTimestamp()
+      });
+      return activityRef.id;
+    } catch (error) {
+      console.error('Error logging admin activity:', error);
+      throw error;
+    }
+  },
+
+  // Get recent activities with limit
+  getRecent: async (limitCount = 10) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'adminActivity'),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+      }));
+    } catch (error) {
+      console.error('Error fetching admin activities:', error);
+      throw error;
+    }
+  },
+
+  // Real-time activity updates
+  onSnapshot: (limitCount = 10, callback) => {
+    const database = checkFirebaseInit();
+    const q = query(
+      collection(database, 'adminActivity'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    return onSnapshot(q, (querySnapshot) => {
+      const activities = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+      }));
+      callback(activities);
+    });
+  }
+};
+
+// Competitions collection functions
+export const competitionsCollection = {
+  // Get all competitions
+  getAll: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const querySnapshot = await getDocs(collection(database, 'competitions'));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching competitions:', error);
+      throw error;
+    }
+  },
+
+  // Add new competition
+  add: async (competitionData) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'competitions'), {
+        ...competitionData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding competition:', error);
+      throw error;
+    }
+  },
+
+  // Update competition
+  update: async (competitionId, updates) => {
+    try {
+      const database = checkFirebaseInit();
+      const competitionRef = doc(database, 'competitions', competitionId);
+      await updateDoc(competitionRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating competition:', error);
+      throw error;
+    }
+  },
+
+  // Delete competition
+  delete: async (competitionId) => {
+    try {
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'competitions', competitionId));
+    } catch (error) {
+      console.error('Error deleting competition:', error);
+      throw error;
+    }
+  },
+
+  // Real-time competitions
+  onSnapshot: (callback) => {
+    const database = checkFirebaseInit();
+    const q = query(collection(database, 'competitions'), orderBy('name'));
+    return onSnapshot(q, (querySnapshot) => {
+      const competitions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(competitions);
+    });
+  }
+};

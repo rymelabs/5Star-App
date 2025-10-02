@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
+import { useCompetitions } from '../../context/CompetitionsContext';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X } from 'lucide-react';
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
   const { fixtures, teams, addFixture, updateFixture } = useFootball();
+  const { competitions } = useCompetitions();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -14,9 +16,11 @@ const AdminFixtures = () => {
     date: '',
     time: '',
     venue: '',
-    competition: 'Premier League',
+    competition: '',
     round: '',
-    status: 'scheduled'
+    status: 'scheduled',
+    homeScore: '',
+    awayScore: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -80,9 +84,11 @@ const AdminFixtures = () => {
       date: '',
       time: '',
       venue: '',
-      competition: 'Premier League',
+      competition: '',
       round: '',
-      status: 'scheduled'
+      status: 'scheduled',
+      homeScore: '',
+      awayScore: ''
     });
     setShowAddForm(false);
     setEditingId(null);
@@ -102,7 +108,9 @@ const AdminFixtures = () => {
       venue: fixture.venue || '',
       competition: fixture.competition || 'Premier League',
       round: fixture.round || '',
-      status: fixture.status || 'scheduled'
+      status: fixture.status || 'scheduled',
+      homeScore: fixture.homeScore !== null && fixture.homeScore !== undefined ? fixture.homeScore : '',
+      awayScore: fixture.awayScore !== null && fixture.awayScore !== undefined ? fixture.awayScore : ''
     });
     setEditingId(fixture.id);
     setShowAddForm(false);
@@ -124,7 +132,9 @@ const AdminFixtures = () => {
         venue: formData.venue || '',
         competition: formData.competition || 'Premier League',
         round: formData.round || '',
-        status: formData.status || 'scheduled'
+        status: formData.status || 'scheduled',
+        homeScore: formData.homeScore !== '' ? parseInt(formData.homeScore) : null,
+        awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null
       };
       
       await updateFixture(editingId, updates);
@@ -299,12 +309,16 @@ const AdminFixtures = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="Premier League">Premier League</option>
-                    <option value="Champions League">Champions League</option>
-                    <option value="FA Cup">FA Cup</option>
-                    <option value="League Cup">League Cup</option>
-                    <option value="Europa League">Europa League</option>
+                    <option value="">Select competition</option>
+                    {competitions.map(comp => (
+                      <option key={comp.id} value={comp.name}>{comp.name}</option>
+                    ))}
                   </select>
+                  {competitions.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No competitions yet. Add one from the competitions page.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -338,6 +352,36 @@ const AdminFixtures = () => {
                     <option value="postponed">Postponed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Home Score
+                  </label>
+                  <input
+                    type="number"
+                    name="homeScore"
+                    value={formData.homeScore}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Away Score
+                  </label>
+                  <input
+                    type="number"
+                    name="awayScore"
+                    value={formData.awayScore}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    placeholder="0"
+                    min="0"
+                  />
                 </div>
               </div>
 

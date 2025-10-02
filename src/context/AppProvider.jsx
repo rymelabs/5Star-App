@@ -3,6 +3,7 @@ import { AuthProvider } from './AuthContext';
 import { FootballProvider } from './FootballContext';
 import { NewsProvider } from './NewsContext';
 import { NotificationProvider } from './NotificationContext';
+import { CompetitionsProvider } from './CompetitionsContext';
 
 // Combined provider component
 export const AppProvider = ({ children }) => {
@@ -10,9 +11,11 @@ export const AppProvider = ({ children }) => {
     <AuthProvider>
       <FootballProvider>
         <NewsProvider>
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
+          <CompetitionsProvider>
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
+          </CompetitionsProvider>
         </NewsProvider>
       </FootballProvider>
     </AuthProvider>
