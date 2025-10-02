@@ -282,7 +282,8 @@ export const newsCollection = {
   update: async (articleId, articleData) => {
     try {
       const database = checkFirebaseInit();
-      const docRef = doc(database, 'articles', articleId);
+      const articleIdStr = String(articleId);
+      const docRef = doc(database, 'articles', articleIdStr);
       await updateDoc(docRef, {
         ...articleData,
         updatedAt: serverTimestamp()
@@ -297,10 +298,33 @@ export const newsCollection = {
   delete: async (articleId) => {
     try {
       const database = checkFirebaseInit();
-      const docRef = doc(database, 'articles', articleId);
+      // Convert ID to string (handles both numeric and string IDs)
+      const articleIdStr = String(articleId);
+      const docRef = doc(database, 'articles', articleIdStr);
+      
+      console.log('Attempting to delete article:', articleIdStr, '(original:', articleId, ')');
+      
+      // Verify article exists before deleting
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        console.warn('Article already deleted or does not exist:', articleIdStr);
+        return; // Don't throw error, just return
+      }
+      
+      // Delete the document
       await deleteDoc(docRef);
+      console.log('Article deleted successfully:', articleIdStr);
+      
+      // Verify deletion
+      const verifySnap = await getDoc(docRef);
+      if (verifySnap.exists()) {
+        throw new Error('Article deletion verification failed - document still exists');
+      }
+      console.log('Article deletion verified:', articleIdStr);
     } catch (error) {
-      console.error('Error deleting article:', error);
+      console.error('Error deleting article:', articleId, error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       throw error;
     }
   },
@@ -309,7 +333,8 @@ export const newsCollection = {
   toggleLike: async (articleId, userId) => {
     try {
       const database = checkFirebaseInit();
-      const articleRef = doc(database, 'articles', articleId);
+      const articleIdStr = String(articleId);
+      const articleRef = doc(database, 'articles', articleIdStr);
       const articleSnap = await getDoc(articleRef);
       
       if (!articleSnap.exists()) {

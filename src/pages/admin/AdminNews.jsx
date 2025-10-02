@@ -322,11 +322,18 @@ const AdminNews = () => {
                         onClick={async () => {
                           if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
                             try {
+                              console.log('AdminNews: Attempting to delete article:', article.id);
                               await deleteArticle(article.id);
-                              console.log('Article deleted successfully');
+                              console.log('AdminNews: Article deleted successfully');
+                              alert('Article deleted successfully!');
                             } catch (error) {
-                              console.error('Failed to delete article:', error);
-                              alert('Failed to delete article. Please try again.');
+                              console.error('AdminNews: Failed to delete article:', error);
+                              console.error('Error code:', error?.code);
+                              console.error('Error message:', error?.message);
+                              const errorMsg = error?.code === 'permission-denied' 
+                                ? 'Permission denied. Make sure you have admin access and Firestore rules are deployed.'
+                                : error?.message || 'Failed to delete article. Please try again.';
+                              alert(errorMsg);
                             }
                           }
                         }}
