@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
 import { Calendar, Clock, Filter, Trophy, Users } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel, isToday } from '../utils/dateUtils';
-import { formatScore, groupBy, sortBy } from '../utils/helpers';
+import { formatScore, groupBy, sortBy, abbreviateTeamName } from '../utils/helpers';
 
 const Fixtures = () => {
   const navigate = useNavigate();
@@ -135,59 +135,72 @@ const Fixtures = () => {
                     <div
                       key={fixture.id}
                       onClick={() => handleFixtureClick(fixture)}
-                      className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200"
+                      className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden"
                     >
                       <div className="flex items-center justify-between">
                         {/* Teams */}
-                        <div className="flex-1">
+                        <div className="flex items-center space-x-6 flex-1 min-w-0">
                           {/* Home Team */}
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-3">
-                              <img
-                                src={fixture.homeTeam.logo}
-                                alt={fixture.homeTeam.name}
-                                className="w-6 h-6 object-contain"
-                                onError={(e) => e.target.style.display = 'none'}
-                              />
-                              <span className="font-medium text-white">
-                                {fixture.homeTeam.name}
-                              </span>
-                            </div>
-                            {fixture.status === 'completed' && (
-                              <span className="text-lg font-bold text-white">
-                                {fixture.homeScore}
-                              </span>
+                          <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                            <span className="font-medium text-white truncate">
+                              {abbreviateTeamName(fixture.homeTeam.name)}
+                            </span>
+                            <img
+                              src={fixture.homeTeam.logo}
+                              alt={fixture.homeTeam.name}
+                              className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          </div>
+
+                          {/* VS / Score */}
+                          <div className="flex flex-col items-center px-4 flex-shrink-0">
+                            {fixture.status === 'completed' ? (
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-white">
+                                  {fixture.homeScore} - {fixture.awayScore}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <div className="text-sm font-semibold text-primary-500">VS</div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {new Date(fixture.dateTime).toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {new Date(fixture.dateTime).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                              </div>
                             )}
                           </div>
-                          
+
                           {/* Away Team */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <img
-                                src={fixture.awayTeam.logo}
-                                alt={fixture.awayTeam.name}
-                                className="w-6 h-6 object-contain"
-                                onError={(e) => e.target.style.display = 'none'}
-                              />
-                              <span className="font-medium text-white">
-                                {fixture.awayTeam.name}
-                              </span>
-                            </div>
-                            {fixture.status === 'completed' && (
-                              <span className="text-lg font-bold text-white">
-                                {fixture.awayScore}
-                              </span>
-                            )}
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <img
+                              src={fixture.awayTeam.logo}
+                              alt={fixture.awayTeam.name}
+                              className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                            <span className="font-medium text-white truncate">
+                              {abbreviateTeamName(fixture.awayTeam.name)}
+                            </span>
                           </div>
                         </div>
                         
-                        {/* Status/Time */}
-                        <div className="ml-4 text-center">
-                          <div className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(fixture.status)}`}>
+                        {/* Status/Venue */}
+                        <div className="ml-6 text-right flex-shrink-0">
+                          <div className={`px-2 py-1 rounded text-xs font-medium inline-block ${getStatusColor(fixture.status)}`}>
                             {getStatusText(fixture)}
                           </div>
                           {fixture.venue && (
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[100px]">
                               {fixture.venue}
                             </div>
                           )}

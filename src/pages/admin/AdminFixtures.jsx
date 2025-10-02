@@ -33,26 +33,26 @@ const AdminFixtures = () => {
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      const homeTeam = teams.find(t => t.id === parseInt(formData.homeTeam));
-      const awayTeam = teams.find(t => t.id === parseInt(formData.awayTeam));
+      // Combine date and time into a single dateTime
+      const dateTimeString = `${formData.date}T${formData.time}`;
+      const dateTime = new Date(dateTimeString);
       
       const newFixture = {
-        id: Date.now(),
-        homeTeam,
-        awayTeam,
-        date: formData.date,
-        time: formData.time,
-        venue: formData.venue,
-        competition: formData.competition,
-        round: formData.round,
-        status: formData.status,
+        homeTeamId: formData.homeTeam,
+        awayTeamId: formData.awayTeam,
+        dateTime: dateTime,
+        venue: formData.venue || '',
+        competition: formData.competition || 'Premier League',
+        round: formData.round || '',
+        status: formData.status || 'scheduled',
         homeScore: null,
         awayScore: null
       };
       
-      addFixture(newFixture);
+      console.log('Submitting fixture:', newFixture);
+      await addFixture(newFixture);
+      
+      // Reset form
       setFormData({
         homeTeam: '',
         awayTeam: '',
@@ -66,6 +66,7 @@ const AdminFixtures = () => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error adding fixture:', error);
+      alert('Failed to add fixture: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -184,7 +185,7 @@ const AdminFixtures = () => {
                     required
                   >
                     <option value="">Select away team</option>
-                    {teams.filter(team => team.id !== parseInt(formData.homeTeam)).map(team => (
+                    {teams.filter(team => team.id !== formData.homeTeam).map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
                   </select>
@@ -308,7 +309,21 @@ const AdminFixtures = () => {
         {/* Fixtures List */}
         <div className="space-y-4">
           {fixtures.map((fixture) => {
-            const dateTime = formatDateTime(fixture.date, fixture.time);
+            // Handle both old (date/time) and new (dateTime) formats
+            let dateTime;
+            if (fixture.dateTime) {
+              const dt = new Date(fixture.dateTime);
+              dateTime = {
+                date: dt.toLocaleDateString(),
+                time: dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+              };
+            } else {
+              dateTime = formatDateTime(fixture.date, fixture.time);
+            }
+            
+            // Safely get team data
+            const homeTeam = fixture.homeTeam || teams.find(t => t.id === fixture.homeTeamId) || { name: 'Unknown', logo: '' };
+            const awayTeam = fixture.awayTeam || teams.find(t => t.id === fixture.awayTeamId) || { name: 'Unknown', logo: '' };
             
             return (
               <div key={fixture.id} className="card p-4">
@@ -346,12 +361,14 @@ const AdminFixtures = () => {
                   {/* Teams */}
                   <div className="flex items-center space-x-4 flex-1">
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={fixture.homeTeam.logo}
-                        alt={fixture.homeTeam.name}
-                        className="w-8 h-8 object-contain"
-                      />
-                      <span className="font-medium text-white">{fixture.homeTeam.name}</span>
+                      {homeTeam.logo && (
+                        <img
+                          src={homeTeam.logo}
+                          alt={homeTeam.name}
+                          className="w-8 h-8 object-contain"
+                        />
+                      )}
+                      <span className="font-medium text-white">{homeTeam.name}</span>
                     </div>
 
                     <div className="flex items-center space-x-2 px-4">
@@ -369,12 +386,14 @@ const AdminFixtures = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={fixture.awayTeam.logo}
-                        alt={fixture.awayTeam.name}
-                        className="w-8 h-8 object-contain"
-                      />
-                      <span className="font-medium text-white">{fixture.awayTeam.name}</span>
+                      {awayTeam.logo && (
+                        <img
+                          src={awayTeam.logo}
+                          alt={awayTeam.name}
+                          className="w-8 h-8 object-contain"
+                        />
+                      )}
+                      <span className="font-medium text-white">{awayTeam.name}</span>
                     </div>
                   </div>
 

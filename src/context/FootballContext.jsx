@@ -40,14 +40,24 @@ export const FootballProvider = ({ children }) => {
 
     try {
       const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
-        setFixtures(updatedFixtures);
+        // Populate fixtures with team data from current teams state
+        const populatedFixtures = updatedFixtures.map(fixture => {
+          const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
+          const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+          return {
+            ...fixture,
+            homeTeam: homeTeam || { id: fixture.homeTeamId, name: 'Unknown Team', logo: '' },
+            awayTeam: awayTeam || { id: fixture.awayTeamId, name: 'Unknown Team', logo: '' }
+          };
+        });
+        setFixtures(populatedFixtures);
       });
 
       return () => unsubscribe();
     } catch (error) {
       console.error('Error setting up fixtures listener:', error);
     }
-  }, []);
+  }, [teams]); // Re-run when teams change
 
   const loadInitialData = async () => {
     try {
@@ -59,7 +69,19 @@ export const FootballProvider = ({ children }) => {
       ]);
 
       setTeams(teamsData);
-      setFixtures(fixturesData);
+      
+      // Populate fixtures with team data
+      const populatedFixtures = fixturesData.map(fixture => {
+        const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
+        const awayTeam = teamsData.find(t => t.id === fixture.awayTeamId);
+        return {
+          ...fixture,
+          homeTeam: homeTeam || { id: fixture.homeTeamId, name: 'Unknown Team', logo: '' },
+          awayTeam: awayTeam || { id: fixture.awayTeamId, name: 'Unknown Team', logo: '' }
+        };
+      });
+      
+      setFixtures(populatedFixtures);
       setLeagueTable(leagueData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -118,11 +140,19 @@ export const FootballProvider = ({ children }) => {
   const addFixture = async (fixtureData) => {
     try {
       const fixtureId = await fixturesCollection.add(fixtureData);
+      
+      // Find the team data
+      const homeTeam = teams.find(t => t.id === fixtureData.homeTeamId);
+      const awayTeam = teams.find(t => t.id === fixtureData.awayTeamId);
+      
       const newFixture = { 
         id: fixtureId, 
         ...fixtureData,
+        homeTeam: homeTeam || { id: fixtureData.homeTeamId, name: 'Unknown Team', logo: '' },
+        awayTeam: awayTeam || { id: fixtureData.awayTeamId, name: 'Unknown Team', logo: '' },
         dateTime: new Date(fixtureData.dateTime)
       };
+      
       setFixtures(prev => [...prev, newFixture].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)));
       return newFixture;
     } catch (error) {
