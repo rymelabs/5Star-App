@@ -372,6 +372,36 @@ export const newsCollection = {
       console.error('Error toggling like:', error);
       throw error;
     }
+  },
+
+  // Increment view count
+  incrementView: async (articleId) => {
+    try {
+      const database = checkFirebaseInit();
+      const articleIdStr = String(articleId);
+      const articleRef = doc(database, 'articles', articleIdStr);
+      
+      // Get current views count
+      const articleSnap = await getDoc(articleRef);
+      
+      if (!articleSnap.exists()) {
+        console.warn('Article not found for view increment:', articleIdStr);
+        return;
+      }
+      
+      const currentViews = articleSnap.data().views || 0;
+      
+      // Increment view count
+      await updateDoc(articleRef, {
+        views: currentViews + 1,
+        updatedAt: serverTimestamp()
+      });
+      
+      return currentViews + 1;
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+      // Don't throw - view tracking shouldn't break the app
+    }
   }
 };
 

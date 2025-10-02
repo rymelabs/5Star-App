@@ -34,8 +34,8 @@ service cloud.firestore {
       allow update: if request.auth != null && (
         // Admins can update everything
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        // Users can only update likes and likedBy fields
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'updatedAt']))
+        // Users can only update likes, likedBy, views fields
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'views', 'updatedAt']))
       );
     }
     
