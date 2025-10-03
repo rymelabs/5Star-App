@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
-import { ChevronRight, Calendar, Trophy, Instagram } from 'lucide-react';
+import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 
@@ -73,6 +73,89 @@ const Latest = () => {
     return sorted.slice(0, 4);
   }, [fixtures, activeSeason]);
 
+  // Get recent results (last 6 completed matches)
+  const recentResults = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0) return [];
+    
+    const completed = fixtures.filter(f => f.status === 'completed');
+    
+    // Sort by date (most recent first)
+    return completed
+      .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+      .slice(0, 6);
+  }, [fixtures]);
+
+  // Calculate top scorers from completed fixtures
+  const topScorers = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0) return [];
+    
+    const scorers = {};
+    
+    // Iterate through completed fixtures
+    fixtures.filter(f => f.status === 'completed').forEach(fixture => {
+      // Count goals for home team
+      if (fixture.homeScore > 0 && fixture.homeTeam) {
+        const teamId = fixture.homeTeam.id;
+        if (!scorers[teamId]) {
+          scorers[teamId] = {
+            team: fixture.homeTeam,
+            goals: 0,
+            matches: 0
+          };
+        }
+        scorers[teamId].goals += fixture.homeScore;
+        scorers[teamId].matches += 1;
+      }
+      
+      // Count goals for away team
+      if (fixture.awayScore > 0 && fixture.awayTeam) {
+        const teamId = fixture.awayTeam.id;
+        if (!scorers[teamId]) {
+          scorers[teamId] = {
+            team: fixture.awayTeam,
+            goals: 0,
+            matches: 0
+          };
+        }
+        scorers[teamId].goals += fixture.awayScore;
+        scorers[teamId].matches += 1;
+      }
+    });
+    
+    // Convert to array and sort by goals
+    return Object.values(scorers)
+      .sort((a, b) => b.goals - a.goals)
+      .slice(0, 5);
+  }, [fixtures]);
+
+  // Calculate team form (last 5 matches)
+  const teamForm = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0 || !leagueTable) return {};
+    
+    const form = {};
+    const completed = fixtures.filter(f => f.status === 'completed')
+      .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+    
+    leagueTable.forEach(entry => {
+      const teamId = entry.team.id;
+      const teamMatches = completed.filter(f => 
+        f.homeTeam?.id === teamId || f.awayTeam?.id === teamId
+      ).slice(0, 5);
+      
+      form[teamId] = teamMatches.map(match => {
+        const isHome = match.homeTeam?.id === teamId;
+        const teamScore = isHome ? match.homeScore : match.awayScore;
+        const opponentScore = isHome ? match.awayScore : match.homeScore;
+        
+        if (teamScore > opponentScore) return 'W';
+        if (teamScore < opponentScore) return 'L';
+        return 'D';
+      });
+    });
+    
+    return form;
+  }, [fixtures, leagueTable]);
+
   const handleNewsClick = (article) => {
     if (article?.slug) {
       navigate(`/news/${article.slug}`);
@@ -135,6 +218,129 @@ const Latest = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recent Results Section */}
+      {recentResults.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <TrendingUp className="w-5 h-5 text-accent-500 mr-2" />
+              <h2 className="text-xl font-semibold text-white">Recent Results</h2>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures')}
+              className="flex items-center text-accent-500 text-sm font-medium hover:text-accent-400 transition-colors"
+            >
+              View all
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {recentResults.map((match) => (
+              <div
+                key={match.id}
+                onClick={() => handleFixtureClick(match)}
+                className="card p-4 cursor-pointer hover:ring-2 hover:ring-accent-500 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  {/* Home Team */}
+                  <div className="flex items-center flex-1">
+                    <img
+                      src={match.homeTeam?.logo}
+                      alt={match.homeTeam?.name}
+                      className="w-8 h-8 object-contain mr-3"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                    <span className="text-white font-medium truncate">
+                      {match.homeTeam?.name}
+                    </span>
+                  </div>
+                  
+                  {/* Score */}
+                  <div className="px-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-white">
+                        {match.homeScore} - {match.awayScore}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">FT</div>
+                    </div>
+                  </div>
+                  
+                  {/* Away Team */}
+                  <div className="flex items-center flex-1 justify-end">
+                    <span className="text-white font-medium truncate">
+                      {match.awayTeam?.name}
+                    </span>
+                    <img
+                      src={match.awayTeam?.logo}
+                      alt={match.awayTeam?.name}
+                      className="w-8 h-8 object-contain ml-3"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  </div>
+                </div>
+                
+                {/* Date */}
+                <div className="text-xs text-gray-500 mt-2 text-center">
+                  {formatDate(match.dateTime)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Top Scorers Section */}
+      {topScorers.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Target className="w-5 h-5 text-primary-500 mr-2" />
+              <h2 className="text-xl font-semibold text-white">Top Scoring Teams</h2>
+            </div>
+          </div>
+          
+          <div className="card p-4">
+            <div className="space-y-3">
+              {topScorers.map((scorer, index) => (
+                <div
+                  key={scorer.team.id}
+                  className="flex items-center justify-between py-2 border-b border-dark-700 last:border-0"
+                >
+                  {/* Rank & Team */}
+                  <div className="flex items-center flex-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 font-bold text-sm ${
+                      index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                      index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                      index === 2 ? 'bg-orange-500/20 text-orange-500' :
+                      'bg-dark-700 text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <img
+                      src={scorer.team.logo}
+                      alt={scorer.team.name}
+                      className="w-8 h-8 object-contain mr-3"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                    <div>
+                      <div className="text-white font-medium">{scorer.team.name}</div>
+                      <div className="text-xs text-gray-500">{scorer.matches} matches played</div>
+                    </div>
+                  </div>
+                  
+                  {/* Goals */}
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-primary-500">{scorer.goals}</div>
+                    <div className="text-xs text-gray-500">goals</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -363,7 +569,7 @@ const Latest = () => {
           
           <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
+            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)_auto] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
               <div className="text-left">S/N</div>
               <div className="text-left">TEAM</div>
               <div className="text-center w-8">P</div>
@@ -372,6 +578,7 @@ const Latest = () => {
               <div className="text-center w-8">L</div>
               <div className="text-center w-10">GD</div>
               <div className="text-center w-10">PTS</div>
+              <div className="text-center w-24">FORM</div>
             </div>
             
             {/* Table Body */}
@@ -379,7 +586,7 @@ const Latest = () => {
               {topTeams.map((team, index) => (
                 <div
                   key={team.team.id}
-                  className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
+                  className="grid grid-cols-[auto_1fr_repeat(6,auto)_auto] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
                 >
                   <div className="flex items-center">
                     <span className="text-sm font-medium text-white">
@@ -430,6 +637,25 @@ const Latest = () => {
                     <span className="text-sm font-semibold text-white">
                       {team.points}
                     </span>
+                  </div>
+                  
+                  {/* Form Indicators */}
+                  <div className="flex items-center justify-center gap-1 w-24">
+                    {teamForm[team.team.id]?.map((result, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-bold ${
+                          result === 'W' ? 'bg-green-500/20 text-green-500' :
+                          result === 'D' ? 'bg-yellow-500/20 text-yellow-500' :
+                          'bg-red-500/20 text-red-500'
+                        }`}
+                        title={result === 'W' ? 'Win' : result === 'D' ? 'Draw' : 'Loss'}
+                      >
+                        {result}
+                      </div>
+                    )) || (
+                      <span className="text-xs text-gray-600">-</span>
+                    )}
                   </div>
                 </div>
               ))}
