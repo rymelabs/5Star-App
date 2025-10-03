@@ -16,7 +16,8 @@ import {
   Edit,
   Trash2,
   Eye,
-  Activity
+  Activity,
+  Instagram
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -160,6 +161,14 @@ const AdminDashboard = () => {
       icon: Settings,
       path: '/admin/league-settings',
       color: 'text-yellow-400',
+      count: '-',
+    },
+    {
+      title: 'Instagram Settings',
+      description: 'Configure Instagram feed and social media integration',
+      icon: Instagram,
+      path: '/admin/instagram',
+      color: 'text-pink-400',
       count: '-',
     },
   ];

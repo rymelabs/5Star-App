@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
-import { ChevronRight, Calendar, Trophy } from 'lucide-react';
+import { useInstagram } from '../context/InstagramContext';
+import { ChevronRight, Calendar, Trophy, Instagram } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 
@@ -14,6 +15,8 @@ const Latest = () => {
   let fixtures = [];
   let leagueTable = [];
   let activeSeason = null;
+  let instagramPosts = [];
+  let instagramSettings = null;
   
   try {
     const newsContext = useNews();
@@ -29,6 +32,14 @@ const Latest = () => {
     activeSeason = footballContext?.activeSeason || null;
   } catch (error) {
     console.error('Error accessing FootballContext:', error);
+  }
+
+  try {
+    const instagramContext = useInstagram();
+    instagramPosts = instagramContext?.posts || [];
+    instagramSettings = instagramContext?.settings || null;
+  } catch (error) {
+    console.error('Error accessing InstagramContext:', error);
   }
 
   // Get latest news for carousel (top 3)
@@ -443,6 +454,91 @@ const Latest = () => {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Instagram Feed Section */}
+      {instagramSettings && instagramSettings.enabled && instagramPosts.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Instagram className="w-5 h-5 text-pink-500 mr-2" />
+              <h2 className="text-xl font-semibold text-white">Follow Us on Instagram</h2>
+            </div>
+            {instagramSettings.username && (
+              <a
+                href={`https://instagram.com/${instagramSettings.username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-pink-500 text-sm font-medium hover:text-pink-400 transition-colors"
+              >
+                @{instagramSettings.username}
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {instagramPosts.slice(0, 6).map((post, index) => (
+              <a
+                key={post.id || index}
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-pink-500 transition-all duration-200 group"
+              >
+                {/* Post Image */}
+                <div className="aspect-square overflow-hidden bg-dark-700 relative">
+                  {post.media_type === 'VIDEO' ? (
+                    <img
+                      src={post.thumbnail_url || post.media_url}
+                      alt={post.caption || 'Instagram post'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <img
+                      src={post.media_url}
+                      alt={post.caption || 'Instagram post'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                  
+                  {/* Video indicator */}
+                  {post.media_type === 'VIDEO' && (
+                    <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                      </svg>
+                    </div>
+                  )}
+                  
+                  {/* Hover overlay with caption preview */}
+                  {post.caption && (
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3">
+                      <p className="text-white text-xs line-clamp-3">
+                        {post.caption}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          
+          {/* Instagram CTA */}
+          {instagramSettings.username && (
+            <div className="mt-4 text-center">
+              <a
+                href={`https://instagram.com/${instagramSettings.username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:from-purple-600 hover:to-pink-600 transition-all"
+              >
+                <Instagram className="w-4 h-4" />
+                Follow @{instagramSettings.username}
+              </a>
+            </div>
+          )}
         </section>
       )}
 
