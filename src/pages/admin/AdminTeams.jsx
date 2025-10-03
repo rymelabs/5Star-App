@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield
 
 const AdminTeams = () => {
   const navigate = useNavigate();
-  const { teams, addTeam, addBulkTeams } = useFootball();
+  const { teams, addTeam, updateTeam, addBulkTeams } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -106,25 +106,50 @@ const AdminTeams = () => {
     showSuccess('Player Removed', 'Player removed from squad');
   };
 
+  const handleEdit = (team) => {
+    setEditingTeam(team);
+    setFormData({
+      name: team.name,
+      logo: team.logo || '',
+      stadium: team.stadium || '',
+      founded: team.founded || '',
+      manager: team.manager || '',
+      players: team.players || [],
+    });
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      if (editingTeam) {
+        // Update existing team
+        const updatedTeam = {
+          ...formData,
+          logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+        };
+        await updateTeam(editingTeam.id, updatedTeam);
+        showSuccess('Team Updated', `${updatedTeam.name} has been updated successfully`);
+      } else {
+        // Add new team
+        const newTeam = {
+          ...formData,
+          logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+        };
+        await addTeam(newTeam);
+        showSuccess('Team Added', `${newTeam.name} has been added successfully`);
+      }
       
-      const newTeam = {
-        ...formData,
-        logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
-      };
-      
-      addTeam(newTeam);
-      setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '' });
+      setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', players: [] });
       setShowAddForm(false);
-      showSuccess('Team Added', `${newTeam.name} has been added successfully`);
+      setEditingTeam(null);
     } catch (error) {
-      console.error('Error adding team:', error);
+      console.error('Error saving team:', error);
+      showError('Error', 'Failed to save team');
     } finally {
       setLoading(false);
     }
@@ -197,7 +222,7 @@ const AdminTeams = () => {
         {showAddForm && (
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Add New Team</h3>
+              <h3 className="text-lg font-semibold text-white">{editingTeam ? 'Edit Team' : 'Add New Team'}</h3>
               <button
                 onClick={handleCancel}
                 className="p-2 rounded-full hover:bg-dark-700 transition-colors"
@@ -470,7 +495,7 @@ const AdminTeams = () => {
                   className="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   <Save className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
-                  <span>{loading ? 'Adding...' : 'Add Team'}</span>
+                  <span>{loading ? (editingTeam ? 'Updating...' : 'Adding...') : (editingTeam ? 'Update Team' : 'Add Team')}</span>
                   {!loading && (
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
@@ -512,7 +537,7 @@ const AdminTeams = () => {
 
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => navigate(`/admin/teams/edit/${team.id}`)}
+                    onClick={() => handleEdit(team)}
                     className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                   >
                     <Edit className="w-4 h-4" />
