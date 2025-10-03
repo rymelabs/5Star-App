@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection } from '../firebase/firestore';
+import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const FootballContext = createContext();
@@ -22,6 +22,8 @@ export const FootballProvider = ({ children }) => {
     relegationPosition: 18,
     totalTeams: 20
   });
+  const [activeSeason, setActiveSeason] = useState(null);
+  const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -69,15 +71,19 @@ export const FootballProvider = ({ children }) => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [teamsData, fixturesData, leagueData, settingsData] = await Promise.all([
+      const [teamsData, fixturesData, leagueData, settingsData, activeSeasonData, seasonsData] = await Promise.all([
         teamsCollection.getAll(),
         fixturesCollection.getAll(),
         leagueTableCollection.getCurrent(),
-        leagueSettingsCollection.get()
+        leagueSettingsCollection.get(),
+        seasonsCollection.getActive(),
+        seasonsCollection.getAll()
       ]);
 
       setTeams(teamsData);
       setLeagueSettings(settingsData);
+      setActiveSeason(activeSeasonData);
+      setSeasons(seasonsData);
       
       // Populate fixtures with team data
       const populatedFixtures = fixturesData.map(fixture => {
@@ -269,11 +275,69 @@ export const FootballProvider = ({ children }) => {
     }
   };
 
+  // Season management functions
+  const setActiveSeasonById = async (seasonId) => {
+    try {
+      await seasonsCollection.setActive(seasonId);
+      const updatedSeason = await seasonsCollection.getById(seasonId);
+      setActiveSeason(updatedSeason);
+      
+      // Reload seasons to update their active status
+      const updatedSeasons = await seasonsCollection.getAll();
+      setSeasons(updatedSeasons);
+      
+      // Reload fixtures to show season-specific fixtures
+      await loadInitialData();
+    } catch (error) {
+      console.error('Error setting active season:', error);
+      throw error;
+    }
+  };
+
+  const getSeasonFixtures = (seasonId) => {
+    return fixtures.filter(f => f.seasonId === seasonId);
+  };
+
+  const getGroupStandings = (seasonId, groupId) => {
+    const season = seasons.find(s => s.id === seasonId) || activeSeason;
+    if (!season) return [];
+    
+    const group = season.groups?.find(g => g.id === groupId);
+    return group?.standings || [];
+  };
+
+  const updateGroupStandings = async (seasonId, groupId, standings) => {
+    try {
+      const season = seasons.find(s => s.id === seasonId);
+      if (!season) return;
+
+      const updatedGroups = season.groups.map(g => 
+        g.id === groupId ? { ...g, standings } : g
+      );
+
+      await seasonsCollection.update(seasonId, { groups: updatedGroups });
+      
+      // Update local state
+      setSeasons(prev => prev.map(s => 
+        s.id === seasonId ? { ...s, groups: updatedGroups } : s
+      ));
+      
+      if (activeSeason?.id === seasonId) {
+        setActiveSeason(prev => ({ ...prev, groups: updatedGroups }));
+      }
+    } catch (error) {
+      console.error('Error updating group standings:', error);
+      throw error;
+    }
+  };
+
   const value = {
     teams,
     fixtures,
     leagueTable,
     leagueSettings,
+    activeSeason,
+    seasons,
     loading,
     error,
     addTeam,
@@ -284,6 +348,10 @@ export const FootballProvider = ({ children }) => {
     updateFixture,
     updateLeagueTable,
     updateLeagueSettings,
+    setActiveSeasonById,
+    getSeasonFixtures,
+    getGroupStandings,
+    updateGroupStandings,
     refreshData: loadInitialData
   };
 
