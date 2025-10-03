@@ -183,18 +183,18 @@ const Latest = () => {
             </button>
           </div>
           
-          <div className="space-y-4">
-            {latestNews.map((article) => (
+          <div className="space-y-3">
+            {/* Featured Article - Large Card */}
+            {latestNews[0] && (
               <div
-                key={article.id}
-                onClick={() => handleNewsClick(article)}
+                onClick={() => handleNewsClick(latestNews[0])}
                 className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
               >
                 {/* News Image */}
                 <div className="aspect-video overflow-hidden">
                   <img
-                    src={article.image}
-                    alt={article.title}
+                    src={latestNews[0].image}
+                    alt={latestNews[0].title}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -202,14 +202,14 @@ const Latest = () => {
                 {/* News Content */}
                 <div className="p-4">
                   <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">
-                    {article.title}
+                    {latestNews[0].title}
                   </h3>
                   <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                    {truncateText(article.excerpt || article.summary || article.content, 120)}
+                    {truncateText(latestNews[0].excerpt || latestNews[0].summary || latestNews[0].content, 120)}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">
-                      {formatDate(article.publishedAt)}
+                      {formatDate(latestNews[0].publishedAt)}
                     </span>
                     <button className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors">
                       Read more
@@ -217,7 +217,39 @@ const Latest = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Other Articles - Smaller Cards in Grid */}
+            {latestNews.length > 1 && (
+              <div className="grid grid-cols-2 gap-3">
+                {latestNews.slice(1, 3).map((article) => (
+                  <div
+                    key={article.id}
+                    onClick={() => handleNewsClick(article)}
+                    className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
+                  >
+                    {/* News Image - Smaller */}
+                    <div className="aspect-square overflow-hidden">
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    {/* News Content - Compact */}
+                    <div className="p-3">
+                      <h3 className="font-semibold text-white text-sm mb-2 line-clamp-2">
+                        {article.title}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(article.publishedAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
