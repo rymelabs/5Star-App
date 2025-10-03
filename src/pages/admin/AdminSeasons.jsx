@@ -156,32 +156,32 @@ const AdminSeasons = () => {
           {seasons.map((season) => (
             <div
               key={season.id}
-              className={`card p-6 ${season.isActive ? 'border-2 border-primary-500' : ''}`}
+              className={`card p-4 sm:p-6 ${season.isActive ? 'border-2 border-primary-500' : ''}`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-white">{season.name}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-white truncate">{season.name}</h3>
                     {season.isActive && (
-                      <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded">
+                      <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded whitespace-nowrap">
                         Active
                       </span>
                     )}
-                    <span className={`px-2 py-1 text-xs font-medium border rounded ${getStatusBadge(season.status)}`}>
+                    <span className={`px-2 py-1 text-xs font-medium border rounded whitespace-nowrap ${getStatusBadge(season.status)}`}>
                       {season.status}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400">Season {season.year}</p>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {!season.isActive && (
                     <button
                       onClick={() => handleSetActive(season.id)}
                       className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
                       title="Set as active season"
                     >
-                      <Play className="w-5 h-5" />
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   )}
                   <button
@@ -189,53 +189,53 @@ const AdminSeasons = () => {
                     className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                     title="View details"
                   >
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}/edit`)}
                     className="p-2 text-accent-400 hover:bg-accent-500/10 rounded-lg transition-colors"
                     title="Edit season"
                   >
-                    <Edit className="w-5 h-5" />
+                    <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(season.id)}
                     className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                     title="Delete season"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Season Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg">
-                    <Users className="w-4 h-4 text-blue-400" />
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-gray-700">
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                  <div className="p-2 bg-blue-500/10 rounded-lg flex-shrink-0">
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Groups</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-400 truncate">Groups</p>
                     <p className="text-sm font-semibold text-white">{season.numberOfGroups || 0}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-accent-500/10 rounded-lg">
-                    <Trophy className="w-4 h-4 text-accent-400" />
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                  <div className="p-2 bg-accent-500/10 rounded-lg flex-shrink-0">
+                    <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-accent-400" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Teams/Group</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-400 truncate">Teams/Grp</p>
                     <p className="text-sm font-semibold text-white">{season.teamsPerGroup || 0}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary-500/10 rounded-lg">
-                    <Calendar className="w-4 h-4 text-primary-400" />
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                  <div className="p-2 bg-primary-500/10 rounded-lg flex-shrink-0">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-primary-400" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Knockout Legs</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-400 truncate">KO Legs</p>
                     <p className="text-sm font-semibold text-white">
                       {season.knockoutConfig?.matchesPerRound || 2}
                     </p>
