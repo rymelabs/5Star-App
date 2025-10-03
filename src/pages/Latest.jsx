@@ -10,37 +10,18 @@ import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '..
 const Latest = () => {
   const navigate = useNavigate();
   
-  // Add try-catch for context usage
-  let articles = [];
-  let fixtures = [];
-  let leagueTable = [];
-  let activeSeason = null;
-  let instagramPosts = [];
-  let instagramSettings = null;
+  // Use hooks at the top level (hooks cannot be in try-catch)
+  const newsContext = useNews();
+  const footballContext = useFootball();
+  const instagramContext = useInstagram();
   
-  try {
-    const newsContext = useNews();
-    articles = newsContext?.articles || [];
-  } catch (error) {
-    console.error('Error accessing NewsContext:', error);
-  }
-  
-  try {
-    const footballContext = useFootball();
-    fixtures = footballContext?.fixtures || [];
-    leagueTable = footballContext?.leagueTable || [];
-    activeSeason = footballContext?.activeSeason || null;
-  } catch (error) {
-    console.error('Error accessing FootballContext:', error);
-  }
-
-  try {
-    const instagramContext = useInstagram();
-    instagramPosts = instagramContext?.posts || [];
-    instagramSettings = instagramContext?.settings || null;
-  } catch (error) {
-    console.error('Error accessing InstagramContext:', error);
-  }
+  // Safely extract values with fallbacks
+  const articles = newsContext?.articles || [];
+  const fixtures = footballContext?.fixtures || [];
+  const leagueTable = footballContext?.leagueTable || [];
+  const activeSeason = footballContext?.activeSeason || null;
+  const instagramPosts = instagramContext?.posts || [];
+  const instagramSettings = instagramContext?.settings || null;
 
   // Get latest news for carousel (top 3)
   const latestNews = articles?.slice(0, 3) || [];
@@ -458,87 +439,93 @@ const Latest = () => {
       )}
 
       {/* Instagram Feed Section */}
-      {instagramSettings && instagramSettings.enabled && instagramPosts.length > 0 && (
+      {instagramSettings?.enabled && instagramSettings?.username && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Instagram className="w-5 h-5 text-pink-500 mr-2" />
               <h2 className="text-xl font-semibold text-white">Follow Us on Instagram</h2>
             </div>
-            {instagramSettings.username && (
-              <a
-                href={`https://instagram.com/${instagramSettings.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-pink-500 text-sm font-medium hover:text-pink-400 transition-colors"
-              >
-                @{instagramSettings.username}
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </a>
-            )}
+            <a
+              href={`https://instagram.com/${instagramSettings.username.replace('@', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-pink-500 text-sm font-medium hover:text-pink-400 transition-colors"
+            >
+              @{instagramSettings.username.replace('@', '')}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </a>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {instagramPosts.slice(0, 6).map((post, index) => (
-              <a
-                key={post.id || index}
-                href={post.permalink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-pink-500 transition-all duration-200 group"
-              >
-                {/* Post Image */}
-                <div className="aspect-square overflow-hidden bg-dark-700 relative">
-                  {post.media_type === 'VIDEO' ? (
-                    <img
-                      src={post.thumbnail_url || post.media_url}
-                      alt={post.caption || 'Instagram post'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <img
-                      src={post.media_url}
-                      alt={post.caption || 'Instagram post'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  )}
-                  
-                  {/* Video indicator */}
-                  {post.media_type === 'VIDEO' && (
-                    <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                      </svg>
+          {instagramPosts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {instagramPosts.slice(0, 6).map((post, index) => (
+                  <a
+                    key={post.id || index}
+                    href={post.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-pink-500 transition-all duration-200 group"
+                  >
+                    {/* Post Image */}
+                    <div className="aspect-square overflow-hidden bg-dark-700 relative">
+                      {post.media_type === 'VIDEO' ? (
+                        <img
+                          src={post.thumbnail_url || post.media_url}
+                          alt={post.caption || 'Instagram post'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <img
+                          src={post.media_url}
+                          alt={post.caption || 'Instagram post'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
+                      
+                      {/* Video indicator */}
+                      {post.media_type === 'VIDEO' && (
+                        <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      )}
+                      
+                      {/* Hover overlay with caption preview */}
+                      {post.caption && (
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3">
+                          <p className="text-white text-xs line-clamp-3">
+                            {post.caption}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  {/* Hover overlay with caption preview */}
-                  {post.caption && (
-                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3">
-                      <p className="text-white text-xs line-clamp-3">
-                        {post.caption}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
-          
-          {/* Instagram CTA */}
-          {instagramSettings.username && (
-            <div className="mt-4 text-center">
-              <a
-                href={`https://instagram.com/${instagramSettings.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:from-purple-600 hover:to-pink-600 transition-all"
-              >
-                <Instagram className="w-4 h-4" />
-                Follow @{instagramSettings.username}
-              </a>
+                  </a>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="card p-8 text-center bg-gradient-to-br from-pink-500/5 to-purple-500/5 border-pink-500/20">
+              <Instagram className="w-12 h-12 text-pink-500 mx-auto mb-3 opacity-50" />
+              <p className="text-gray-300 mb-1">Connect with us on Instagram!</p>
+              <p className="text-sm text-gray-500 mb-4">See our latest updates and behind-the-scenes content</p>
             </div>
           )}
+          
+          {/* Instagram CTA */}
+          <div className="mt-4 text-center">
+            <a
+              href={`https://instagram.com/${instagramSettings.username.replace('@', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-pink-500/25"
+            >
+              <Instagram className="w-5 h-5" />
+              Follow @{instagramSettings.username.replace('@', '')}
+            </a>
+          </div>
         </section>
       )}
 
