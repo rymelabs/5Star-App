@@ -23,6 +23,7 @@ const AdminNews = React.lazy(() => import('./pages/admin/AdminNews').catch(() =>
 const AdminLeagueSettings = React.lazy(() => import('./pages/admin/AdminLeagueSettings').catch(() => ({ default: () => <div>Admin League Settings not available</div> })));
 const AdminSeasons = React.lazy(() => import('./pages/admin/AdminSeasons').catch(() => ({ default: () => <div>Admin Seasons not available</div> })));
 const CreateSeason = React.lazy(() => import('./pages/admin/CreateSeason').catch(() => ({ default: () => <div>Create Season not available</div> })));
+const SeasonDetail = React.lazy(() => import('./pages/admin/SeasonDetail').catch(() => ({ default: () => <div>Season Detail not available</div> })));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -106,6 +107,7 @@ const AppContent = () => {
               <Route path="/admin/league-settings" element={<AdminLeagueSettings />} />
               <Route path="/admin/seasons" element={<AdminSeasons />} />
               <Route path="/admin/seasons/create" element={<CreateSeason />} />
+              <Route path="/admin/seasons/:seasonId" element={<SeasonDetail />} />
             </>
           )}
           
