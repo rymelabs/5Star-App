@@ -4,6 +4,7 @@ import {
   getDocs, 
   getDoc,
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -725,17 +726,10 @@ export const leagueSettingsCollection = {
     try {
       const database = checkFirebaseInit();
       const settingsRef = doc(database, 'leagueSettings', 'current');
-      await updateDoc(settingsRef, {
+      await setDoc(settingsRef, {
         ...settings,
         updatedAt: serverTimestamp()
-      }).catch(async () => {
-        // If document doesn't exist, create it
-        await addDoc(collection(database, 'leagueSettings'), {
-          ...settings,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      });
+      }, { merge: true });
     } catch (error) {
       console.error('Error saving league settings:', error);
       throw error;

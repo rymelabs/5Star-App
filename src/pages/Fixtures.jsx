@@ -245,14 +245,15 @@ const Fixtures = () => {
         <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide\">\n            <div className="text-left">#</div>
-            <div className="text-left">Team</div>
+          <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
+            <div className="text-left">S/N</div>
+            <div className="text-left">TEAM</div>
             <div className="text-center w-8">P</div>
             <div className="text-center w-8">W</div>
             <div className="text-center w-8">D</div>
             <div className="text-center w-8">L</div>
             <div className="text-center w-10">GD</div>
-            <div className="text-center w-10">Pts</div>
+            <div className="text-center w-10">PTS</div>
           </div>
           
           {/* Table Body */}
