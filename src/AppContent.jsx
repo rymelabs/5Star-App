@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Stats from './pages/Stats';
 import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
@@ -85,6 +86,7 @@ const AppContent = () => {
           <Route path="/fixtures/:id" element={<FixtureDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
+          <Route path="/stats" element={<Stats />} />
           
           {/* Profile setup for new users */}
           <Route path="/profile-setup" element={<ProfileSetup />} />

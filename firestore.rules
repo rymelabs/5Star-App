@@ -13,6 +13,9 @@ service cloud.firestore {
     }
     
     // Teams collection
+    // Admins can manage team data including:
+    // - Basic info (name, logo, etc.)
+    // - Players array (with jerseyNumber, position, isCaptain, isGoalkeeper)
     match /teams/{teamId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
@@ -20,13 +23,17 @@ service cloud.firestore {
     }
     
     // Fixtures collection
+    // Admins can manage fixture data including:
+    // - Basic info (teams, scores, dates, etc.)
+    // - Lineups (homeLineup, awayLineup arrays - max 11 players each)
+    // - Events (goals, cards with player details, minutes, assists)
     match /fixtures/{fixtureId} {
       allow read: if true; // Public read access
       // Admins can create/delete
       allow create, delete: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       // Updates:
-      // - Admins can update anything
+      // - Admins can update anything (including lineups and events)
       // - Authenticated users can update only likes/likedBy/updatedAt (for liking fixtures)
       allow update: if request.auth != null && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||

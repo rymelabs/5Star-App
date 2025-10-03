@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Users, MessageCircle, Heart, User } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, MessageCircle, Heart, User, Shield, Target } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
@@ -137,7 +137,7 @@ const FixtureDetail = () => {
         {/* Teams and Score */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-center flex-1">
-            {fixture.homeTeam?.logo ? (
+            {fixture.homeTeam?.logo && fixture.homeTeam.logo.trim() ? (
               <img 
                 src={fixture.homeTeam.logo} 
                 alt={fixture.homeTeam.name}
@@ -167,7 +167,7 @@ const FixtureDetail = () => {
           </div>
 
           <div className="text-center flex-1">
-            {fixture.awayTeam?.logo ? (
+            {fixture.awayTeam?.logo && fixture.awayTeam.logo.trim() ? (
               <img 
                 src={fixture.awayTeam.logo} 
                 alt={fixture.awayTeam.name}
@@ -211,6 +211,157 @@ const FixtureDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Team Lineups */}
+      {(fixture.homeLineup?.length > 0 || fixture.awayLineup?.length > 0) && (
+        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Starting Lineups
+          </h3>
+          
+          {/* Debug Info - Remove after testing */}
+          {(!fixture.homeTeam?.players && !fixture.awayTeam?.players) && (
+            <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-yellow-200 text-sm">
+              ⚠️ Team player data not loaded. Teams: {fixture.homeTeam?.name} (players: {fixture.homeTeam?.players?.length || 0}), {fixture.awayTeam?.name} (players: {fixture.awayTeam?.players?.length || 0})
+            </div>
+          )}
+          
+          {/* Side by Side Layout - Always 2 columns */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+            {/* Home Team Lineup */}
+            <div className="min-w-0">
+              <h4 className="font-medium text-white mb-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                <span className="truncate">{fixture.homeTeam?.name}</span>
+                <span className="text-xs text-gray-400">({fixture.homeLineup?.length || 0})</span>
+              </h4>
+              {fixture.homeLineup && fixture.homeLineup.length > 0 ? (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                  {fixture.homeLineup.map((playerId) => {
+                    const player = fixture.homeTeam?.players?.find(p => p.id === playerId);
+                    if (!player) return null;
+                    
+                    return (
+                      <div key={player.id} className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
+                          {player.jerseyNumber || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
+                            <span className="truncate">{player.name}</span>
+                            {player.isCaptain && (
+                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title="Captain" />
+                            )}
+                          </div>
+                          <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">No lineup</div>
+              )}
+            </div>
+
+            {/* Away Team Lineup */}
+            <div className="min-w-0">
+              <h4 className="font-medium text-white mb-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                <span className="truncate">{fixture.awayTeam?.name}</span>
+                <span className="text-xs text-gray-400">({fixture.awayLineup?.length || 0})</span>
+              </h4>
+              {fixture.awayLineup && fixture.awayLineup.length > 0 ? (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                  {fixture.awayLineup.map((playerId) => {
+                    const player = fixture.awayTeam?.players?.find(p => p.id === playerId);
+                    if (!player) return null;
+                    
+                    return (
+                      <div key={player.id} className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
+                          {player.jerseyNumber || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
+                            <span className="truncate">{player.name}</span>
+                            {player.isCaptain && (
+                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title="Captain" />
+                            )}
+                          </div>
+                          <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">No lineup</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Match Timeline */}
+      {fixture.events && fixture.events.length > 0 && (
+        <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Match Events
+          </h3>
+          <div className="space-y-3">
+            {fixture.events
+              .sort((a, b) => a.minute - b.minute)
+              .map((event) => {
+                const team = event.team === fixture.homeTeam?.id ? fixture.homeTeam : fixture.awayTeam;
+                const player = team?.players?.find(p => p.id === event.playerId);
+                const assistant = event.assistById ? team?.players?.find(p => p.id === event.assistById) : null;
+                
+                return (
+                  <div key={event.id} className="flex items-start gap-4 p-3 bg-dark-800 rounded-lg">
+                    {/* Minute Badge */}
+                    <div className="w-12 flex-shrink-0">
+                      <span className="text-sm font-bold text-purple-400">
+                        {event.minute}'
+                      </span>
+                    </div>
+
+                    {/* Event Icon */}
+                    <div className="flex-shrink-0 mt-0.5">
+                      {event.type === 'goal' && (
+                        <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <Target className="w-4 h-4 text-green-400" />
+                        </div>
+                      )}
+                      {event.type === 'yellow_card' && (
+                        <div className="w-4 h-5 bg-yellow-400 rounded-sm" />
+                      )}
+                      {event.type === 'red_card' && (
+                        <div className="w-4 h-5 bg-red-500 rounded-sm" />
+                      )}
+                    </div>
+
+                    {/* Event Details */}
+                    <div className="flex-1">
+                      <div className="text-white text-sm font-medium">
+                        {player?.name || 'Unknown Player'}
+                        {event.type === 'goal' && ' ⚽'}
+                      </div>
+                      {assistant && (
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          Assist: {assistant.name}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {team?.name}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* Live Commentary */}
       {isLiveMatch && fixture.commentary && (

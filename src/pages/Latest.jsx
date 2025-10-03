@@ -377,14 +377,16 @@ const Latest = () => {
                       <span className="font-medium text-white text-sm truncate">
                         {abbreviateTeamName(fixture.homeTeam.name)}
                       </span>
-                      <img
-                        src={fixture.homeTeam.logo}
-                        alt={fixture.homeTeam.name}
-                        className="w-10 h-10 object-contain rounded-full flex-shrink-0"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
+                      {fixture.homeTeam?.logo && (
+                        <img
+                          src={fixture.homeTeam.logo}
+                          alt={fixture.homeTeam.name}
+                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      )}
                     </div>
                     
                     {/* VS / Score / Time / Date */}
@@ -420,14 +422,16 @@ const Latest = () => {
                     
                     {/* Away Team */}
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <img
-                        src={fixture.awayTeam.logo}
-                        alt={fixture.awayTeam.name}
-                        className="w-10 h-10 object-contain rounded-full flex-shrink-0"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
+                      {fixture.awayTeam?.logo && (
+                        <img
+                          src={fixture.awayTeam.logo}
+                          alt={fixture.awayTeam.name}
+                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      )}
                       <span className="font-medium text-white text-sm truncate">
                         {abbreviateTeamName(fixture.awayTeam.name)}
                       </span>
