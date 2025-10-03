@@ -125,15 +125,19 @@ const SeasonStandings = ({ season, teams }) => {
                       </div>
                       
                       {/* Team - Sticky on mobile */}
-                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-[120px] sm:min-w-0 sticky left-8 bg-dark-800 sm:bg-transparent z-10 sm:static">
+                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-[120px] max-w-[140px] sm:max-w-[200px] sticky left-8 bg-dark-800 sm:bg-transparent z-10 sm:static">
                         {team?.logo && (
                           <img 
                             src={team.logo} 
                             alt={team?.name || standing.team?.name} 
                             className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover flex-shrink-0" 
+                            onError={(e) => e.target.style.display = 'none'}
                           />
                         )}
-                        <span className="font-medium text-white text-sm sm:text-base truncate">
+                        <span 
+                          className="font-medium text-white text-sm sm:text-base truncate" 
+                          title={team?.name || standing.team?.name || 'Unknown Team'}
+                        >
                           {team?.name || standing.team?.name || 'Unknown Team'}
                         </span>
                       </div>
