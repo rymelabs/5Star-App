@@ -8,16 +8,21 @@ import {
   Play,
   Edit,
   TrendingUp,
-  Target
+  Target,
+  Eye,
+  Clock
 } from 'lucide-react';
 import { seasonsCollection, fixturesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useFootball } from '../../context/FootballContext';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();
   const { seasonId } = useParams();
   const { user } = useAuth();
+  const { teams } = useFootball();
   const [season, setSeason] = useState(null);
+  const [seasonFixtures, setSeasonFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('groups'); // groups, knockout, fixtures
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -27,8 +32,40 @@ const SeasonDetail = () => {
   useEffect(() => {
     if (seasonId) {
       loadSeason();
+      loadSeasonFixtures();
+      
+      // Set up real-time listener for season (to update standings)
+      const unsubscribeSeason = seasonsCollection.onSnapshotById(seasonId, (updatedSeason) => {
+        if (updatedSeason) {
+          setSeason(updatedSeason);
+        }
+      });
+      
+      // Set up real-time listener for fixtures
+      const unsubscribeFixtures = fixturesCollection.onSnapshot((updatedFixtures) => {
+        const seasonFixturesData = updatedFixtures.filter(f => f.seasonId === seasonId);
+        
+        // Populate with team data
+        const populatedFixtures = seasonFixturesData.map(fixture => {
+          const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
+          const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+          
+          return {
+            ...fixture,
+            homeTeam: homeTeam || { id: fixture.homeTeamId, name: 'Unknown Team', logo: '' },
+            awayTeam: awayTeam || { id: fixture.awayTeamId, name: 'Unknown Team', logo: '' }
+          };
+        });
+        
+        setSeasonFixtures(populatedFixtures);
+      });
+      
+      return () => {
+        unsubscribeSeason();
+        unsubscribeFixtures();
+      };
     }
-  }, [seasonId]);
+  }, [seasonId, teams]);
 
   const loadSeason = async () => {
     try {
@@ -40,6 +77,28 @@ const SeasonDetail = () => {
       showToast('Failed to load season', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSeasonFixtures = async () => {
+    try {
+      const fixtures = await fixturesCollection.getBySeason(seasonId);
+      
+      // Populate with team data
+      const populatedFixtures = fixtures.map(fixture => {
+        const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
+        const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+        
+        return {
+          ...fixture,
+          homeTeam: homeTeam || { id: fixture.homeTeamId, name: 'Unknown Team', logo: '' },
+          awayTeam: awayTeam || { id: fixture.awayTeamId, name: 'Unknown Team', logo: '' }
+        };
+      });
+      
+      setSeasonFixtures(populatedFixtures);
+    } catch (error) {
+      console.error('Error loading season fixtures:', error);
     }
   };
 
@@ -534,14 +593,122 @@ const SeasonDetail = () => {
       )}
 
       {activeTab === 'fixtures' && (
-        <div className="card p-4 sm:p-6">
-          <div className="text-center py-8 sm:py-12">
-            <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Season Fixtures</h3>
-            <p className="text-sm text-gray-400 px-4">
-              View and manage all fixtures for this season
-            </p>
-          </div>
+        <div className="space-y-4">
+          {seasonFixtures.length === 0 ? (
+            <div className="card p-4 sm:p-6">
+              <div className="text-center py-8 sm:py-12">
+                <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-2">No Fixtures Yet</h3>
+                <p className="text-sm text-gray-400 px-4">
+                  Generate fixtures to see them here
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="card p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
+                Season Fixtures ({seasonFixtures.length})
+              </h3>
+              
+              <div className="space-y-3">
+                {seasonFixtures.map((fixture) => (
+                  <div 
+                    key={fixture.id}
+                    className="p-3 sm:p-4 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Teams */}
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        {/* Home Team */}
+                        <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
+                          <span className="text-sm font-medium text-white truncate">
+                            {fixture.homeTeam?.name}
+                          </span>
+                          {fixture.homeTeam?.logo && (
+                            <img
+                              src={fixture.homeTeam.logo}
+                              alt={fixture.homeTeam.name}
+                              className="w-6 h-6 object-contain flex-shrink-0"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          )}
+                        </div>
+
+                        {/* Score or VS */}
+                        <div className="flex items-center gap-2 px-3 flex-shrink-0">
+                          {fixture.status === 'completed' ? (
+                            <div className="text-center">
+                              <div className="text-base font-bold text-white">
+                                {fixture.homeScore} - {fixture.awayScore}
+                              </div>
+                              <div className="text-xs text-gray-500">FT</div>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-sm font-semibold text-primary-500">VS</div>
+                              {fixture.dateTime && (
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {new Date(fixture.dateTime).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Away Team */}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {fixture.awayTeam?.logo && (
+                            <img
+                              src={fixture.awayTeam.logo}
+                              alt={fixture.awayTeam.name}
+                              className="w-6 h-6 object-contain flex-shrink-0"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          )}
+                          <span className="text-sm font-medium text-white truncate">
+                            {fixture.awayTeam?.name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        onClick={() => navigate(`/fixtures/${fixture.id}`)}
+                        className="p-2 text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors flex-shrink-0"
+                        title="View fixture details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Fixture Info */}
+                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                      {fixture.groupName && (
+                        <span className="px-2 py-1 bg-dark-700 rounded">
+                          {fixture.groupName}
+                        </span>
+                      )}
+                      {fixture.stage && (
+                        <span className="px-2 py-1 bg-dark-700 rounded capitalize">
+                          {fixture.stage}
+                        </span>
+                      )}
+                      <span className={`px-2 py-1 rounded capitalize ${
+                        fixture.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                        fixture.status === 'live' ? 'bg-red-500/20 text-red-400' :
+                        'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {fixture.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
