@@ -74,6 +74,62 @@ const SeasonDetail = () => {
     }
   };
 
+  const handleDeleteSeasonFixtures = async () => {
+    if (!confirm('⚠️ DELETE all fixtures for this season? This action cannot be undone!')) {
+      return;
+    }
+
+    try {
+      const deletedCount = await fixturesCollection.deleteBySeason(seasonId);
+      showToast(`Deleted ${deletedCount} fixtures successfully!`, 'success');
+    } catch (error) {
+      console.error('Error deleting fixtures:', error);
+      showToast('Failed to delete fixtures', 'error');
+    }
+  };
+
+  const handleCleanupBrokenFixtures = async () => {
+    if (!confirm('Clean up broken fixtures? This will delete all fixtures with missing team IDs.')) {
+      return;
+    }
+
+    try {
+      const deletedCount = await fixturesCollection.cleanupBrokenFixtures();
+      showToast(`Cleaned up ${deletedCount} broken fixtures!`, 'success');
+    } catch (error) {
+      console.error('Error cleaning up fixtures:', error);
+      showToast('Failed to cleanup fixtures', 'error');
+    }
+  };
+
+  const handleRegenerateFixtures = async () => {
+    if (!confirm('⚠️ REGENERATE all fixtures? This will delete existing fixtures and create new ones with correct team IDs.')) {
+      return;
+    }
+
+    try {
+      // Step 1: Delete existing fixtures
+      const deletedCount = await fixturesCollection.deleteBySeason(seasonId);
+      
+      // Step 2: Generate new fixtures
+      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId);
+      
+      // Step 3: Save new fixtures
+      for (const fixture of fixtures) {
+        await fixturesCollection.add({
+          ...fixture,
+          createdAt: new Date(),
+          status: 'upcoming'
+        });
+      }
+
+      showToast(`✅ Deleted ${deletedCount} old fixtures and generated ${fixtures.length} new fixtures!`, 'success');
+    } catch (error) {
+      console.error('Error regenerating fixtures:', error);
+      showToast('Failed to regenerate fixtures', 'error');
+    }
+  };
+
   const handleSeedKnockout = async () => {
     if (!confirm('Seed knockout stage? This will automatically create knockout brackets from group qualifiers.')) {
       return;
@@ -287,6 +343,21 @@ const SeasonDetail = () => {
         </button>
 
         <button
+          onClick={handleRegenerateFixtures}
+          className="card p-4 hover:bg-dark-800/50 transition-colors text-left border border-orange-500/30"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-orange-400 text-sm sm:text-base truncate">🔄 Regenerate Fixtures</h3>
+              <p className="text-xs sm:text-sm text-gray-400 truncate">Delete & recreate all fixtures</p>
+            </div>
+          </div>
+        </button>
+
+        <button
           onClick={handleSeedKnockout}
           className="card p-4 hover:bg-dark-800/50 transition-colors text-left"
         >
@@ -297,6 +368,21 @@ const SeasonDetail = () => {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-white text-sm sm:text-base truncate">Seed Knockout Stage</h3>
               <p className="text-xs sm:text-sm text-gray-400 truncate">Generate knockout brackets</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={handleCleanupBrokenFixtures}
+          className="card p-4 hover:bg-dark-800/50 transition-colors text-left border border-red-500/30"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-red-500/10 rounded-lg flex-shrink-0">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-red-400 text-sm sm:text-base truncate">🧹 Cleanup Broken Fixtures</h3>
+              <p className="text-xs sm:text-sm text-gray-400 truncate">Remove fixtures with missing teams</p>
             </div>
           </div>
         </button>

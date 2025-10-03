@@ -418,12 +418,14 @@ const CreateSeason = () => {
                         className="flex items-center justify-between p-2 bg-dark-800 rounded"
                       >
                         <div className="flex items-center space-x-2">
-                          <img
-                            src={team.logo}
-                            alt={team.name}
-                            className="w-6 h-6 object-contain"
-                            onError={(e) => e.target.style.display = 'none'}
-                          />
+                          {team.logo && (
+                            <img
+                              src={team.logo}
+                              alt={team.name}
+                              className="w-6 h-6 object-contain"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          )}
                           <span className="text-sm text-white">{team.name}</span>
                         </div>
                         <button
@@ -450,8 +452,9 @@ const CreateSeason = () => {
                         }
                       }}
                       className="input-field w-full text-sm"
+                      defaultValue=""
                     >
-                      <option value="">Add team...</option>
+                      <option value="" disabled>Add team...</option>
                       {allTeams
                         .filter(team => !isTeamAssigned(team.id))
                         .map(team => (

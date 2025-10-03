@@ -458,8 +458,9 @@ const EditSeason = () => {
                       }
                     }}
                     className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-primary-500"
+                    defaultValue=""
                   >
-                    <option value="">Add team...</option>
+                    <option value="" disabled>Add team...</option>
                     {getAvailableTeams().map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}

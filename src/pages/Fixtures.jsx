@@ -4,14 +4,20 @@ import { useFootball } from '../context/FootballContext';
 import { Calendar, Clock, Filter, Trophy, Users } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel, isToday } from '../utils/dateUtils';
 import { formatScore, groupBy, sortBy, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import SeasonStandings from '../components/SeasonStandings';
 
 const Fixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, leagueTable, leagueSettings, seasons, activeSeason } = useFootball();
+  const { fixtures, leagueTable, leagueSettings, seasons, activeSeason, teams } = useFootball();
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSeasonId, setSelectedSeasonId] = useState(activeSeason?.id || 'all');
+  const [selectedTableSeasonId, setSelectedTableSeasonId] = useState(activeSeason?.id || null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Get selected season for table display
+  const displayTableSeason = seasons?.find(s => s.id === selectedTableSeasonId) || null;
+  const showSeasonStandings = seasons && seasons.length > 0 && displayTableSeason;
 
   // Filter fixtures based on status and season
   const filteredFixtures = useMemo(() => {
@@ -33,8 +39,21 @@ const Fixtures = () => {
       filtered = filtered.filter(f => isToday(f.dateTime));
     }
     
-    return sortBy(filtered, 'dateTime', 'desc');
-  }, [fixtures, statusFilter, selectedSeasonId]);
+    // Sort: prioritize season fixtures, then by date
+    const sorted = filtered.sort((a, b) => {
+      // If one has season and other doesn't, prioritize season fixture
+      const aHasSeason = a.seasonId && a.seasonId === activeSeason?.id;
+      const bHasSeason = b.seasonId && b.seasonId === activeSeason?.id;
+      
+      if (aHasSeason && !bHasSeason) return -1;
+      if (!aHasSeason && bHasSeason) return 1;
+      
+      // Otherwise sort by date (descending)
+      return new Date(b.dateTime) - new Date(a.dateTime);
+    });
+    
+    return sorted;
+  }, [fixtures, statusFilter, selectedSeasonId, activeSeason]);
 
   // Group fixtures by date
   const groupedFixtures = useMemo(() => {
@@ -160,12 +179,45 @@ const Fixtures = () => {
                   {getMatchDayLabel(dayFixtures[0].dateTime)}
                 </h3>
                 <div className="space-y-3">
-                  {dayFixtures.map((fixture) => (
+                  {dayFixtures.map((fixture) => {
+                    const isSeasonFixture = fixture.seasonId && fixture.seasonId === activeSeason?.id;
+                    const season = seasons?.find(s => s.id === fixture.seasonId);
+                    const group = season?.groups?.find(g => g.id === fixture.groupId);
+                    
+                    return (
                     <div
                       key={fixture.id}
                       onClick={() => handleFixtureClick(fixture)}
-                      className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden"
+                      className={`card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden ${
+                        isSeasonFixture ? 'border-l-2 border-primary-500' : ''
+                      }`}
                     >
+                      {/* Season/Competition Badge */}
+                      {(fixture.seasonId || fixture.competition) && (
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {fixture.seasonId && season && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded">
+                              {season.name}
+                            </span>
+                          )}
+                          {group && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">
+                              {group.name}
+                            </span>
+                          )}
+                          {fixture.stage && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
+                              {fixture.stage === 'knockout' ? fixture.round || 'Knockout' : 'Group Stage'}
+                            </span>
+                          )}
+                          {!fixture.seasonId && fixture.competition && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded">
+                              {fixture.competition}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-between">
                         {/* Teams */}
                         <div className="flex items-center space-x-6 flex-1 min-w-0">
@@ -174,12 +226,14 @@ const Fixtures = () => {
                             <span className="font-medium text-white truncate">
                               {abbreviateTeamName(fixture.homeTeam.name)}
                             </span>
-                            <img
-                              src={fixture.homeTeam.logo}
-                              alt={fixture.homeTeam.name}
-                              className="w-10 h-10 object-contain rounded-full flex-shrink-0"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
+                            {fixture.homeTeam.logo && (
+                              <img
+                                src={fixture.homeTeam.logo}
+                                alt={fixture.homeTeam.name}
+                                className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                                onError={(e) => e.target.style.display = 'none'}
+                              />
+                            )}
                           </div>
 
                           {/* VS / Score */}
@@ -221,12 +275,14 @@ const Fixtures = () => {
 
                           {/* Away Team */}
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <img
-                              src={fixture.awayTeam.logo}
-                              alt={fixture.awayTeam.name}
-                              className="w-10 h-10 object-contain rounded-full flex-shrink-0"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
+                            {fixture.awayTeam.logo && (
+                              <img
+                                src={fixture.awayTeam.logo}
+                                alt={fixture.awayTeam.name}
+                                className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                                onError={(e) => e.target.style.display = 'none'}
+                              />
+                            )}
                             <span className="font-medium text-white truncate">
                               {abbreviateTeamName(fixture.awayTeam.name)}
                             </span>
@@ -258,7 +314,8 @@ const Fixtures = () => {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))
@@ -271,96 +328,143 @@ const Fixtures = () => {
           )}
         </div>
       ) : (
-        /* League Table */
-        <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
-          
-          {/* Table Header */}
-          <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
-            <div className="text-left">S/N</div>
-            <div className="text-left">TEAM</div>
-            <div className="text-center w-8">P</div>
-            <div className="text-center w-8">W</div>
-            <div className="text-center w-8">D</div>
-            <div className="text-center w-8">L</div>
-            <div className="text-center w-10">GD</div>
-            <div className="text-center w-10">PTS</div>
-          </div>
-          
-          {/* Table Body */}
-          <div className="divide-y divide-gray-700/50">
-            {leagueTable.map((team) => (
-              <div
-                key={team.team.id}
-                className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
-              >
-                <div className="flex items-center">
-                  <span className={`text-sm font-medium ${
-                    team.position <= leagueSettings.qualifiedPosition ? 'text-primary-400' :
-                    team.position >= leagueSettings.relegationPosition ? 'text-red-400' : 'text-white'
-                  }`}>
-                    {team.position}
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-2 min-w-0">
-                  <img
-                    src={team.team.logo}
-                    alt={team.team.name}
-                    className="w-5 h-5 object-contain flex-shrink-0"
-                    onError={(e) => e.target.style.display = 'none'}
-                  />
-                  <span className="text-sm font-medium text-white truncate">
-                    {team.team.name}
-                  </span>
-                </div>
-                
-                <div className="text-center w-8 flex items-center justify-center">
-                  <span className="text-sm text-gray-300">{team.played}</span>
-                </div>
-                
-                <div className="text-center w-8 flex items-center justify-center">
-                  <span className="text-sm text-gray-300">{team.won}</span>
-                </div>
-                
-                <div className="text-center w-8 flex items-center justify-center">
-                  <span className="text-sm text-gray-300">{team.drawn}</span>
-                </div>
-                
-                <div className="text-center w-8 flex items-center justify-center">
-                  <span className="text-sm text-gray-300">{team.lost}</span>
-                </div>
-                
-                <div className="text-center w-10 flex items-center justify-center">
-                  <span className={`text-sm ${
-                    team.goalDifference > 0 ? 'text-accent-400' : 
-                    team.goalDifference < 0 ? 'text-red-400' : 'text-gray-300'
-                  }`}>
-                    {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                  </span>
-                </div>
-                
-                <div className="text-center w-10 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">
-                    {team.points}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Table Legend */}
-          <div className="px-4 py-3 bg-dark-800/30 border-t border-gray-700">
-            <div className="flex flex-wrap gap-4 text-xs text-gray-400">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                Qualified (Top {leagueSettings.qualifiedPosition})
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                Eliminated (Bottom {21 - leagueSettings.relegationPosition})
+        /* League Table / Season Standings */
+        <div className="space-y-6">
+          {/* Season Selector for Table Tab */}
+          {seasons && seasons.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+              <label className="text-sm font-medium text-gray-300 whitespace-nowrap">
+                View Standings:
+              </label>
+              <div className="flex flex-wrap gap-2 flex-1">
+                <button
+                  onClick={() => setSelectedTableSeasonId(null)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    !selectedTableSeasonId
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                  }`}
+                >
+                  League Table
+                </button>
+                {seasons.map(season => (
+                  <button
+                    key={season.id}
+                    onClick={() => setSelectedTableSeasonId(season.id)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedTableSeasonId === season.id
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                    }`}
+                  >
+                    {season.name} {season.isActive && '⭐'}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Show Season Standings if selected */}
+          {showSeasonStandings ? (
+            <SeasonStandings season={displayTableSeason} teams={teams} />
+          ) : (
+            /* Traditional League Table */
+            <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                <div className="text-left">S/N</div>
+                <div className="text-left">TEAM</div>
+                <div className="text-center w-8">P</div>
+                <div className="text-center w-8">W</div>
+                <div className="text-center w-8">D</div>
+                <div className="text-center w-8">L</div>
+                <div className="text-center w-10">GD</div>
+                <div className="text-center w-10">PTS</div>
+              </div>
+              
+              {/* Table Body */}
+              <div className="divide-y divide-gray-700/50">
+                {leagueTable.map((team) => (
+                  <div
+                    key={team.team.id}
+                    className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
+                  >
+                    <div className="flex items-center">
+                      <span className={`text-sm font-medium ${
+                        team.position <= leagueSettings.qualifiedPosition ? 'text-primary-400' :
+                        team.position >= leagueSettings.relegationPosition ? 'text-red-400' : 'text-white'
+                      }`}>
+                        {team.position}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <img
+                        src={team.team.logo}
+                        alt={team.team.name}
+                        className="w-5 h-5 object-contain flex-shrink-0"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                      <span className="text-sm font-medium text-white truncate">
+                        {team.team.name}
+                      </span>
+                    </div>
+                    
+                    <div className="text-center w-8 flex items-center justify-center">
+                      <span className="text-sm text-gray-300">{team.played}</span>
+                    </div>
+                    
+                    <div className="text-center w-8 flex items-center justify-center">
+                      <span className="text-sm text-gray-300">{team.won}</span>
+                    </div>
+                    
+                    <div className="text-center w-8 flex items-center justify-center">
+                      <span className="text-sm text-gray-300">{team.drawn}</span>
+                    </div>
+                    
+                    <div className="text-center w-8 flex items-center justify-center">
+                      <span className="text-sm text-gray-300">{team.lost}</span>
+                    </div>
+                    
+                    <div className="text-center w-10 flex items-center justify-center">
+                      <span className={`text-sm ${
+                        team.goalDifference > 0 ? 'text-accent-400' : 
+                        team.goalDifference < 0 ? 'text-red-400' : 'text-gray-300'
+                      }`}>
+                        {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                      </span>
+                    </div>
+                    
+                    <div className="text-center w-10 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-white">
+                        {team.points}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Legend */}
+              {leagueSettings && (
+                <div className="px-4 py-3 bg-dark-800/20 border-t border-gray-700 text-xs text-gray-400">
+                  <div className="flex flex-wrap gap-4">
+                    {leagueSettings.qualifiedPosition > 0 && (
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-primary-500 rounded-full mr-2"></div>
+                        <span>Qualification</span>
+                      </div>
+                    )}
+                    {leagueSettings.relegationPosition > 0 && (
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                        <span>Relegation</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
