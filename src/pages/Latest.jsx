@@ -67,6 +67,20 @@ const Latest = () => {
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
 
+  // Get season fixtures (first 4 from active season)
+  const seasonFixtures = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0 || !activeSeason) return [];
+    
+    // Filter fixtures for the active season
+    const seasonOnly = fixtures.filter(f => f.seasonId === activeSeason.id);
+    
+    // Sort by date (earliest first)
+    const sorted = seasonOnly.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+    
+    // Take first 4
+    return sorted.slice(0, 4);
+  }, [fixtures, activeSeason]);
+
   const handleNewsClick = (article) => {
     if (article?.slug) {
       navigate(`/news/${article.slug}`);
@@ -218,6 +232,116 @@ const Latest = () => {
                       />
                       <span className="font-medium text-white text-sm truncate">
                         {abbreviateTeamName(fixture.awayTeam.name)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Season Fixtures Section */}
+      {activeSeason && seasonFixtures.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Trophy className="w-5 h-5 text-accent-500 mr-2" />
+              <h2 className="text-xl font-semibold text-white">{activeSeason.name} Fixtures</h2>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures')}
+              className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
+            >
+              See more
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {seasonFixtures.map((fixture) => (
+              <div
+                key={fixture.id}
+                onClick={() => handleFixtureClick(fixture)}
+                className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden border-l-2 border-primary-500"
+              >
+                {/* Competition/Group badges */}
+                {(fixture.groupId || fixture.stage) && (
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    {fixture.groupId && activeSeason.groups && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">
+                        {activeSeason.groups.find(g => g.id === fixture.groupId)?.name || 'Group'}
+                      </span>
+                    )}
+                    {fixture.stage && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
+                        {fixture.stage === 'knockout' ? fixture.round || 'Knockout' : 'Group Stage'}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  {/* Teams */}
+                  <div className="flex items-center space-x-6 flex-1 min-w-0">
+                    {/* Home Team */}
+                    <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                      <span className="font-medium text-white text-sm truncate max-w-[120px]" title={fixture.homeTeam?.name}>
+                        {abbreviateTeamName(fixture.homeTeam?.name || 'Unknown')}
+                      </span>
+                      {fixture.homeTeam?.logo && (
+                        <img
+                          src={fixture.homeTeam.logo}
+                          alt={fixture.homeTeam.name}
+                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* VS / Score / Time / Date */}
+                    <div className="flex flex-col items-center px-4 flex-shrink-0">
+                      {fixture.status === 'completed' ? (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-white">
+                            {fixture.homeScore} - {fixture.awayScore}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">FT</div>
+                        </div>
+                      ) : isFixtureLive(fixture) ? (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-white">
+                            {fixture.homeScore || 0} - {fixture.awayScore || 0}
+                          </div>
+                          <div className="text-sm font-bold animate-live-pulse mt-1">
+                            LIVE
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <div className="text-sm font-semibold text-primary-500">VS</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Away Team */}
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      {fixture.awayTeam?.logo && (
+                        <img
+                          src={fixture.awayTeam.logo}
+                          alt={fixture.awayTeam.name}
+                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                      )}
+                      <span className="font-medium text-white text-sm truncate max-w-[120px]" title={fixture.awayTeam?.name}>
+                        {abbreviateTeamName(fixture.awayTeam?.name || 'Unknown')}
                       </span>
                     </div>
                   </div>
