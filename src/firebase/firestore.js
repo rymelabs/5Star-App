@@ -129,6 +129,71 @@ export const fixturesCollection = {
     }
   },
 
+  // Get fixtures by season
+  getBySeason: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'fixtures'),
+        where('seasonId', '==', seasonId),
+        orderBy('dateTime', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
+      }));
+    } catch (error) {
+      console.error('Error fetching fixtures by season:', error);
+      throw error;
+    }
+  },
+
+  // Get fixtures by group
+  getByGroup: async (seasonId, groupId) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'fixtures'),
+        where('seasonId', '==', seasonId),
+        where('groupId', '==', groupId),
+        orderBy('dateTime', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
+      }));
+    } catch (error) {
+      console.error('Error fetching fixtures by group:', error);
+      throw error;
+    }
+  },
+
+  // Get fixtures by stage (group/knockout)
+  getByStage: async (seasonId, stage) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'fixtures'),
+        where('seasonId', '==', seasonId),
+        where('stage', '==', stage),
+        orderBy('dateTime', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
+      }));
+    } catch (error) {
+      console.error('Error fetching fixtures by stage:', error);
+      throw error;
+    }
+  },
+
   // Add new fixture
   add: async (fixtureData) => {
     try {
@@ -136,6 +201,10 @@ export const fixturesCollection = {
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
         dateTime: new Date(fixtureData.dateTime),
+        seasonId: fixtureData.seasonId || null,
+        groupId: fixtureData.groupId || null,
+        stage: fixtureData.stage || null, // 'group' or 'knockout'
+        round: fixtureData.round || null, // For knockout: 'quarter-final', 'semi-final', 'final'
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

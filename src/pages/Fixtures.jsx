@@ -7,27 +7,34 @@ import { formatScore, groupBy, sortBy, abbreviateTeamName, isFixtureLive } from 
 
 const Fixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, leagueTable, leagueSettings } = useFootball();
+  const { fixtures, leagueTable, leagueSettings, seasons, activeSeason } = useFootball();
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedSeasonId, setSelectedSeasonId] = useState(activeSeason?.id || 'all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter fixtures based on status
+  // Filter fixtures based on status and season
   const filteredFixtures = useMemo(() => {
     let filtered = fixtures;
     
+    // Filter by season
+    if (selectedSeasonId && selectedSeasonId !== 'all') {
+      filtered = filtered.filter(f => f.seasonId === selectedSeasonId);
+    }
+    
+    // Filter by status
     if (statusFilter === 'upcoming') {
-      filtered = fixtures.filter(f => new Date(f.dateTime) > new Date());
+      filtered = filtered.filter(f => new Date(f.dateTime) > new Date());
     } else if (statusFilter === 'completed') {
-      filtered = fixtures.filter(f => f.status === 'completed');
+      filtered = filtered.filter(f => f.status === 'completed');
     } else if (statusFilter === 'live') {
-      filtered = fixtures.filter(f => f.status === 'live');
+      filtered = filtered.filter(f => f.status === 'live');
     } else if (statusFilter === 'today') {
-      filtered = fixtures.filter(f => isToday(f.dateTime));
+      filtered = filtered.filter(f => isToday(f.dateTime));
     }
     
     return sortBy(filtered, 'dateTime', 'desc');
-  }, [fixtures, statusFilter]);
+  }, [fixtures, statusFilter, selectedSeasonId]);
 
   // Group fixtures by date
   const groupedFixtures = useMemo(() => {
@@ -68,28 +75,51 @@ const Fixtures = () => {
 
       {/* Filters */}
       {showFilters && (
-        <div className="card p-4 mb-6">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Filter by Status</h3>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: 'all', label: 'All Fixtures' },
-              { key: 'today', label: 'Today' },
-              { key: 'live', label: 'Live' },
-              { key: 'upcoming', label: 'Upcoming' },
-              { key: 'completed', label: 'Completed' },
-            ].map((filter) => (
-              <button
-                key={filter.key}
-                onClick={() => setStatusFilter(filter.key)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === filter.key
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                }`}
+        <div className="card p-4 mb-6 space-y-4">
+          {/* Season Filter */}
+          {seasons && seasons.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-3">Season</h3>
+              <select
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+                className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
               >
-                {filter.label}
-              </button>
-            ))}
+                <option value="all">All Seasons</option>
+                {seasons.map(season => (
+                  <option key={season.id} value={season.id}>
+                    {season.name} ({season.year})
+                    {season.isActive && ' - Active'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          {/* Status Filter */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Filter by Status</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'all', label: 'All Fixtures' },
+                { key: 'today', label: 'Today' },
+                { key: 'live', label: 'Live' },
+                { key: 'upcoming', label: 'Upcoming' },
+                { key: 'completed', label: 'Completed' },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setStatusFilter(filter.key)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    statusFilter === filter.key
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

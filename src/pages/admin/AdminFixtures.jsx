@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X } from 
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, teams, addFixture, updateFixture } = useFootball();
+  const { fixtures, teams, addFixture, updateFixture, seasons, activeSeason } = useFootball();
   const { competitions } = useCompetitions();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -20,8 +20,12 @@ const AdminFixtures = () => {
     round: '',
     status: 'scheduled',
     homeScore: '',
-    awayScore: ''
+    awayScore: '',
+    seasonId: '',
+    groupId: '',
+    stage: ''
   });
+  const [selectedSeasonGroups, setSelectedSeasonGroups] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -30,6 +34,22 @@ const AdminFixtures = () => {
       ...prev,
       [name]: value
     }));
+
+    // If season changes, load its groups
+    if (name === 'seasonId') {
+      const season = seasons.find(s => s.id === value);
+      if (season && season.groups) {
+        setSelectedSeasonGroups(season.groups);
+      } else {
+        setSelectedSeasonGroups([]);
+      }
+      // Reset group and stage when season changes
+      setFormData(prev => ({
+        ...prev,
+        groupId: '',
+        stage: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,7 +71,10 @@ const AdminFixtures = () => {
         round: formData.round || '',
         status: formData.status || 'scheduled',
         homeScore: null,
-        awayScore: null
+        awayScore: null,
+        seasonId: formData.seasonId || null,
+        groupId: formData.groupId || null,
+        stage: formData.stage || null
       };
       
       console.log('Submitting fixture:', newFixture);
@@ -88,8 +111,12 @@ const AdminFixtures = () => {
       round: '',
       status: 'scheduled',
       homeScore: '',
-      awayScore: ''
+      awayScore: '',
+      seasonId: '',
+      groupId: '',
+      stage: ''
     });
+    setSelectedSeasonGroups([]);
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -110,8 +137,18 @@ const AdminFixtures = () => {
       round: fixture.round || '',
       status: fixture.status || 'scheduled',
       homeScore: fixture.homeScore !== null && fixture.homeScore !== undefined ? fixture.homeScore : '',
-      awayScore: fixture.awayScore !== null && fixture.awayScore !== undefined ? fixture.awayScore : ''
+      awayScore: fixture.awayScore !== null && fixture.awayScore !== undefined ? fixture.awayScore : '',
+      seasonId: fixture.seasonId || '',
+      groupId: fixture.groupId || '',
+      stage: fixture.stage || ''
     });
+    // Load groups if season is selected
+    if (fixture.seasonId) {
+      const season = seasons.find(s => s.id === fixture.seasonId);
+      if (season && season.groups) {
+        setSelectedSeasonGroups(season.groups);
+      }
+    }
     setEditingId(fixture.id);
     setShowAddForm(false);
   };
@@ -134,7 +171,10 @@ const AdminFixtures = () => {
         round: formData.round || '',
         status: formData.status || 'scheduled',
         homeScore: formData.homeScore !== '' ? parseInt(formData.homeScore) : null,
-        awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null
+        awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null,
+        seasonId: formData.seasonId || null,
+        groupId: formData.groupId || null,
+        stage: formData.stage || null
       };
       
       await updateFixture(editingId, updates);
@@ -317,6 +357,72 @@ const AdminFixtures = () => {
                   {competitions.length === 0 && (
                     <p className="text-xs text-gray-500 mt-1">
                       No competitions yet. Add one from the competitions page.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Season
+                  </label>
+                  <select
+                    name="seasonId"
+                    value={formData.seasonId}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                  >
+                    <option value="">None (Friendly)</option>
+                    {seasons.map(season => (
+                      <option key={season.id} value={season.id}>
+                        {season.name} ({season.year})
+                      </option>
+                    ))}
+                  </select>
+                  {seasons.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No seasons yet. Create one from seasons page.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Stage
+                  </label>
+                  <select
+                    name="stage"
+                    value={formData.stage}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    disabled={!formData.seasonId}
+                  >
+                    <option value="">Select stage</option>
+                    <option value="group">Group Stage</option>
+                    <option value="knockout">Knockout Stage</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Group
+                  </label>
+                  <select
+                    name="groupId"
+                    value={formData.groupId}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    disabled={!formData.seasonId || formData.stage !== 'group'}
+                  >
+                    <option value="">Select group</option>
+                    {selectedSeasonGroups.map(group => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formData.stage === 'group' && selectedSeasonGroups.length === 0 && formData.seasonId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No groups configured for this season.
                     </p>
                   )}
                 </div>
