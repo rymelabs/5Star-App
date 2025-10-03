@@ -500,14 +500,18 @@ const SeasonDetail = () => {
                             <tr key={standing.teamId} className="border-b border-gray-700/50">
                               <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{index + 1}</td>
                               <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
-                                <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0">
-                                  <img
-                                    src={standing.team?.logo}
-                                    alt={standing.team?.name}
-                                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
-                                    onError={(e) => e.target.style.display = 'none'}
-                                  />
-                                  <span className="text-white truncate">{standing.team?.name}</span>
+                                <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0 max-w-[140px] sm:max-w-[200px]">
+                                  {standing.team?.logo && (
+                                    <img
+                                      src={standing.team?.logo}
+                                      alt={standing.team?.name}
+                                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                                      onError={(e) => e.target.style.display = 'none'}
+                                    />
+                                  )}
+                                  <span className="text-white truncate" title={standing.team?.name}>
+                                    {standing.team?.name}
+                                  </span>
                                 </div>
                               </td>
                               <td className="text-center text-gray-300 px-1 sm:px-2">{standing.played}</td>
@@ -605,109 +609,130 @@ const SeasonDetail = () => {
               </div>
             </div>
           ) : (
-            <div className="card p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
-                Season Fixtures ({seasonFixtures.length})
-              </h3>
-              
-              <div className="space-y-3">
-                {seasonFixtures.map((fixture) => (
-                  <div 
-                    key={fixture.id}
-                    className="p-3 sm:p-4 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Teams */}
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        {/* Home Team */}
-                        <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-                          <span className="text-sm font-medium text-white truncate">
-                            {fixture.homeTeam?.name}
-                          </span>
-                          {fixture.homeTeam?.logo && (
-                            <img
-                              src={fixture.homeTeam.logo}
-                              alt={fixture.homeTeam.name}
-                              className="w-6 h-6 object-contain flex-shrink-0"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
-                          )}
-                        </div>
+            <>
+              {/* Group fixtures by group */}
+              {(() => {
+                // Group fixtures by groupId
+                const groupedFixtures = seasonFixtures.reduce((acc, fixture) => {
+                  const key = fixture.groupId || fixture.stage || 'other';
+                  if (!acc[key]) {
+                    acc[key] = {
+                      name: fixture.groupName || (fixture.stage ? fixture.stage.charAt(0).toUpperCase() + fixture.stage.slice(1) : 'Other Fixtures'),
+                      fixtures: []
+                    };
+                  }
+                  acc[key].fixtures.push(fixture);
+                  return acc;
+                }, {});
 
-                        {/* Score or VS */}
-                        <div className="flex items-center gap-2 px-3 flex-shrink-0">
-                          {fixture.status === 'completed' ? (
-                            <div className="text-center">
-                              <div className="text-base font-bold text-white">
-                                {fixture.homeScore} - {fixture.awayScore}
+                return Object.entries(groupedFixtures).map(([key, data]) => (
+                  <div key={key} className="card p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
+                      {data.name} ({data.fixtures.length} fixtures)
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {data.fixtures.map((fixture) => (
+                        <div 
+                          key={fixture.id}
+                          className="p-3 sm:p-4 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            {/* Teams */}
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              {/* Home Team */}
+                              <div className="flex items-center gap-2 flex-1 justify-end min-w-0 max-w-[40%]">
+                                <span className="text-sm font-medium text-white truncate" title={fixture.homeTeam?.name}>
+                                  {fixture.homeTeam?.name}
+                                </span>
+                                {fixture.homeTeam?.logo && (
+                                  <img
+                                    src={fixture.homeTeam.logo}
+                                    alt={fixture.homeTeam.name}
+                                    className="w-6 h-6 object-contain flex-shrink-0"
+                                    onError={(e) => e.target.style.display = 'none'}
+                                  />
+                                )}
                               </div>
-                              <div className="text-xs text-gray-500">FT</div>
+
+                              {/* Score or VS */}
+                              <div className="flex items-center gap-2 px-3 flex-shrink-0">
+                                {fixture.status === 'completed' ? (
+                                  <div className="text-center">
+                                    <div className="text-base font-bold text-white">
+                                      {fixture.homeScore} - {fixture.awayScore}
+                                    </div>
+                                    <div className="text-xs text-gray-500">FT</div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center">
+                                    <div className="text-sm font-semibold text-primary-500">VS</div>
+                                    {fixture.dateTime && (
+                                      <div className="text-xs text-gray-400 mt-1">
+                                        {new Date(fixture.dateTime).toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric' 
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="flex items-center gap-2 flex-1 min-w-0 max-w-[40%]">
+                                {fixture.awayTeam?.logo && (
+                                  <img
+                                    src={fixture.awayTeam.logo}
+                                    alt={fixture.awayTeam.name}
+                                    className="w-6 h-6 object-contain flex-shrink-0"
+                                    onError={(e) => e.target.style.display = 'none'}
+                                  />
+                                )}
+                                <span className="text-sm font-medium text-white truncate" title={fixture.awayTeam?.name}>
+                                  {fixture.awayTeam?.name}
+                                </span>
+                              </div>
                             </div>
-                          ) : (
-                            <div className="text-center">
-                              <div className="text-sm font-semibold text-primary-500">VS</div>
-                              {fixture.dateTime && (
-                                <div className="text-xs text-gray-400 mt-1">
-                                  {new Date(fixture.dateTime).toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric' 
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          )}
+
+                            {/* Action Button */}
+                            <button
+                              onClick={() => navigate(`/fixtures/${fixture.id}`)}
+                              className="p-2 text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors flex-shrink-0"
+                              title="View fixture details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Fixture Info */}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
+                            {fixture.dateTime && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {new Date(fixture.dateTime).toLocaleString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                            <span className={`px-2 py-1 rounded capitalize ${
+                              fixture.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                              fixture.status === 'live' ? 'bg-red-500/20 text-red-400' :
+                              'bg-blue-500/20 text-blue-400'
+                            }`}>
+                              {fixture.status}
+                            </span>
+                          </div>
                         </div>
-
-                        {/* Away Team */}
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {fixture.awayTeam?.logo && (
-                            <img
-                              src={fixture.awayTeam.logo}
-                              alt={fixture.awayTeam.name}
-                              className="w-6 h-6 object-contain flex-shrink-0"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
-                          )}
-                          <span className="text-sm font-medium text-white truncate">
-                            {fixture.awayTeam?.name}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <button
-                        onClick={() => navigate(`/fixtures/${fixture.id}`)}
-                        className="p-2 text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors flex-shrink-0"
-                        title="View fixture details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Fixture Info */}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                      {fixture.groupName && (
-                        <span className="px-2 py-1 bg-dark-700 rounded">
-                          {fixture.groupName}
-                        </span>
-                      )}
-                      {fixture.stage && (
-                        <span className="px-2 py-1 bg-dark-700 rounded capitalize">
-                          {fixture.stage}
-                        </span>
-                      )}
-                      <span className={`px-2 py-1 rounded capitalize ${
-                        fixture.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                        fixture.status === 'live' ? 'bg-red-500/20 text-red-400' :
-                        'bg-blue-500/20 text-blue-400'
-                      }`}>
-                        {fixture.status}
-                      </span>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                ));
+              })()}
+            </>
           )}
         </div>
       )}
