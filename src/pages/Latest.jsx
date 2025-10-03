@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { ChevronRight, Calendar, Trophy } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import SeasonStandings from '../components/SeasonStandings';
 
 const Latest = () => {
   const navigate = useNavigate();
+  const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   
   // Add try-catch for context usage
   let articles = [];
   let fixtures = [];
   let leagueTable = [];
+  let seasons = [];
+  let activeSeason = null;
+  let teams = [];
   
   try {
     const newsContext = useNews();
@@ -25,9 +30,19 @@ const Latest = () => {
     const footballContext = useFootball();
     fixtures = footballContext?.fixtures || [];
     leagueTable = footballContext?.leagueTable || [];
+    seasons = footballContext?.seasons || [];
+    activeSeason = footballContext?.activeSeason || null;
+    teams = footballContext?.teams || [];
   } catch (error) {
     console.error('Error accessing FootballContext:', error);
   }
+
+  // Set initial selected season to active season
+  React.useEffect(() => {
+    if (activeSeason && !selectedSeasonId) {
+      setSelectedSeasonId(activeSeason.id);
+    }
+  }, [activeSeason, selectedSeasonId]);
 
   // Get latest news for carousel (top 3)
   const latestNews = articles?.slice(0, 3) || [];
@@ -37,6 +52,10 @@ const Latest = () => {
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
+
+  // Get selected season for standings
+  const displaySeason = seasons.find(s => s.id === selectedSeasonId) || activeSeason;
+  const showSeasonStandings = seasons.length > 0 && displaySeason;
 
   const handleNewsClick = (article) => {
     if (article?.slug) {
@@ -199,8 +218,35 @@ const Latest = () => {
         </section>
       )}
 
-      {/* League Table Section */}
-      {topTeams.length > 0 && (
+      {/* Season Standings / League Table Section */}
+      {showSeasonStandings ? (
+        <section>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex items-center">
+              <Trophy className="w-5 h-5 text-accent-500 mr-2 flex-shrink-0" />
+              <h2 className="text-xl font-semibold text-white">Season Standings</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Season Selector */}
+              {seasons.length > 1 && (
+                <select
+                  value={selectedSeasonId || ''}
+                  onChange={(e) => setSelectedSeasonId(e.target.value)}
+                  className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+                >
+                  {seasons.map(season => (
+                    <option key={season.id} value={season.id}>
+                      {season.name} {season.isActive && '(Active)'}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+          
+          <SeasonStandings season={displaySeason} teams={teams} />
+        </section>
+      ) : topTeams.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
