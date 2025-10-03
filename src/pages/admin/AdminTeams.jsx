@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield
 
 const AdminTeams = () => {
   const navigate = useNavigate();
-  const { teams, addTeam, updateTeam, addBulkTeams } = useFootball();
+  const { teams, addTeam, updateTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -161,23 +161,6 @@ const AdminTeams = () => {
     setShowAddForm(false);
     setShowPlayerForm(false);
     setEditingTeam(null);
-  };
-
-  const handleBulkUpload = async (teamsData) => {
-    try {
-      await addBulkTeams(teamsData);
-      showSuccess(
-        'Teams Uploaded Successfully',
-        `${teamsData.length} team${teamsData.length === 1 ? '' : 's'} added to the database`
-      );
-    } catch (error) {
-      console.error('Error uploading teams:', error);
-      showError(
-        'Upload Failed',
-        'There was an error uploading the teams. Please try again.'
-      );
-      throw error; // Re-throw to let BulkTeamUpload handle the error
-    }
   };
 
   return (
@@ -571,12 +554,10 @@ const AdminTeams = () => {
       </div>
 
       {/* Bulk Upload Modal */}
-      {showBulkUpload && (
-        <BulkTeamUpload
-          onUpload={handleBulkUpload}
-          onClose={() => setShowBulkUpload(false)}
-        />
-      )}
+      <BulkTeamUpload
+        isOpen={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+      />
     </div>
   );
 };
