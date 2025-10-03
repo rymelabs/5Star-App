@@ -16,6 +16,8 @@ const Fixtures = () => {
   const [selectedTableSeasonId, setSelectedTableSeasonId] = useState(activeSeason?.id || null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'group'
+  // Track expanded sections (by date string or group key)
+  const [expandedSections, setExpandedSections] = useState({});
 
   const displayTableSeason = seasons?.find(s => s.id === selectedTableSeasonId) || null;
   const showSeasonStandings = Boolean(seasons && seasons.length > 0 && displayTableSeason);
@@ -65,6 +67,8 @@ const Fixtures = () => {
   }, [filteredFixtures, groupViewSeasonId]);
 
   const handleFixtureClick = (fixture) => navigate(`/fixtures/${fixture.id}`);
+  const isSectionExpanded = (key) => Boolean(expandedSections[key]);
+  const toggleSection = (key) => setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className="px-4 py-6">
@@ -174,13 +178,17 @@ const Fixtures = () => {
               Object
                 .entries(groupedByDate)
                 .sort(([d1], [d2]) => new Date(d1) - new Date(d2))
-                .map(([date, dayFixtures]) => (
+                .map(([date, dayFixtures]) => {
+                  const expanded = isSectionExpanded(date);
+                  const items = expanded ? dayFixtures : dayFixtures.slice(0, 3);
+                  const remaining = Math.max(0, dayFixtures.length - 3);
+                  return (
                   <div key={date}>
                     <h3 className="text-lg font-semibold text-white mb-3 sticky top-16 bg-dark-900 py-2">
                       {getMatchDayLabel(dayFixtures[0].dateTime)}
                     </h3>
                     <div className="space-y-3">
-                      {dayFixtures.map((fixture) => {
+                      {items.map((fixture) => {
                         const isSeasonFixture = fixture.seasonId && fixture.seasonId === activeSeason?.id;
                         const season = seasons?.find(s => s.id === fixture.seasonId);
                         const group = season?.groups?.find(g => g.id === fixture.groupId);
@@ -287,9 +295,20 @@ const Fixtures = () => {
                           </div>
                         );
                       })}
+                      {dayFixtures.length > 3 && (
+                        <div className="pt-1">
+                          <button
+                            onClick={() => toggleSection(date)}
+                            className="px-3 py-1.5 text-sm rounded-md bg-dark-800 hover:bg-dark-700 text-gray-300 border border-dark-700"
+                          >
+                            {expanded ? 'See less' : `See more (${remaining} more)`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))
+                );
+                })
             ) : (
               <div className="text-center py-12">
                 <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
@@ -308,6 +327,9 @@ const Fixtures = () => {
                   const isUngrouped = groupKey === 'ungrouped';
                   const groupMeta = groupViewSeason?.groups?.find(g => g.id === groupKey);
                   const header = isKnockout ? 'Knockout Stage' : isUngrouped ? 'Other Fixtures' : (groupMeta?.name || 'Group');
+                  const expanded = isSectionExpanded(groupKey);
+                  const items = expanded ? list : list.slice(0, 3);
+                  const remaining = Math.max(0, list.length - 3);
                   return (
                     <div key={groupKey} className="mb-6">
                       <div className="flex items-center justify-between mb-3">
@@ -317,7 +339,7 @@ const Fixtures = () => {
                         </h3>
                       </div>
                       <div className="space-y-3">
-                        {list.map((fixture) => {
+                        {items.map((fixture) => {
                           const isSeasonFixture = fixture.seasonId && fixture.seasonId === activeSeason?.id;
                           const season = seasons?.find(s => s.id === fixture.seasonId);
                           const group = season?.groups?.find(g => g.id === fixture.groupId);
@@ -398,6 +420,16 @@ const Fixtures = () => {
                             </div>
                           );
                         })}
+                        {list.length > 3 && (
+                          <div className="pt-1">
+                            <button
+                              onClick={() => toggleSection(groupKey)}
+                              className="px-3 py-1.5 text-sm rounded-md bg-dark-800 hover:bg-dark-700 text-gray-300 border border-dark-700"
+                            >
+                              {expanded ? 'See less' : `See more (${remaining} more)`}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

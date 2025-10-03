@@ -92,9 +92,9 @@ const SeasonStandings = ({ season, teams }) => {
 
           {/* Table Header - Mobile */}
           <div className="block sm:hidden overflow-x-auto">
-            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 px-4 py-3 bg-dark-700 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-dark-600 min-w-max">
-              <div className="text-center sticky left-0 bg-dark-700 z-10">S/N</div>
-              <div className="sticky left-8 bg-dark-700 z-10 min-w-[120px]">TEAM</div>
+            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 px-4 py-3 bg-dark-700 text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-dark-600 min-w-max">
+              <div className="text-center sticky left-0 bg-dark-700 z-10">#</div>
+              <div className="sticky left-6 bg-dark-700 z-10 min-w-[140px]">Team</div>
               <div className="text-center">P</div>
               <div className="text-center">W</div>
               <div className="text-center">D</div>
@@ -120,18 +120,18 @@ const SeasonStandings = ({ season, teams }) => {
                       className={`grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 sm:gap-4 px-4 py-3 border-b border-dark-700 last:border-0 hover:bg-dark-700/50 transition-colors ${getPositionColor(standing.position)} min-w-max sm:min-w-0`}
                     >
                       {/* Position - Sticky on mobile */}
-                      <div className="text-center font-semibold text-white sticky left-0 bg-dark-800 sm:bg-transparent z-10 sm:static">
+                      <div className="text-center font-semibold text-white sticky left-0 bg-dark-800 sm:bg-transparent z-10 sm:static w-6 sm:w-auto">
                         {standing.position}
                       </div>
                       
                       {/* Team - Sticky on mobile */}
-                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-[120px] max-w-[140px] sm:max-w-[200px] sticky left-8 bg-dark-800 sm:bg-transparent z-10 sm:static">
+                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-[140px] max-w-[180px] sm:max-w-[240px] sticky left-6 bg-dark-800 sm:bg-transparent z-10 sm:static">
                         {team?.logo && (
                           <img 
                             src={team.logo} 
                             alt={team?.name || standing.team?.name} 
                             className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover flex-shrink-0" 
-                            onError={(e) => e.target.style.display = 'none'}
+                            onError={(e) => (e.currentTarget.style.display = 'none')}
                           />
                         )}
                         <span 
@@ -143,10 +143,10 @@ const SeasonStandings = ({ season, teams }) => {
                       </div>
                       
                       {/* Stats */}
-                      <div className="text-center text-gray-300 text-sm sm:text-base">{standing.played}</div>
-                      <div className="text-center text-gray-300 text-sm sm:text-base">{standing.won}</div>
-                      <div className="text-center text-gray-300 text-sm sm:text-base">{standing.drawn}</div>
-                      <div className="text-center text-gray-300 text-sm sm:text-base">{standing.lost}</div>
+                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.played}</div>
+                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.won}</div>
+                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.drawn}</div>
+                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.lost}</div>
                       <div className={`text-center font-medium text-sm sm:text-base ${
                         standing.goalDifference > 0 ? 'text-green-400' : 
                         standing.goalDifference < 0 ? 'text-red-400' : 
@@ -165,11 +165,13 @@ const SeasonStandings = ({ season, teams }) => {
           {/* Legend */}
           {season.knockoutConfig?.qualifiersPerGroup > 0 && (
             <div className="px-4 py-3 bg-dark-700/50 border-t border-dark-600">
-              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+              <div className="flex items-center space-x-3 text-xs sm:text-sm text-gray-400">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded"></div>
                   <span>Qualifies for knockout stage</span>
                 </div>
+                <div className="text-gray-500">•</div>
+                <div className="text-gray-400">Top {season.knockoutConfig.qualifiersPerGroup} in each group</div>
               </div>
             </div>
           )}
