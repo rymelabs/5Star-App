@@ -4,6 +4,7 @@ import { FootballProvider } from './FootballContext';
 import { NewsProvider } from './NewsContext';
 import { NotificationProvider } from './NotificationContext';
 import { CompetitionsProvider } from './CompetitionsContext';
+import { InstagramProvider } from './InstagramContext';
 
 // Combined provider component
 export const AppProvider = ({ children }) => {
@@ -12,9 +13,11 @@ export const AppProvider = ({ children }) => {
       <FootballProvider>
         <NewsProvider>
           <CompetitionsProvider>
-            <NotificationProvider>
-              {children}
-            </NotificationProvider>
+            <InstagramProvider>
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </InstagramProvider>
           </CompetitionsProvider>
         </NewsProvider>
       </FootballProvider>
