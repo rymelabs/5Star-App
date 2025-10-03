@@ -27,10 +27,15 @@ export const InstagramProvider = ({ children }) => {
       const instagramSettings = await getInstagramSettings();
       setSettings(instagramSettings);
 
-      // Only fetch posts if Instagram is enabled
-      if (instagramSettings && instagramSettings.enabled) {
-        const instagramPosts = await fetchInstagramPosts(6);
-        setPosts(instagramPosts);
+      // Only fetch posts if Instagram is enabled and username is provided
+      if (instagramSettings?.enabled && instagramSettings?.username) {
+        try {
+          const instagramPosts = await fetchInstagramPosts(12);
+          setPosts(instagramPosts);
+        } catch (err) {
+          console.log('Could not fetch Instagram posts, using fallback display');
+          setPosts([]);
+        }
       } else {
         setPosts([]);
       }
@@ -38,6 +43,7 @@ export const InstagramProvider = ({ children }) => {
       console.error('Error loading Instagram data:', err);
       setError(err.message);
       setPosts([]);
+      setSettings({ enabled: false, username: '' });
     } finally {
       setLoading(false);
     }

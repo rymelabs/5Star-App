@@ -1,44 +1,33 @@
-import { collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
-
-// Helper function to check if Firebase is initialized
-const checkFirebaseInit = () => {
-  const db = getFirebaseDb();
-  if (!db) {
-    throw new Error('Firebase is not initialized. Please check your .env configuration.');
-  }
-  return db;
-};
-
-/**
- * Instagram integration service
- * Note: For production, you'll need to set up Instagram Basic Display API
- * or use Instagram Graph API with proper authentication
- */
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // Get Instagram settings from Firestore
 export const getInstagramSettings = async () => {
   try {
-    const database = checkFirebaseInit();
-    const settingsRef = doc(database, 'settings', 'instagram');
+    const db = getFirebaseDb();
+    const settingsRef = doc(db, 'settings', 'instagram');
     const settingsDoc = await getDoc(settingsRef);
     
     if (settingsDoc.exists()) {
       return settingsDoc.data();
     }
     
-    return null;
+    // Return default settings if none exist
+    return {
+      enabled: false,
+      username: '',
+    };
   } catch (error) {
     console.error('Error fetching Instagram settings:', error);
     throw error;
   }
 };
 
-// Save Instagram settings (admin only)
+// Save Instagram settings to Firestore
 export const saveInstagramSettings = async (settings) => {
   try {
-    const database = checkFirebaseInit();
-    const settingsRef = doc(database, 'settings', 'instagram');
+    const db = getFirebaseDb();
+    const settingsRef = doc(db, 'settings', 'instagram');
     
     await setDoc(settingsRef, {
       ...settings,
@@ -52,61 +41,60 @@ export const saveInstagramSettings = async (settings) => {
   }
 };
 
-// Fetch Instagram posts
-// For now, this returns mock data. In production, you would:
-// 1. Use Instagram Basic Display API with access token
-// 2. Or use Instagram embed/oEmbed API
-// 3. Or use a third-party service like Juicer, SnapWidget, etc.
-export const fetchInstagramPosts = async (limit = 6) => {
+// Fetch Instagram posts from public profile (no API key needed)
+// Note: Direct fetching from browser is blocked by Instagram's CORS policy
+// This function is kept for future backend implementation
+export const fetchInstagramPosts = async (limit = 12) => {
   try {
     const settings = await getInstagramSettings();
     
-    if (!settings || !settings.enabled) {
+    if (!settings.enabled || !settings.username) {
+      console.log('Instagram is disabled or no username available');
       return [];
     }
-
-    // If you have an Instagram access token, use it here
-    if (settings.accessToken && settings.username) {
-      try {
-        // Instagram Basic Display API endpoint
-        const response = await fetch(
-          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=${settings.accessToken}&limit=${limit}`
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          return data.data || [];
-        }
-      } catch (error) {
-        console.error('Error fetching from Instagram API:', error);
-      }
-    }
-
-    // Fallback: Return empty array if no valid configuration
+    
+    // Instagram blocks client-side requests due to CORS policy
+    // For now, return empty array to show the profile link fallback
+    // To display actual posts, you would need:
+    // 1. Backend proxy server to fetch Instagram data
+    // 2. Official Instagram Basic Display API with access token
+    // 3. Third-party service (EmbedSocial, Juicer, SnapWidget)
+    
+    console.log('Instagram post fetching is not available from browser. Showing profile link only.');
     return [];
+    
+    /* 
+    // This code is commented out because Instagram blocks it with CORS
+    const username = settings.username.replace('@', '');
+    const response = await fetch(`https://www.instagram.com/${username}/?__a=1&__d=dis`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      }
+    });
+    
+    if (!response.ok) {
+      console.log('Unable to fetch Instagram posts, will show profile link only');
+      return [];
+    }
+    
+    const data = await response.json();
+    const posts = data?.graphql?.user?.edge_owner_to_timeline_media?.edges || [];
+    
+    return posts.slice(0, limit).map(edge => ({
+      id: edge.node.id,
+      media_type: edge.node.is_video ? 'VIDEO' : 'IMAGE',
+      media_url: edge.node.display_url,
+      thumbnail_url: edge.node.thumbnail_src || edge.node.display_url,
+      caption: edge.node.edge_media_to_caption?.edges[0]?.node?.text || '',
+      permalink: `https://www.instagram.com/p/${edge.node.shortcode}/`,
+      timestamp: new Date(edge.node.taken_at_timestamp * 1000).toISOString(),
+      likes: edge.node.edge_liked_by?.count || 0,
+      comments: edge.node.edge_media_to_comment?.count || 0,
+    }));
+    */
   } catch (error) {
-    console.error('Error fetching Instagram posts:', error);
+    console.log('Instagram integration showing profile link only (client-side fetching not supported)');
+    // Return empty array - will show profile link fallback
     return [];
   }
-};
-
-// Generate Instagram embed URL for a post
-export const getInstagramEmbedUrl = (postUrl) => {
-  if (!postUrl) return null;
-  return `https://www.instagram.com/p/${postUrl.split('/p/')[1]?.split('/')[0]}/embed/`;
-};
-
-// Parse Instagram username from URL
-export const parseInstagramUsername = (url) => {
-  if (!url) return null;
-  const match = url.match(/instagram\.com\/([^\/\?]+)/);
-  return match ? match[1] : null;
-};
-
-export default {
-  getInstagramSettings,
-  saveInstagramSettings,
-  fetchInstagramPosts,
-  getInstagramEmbedUrl,
-  parseInstagramUsername
 };

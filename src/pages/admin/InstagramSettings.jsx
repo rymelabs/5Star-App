@@ -1,45 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Instagram, Save, Eye, EyeOff, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Instagram, Save, AlertCircle, CheckCircle, ExternalLink, Home } from 'lucide-react';
 import { getInstagramSettings, saveInstagramSettings } from '../../firebase/instagram';
 import { useAuth } from '../../context/AuthContext';
 
 const InstagramSettings = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showToken, setShowToken] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
   const [settings, setSettings] = useState({
     enabled: false,
     username: '',
-    accessToken: '',
-    refreshToken: ''
   });
 
+  const [initialSettings, setInitialSettings] = useState(null);
+
+  // Fetch current settings
   useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        const currentSettings = await getInstagramSettings();
+        const settingsData = {
+          enabled: currentSettings?.enabled || false,
+          username: currentSettings?.username || '',
+        };
+        setSettings(settingsData);
+        setInitialSettings(settingsData);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        setMessage({ type: 'error', text: 'Failed to load settings' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadSettings();
   }, []);
-
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
-      const data = await getInstagramSettings();
-      if (data) {
-        setSettings({
-          enabled: data.enabled || false,
-          username: data.username || '',
-          accessToken: data.accessToken || '',
-          refreshToken: data.refreshToken || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error loading Instagram settings:', error);
-      setMessage({ type: 'error', text: 'Failed to load Instagram settings' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -115,34 +115,34 @@ const InstagramSettings = () => {
 
       {/* Setup Instructions */}
       <div className="card p-6 mb-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Setup Instructions</h3>
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Instagram className="w-5 h-5 text-pink-500" />
+          How It Works
+        </h3>
         <div className="space-y-4 text-gray-300 text-sm">
-          <div>
-            <h4 className="font-medium text-white mb-2">Option 1: Simple Display (Username Only)</h4>
+          <p>
+            This integration displays your public Instagram posts on the home page, allowing visitors to see your latest content and follow your account.
+          </p>
+          
+          <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg p-4">
+            <h4 className="font-medium text-white mb-2">✨ Quick Setup (2 steps):</h4>
             <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>Enable Instagram integration below</li>
-              <li>Enter your Instagram username</li>
-              <li>Save settings</li>
+              <li>Enable the Instagram integration below</li>
+              <li>Enter your Instagram username (without the @)</li>
+              <li>Click Save Settings</li>
             </ol>
-            <p className="text-xs text-gray-500 mt-2">Note: Without an access token, the Instagram section will show a follow button and link to your profile.</p>
           </div>
           
-          <div className="border-t border-dark-700 pt-4">
-            <h4 className="font-medium text-white mb-2">Option 2: Live Feed (Access Token Required)</h4>
-            <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>Create a Facebook Developer account at <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-400">developers.facebook.com</a></li>
-              <li>Set up an Instagram Basic Display app</li>
-              <li>Generate a User Access Token</li>
-              <li>Paste the access token below</li>
-              <li>Save settings</li>
-            </ol>
-            <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-blue-400 text-xs flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>Access tokens expire after 60 days. You'll need to refresh them periodically. Consider setting up long-lived tokens in your Facebook Developer dashboard.</span>
-              </p>
-            </div>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <p className="text-blue-400 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>Your Instagram account must be <strong>public</strong> for posts to display. The integration automatically fetches your latest posts to show on the home page.</span>
+            </p>
           </div>
+          
+          <p className="text-xs text-gray-500">
+            Note: This displays public Instagram posts. No API keys or Facebook Developer setup required! 🎉
+          </p>
         </div>
       </div>
 
@@ -182,58 +182,38 @@ const InstagramSettings = () => {
               <input
                 type="text"
                 value={settings.username}
-                onChange={(e) => handleChange('username', e.target.value)}
-                placeholder="yourusername"
+                onChange={(e) => handleChange('username', e.target.value.replace('@', ''))}
+                placeholder="your_instagram_username"
                 className="w-full pl-8 pr-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                 disabled={!settings.enabled}
                 required={settings.enabled}
               />
             </div>
             {settings.username && (
-              <a
-                href={`https://instagram.com/${settings.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary-500 hover:text-primary-400 mt-1 inline-flex items-center gap-1"
-              >
-                View Profile <ExternalLink className="w-3 h-3" />
-              </a>
+              <div className="mt-2 flex items-center gap-2">
+                <a
+                  href={`https://instagram.com/${settings.username.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-pink-500 hover:text-pink-400 inline-flex items-center gap-1"
+                >
+                  <Instagram className="w-3 h-3" />
+                  View @{settings.username.replace('@', '')} on Instagram
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             )}
-          </div>
-
-          {/* Access Token */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Access Token (Optional)
-            </label>
-            <div className="relative">
-              <input
-                type={showToken ? 'text' : 'password'}
-                value={settings.accessToken}
-                onChange={(e) => handleChange('accessToken', e.target.value)}
-                placeholder="Enter your Instagram access token"
-                className="w-full pr-10 px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                disabled={!settings.enabled}
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showToken ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
             <p className="text-xs text-gray-500 mt-1">
-              Required to display live Instagram posts. Leave empty to show only profile link.
+              Enter your public Instagram username. Posts will be automatically fetched and displayed.
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-dark-700">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-dark-700">
             <button
               type="submit"
-              disabled={saving || !settings.enabled}
-              className="btn-primary flex items-center gap-2"
+              disabled={saving || (!settings.enabled && !initialSettings?.enabled)}
+              className="btn-primary flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save Settings'}
@@ -241,11 +221,11 @@ const InstagramSettings = () => {
             
             <button
               type="button"
-              onClick={loadSettings}
-              disabled={saving}
-              className="px-4 py-2 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors"
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-500 transition-colors flex items-center justify-center gap-2"
             >
-              Reset
+              <Home className="w-4 h-4" />
+              Preview on Home Page
             </button>
           </div>
         </div>
