@@ -77,5 +77,12 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+    
+    // Seasons/Tournaments collection
+    match /seasons/{seasonId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
   }
 }

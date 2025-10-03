@@ -753,3 +753,348 @@ export const leagueSettingsCollection = {
     });
   }
 };
+
+// Seasons/Tournament collection functions
+export const seasonsCollection = {
+  // Get all seasons
+  getAll: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(collection(database, 'seasons'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching seasons:', error);
+      throw error;
+    }
+  },
+
+  // Get a single season by ID
+  getById: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
+      if (seasonDoc.exists()) {
+        return { id: seasonDoc.id, ...seasonDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching season:', error);
+      throw error;
+    }
+  },
+
+  // Get active season
+  getActive: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'seasons'), 
+        where('isActive', '==', true),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching active season:', error);
+      throw error;
+    }
+  },
+
+  // Create a new season
+  create: async (seasonData) => {
+    try {
+      const database = checkFirebaseInit();
+      const currentYear = new Date().getFullYear();
+      
+      const season = {
+        name: seasonData.name || `5Star Premier League Season ${currentYear}`,
+        year: seasonData.year || currentYear,
+        isActive: seasonData.isActive || false,
+        status: 'upcoming', // upcoming, ongoing, completed
+        
+        // Group stage configuration
+        numberOfGroups: seasonData.numberOfGroups || 4,
+        teamsPerGroup: seasonData.teamsPerGroup || 4,
+        groups: seasonData.groups || [], // Array of {id, name, teams: []}
+        
+        // Knockout configuration
+        knockoutConfig: {
+          matchesPerRound: seasonData.knockoutConfig?.matchesPerRound || 2, // 1 = single leg, 2 = home & away
+          rounds: seasonData.knockoutConfig?.rounds || [], // Array of knockout rounds
+        },
+        
+        // Metadata
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      const docRef = await addDoc(collection(database, 'seasons'), season);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating season:', error);
+      throw error;
+    }
+  },
+
+  // Update a season
+  update: async (seasonId, updates) => {
+    try {
+      const database = checkFirebaseInit();
+      await updateDoc(doc(database, 'seasons', seasonId), {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating season:', error);
+      throw error;
+    }
+  },
+
+  // Set a season as active (deactivates all others)
+  setActive: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      const batch = writeBatch(database);
+      
+      // Get all seasons
+      const seasonsSnapshot = await getDocs(collection(database, 'seasons'));
+      
+      // Deactivate all seasons
+      seasonsSnapshot.docs.forEach((seasonDoc) => {
+        batch.update(seasonDoc.ref, { isActive: false });
+      });
+      
+      // Activate the selected season
+      batch.update(doc(database, 'seasons', seasonId), { 
+        isActive: true,
+        status: 'ongoing',
+        updatedAt: serverTimestamp()
+      });
+      
+      await batch.commit();
+    } catch (error) {
+      console.error('Error setting active season:', error);
+      throw error;
+    }
+  },
+
+  // Delete a season
+  delete: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'seasons', seasonId));
+    } catch (error) {
+      console.error('Error deleting season:', error);
+      throw error;
+    }
+  },
+
+  // Add a group to a season
+  addGroup: async (seasonId, groupData) => {
+    try {
+      const database = checkFirebaseInit();
+      const seasonRef = doc(database, 'seasons', seasonId);
+      const seasonDoc = await getDoc(seasonRef);
+      
+      if (seasonDoc.exists()) {
+        const season = seasonDoc.data();
+        const groups = season.groups || [];
+        const groupId = `group-${Date.now()}`;
+        
+        groups.push({
+          id: groupId,
+          name: groupData.name || `Group ${groups.length + 1}`,
+          teams: groupData.teams || [],
+          standings: [] // Will be calculated from fixtures
+        });
+        
+        await updateDoc(seasonRef, {
+          groups,
+          updatedAt: serverTimestamp()
+        });
+        
+        return groupId;
+      }
+    } catch (error) {
+      console.error('Error adding group:', error);
+      throw error;
+    }
+  },
+
+  // Update a group in a season
+  updateGroup: async (seasonId, groupId, groupData) => {
+    try {
+      const database = checkFirebaseInit();
+      const seasonRef = doc(database, 'seasons', seasonId);
+      const seasonDoc = await getDoc(seasonRef);
+      
+      if (seasonDoc.exists()) {
+        const season = seasonDoc.data();
+        const groups = season.groups || [];
+        const groupIndex = groups.findIndex(g => g.id === groupId);
+        
+        if (groupIndex !== -1) {
+          groups[groupIndex] = {
+            ...groups[groupIndex],
+            ...groupData,
+            id: groupId // Preserve the ID
+          };
+          
+          await updateDoc(seasonRef, {
+            groups,
+            updatedAt: serverTimestamp()
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error updating group:', error);
+      throw error;
+    }
+  },
+
+  // Generate group fixtures
+  generateGroupFixtures: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
+      
+      if (!seasonDoc.exists()) return;
+      
+      const season = seasonDoc.data();
+      const fixtures = [];
+      
+      // Generate fixtures for each group
+      season.groups.forEach(group => {
+        const teams = group.teams;
+        
+        // Round-robin: each team plays every other team
+        for (let i = 0; i < teams.length; i++) {
+          for (let j = i + 1; j < teams.length; j++) {
+            // Home fixture
+            fixtures.push({
+              seasonId,
+              groupId: group.id,
+              groupName: group.name,
+              stage: 'group',
+              homeTeam: teams[i],
+              awayTeam: teams[j],
+              status: 'upcoming',
+              dateTime: null, // To be set by admin
+              venue: null // To be set by admin
+            });
+            
+            // Away fixture (return leg)
+            fixtures.push({
+              seasonId,
+              groupId: group.id,
+              groupName: group.name,
+              stage: 'group',
+              homeTeam: teams[j],
+              awayTeam: teams[i],
+              status: 'upcoming',
+              dateTime: null,
+              venue: null
+            });
+          }
+        }
+      });
+      
+      return fixtures;
+    } catch (error) {
+      console.error('Error generating group fixtures:', error);
+      throw error;
+    }
+  },
+
+  // Seed knockout stage from group qualifiers
+  seedKnockoutStage: async (seasonId, qualifiersPerGroup = 2) => {
+    try {
+      const database = checkFirebaseInit();
+      const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
+      
+      if (!seasonDoc.exists()) return;
+      
+      const season = seasonDoc.data();
+      const qualifiedTeams = [];
+      
+      // Get top N teams from each group
+      season.groups.forEach(group => {
+        const standings = (group.standings || [])
+          .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
+          .slice(0, qualifiersPerGroup);
+        
+        standings.forEach((team, index) => {
+          qualifiedTeams.push({
+            teamId: team.teamId,
+            team: team.team,
+            groupId: group.id,
+            groupPosition: index + 1,
+            points: team.points
+          });
+        });
+      });
+      
+      // Create knockout rounds
+      const knockoutRounds = [];
+      let currentRound = qualifiedTeams;
+      let roundNumber = 1;
+      
+      while (currentRound.length > 1) {
+        const roundName = currentRound.length === 2 ? 'Final' :
+                         currentRound.length === 4 ? 'Semi-Finals' :
+                         currentRound.length === 8 ? 'Quarter-Finals' :
+                         `Round of ${currentRound.length}`;
+        
+        const matches = [];
+        for (let i = 0; i < currentRound.length; i += 2) {
+          matches.push({
+            homeTeam: currentRound[i],
+            awayTeam: currentRound[i + 1],
+            matchNumber: (i / 2) + 1
+          });
+        }
+        
+        knockoutRounds.push({
+          roundNumber,
+          name: roundName,
+          matches,
+          completed: false
+        });
+        
+        currentRound = currentRound.slice(0, currentRound.length / 2);
+        roundNumber++;
+      }
+      
+      await updateDoc(doc(database, 'seasons', seasonId), {
+        'knockoutConfig.rounds': knockoutRounds,
+        updatedAt: serverTimestamp()
+      });
+      
+      return knockoutRounds;
+    } catch (error) {
+      console.error('Error seeding knockout stage:', error);
+      throw error;
+    }
+  },
+
+  // Real-time listener for seasons
+  onSnapshot: (callback) => {
+    const database = checkFirebaseInit();
+    const q = query(collection(database, 'seasons'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (querySnapshot) => {
+      const seasons = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(seasons);
+    });
+  }
+};
