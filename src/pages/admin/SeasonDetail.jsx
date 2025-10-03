@@ -158,116 +158,130 @@ const SeasonDetail = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate('/admin/seasons')}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
-          <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-lg font-semibold text-white">{season.name}</h1>
-              {season.isActive && (
-                <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded">
-                  Active
-                </span>
-              )}
-              <span className={`px-2 py-1 text-xs font-medium border rounded ${getStatusBadge(season.status)}`}>
-                {season.status}
-              </span>
+      <div className="mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start flex-1 min-w-0">
+            <button
+              onClick={() => navigate('/admin/seasons')}
+              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2 flex-shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-400" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                <h1 className="text-lg font-semibold text-white truncate">{season.name}</h1>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {season.isActive && (
+                    <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded whitespace-nowrap">
+                      Active
+                    </span>
+                  )}
+                  <span className={`px-2 py-1 text-xs font-medium border rounded whitespace-nowrap ${getStatusBadge(season.status)}`}>
+                    {season.status}
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400">Season {season.year}</p>
             </div>
-            <p className="text-sm text-gray-400">Season {season.year}</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2">
           {!season.isActive && (
             <button
               onClick={handleSetActive}
-              className="px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors flex items-center space-x-2"
+              className="flex-1 sm:flex-none px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors flex items-center justify-center space-x-2"
             >
               <Play className="w-4 h-4" />
-              <span>Activate</span>
+              <span className="text-sm">Activate</span>
             </button>
           )}
           <button
             onClick={() => navigate(`/admin/seasons/${seasonId}/edit`)}
-            className="px-4 py-2 bg-accent-500/10 text-accent-400 border border-accent-500/30 rounded-lg hover:bg-accent-500/20 transition-colors flex items-center space-x-2"
+            className="flex-1 sm:flex-none px-4 py-2 bg-accent-500/10 text-accent-400 border border-accent-500/30 rounded-lg hover:bg-accent-500/20 transition-colors flex items-center justify-center space-x-2"
           >
             <Edit className="w-4 h-4" />
-            <span>Edit</span>
+            <span className="text-sm">Edit</span>
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div className="card p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Users className="w-5 h-5 text-blue-400" />
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-white">{season.numberOfGroups}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Groups</p>
-              <p className="text-xl font-semibold text-white">{season.numberOfGroups}</p>
+              <p className="text-xs text-gray-400 truncate">Groups</p>
             </div>
           </div>
         </div>
 
         <div className="card p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-accent-500/10 rounded-lg">
-              <Trophy className="w-5 h-5 text-accent-400" />
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 bg-accent-500/10 rounded-lg">
+                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-accent-400" />
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-white">{season.teamsPerGroup}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Teams/Group</p>
-              <p className="text-xl font-semibold text-white">{season.teamsPerGroup}</p>
+              <p className="text-xs text-gray-400 truncate">Teams/Group</p>
             </div>
           </div>
         </div>
 
         <div className="card p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary-500/10 rounded-lg">
-              <Target className="w-5 h-5 text-primary-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Total Teams</p>
-              <p className="text-xl font-semibold text-white">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 bg-primary-500/10 rounded-lg">
+                <Target className="w-4 h-4 md:w-5 md:h-5 text-primary-400" />
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-white">
                 {season.groups?.reduce((sum, g) => sum + (g.teams?.length || 0), 0) || 0}
               </p>
             </div>
+            <div>
+              <p className="text-xs text-gray-400 truncate">Total Teams</p>
+            </div>
           </div>
         </div>
 
         <div className="card p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-400" />
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+              </div>
+              <p className="text-2xl md:text-3xl font-bold text-white">
+                {season.knockoutConfig?.qualifiersPerGroup || 2}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Qualifiers</p>
-              <p className="text-xl font-semibold text-white">
-                {season.knockoutConfig?.qualifiersPerGroup || 2} per group
-              </p>
+              <p className="text-xs text-gray-400 truncate">Per Group</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
         <button
           onClick={handleGenerateFixtures}
           className="card p-4 hover:bg-dark-800/50 transition-colors text-left"
         >
           <div className="flex items-center space-x-3">
-            <Calendar className="w-6 h-6 text-accent-400" />
-            <div>
-              <h3 className="font-semibold text-white">Generate Group Fixtures</h3>
-              <p className="text-sm text-gray-400">Create all group stage matches</p>
+            <div className="p-2 bg-accent-500/10 rounded-lg flex-shrink-0">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-accent-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-white text-sm sm:text-base truncate">Generate Group Fixtures</h3>
+              <p className="text-xs sm:text-sm text-gray-400 truncate">Create all group stage matches</p>
             </div>
           </div>
         </button>
@@ -277,17 +291,19 @@ const SeasonDetail = () => {
           className="card p-4 hover:bg-dark-800/50 transition-colors text-left"
         >
           <div className="flex items-center space-x-3">
-            <Trophy className="w-6 h-6 text-primary-400" />
-            <div>
-              <h3 className="font-semibold text-white">Seed Knockout Stage</h3>
-              <p className="text-sm text-gray-400">Generate knockout brackets</p>
+            <div className="p-2 bg-primary-500/10 rounded-lg flex-shrink-0">
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-white text-sm sm:text-base truncate">Seed Knockout Stage</h3>
+              <p className="text-xs sm:text-sm text-gray-400 truncate">Generate knockout brackets</p>
             </div>
           </div>
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-dark-800 p-1 rounded-lg">
+      <div className="flex space-x-1 mb-6 bg-dark-800 p-1 rounded-lg overflow-x-auto">
         {[
           { id: 'groups', label: 'Groups', icon: Users },
           { id: 'knockout', label: 'Knockout', icon: Trophy },
@@ -296,13 +312,13 @@ const SeasonDetail = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
+            className={`flex-1 min-w-[90px] px-3 sm:px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center space-x-1 sm:space-x-2 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-primary-500 text-white'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <tab.icon className="w-4 h-4" />
+            <tab.icon className="w-4 h-4 flex-shrink-0" />
             <span>{tab.label}</span>
           </button>
         ))}
@@ -312,59 +328,61 @@ const SeasonDetail = () => {
       {activeTab === 'groups' && (
         <div className="space-y-4">
           {season.groups?.map((group) => (
-            <div key={group.id} className="card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">{group.name}</h3>
+            <div key={group.id} className="card p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-4 truncate">{group.name}</h3>
               
               {/* Group Standings */}
               {group.standings && group.standings.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="text-xs text-gray-400 uppercase border-b border-gray-700">
-                      <tr>
-                        <th className="text-left py-2">Pos</th>
-                        <th className="text-left py-2">Team</th>
-                        <th className="text-center py-2">P</th>
-                        <th className="text-center py-2">W</th>
-                        <th className="text-center py-2">D</th>
-                        <th className="text-center py-2">L</th>
-                        <th className="text-center py-2">GD</th>
-                        <th className="text-center py-2">Pts</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                      {group.standings
-                        .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
-                        .map((standing, index) => (
-                          <tr key={standing.teamId} className="border-b border-gray-700/50">
-                            <td className="py-3 text-white">{index + 1}</td>
-                            <td className="py-3">
-                              <div className="flex items-center space-x-2">
-                                <img
-                                  src={standing.team?.logo}
-                                  alt={standing.team?.name}
-                                  className="w-6 h-6 object-contain"
-                                  onError={(e) => e.target.style.display = 'none'}
-                                />
-                                <span className="text-white">{standing.team?.name}</span>
-                              </div>
-                            </td>
-                            <td className="text-center text-gray-300">{standing.played}</td>
-                            <td className="text-center text-gray-300">{standing.won}</td>
-                            <td className="text-center text-gray-300">{standing.drawn}</td>
-                            <td className="text-center text-gray-300">{standing.lost}</td>
-                            <td className="text-center text-gray-300">
-                              {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
-                            </td>
-                            <td className="text-center font-semibold text-white">{standing.points}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="inline-block min-w-full align-middle">
+                    <table className="min-w-full">
+                      <thead className="text-xs text-gray-400 uppercase border-b border-gray-700">
+                        <tr>
+                          <th className="text-left py-2 px-2 sm:px-0 sticky left-0 bg-dark-700 sm:bg-transparent z-10">Pos</th>
+                          <th className="text-left py-2 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10 min-w-[120px] sm:min-w-0">Team</th>
+                          <th className="text-center py-2 px-1 sm:px-2">P</th>
+                          <th className="text-center py-2 px-1 sm:px-2">W</th>
+                          <th className="text-center py-2 px-1 sm:px-2">D</th>
+                          <th className="text-center py-2 px-1 sm:px-2">L</th>
+                          <th className="text-center py-2 px-1 sm:px-2">GD</th>
+                          <th className="text-center py-2 px-1 sm:px-2">Pts</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs sm:text-sm">
+                        {group.standings
+                          .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
+                          .map((standing, index) => (
+                            <tr key={standing.teamId} className="border-b border-gray-700/50">
+                              <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{index + 1}</td>
+                              <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
+                                <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0">
+                                  <img
+                                    src={standing.team?.logo}
+                                    alt={standing.team?.name}
+                                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                                    onError={(e) => e.target.style.display = 'none'}
+                                  />
+                                  <span className="text-white truncate">{standing.team?.name}</span>
+                                </div>
+                              </td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.played}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.won}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.drawn}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.lost}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">
+                                {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
+                              </td>
+                              <td className="text-center font-semibold text-white px-1 sm:px-2">{standing.points}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-400">No standings available yet</p>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-400">No standings available yet</p>
+                  <p className="text-xs text-gray-500 mt-1">
                     Standings will be calculated from match results
                   </p>
                 </div>
@@ -375,32 +393,32 @@ const SeasonDetail = () => {
       )}
 
       {activeTab === 'knockout' && (
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           {season.knockoutConfig?.rounds && season.knockoutConfig.rounds.length > 0 ? (
             <div className="space-y-6">
               {season.knockoutConfig.rounds.map((round) => (
                 <div key={round.roundNumber}>
-                  <h3 className="text-lg font-semibold text-white mb-4">{round.name}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-4">{round.name}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     {round.matches.map((match) => (
-                      <div key={match.matchNumber} className="p-4 bg-dark-800 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
+                      <div key={match.matchNumber} className="p-3 sm:p-4 bg-dark-800 rounded-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
                             <img
                               src={match.homeTeam?.team?.logo}
                               alt={match.homeTeam?.team?.name}
-                              className="w-6 h-6 object-contain"
+                              className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
                               onError={(e) => e.target.style.display = 'none'}
                             />
-                            <span className="text-white">{match.homeTeam?.team?.name || 'TBD'}</span>
+                            <span className="text-white text-sm sm:text-base truncate">{match.homeTeam?.team?.name || 'TBD'}</span>
                           </div>
-                          <span className="text-gray-400 text-sm">vs</span>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-white">{match.awayTeam?.team?.name || 'TBD'}</span>
+                          <span className="text-gray-400 text-xs sm:text-sm text-center flex-shrink-0">vs</span>
+                          <div className="flex items-center space-x-2 flex-1 min-w-0 sm:justify-end">
+                            <span className="text-white text-sm sm:text-base truncate sm:order-2">{match.awayTeam?.team?.name || 'TBD'}</span>
                             <img
                               src={match.awayTeam?.team?.logo}
                               alt={match.awayTeam?.team?.name}
-                              className="w-6 h-6 object-contain"
+                              className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0 sm:order-1"
                               onError={(e) => e.target.style.display = 'none'}
                             />
                           </div>
@@ -412,15 +430,15 @@ const SeasonDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Trophy className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-              <h3 className="text-lg font-semibold text-white mb-2">Knockout Stage Not Set</h3>
-              <p className="text-gray-400 mb-6">
+            <div className="text-center py-8 sm:py-12">
+              <Trophy className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Knockout Stage Not Set</h3>
+              <p className="text-sm text-gray-400 mb-6 px-4">
                 Seed the knockout stage once group stage results are available
               </p>
               <button
                 onClick={handleSeedKnockout}
-                className="btn-primary"
+                className="btn-primary text-sm sm:text-base"
               >
                 Seed Knockout Stage
               </button>
@@ -430,11 +448,11 @@ const SeasonDetail = () => {
       )}
 
       {activeTab === 'fixtures' && (
-        <div className="card p-6">
-          <div className="text-center py-12">
-            <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-            <h3 className="text-lg font-semibold text-white mb-2">Season Fixtures</h3>
-            <p className="text-gray-400">
+        <div className="card p-4 sm:p-6">
+          <div className="text-center py-8 sm:py-12">
+            <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Season Fixtures</h3>
+            <p className="text-sm text-gray-400 px-4">
               View and manage all fixtures for this season
             </p>
           </div>
