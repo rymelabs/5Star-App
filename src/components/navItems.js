@@ -1,4 +1,4 @@
-import { Home, Calendar, Newspaper } from 'lucide-react';
+import { Home, Calendar, Newspaper, TrendingUp } from 'lucide-react';
 
 export const navItems = [
   {
@@ -15,5 +15,10 @@ export const navItems = [
     path: '/news',
     label: 'News',
     icon: Newspaper,
+  },
+  {
+    path: '/stats',
+    label: 'Stats',
+    icon: TrendingUp,
   },
 ];

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
@@ -23,9 +23,21 @@ const AdminFixtures = () => {
     awayScore: '',
     seasonId: '',
     groupId: '',
-    stage: ''
+    stage: '',
+    homeLineup: [],
+    awayLineup: [],
+    events: []
   });
   const [selectedSeasonGroups, setSelectedSeasonGroups] = useState([]);
+  const [showLineupModal, setShowLineupModal] = useState(null); // 'home' or 'away'
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    type: 'goal',
+    team: 'home',
+    player: '',
+    minute: '',
+    assistBy: ''
+  });
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -70,11 +82,14 @@ const AdminFixtures = () => {
         competition: formData.competition || 'Premier League',
         round: formData.round || '',
         status: formData.status || 'scheduled',
-        homeScore: null,
-        awayScore: null,
+        homeScore: formData.homeScore || null,
+        awayScore: formData.awayScore || null,
         seasonId: formData.seasonId || null,
         groupId: formData.groupId || null,
-        stage: formData.stage || null
+        stage: formData.stage || null,
+        homeLineup: formData.homeLineup || [],
+        awayLineup: formData.awayLineup || [],
+        events: formData.events || []
       };
       
       console.log('Submitting fixture:', newFixture);
@@ -100,6 +115,90 @@ const AdminFixtures = () => {
     }
   };
 
+  // Lineup Management
+  const handleTogglePlayerInLineup = (team, playerId) => {
+    const lineupKey = team === 'home' ? 'homeLineup' : 'awayLineup';
+    const currentLineup = formData[lineupKey] || [];
+    
+    if (currentLineup.includes(playerId)) {
+      // Remove player from lineup
+      setFormData(prev => ({
+        ...prev,
+        [lineupKey]: currentLineup.filter(id => id !== playerId)
+      }));
+    } else {
+      // Add player to lineup (max 11)
+      if (currentLineup.length < 11) {
+        setFormData(prev => ({
+          ...prev,
+          [lineupKey]: [...currentLineup, playerId]
+        }));
+      } else {
+        alert('Maximum 11 players allowed in lineup');
+      }
+    }
+  };
+
+  // Event Management
+  const handleAddEvent = () => {
+    if (!eventForm.player || !eventForm.minute) {
+      alert('Please select player and enter minute');
+      return;
+    }
+
+    const newEvent = {
+      id: Date.now().toString(),
+      type: eventForm.type,
+      team: eventForm.team,
+      playerId: eventForm.player,
+      minute: parseInt(eventForm.minute),
+      assistById: eventForm.assistBy || null,
+      timestamp: new Date().toISOString()
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      events: [...(prev.events || []), newEvent]
+    }));
+
+    // Auto-increment score if it's a goal
+    if (eventForm.type === 'goal') {
+      const scoreKey = eventForm.team === 'home' ? 'homeScore' : 'awayScore';
+      setFormData(prev => ({
+        ...prev,
+        [scoreKey]: (parseInt(prev[scoreKey]) || 0) + 1
+      }));
+    }
+
+    // Reset event form
+    setEventForm({
+      type: 'goal',
+      team: 'home',
+      player: '',
+      minute: '',
+      assistBy: ''
+    });
+    setShowEventModal(false);
+  };
+
+  const handleRemoveEvent = (eventId) => {
+    const event = formData.events.find(e => e.id === eventId);
+    
+    // Decrement score if removing a goal
+    if (event && event.type === 'goal') {
+      const scoreKey = event.team === 'home' ? 'homeScore' : 'awayScore';
+      setFormData(prev => ({
+        ...prev,
+        [scoreKey]: Math.max(0, (parseInt(prev[scoreKey]) || 0) - 1)
+      }));
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      events: prev.events.filter(e => e.id !== eventId)
+    }));
+  };
+
   const handleCancel = () => {
     setFormData({
       homeTeam: '',
@@ -114,11 +213,16 @@ const AdminFixtures = () => {
       awayScore: '',
       seasonId: '',
       groupId: '',
-      stage: ''
+      stage: '',
+      homeLineup: [],
+      awayLineup: [],
+      events: []
     });
     setSelectedSeasonGroups([]);
     setShowAddForm(false);
     setEditingId(null);
+    setShowLineupModal(null);
+    setShowEventModal(false);
   };
 
   const handleEdit = (fixture) => {
@@ -140,7 +244,10 @@ const AdminFixtures = () => {
       awayScore: fixture.awayScore !== null && fixture.awayScore !== undefined ? fixture.awayScore : '',
       seasonId: fixture.seasonId || '',
       groupId: fixture.groupId || '',
-      stage: fixture.stage || ''
+      stage: fixture.stage || '',
+      homeLineup: fixture.homeLineup || [],
+      awayLineup: fixture.awayLineup || [],
+      events: fixture.events || []
     });
     // Load groups if season is selected
     if (fixture.seasonId) {
@@ -174,7 +281,10 @@ const AdminFixtures = () => {
         awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null,
         seasonId: formData.seasonId || null,
         groupId: formData.groupId || null,
-        stage: formData.stage || null
+        stage: formData.stage || null,
+        homeLineup: formData.homeLineup || [],
+        awayLineup: formData.awayLineup || [],
+        events: formData.events || []
       };
       
       await updateFixture(editingId, updates);
@@ -491,6 +601,138 @@ const AdminFixtures = () => {
                 </div>
               </div>
 
+              {/* Lineup Management Section */}
+              {formData.homeTeam && formData.awayTeam && (
+                <div className="border-t border-gray-700 pt-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team Lineups
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Home Team Lineup */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-300">
+                          {teams.find(t => t.id === formData.homeTeam)?.name} Lineup
+                        </label>
+                        <span className="text-xs text-gray-400">
+                          {formData.homeLineup.length}/11 selected
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowLineupModal('home')}
+                        className="btn-secondary w-full justify-center"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Select Home Lineup
+                      </button>
+                      {formData.homeLineup.length > 0 && (
+                        <div className="mt-2 text-xs text-gray-400">
+                          {formData.homeLineup.length} player{formData.homeLineup.length !== 1 ? 's' : ''} selected
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Away Team Lineup */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-300">
+                          {teams.find(t => t.id === formData.awayTeam)?.name} Lineup
+                        </label>
+                        <span className="text-xs text-gray-400">
+                          {formData.awayLineup.length}/11 selected
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowLineupModal('away')}
+                        className="btn-secondary w-full justify-center"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Select Away Lineup
+                      </button>
+                      {formData.awayLineup.length > 0 && (
+                        <div className="mt-2 text-xs text-gray-400">
+                          {formData.awayLineup.length} player{formData.awayLineup.length !== 1 ? 's' : ''} selected
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Match Events Section */}
+              {formData.homeTeam && formData.awayTeam && (formData.homeLineup.length > 0 || formData.awayLineup.length > 0) && (
+                <div className="border-t border-gray-700 pt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      Match Events ({formData.events.length})
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowEventModal(true)}
+                      className="btn-secondary text-sm"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Add Event
+                    </button>
+                  </div>
+
+                  {/* Events List */}
+                  {formData.events.length > 0 ? (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {formData.events
+                        .sort((a, b) => a.minute - b.minute)
+                        .map((event) => {
+                          const team = teams.find(t => t.id === event.team);
+                          const player = team?.players?.find(p => p.id === event.playerId);
+                          const assistant = event.assistById ? team?.players?.find(p => p.id === event.assistById) : null;
+                          
+                          return (
+                            <div key={event.id} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-purple-400 w-8">
+                                  {event.minute}'
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {event.type === 'goal' && <Target className="w-4 h-4 text-green-400" />}
+                                  {event.type === 'yellow_card' && <div className="w-3 h-4 bg-yellow-400 rounded-sm" />}
+                                  {event.type === 'red_card' && <div className="w-3 h-4 bg-red-500 rounded-sm" />}
+                                  <div>
+                                    <div className="text-sm text-white">
+                                      {player?.name || 'Unknown Player'}
+                                      <span className="text-xs text-gray-400 ml-2">({team?.name})</span>
+                                    </div>
+                                    {assistant && (
+                                      <div className="text-xs text-gray-400">
+                                        Assist: {assistant.name}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEvent(event.id)}
+                                className="text-red-400 hover:text-red-300 p-1"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 text-sm">
+                      No events added yet. Click "Add Event" to record goals, cards, etc.
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -509,6 +751,276 @@ const AdminFixtures = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Lineup Selection Modal */}
+        {showLineupModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gray-800 p-6 border-b border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Users className="w-6 h-6" />
+                    Select {showLineupModal === 'home' ? 'Home' : 'Away'} Team Lineup
+                  </h3>
+                  <button
+                    onClick={() => setShowLineupModal(null)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-400 mt-2">
+                  Select up to 11 players for the starting lineup
+                  {showLineupModal === 'home' && ` • ${formData.homeLineup.length}/11 selected`}
+                  {showLineupModal === 'away' && ` • ${formData.awayLineup.length}/11 selected`}
+                </p>
+              </div>
+
+              <div className="p-6">
+                {(() => {
+                  const teamId = showLineupModal === 'home' ? formData.homeTeam : formData.awayTeam;
+                  const team = teams.find(t => t.id === teamId);
+                  const lineup = showLineupModal === 'home' ? formData.homeLineup : formData.awayLineup;
+                  const players = team?.players || [];
+
+                  if (players.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-gray-400">
+                        <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>No players added to this team yet.</p>
+                        <p className="text-sm mt-1">Add players to the team first in Team Management.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2">
+                      {players
+                        .sort((a, b) => (a.jerseyNumber || 99) - (b.jerseyNumber || 99))
+                        .map((player) => {
+                          const isSelected = lineup.includes(player.id);
+                          const canSelect = isSelected || lineup.length < 11;
+
+                          return (
+                            <button
+                              key={player.id}
+                              type="button"
+                              onClick={() => canSelect && handleTogglePlayerInLineup(showLineupModal, player.id)}
+                              disabled={!canSelect}
+                              className={`w-full p-4 rounded-lg border-2 transition-all ${
+                                isSelected
+                                  ? 'border-purple-500 bg-purple-500/20'
+                                  : canSelect
+                                  ? 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
+                                  : 'border-gray-700 bg-gray-800/50 opacity-50 cursor-not-allowed'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    {player.jerseyNumber || '?'}
+                                  </div>
+                                  <div className="text-left">
+                                    <div className="font-medium text-white flex items-center gap-2">
+                                      {player.name}
+                                      {player.isCaptain && (
+                                        <span className="text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded border border-yellow-500/50">
+                                          C
+                                        </span>
+                                      )}
+                                      {player.isGoalkeeper && (
+                                        <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded border border-blue-500/50">
+                                          GK
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-gray-400">{player.position}</div>
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <Check className="w-4 h-4 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="sticky bottom-0 bg-gray-800 p-6 border-t border-gray-700">
+                <button
+                  onClick={() => setShowLineupModal(null)}
+                  className="btn-primary w-full justify-center"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Event Modal */}
+        {showEventModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-xl max-w-lg w-full">
+              <div className="p-6 border-b border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Zap className="w-6 h-6" />
+                    Add Match Event
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowEventModal(false);
+                      setEventForm({ type: 'goal', team: '', player: '', minute: '', assistBy: '' });
+                    }}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {/* Event Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Event Type
+                  </label>
+                  <select
+                    value={eventForm.type}
+                    onChange={(e) => setEventForm({ ...eventForm, type: e.target.value })}
+                    className="input-field w-full"
+                  >
+                    <option value="goal">⚽ Goal</option>
+                    <option value="yellow_card">🟨 Yellow Card</option>
+                    <option value="red_card">🟥 Red Card</option>
+                  </select>
+                </div>
+
+                {/* Team Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Team
+                  </label>
+                  <select
+                    value={eventForm.team}
+                    onChange={(e) => {
+                      setEventForm({ ...eventForm, team: e.target.value, player: '', assistBy: '' });
+                    }}
+                    className="input-field w-full"
+                  >
+                    <option value="">Select Team</option>
+                    <option value={formData.homeTeam}>
+                      {teams.find(t => t.id === formData.homeTeam)?.name}
+                    </option>
+                    <option value={formData.awayTeam}>
+                      {teams.find(t => t.id === formData.awayTeam)?.name}
+                    </option>
+                  </select>
+                </div>
+
+                {/* Player Selection */}
+                {eventForm.team && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Player
+                    </label>
+                    <select
+                      value={eventForm.player}
+                      onChange={(e) => setEventForm({ ...eventForm, player: e.target.value })}
+                      className="input-field w-full"
+                    >
+                      <option value="">Select Player</option>
+                      {(() => {
+                        const team = teams.find(t => t.id === eventForm.team);
+                        const lineup = eventForm.team === formData.homeTeam ? formData.homeLineup : formData.awayLineup;
+                        const lineupPlayers = team?.players?.filter(p => lineup.includes(p.id)) || [];
+                        
+                        return lineupPlayers
+                          .sort((a, b) => (a.jerseyNumber || 99) - (b.jerseyNumber || 99))
+                          .map(player => (
+                            <option key={player.id} value={player.id}>
+                              #{player.jerseyNumber} - {player.name}
+                            </option>
+                          ));
+                      })()}
+                    </select>
+                  </div>
+                )}
+
+                {/* Minute */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Minute
+                  </label>
+                  <input
+                    type="number"
+                    value={eventForm.minute}
+                    onChange={(e) => setEventForm({ ...eventForm, minute: e.target.value })}
+                    className="input-field w-full"
+                    placeholder="e.g., 45"
+                    min="1"
+                    max="120"
+                  />
+                </div>
+
+                {/* Assist (only for goals) */}
+                {eventForm.type === 'goal' && eventForm.team && eventForm.player && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Assist By (Optional)
+                    </label>
+                    <select
+                      value={eventForm.assistBy}
+                      onChange={(e) => setEventForm({ ...eventForm, assistBy: e.target.value })}
+                      className="input-field w-full"
+                    >
+                      <option value="">No Assist</option>
+                      {(() => {
+                        const team = teams.find(t => t.id === eventForm.team);
+                        const lineup = eventForm.team === formData.homeTeam ? formData.homeLineup : formData.awayLineup;
+                        const lineupPlayers = team?.players?.filter(p => lineup.includes(p.id) && p.id !== eventForm.player) || [];
+                        
+                        return lineupPlayers
+                          .sort((a, b) => (a.jerseyNumber || 99) - (b.jerseyNumber || 99))
+                          .map(player => (
+                            <option key={player.id} value={player.id}>
+                              #{player.jerseyNumber} - {player.name}
+                            </option>
+                          ));
+                      })()}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-gray-700 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowEventModal(false);
+                    setEventForm({ type: 'goal', team: '', player: '', minute: '', assistBy: '' });
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddEvent}
+                  disabled={!eventForm.team || !eventForm.player || !eventForm.minute}
+                  className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Event
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
