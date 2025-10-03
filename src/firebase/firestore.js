@@ -1079,6 +1079,18 @@ export const seasonsCollection = {
     }
   },
 
+  // Real-time listener for a single season
+  onSnapshotById: (seasonId, callback) => {
+    const database = checkFirebaseInit();
+    return onSnapshot(doc(database, 'seasons', seasonId), (doc) => {
+      if (doc.exists()) {
+        callback({ id: doc.id, ...doc.data() });
+      } else {
+        callback(null);
+      }
+    });
+  },
+
   // Generate group fixtures
   generateGroupFixtures: async (seasonId) => {
     try {
