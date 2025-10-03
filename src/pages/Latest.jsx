@@ -218,12 +218,15 @@ const Latest = () => {
           
           <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-[auto_1fr_repeat(3,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
-              <div className="text-left">#</div>
-              <div className="text-left">Team</div>
-              <div className="text-center w-10">P</div>
+            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
+              <div className="text-left">S/N</div>
+              <div className="text-left">TEAM</div>
+              <div className="text-center w-8">P</div>
+              <div className="text-center w-8">W</div>
+              <div className="text-center w-8">D</div>
+              <div className="text-center w-8">L</div>
               <div className="text-center w-10">GD</div>
-              <div className="text-center w-10">Pts</div>
+              <div className="text-center w-10">PTS</div>
             </div>
             
             {/* Table Body */}
@@ -231,7 +234,7 @@ const Latest = () => {
               {topTeams.map((team, index) => (
                 <div
                   key={team.team.id}
-                  className="grid grid-cols-[auto_1fr_repeat(3,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
+                  className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 hover:bg-dark-800/30 transition-colors duration-200"
                 >
                   <div className="flex items-center">
                     <span className="text-sm font-medium text-white">
@@ -253,8 +256,20 @@ const Latest = () => {
                     </span>
                   </div>
                   
-                  <div className="text-center w-10 flex items-center justify-center">
+                  <div className="text-center w-8 flex items-center justify-center">
                     <span className="text-sm text-gray-300">{team.played}</span>
+                  </div>
+                  
+                  <div className="text-center w-8 flex items-center justify-center">
+                    <span className="text-sm text-gray-300">{team.won}</span>
+                  </div>
+                  
+                  <div className="text-center w-8 flex items-center justify-center">
+                    <span className="text-sm text-gray-300">{team.drawn}</span>
+                  </div>
+                  
+                  <div className="text-center w-8 flex items-center justify-center">
+                    <span className="text-sm text-gray-300">{team.lost}</span>
                   </div>
                   
                   <div className="text-center w-10 flex items-center justify-center">

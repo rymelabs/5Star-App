@@ -40,20 +40,41 @@ const AdminLeagueSettings = () => {
       return;
     }
 
+    // Convert to numbers and validate
+    const qualifiedPos = parseInt(formData.qualifiedPosition, 10);
+    const relegationPos = parseInt(formData.relegationPosition, 10);
+    const totalTeams = parseInt(formData.totalTeams, 10);
+
+    // Check for valid numbers
+    if (isNaN(qualifiedPos) || isNaN(relegationPos) || isNaN(totalTeams)) {
+      showToast('Please fill in all fields with valid numbers', 'error');
+      return;
+    }
+
     // Validation
-    if (formData.qualifiedPosition >= formData.relegationPosition) {
+    if (qualifiedPos >= relegationPos) {
       showToast('Qualified position must be less than relegation position', 'error');
       return;
     }
 
-    if (formData.qualifiedPosition < 1 || formData.relegationPosition > formData.totalTeams) {
+    if (qualifiedPos < 1 || relegationPos > totalTeams) {
       showToast('Invalid position values', 'error');
+      return;
+    }
+
+    if (totalTeams < 2) {
+      showToast('Total teams must be at least 2', 'error');
       return;
     }
 
     try {
       setSaving(true);
-      await updateLeagueSettings(formData);
+      // Ensure we're saving proper numbers
+      await updateLeagueSettings({
+        qualifiedPosition: qualifiedPos,
+        relegationPosition: relegationPos,
+        totalTeams: totalTeams
+      });
       showToast('League settings updated successfully!', 'success');
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -65,9 +86,10 @@ const AdminLeagueSettings = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const numValue = value === '' ? '' : parseInt(value, 10);
     setFormData(prev => ({
       ...prev,
-      [name]: parseInt(value, 10)
+      [name]: numValue
     }));
   };
 
