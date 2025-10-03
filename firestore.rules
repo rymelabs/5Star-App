@@ -22,8 +22,16 @@ service cloud.firestore {
     // Fixtures collection
     match /fixtures/{fixtureId} {
       allow read: if true; // Public read access
-      allow write: if request.auth != null && 
+      // Admins can create/delete
+      allow create, delete: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Updates:
+      // - Admins can update anything
+      // - Authenticated users can update only likes/likedBy/updatedAt (for liking fixtures)
+      allow update: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'updatedAt'])
+      );
     }
     
     // Articles collection
