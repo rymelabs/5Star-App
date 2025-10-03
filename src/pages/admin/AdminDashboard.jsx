@@ -113,15 +113,23 @@ const AdminDashboard = () => {
       onClick: () => navigate('/admin/news'),
     },
     {
-      title: 'League Settings',
-      description: 'Configure qualification positions',
-      icon: Settings,
-      color: 'text-yellow-400',
-      onClick: () => navigate('/admin/league-settings'),
+      title: 'New Season',
+      description: 'Create a tournament season',
+      icon: Trophy,
+      color: 'text-primary-400',
+      onClick: () => navigate('/admin/seasons/create'),
     },
   ];
 
   const managementSections = [
+    {
+      title: 'Seasons Management',
+      description: 'Create and manage tournament seasons',
+      icon: Trophy,
+      path: '/admin/seasons',
+      color: 'text-primary-400',
+      count: '-',
+    },
     {
       title: 'Teams Management',
       description: 'Manage team profiles, logos, and information',
@@ -145,6 +153,14 @@ const AdminDashboard = () => {
       path: '/admin/news',
       color: 'text-purple-400',
       count: articles.length,
+    },
+    {
+      title: 'League Settings',
+      description: 'Configure qualification and relegation positions',
+      icon: Settings,
+      path: '/admin/league-settings',
+      color: 'text-yellow-400',
+      count: '-',
     },
   ];
 
