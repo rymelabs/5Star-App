@@ -283,6 +283,56 @@ export const fixturesCollection = {
       console.error('Error toggling fixture like:', error);
       throw error;
     }
+  },
+
+  // Delete fixtures by season
+  deleteBySeason: async (seasonId) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'fixtures'),
+        where('seasonId', '==', seasonId)
+      );
+      const querySnapshot = await getDocs(q);
+      
+      const batch = writeBatch(database);
+      querySnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+      return querySnapshot.docs.length; // Return count of deleted fixtures
+    } catch (error) {
+      console.error('Error deleting fixtures by season:', error);
+      throw error;
+    }
+  },
+
+  // Clean up broken fixtures (fixtures with undefined team IDs)
+  cleanupBrokenFixtures: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const querySnapshot = await getDocs(collection(database, 'fixtures'));
+      
+      const batch = writeBatch(database);
+      let deletedCount = 0;
+      
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        // Delete fixtures with undefined or missing team IDs
+        if (!data.homeTeamId || !data.awayTeamId || 
+            data.homeTeamId === 'undefined' || data.awayTeamId === 'undefined') {
+          batch.delete(doc.ref);
+          deletedCount++;
+        }
+      });
+      
+      await batch.commit();
+      return deletedCount;
+    } catch (error) {
+      console.error('Error cleaning up broken fixtures:', error);
+      throw error;
+    }
   }
 };
 
@@ -1053,8 +1103,8 @@ export const seasonsCollection = {
               groupId: group.id,
               groupName: group.name,
               stage: 'group',
-              homeTeam: teams[i],
-              awayTeam: teams[j],
+              homeTeamId: teams[i].id,
+              awayTeamId: teams[j].id,
               status: 'upcoming',
               dateTime: null, // To be set by admin
               venue: null // To be set by admin
@@ -1066,8 +1116,8 @@ export const seasonsCollection = {
               groupId: group.id,
               groupName: group.name,
               stage: 'group',
-              homeTeam: teams[j],
-              awayTeam: teams[i],
+              homeTeamId: teams[j].id,
+              awayTeamId: teams[i].id,
               status: 'upcoming',
               dateTime: null,
               venue: null

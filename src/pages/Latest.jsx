@@ -5,19 +5,15 @@ import { useFootball } from '../context/FootballContext';
 import { ChevronRight, Calendar, Trophy } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
-import SeasonStandings from '../components/SeasonStandings';
 
 const Latest = () => {
   const navigate = useNavigate();
-  const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   
   // Add try-catch for context usage
   let articles = [];
   let fixtures = [];
   let leagueTable = [];
-  let seasons = [];
   let activeSeason = null;
-  let teams = [];
   
   try {
     const newsContext = useNews();
@@ -30,32 +26,46 @@ const Latest = () => {
     const footballContext = useFootball();
     fixtures = footballContext?.fixtures || [];
     leagueTable = footballContext?.leagueTable || [];
-    seasons = footballContext?.seasons || [];
     activeSeason = footballContext?.activeSeason || null;
-    teams = footballContext?.teams || [];
   } catch (error) {
     console.error('Error accessing FootballContext:', error);
   }
 
-  // Set initial selected season to active season
-  React.useEffect(() => {
-    if (activeSeason && !selectedSeasonId) {
-      setSelectedSeasonId(activeSeason.id);
-    }
-  }, [activeSeason, selectedSeasonId]);
-
   // Get latest news for carousel (top 3)
   const latestNews = articles?.slice(0, 3) || [];
 
-  // Get upcoming fixtures (next 5) - simplified to avoid date parsing errors
-  const upcomingFixtures = fixtures?.slice(0, 5) || [];
+  // Get upcoming fixtures - prioritize season fixtures
+  const upcomingFixtures = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0) return [];
+    
+    // Get current time
+    const now = new Date();
+    
+    // Filter for upcoming fixtures only
+    const upcoming = fixtures.filter(f => {
+      try {
+        const fixtureDate = new Date(f.dateTime);
+        return fixtureDate > now;
+      } catch {
+        return false;
+      }
+    });
+    
+    // Separate season fixtures from regular fixtures
+    const seasonFixtures = upcoming.filter(f => f.seasonId && f.seasonId === activeSeason?.id);
+    const regularFixtures = upcoming.filter(f => !f.seasonId || f.seasonId !== activeSeason?.id);
+    
+    // Combine: season fixtures first, then regular fixtures
+    const combined = [...seasonFixtures, ...regularFixtures];
+    
+    // Sort by date and take first 5
+    return combined
+      .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+      .slice(0, 5);
+  }, [fixtures, activeSeason]);
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
-
-  // Get selected season for standings
-  const displaySeason = seasons.find(s => s.id === selectedSeasonId) || activeSeason;
-  const showSeasonStandings = seasons.length > 0 && displaySeason;
 
   const handleNewsClick = (article) => {
     if (article?.slug) {
@@ -218,35 +228,8 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Season Standings / League Table Section */}
-      {showSeasonStandings ? (
-        <section>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <div className="flex items-center">
-              <Trophy className="w-5 h-5 text-accent-500 mr-2 flex-shrink-0" />
-              <h2 className="text-xl font-semibold text-white">Season Standings</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Season Selector */}
-              {seasons.length > 1 && (
-                <select
-                  value={selectedSeasonId || ''}
-                  onChange={(e) => setSelectedSeasonId(e.target.value)}
-                  className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
-                >
-                  {seasons.map(season => (
-                    <option key={season.id} value={season.id}>
-                      {season.name} {season.isActive && '(Active)'}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </div>
-          
-          <SeasonStandings season={displaySeason} teams={teams} />
-        </section>
-      ) : topTeams.length > 0 && (
+      {/* League Table Section */}
+      {topTeams.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
