@@ -32,6 +32,7 @@ export const registerUser = async (email, password, userData) => {
       name: userData.name,
       email: user.email,
       role: userData.role || 'user', // Use provided role or default to 'user'
+      profileCompleted: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -49,7 +50,8 @@ export const registerUser = async (email, password, userData) => {
       uid: user.uid,
       email: user.email,
       name: userData.name,
-      role: userData.role || 'user'
+      role: userData.role || 'user',
+      profileCompleted: false
     };
   } catch (error) {
     console.error('❌ Registration error:', error);
@@ -180,6 +182,7 @@ export const signInWithGoogle = async () => {
         email: user.email,
         role: 'user',
         authProvider: 'google',
+        profileCompleted: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -187,12 +190,14 @@ export const signInWithGoogle = async () => {
       await setDoc(doc(db, 'users', user.uid), newUserDoc);
     }
 
+    const userData = userDoc.exists() ? userDoc.data() : {};
     return {
       uid: user.uid,
       email: user.email,
       name: user.displayName || '',
-      role: userDoc.exists() ? userDoc.data().role : 'user',
-      authProvider: 'google'
+      role: userData.role || 'user',
+      authProvider: 'google',
+      profileCompleted: userData.profileCompleted || false
     };
   } catch (error) {
     console.error('❌ Google sign-in error:', error);
@@ -212,7 +217,8 @@ export const signInAnonymous = async () => {
       name: 'Guest User',
       role: 'anonymous',
       authProvider: 'anonymous',
-      isAnonymous: true
+      isAnonymous: true,
+      profileCompleted: false // Anonymous users never complete profile
     };
   } catch (error) {
     console.error('❌ Anonymous sign-in error:', error);
@@ -235,15 +241,29 @@ export const updateUserProfile = async (updates) => {
 
     // Update Firestore document
     const userDocRef = doc(db, 'users', user.uid);
-    await setDoc(userDocRef, {
+    
+    // Mark profile as completed if this is a profile setup update
+    const updateData = {
       ...updates,
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    };
+    
+    // If updating profile data, mark as completed for non-anonymous users
+    if (updates.displayName || updates.bio || updates.favoriteTeam) {
+      if (user.isAnonymous) {
+        // Don't set profileCompleted for anonymous users
+        updateData.profileCompleted = false;
+      } else {
+        updateData.profileCompleted = true;
+      }
+    }
+    
+    await setDoc(userDocRef, updateData, { merge: true });
 
     return {
       uid: user.uid,
       email: user.email,
-      ...updates
+      ...updateData
     };
   } catch (error) {
     console.error('❌ Profile update error:', error);

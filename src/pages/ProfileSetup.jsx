@@ -48,6 +48,8 @@ const ProfileSetup = () => {
         favoriteTeam: formData.favoriteTeam.trim()
       });
       
+      // For non-anonymous users, this marks profile as completed
+      // For anonymous users, they can set up profile each time
       navigate('/', { replace: true });
     } catch (error) {
       console.error('Profile update error:', error);

@@ -26,15 +26,6 @@ const Layout = () => {
     setShowProfileModal(false);
   };
 
-  const handleSearchResult = (result) => {
-    setShowSearchModal(false);
-    if (result.type === 'news') {
-      navigate(`/news/${result.slug}`);
-    } else if (result.type === 'fixture') {
-      navigate(`/fixtures/${result.id}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-dark-900 text-white">
       {/* Header */}
@@ -50,7 +41,7 @@ const Layout = () => {
       
       {/* Modals */}
       {showSearchModal && (
-        <SearchModal onClose={handleSearchClose} onResult={handleSearchResult} />
+        <SearchModal onClose={handleSearchClose} />
       )}
       
       {showProfileModal && (
