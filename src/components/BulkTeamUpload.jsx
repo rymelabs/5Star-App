@@ -344,7 +344,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       <div className="relative w-full max-w-4xl bg-dark-900 border border-dark-700 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">
-          <h2 className="text-xl font-bold text-white tracking-tight">Bulk Upload Teams</h2>
+          <h2 className="text-lg font-bold text-white tracking-tight">Bulk Upload Teams</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X className="w-6 h-6" />
           </button>

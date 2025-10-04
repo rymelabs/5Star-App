@@ -23,8 +23,8 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
           <div className="bg-dark-900 border border-dark-700 rounded-2xl p-8 max-w-md w-full text-center">
-            <div className="text-red-500 text-4xl mb-4">⚠️</div>
-            <h1 className="text-xl font-bold text-white mb-4">Something went wrong</h1>
+            <div className="text-red-500 text-lg mb-4">⚠️</div>
+            <h1 className="text-lg font-bold text-white mb-4">Something went wrong</h1>
             
             {import.meta.env.DEV ? (
               <div className="text-left">

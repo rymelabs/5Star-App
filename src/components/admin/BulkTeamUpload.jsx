@@ -163,7 +163,7 @@ Liverpool,https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png,
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">
           <div>
-            <h2 className="text-xl font-semibold text-white">Bulk Upload Teams</h2>
+            <h2 className="text-lg font-semibold text-white">Bulk Upload Teams</h2>
             <p className="text-gray-400 text-sm">Upload multiple teams using CSV or JSON format</p>
           </div>
           <button

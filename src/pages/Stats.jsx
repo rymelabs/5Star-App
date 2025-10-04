@@ -95,13 +95,18 @@ const Stats = () => {
     const gkMap = new Map();
 
     filteredFixtures.forEach(fixture => {
+      // Ensure scores are numbers
+      const homeScore = parseInt(fixture.homeScore) || 0;
+      const awayScore = parseInt(fixture.awayScore) || 0;
+      
       // Check home team
       const homeLineup = fixture.homeLineup || [];
       const homeGK = fixture.homeTeam?.players?.find(p => 
         homeLineup.includes(p.id) && p.isGoalkeeper
       );
       
-      if (homeGK && fixture.awayScore === 0) {
+      // Home team clean sheet (away score is 0)
+      if (homeGK && awayScore === 0) {
         const key = `${homeGK.id}_${fixture.homeTeam.id}`;
         if (!gkMap.has(key)) {
           gkMap.set(key, {
@@ -138,7 +143,8 @@ const Stats = () => {
         awayLineup.includes(p.id) && p.isGoalkeeper
       );
       
-      if (awayGK && fixture.homeScore === 0) {
+      // Away team clean sheet (home score is 0)
+      if (awayGK && homeScore === 0) {
         const key = `${awayGK.id}_${fixture.awayTeam.id}`;
         if (!gkMap.has(key)) {
           gkMap.set(key, {
@@ -244,7 +250,7 @@ const Stats = () => {
         {/* Rank */}
         <div className="w-8 text-center flex-shrink-0">
           {isTopThree ? (
-            <span className="text-2xl">{medals[index]}</span>
+            <span className="text-lg">{medals[index]}</span>
           ) : (
             <span className="text-gray-400 font-semibold">{index + 1}</span>
           )}
@@ -268,7 +274,7 @@ const Stats = () => {
 
         {/* Stat Value */}
         <div className="text-right flex-shrink-0">
-          <div className="text-2xl font-bold text-white">{statValue}</div>
+          <div className="text-lg font-bold text-white">{statValue}</div>
           {stat === 'cleanSheets' && player.appearances && (
             <div className="text-xs text-gray-400">{player.appearances} apps</div>
           )}
@@ -334,7 +340,7 @@ const Stats = () => {
     <div className="p-6 pb-24">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+        <h1 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
           <Trophy className="w-7 h-7 text-purple-400" />
           Player Statistics
         </h1>

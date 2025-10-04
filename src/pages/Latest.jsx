@@ -174,7 +174,7 @@ const Latest = () => {
       {latestNews.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Latest News</h2>
+            <h2 className="text-lg font-semibold text-white">Latest News</h2>
             <button
               onClick={() => navigate('/news')}
               className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
@@ -221,15 +221,15 @@ const Latest = () => {
 
             {/* Other Articles - Smaller Cards in Grid */}
             {latestNews.length > 1 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 {latestNews.slice(1, 3).map((article) => (
                   <div
                     key={article.id}
                     onClick={() => handleNewsClick(article)}
-                    className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
+                    className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200 flex"
                   >
-                    {/* News Image - Smaller */}
-                    <div className="aspect-square overflow-hidden">
+                    {/* News Image - Compact Square */}
+                    <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
                       <img
                         src={article.image}
                         alt={article.title}
@@ -238,8 +238,8 @@ const Latest = () => {
                     </div>
                     
                     {/* News Content - Compact */}
-                    <div className="p-3">
-                      <h3 className="font-semibold text-white text-sm mb-2 line-clamp-2">
+                    <div className="p-3 flex-1 flex flex-col justify-center">
+                      <h3 className="font-semibold text-white text-sm mb-1 line-clamp-2">
                         {article.title}
                       </h3>
                       <span className="text-xs text-gray-500">
@@ -260,7 +260,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <TrendingUp className="w-5 h-5 text-accent-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">Recent Results</h2>
+              <h2 className="text-lg font-semibold text-white">Recent Results</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
@@ -332,7 +332,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Target className="w-5 h-5 text-primary-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">Top Scoring Teams</h2>
+              <h2 className="text-lg font-semibold text-white">Top Scoring Teams</h2>
             </div>
           </div>
           
@@ -367,7 +367,7 @@ const Latest = () => {
                   
                   {/* Goals */}
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-primary-500">{scorer.goals}</div>
+                    <div className="text-lg font-bold text-primary-500">{scorer.goals}</div>
                     <div className="text-xs text-gray-500">goals</div>
                   </div>
                 </div>
@@ -383,7 +383,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Calendar className="w-5 h-5 text-primary-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">Upcoming Fixtures</h2>
+              <h2 className="text-lg font-semibold text-white">Upcoming Fixtures</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
@@ -482,7 +482,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Trophy className="w-5 h-5 text-accent-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">{activeSeason.name} Fixtures</h2>
+              <h2 className="text-lg font-semibold text-white">{activeSeason.name} Fixtures</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
@@ -592,7 +592,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Trophy className="w-5 h-5 text-accent-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">League Table</h2>
+              <h2 className="text-lg font-semibold text-white">League Table</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
@@ -706,7 +706,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Instagram className="w-5 h-5 text-pink-500 mr-2" />
-              <h2 className="text-xl font-semibold text-white">Follow Us on Instagram</h2>
+              <h2 className="text-lg font-semibold text-white">Follow Us on Instagram</h2>
             </div>
             <a
               href={`https://instagram.com/${instagramSettings.username.replace('@', '')}`}

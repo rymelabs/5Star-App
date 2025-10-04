@@ -321,13 +321,13 @@ const Profile = () => {
           <h3 className="text-lg font-semibold text-white mb-4">Activity</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-primary-500 mb-1">
+              <div className="text-lg font-bold text-primary-500 mb-1">
                 {Math.floor(Math.random() * 50) + 10}
               </div>
               <div className="text-sm text-gray-400">Comments</div>
             </div>
             <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-accent-500 mb-1">
+              <div className="text-lg font-bold text-accent-500 mb-1">
                 {Math.floor(Math.random() * 20) + 5}
               </div>
               <div className="text-sm text-gray-400">Articles Read</div>
