@@ -316,8 +316,13 @@ const PhoneAuth = () => {
 
     try {
       setLoading(true);
-      await verifyPhoneCode(confirmationResult, formData.verificationCode);
-      navigate('/profile-setup');
+      const result = await verifyPhoneCode(confirmationResult, formData.verificationCode);
+      // Only redirect to profile setup if profile is not completed
+      if (!result || !result.profileCompleted) {
+        navigate('/profile-setup');
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       console.error('Verification error:', error);
       setError('Invalid verification code. Please try again.');

@@ -54,11 +54,21 @@ const EmailAuth = () => {
           name: '', // Will be set in profile setup
           role: 'user'
         };
-        await register(userData);
-        navigate('/profile-setup');
+        const result = await register(userData);
+        // Only redirect to profile setup if profile is not completed
+        if (!result.profileCompleted) {
+          navigate('/profile-setup');
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
-        await login(formData.email, formData.password);
-        navigate('/', { replace: true });
+        const result = await login(formData.email, formData.password);
+        // Check if user has completed profile setup
+        if (result && !result.profileCompleted && !result.isAnonymous) {
+          navigate('/profile-setup');
+        } else {
+          navigate('/', { replace: true });
+        }
       }
       
     } catch (error) {

@@ -14,8 +14,14 @@ const AuthLanding = () => {
     try {
       setLoading(true);
       setError('');
-      await signInWithGoogle();
-      navigate('/profile-setup');
+      const userData = await signInWithGoogle();
+      
+      // Only redirect to profile setup if profile is not completed
+      if (!userData.profileCompleted) {
+        navigate('/profile-setup');
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       console.error('Google sign-in error:', error);
       setError('Failed to sign in with Google. Please try again.');
@@ -29,7 +35,8 @@ const AuthLanding = () => {
       setLoading(true);
       setError('');
       await signInAnonymously();
-      navigate('/', { replace: true });
+      // Anonymous users always go to profile setup
+      navigate('/profile-setup');
     } catch (error) {
       console.error('Anonymous sign-in error:', error);
       setError('Failed to sign in anonymously. Please try again.');

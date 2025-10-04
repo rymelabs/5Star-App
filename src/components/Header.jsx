@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import SearchModal from './SearchModal';
+import SearchModal from './ui/SearchModal';
 import ProfileModal from './ProfileModal';
 
 const Header = () => {

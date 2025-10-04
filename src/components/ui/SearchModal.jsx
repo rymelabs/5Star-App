@@ -1,18 +1,201 @@
-import React, { useState, useEffect } from 'react';
-import { X, Search } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Search, Trophy, Users, Newspaper, Calendar, Shield } from 'lucide-react';
 import { useNews } from '../../context/NewsContext';
 import { useFootball } from '../../context/FootballContext';
+import { useCompetitions } from '../../context/CompetitionsContext';
+import { useNavigate } from 'react-router-dom';
 
-const SearchModal = ({ onClose, onResult }) => {
+const SearchModal = ({ onClose }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  const { searchArticles } = useNews();
-  const { fixtures, teams } = useFootball();
+  const { articles } = useNews();
+  const { fixtures, teams, seasons } = useFootball();
+  const { competitions } = useCompetitions();
+  const navigate = useNavigate();
 
+  // Memoized search function
+  const performSearch = useCallback((searchQuery) => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    const searchResults = [];
+
+    try {
+      // 1. Search Teams
+      if (teams && Array.isArray(teams)) {
+        const teamResults = teams
+          .filter(team => {
+            if (!team) return false;
+            const teamName = team.name || '';
+            const teamCity = team.city || '';
+            return teamName.toLowerCase().includes(lowerQuery) || 
+                   teamCity.toLowerCase().includes(lowerQuery);
+          })
+          .slice(0, 5)
+          .map(team => ({
+            id: team.id,
+            type: 'team',
+            category: 'Team',
+            icon: Users,
+            title: team.name || 'Unknown Team',
+            subtitle: team.city || '',
+            image: team.logo || null,
+            data: team
+          }));
+        
+        searchResults.push(...teamResults);
+      }
+
+      // 2. Search Players (from all teams)
+      if (teams && Array.isArray(teams)) {
+        const playerResults = [];
+        teams.forEach(team => {
+          if (team.players && Array.isArray(team.players)) {
+            team.players
+              .filter(player => {
+                if (!player) return false;
+                const playerName = player.name || '';
+                return playerName.toLowerCase().includes(lowerQuery);
+              })
+              .forEach(player => {
+                playerResults.push({
+                  id: `${team.id}-${player.id}`,
+                  type: 'player',
+                  category: 'Player',
+                  icon: Shield,
+                  title: player.name || 'Unknown Player',
+                  subtitle: `${team.name || 'Unknown Team'} • #${player.jerseyNumber || '?'}`,
+                  image: team.logo || null,
+                  data: { player, team }
+                });
+              });
+          }
+        });
+        
+        searchResults.push(...playerResults.slice(0, 5));
+      }
+
+      // 3. Search Competitions
+      if (competitions && Array.isArray(competitions)) {
+        const competitionResults = competitions
+          .filter(comp => {
+            if (!comp) return false;
+            const compName = comp.name || '';
+            return compName.toLowerCase().includes(lowerQuery);
+          })
+          .slice(0, 3)
+          .map(comp => ({
+            id: comp.id,
+            type: 'competition',
+            category: 'Competition',
+            icon: Trophy,
+            title: comp.name || 'Unknown Competition',
+            subtitle: comp.season || '',
+            image: null,
+            data: comp
+          }));
+        
+        searchResults.push(...competitionResults);
+      }
+
+      // 4. Search Seasons
+      if (seasons && Array.isArray(seasons)) {
+        const seasonResults = seasons
+          .filter(season => {
+            if (!season) return false;
+            const seasonName = season.name || '';
+            return seasonName.toLowerCase().includes(lowerQuery);
+          })
+          .slice(0, 3)
+          .map(season => ({
+            id: season.id,
+            type: 'season',
+            category: 'Season',
+            icon: Calendar,
+            title: season.name || 'Unknown Season',
+            subtitle: `${season.startDate || ''} - ${season.endDate || ''}`,
+            image: null,
+            data: season
+          }));
+        
+        searchResults.push(...seasonResults);
+      }
+
+      // 5. Search Fixtures
+      if (fixtures && Array.isArray(fixtures)) {
+        const fixtureResults = fixtures
+          .filter(fixture => {
+            if (!fixture) return false;
+            
+            const homeTeamName = fixture.homeTeam?.name || '';
+            const awayTeamName = fixture.awayTeam?.name || '';
+            const competition = fixture.competition || '';
+            
+            return homeTeamName.toLowerCase().includes(lowerQuery) ||
+                   awayTeamName.toLowerCase().includes(lowerQuery) ||
+                   competition.toLowerCase().includes(lowerQuery);
+          })
+          .slice(0, 5)
+          .map(fixture => ({
+            id: fixture.id,
+            type: 'fixture',
+            category: 'Match',
+            icon: Trophy,
+            title: `${fixture.homeTeam?.name || 'TBD'} vs ${fixture.awayTeam?.name || 'TBD'}`,
+            subtitle: `${fixture.competition || ''} • ${fixture.date || ''}`,
+            image: null,
+            data: fixture
+          }));
+        
+        searchResults.push(...fixtureResults);
+      }
+
+      // 6. Search News Articles
+      if (articles && Array.isArray(articles)) {
+        const newsResults = articles
+          .filter(article => {
+            if (!article) return false;
+            
+            const title = article.title || '';
+            const excerpt = article.excerpt || '';
+            const content = article.content || '';
+            
+            return title.toLowerCase().includes(lowerQuery) ||
+                   excerpt.toLowerCase().includes(lowerQuery) ||
+                   content.toLowerCase().includes(lowerQuery);
+          })
+          .slice(0, 5)
+          .map(article => ({
+            id: article.id,
+            type: 'news',
+            category: 'News',
+            icon: Newspaper,
+            title: article.title || 'Untitled',
+            subtitle: article.excerpt || '',
+            image: article.image || null,
+            data: article
+          }));
+        
+        searchResults.push(...newsResults);
+      }
+
+      // Limit total results to 15
+      setResults(searchResults.slice(0, 15));
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
+    }
+  }, [teams, fixtures, articles, competitions, seasons]);
+
+  // Debounced search effect
   useEffect(() => {
-    if (query.trim().length > 2) {
+    if (query.trim().length >= 2) {
       setLoading(true);
       const timeoutId = setTimeout(() => {
         performSearch(query);
@@ -22,61 +205,67 @@ const SearchModal = ({ onClose, onResult }) => {
       return () => clearTimeout(timeoutId);
     } else {
       setResults([]);
+      setLoading(false);
     }
-  }, [query]);
-
-  const performSearch = (searchQuery) => {
-    const searchResults = [];
-    
-    // Search news articles
-    const newsResults = searchArticles(searchQuery).map(article => ({
-      ...article,
-      type: 'news',
-      category: 'News',
-    }));
-    
-    // Search fixtures by team names
-    const fixtureResults = fixtures
-      .filter(fixture => 
-        fixture.homeTeam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        fixture.awayTeam.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map(fixture => ({
-        ...fixture,
-        type: 'fixture',
-        category: 'Fixture',
-        title: `${fixture.homeTeam.name} vs ${fixture.awayTeam.name}`,
-      }));
-    
-    // Search teams
-    const teamResults = teams
-      .filter(team => 
-        team.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map(team => ({
-        ...team,
-        type: 'team',
-        category: 'Team',
-        title: team.name,
-      }));
-    
-    searchResults.push(...newsResults, ...fixtureResults, ...teamResults);
-    setResults(searchResults.slice(0, 10)); // Limit to 10 results
-  };
+  }, [query, performSearch]);
 
   const handleResultClick = (result) => {
-    onResult(result);
+    // Navigate based on result type
+    switch (result.type) {
+      case 'team':
+        navigate(`/teams/${result.id}`);
+        break;
+      case 'player':
+        // Could navigate to player profile if implemented
+        console.log('Player selected:', result.data);
+        break;
+      case 'fixture':
+        navigate(`/fixtures/${result.id}`);
+        break;
+      case 'news':
+        navigate(`/news/${result.id}`);
+        break;
+      case 'competition':
+        // Could navigate to competition page if implemented
+        console.log('Competition selected:', result.data);
+        break;
+      case 'season':
+        navigate(`/seasons/${result.id}`);
+        break;
+      default:
+        console.log('Unknown result type:', result.type);
+    }
+    
+    onClose();
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Team': 'text-blue-400',
+      'Player': 'text-green-400',
+      'Competition': 'text-purple-400',
+      'Season': 'text-orange-400',
+      'Match': 'text-red-400',
+      'News': 'text-yellow-400'
+    };
+    return colors[category] || 'text-gray-400';
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-start justify-center pt-20">
-      <div className="bg-dark-800 rounded-lg w-full max-w-md mx-4 max-h-96 overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-start justify-center pt-20"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-dark-800 rounded-lg w-full max-w-2xl mx-4 max-h-[600px] overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center p-4 border-b border-dark-700">
           <Search className="w-5 h-5 text-gray-400 mr-3" />
           <input
             type="text"
-            placeholder="Search news, fixtures, teams..."
+            placeholder="Search teams, players, competitions, fixtures, news..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
@@ -86,56 +275,77 @@ const SearchModal = ({ onClose, onResult }) => {
             onClick={onClose}
             className="p-1 rounded-full hover:bg-dark-700 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-400 hover:text-white" />
           </button>
         </div>
         
         {/* Results */}
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-400">
+            <div className="p-8 text-center text-gray-400">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
               Searching...
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
-              {results.map((result, index) => (
-                <button
-                  key={`${result.type}-${result.id || index}`}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full px-4 py-3 text-left hover:bg-dark-700 transition-colors border-b border-dark-700 last:border-b-0"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-white line-clamp-2">
-                        {result.title}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {result.category}
-                      </p>
-                      {result.excerpt && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                          {result.excerpt}
-                        </p>
+              {results.map((result, index) => {
+                const IconComponent = result.icon;
+                return (
+                  <button
+                    key={`${result.type}-${result.id}-${index}`}
+                    onClick={() => handleResultClick(result)}
+                    className="w-full px-4 py-3 text-left hover:bg-dark-700 transition-colors border-b border-dark-700 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Icon */}
+                      <div className="flex-shrink-0">
+                        <IconComponent className={`w-5 h-5 ${getCategoryColor(result.category)}`} />
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-white truncate">
+                          {result.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs font-medium ${getCategoryColor(result.category)}`}>
+                            {result.category}
+                          </span>
+                          {result.subtitle && (
+                            <>
+                              <span className="text-gray-600">•</span>
+                              <span className="text-xs text-gray-400 truncate">
+                                {result.subtitle}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Image */}
+                      {result.image && (
+                        <img
+                          src={result.image}
+                          alt=""
+                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        />
                       )}
                     </div>
-                    {result.image && (
-                      <img
-                        src={result.image}
-                        alt=""
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
-          ) : query.trim().length > 2 ? (
-            <div className="p-4 text-center text-gray-400">
-              No results found for "{query}"
+          ) : query.trim().length >= 2 ? (
+            <div className="p-8 text-center text-gray-400">
+              <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">No results found</p>
+              <p className="text-sm mt-1">Try searching for teams, players, or news</p>
             </div>
           ) : (
-            <div className="p-4 text-center text-gray-400">
-              Type to search...
+            <div className="p-8 text-center text-gray-400">
+              <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">Start typing to search</p>
+              <p className="text-sm mt-1">Search across teams, players, competitions, fixtures, and news</p>
             </div>
           )}
         </div>
