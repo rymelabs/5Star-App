@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { settingsCollection } from '../firebase/settings';
-import { ArrowLeft, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, Check } from 'lucide-react';
+import { ArrowLeft, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, Check, Inbox } from 'lucide-react';
+import NotificationPermissionModal from '../components/NotificationPermissionModal';
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { unreadCount, permissionGranted, requestPermission } = useNotification();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -22,6 +25,7 @@ const Settings = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [language, setLanguage] = useState('en');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [loading, setLoading] = useState(true);
 
@@ -208,7 +212,21 @@ const Settings = () => {
     {
       title: 'Notifications',
       icon: Bell,
+      badge: unreadCount > 0 ? unreadCount : null,
+      action: {
+        label: 'Inbox',
+        icon: Inbox,
+        onClick: () => navigate('/notifications'),
+      },
       items: [
+        {
+          label: 'Enable Notifications',
+          description: permissionGranted ? 'Push notifications are enabled ✓' : 'Enable browser notifications',
+          type: 'button',
+          buttonLabel: permissionGranted ? 'Enabled' : 'Enable',
+          onClick: () => !permissionGranted && setShowPermissionModal(true),
+          disabled: permissionGranted,
+        },
         {
           label: 'Push Notifications',
           description: 'Receive push notifications on your device',
@@ -488,9 +506,26 @@ const Settings = () => {
             const Icon = section.icon;
             return (
               <div key={section.title}>
-                <div className="flex items-center mb-4">
-                  <Icon className="w-5 h-5 text-primary-500 mr-2" />
-                  <h2 className="text-lg font-semibold text-white">{section.title}</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Icon className="w-5 h-5 text-primary-500 mr-2" />
+                    <h2 className="text-lg font-semibold text-white">{section.title}</h2>
+                    {section.badge && (
+                      <span className="ml-2 px-2 py-0.5 bg-primary-600 text-white text-xs font-semibold rounded-full">
+                        {section.badge}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {section.action && (
+                    <button
+                      onClick={section.action.onClick}
+                      className="flex items-center text-sm text-primary-400 hover:text-primary-300 transition"
+                    >
+                      {section.action.label}
+                      {section.action.icon && <section.action.icon className="w-4 h-4 ml-1" />}
+                    </button>
+                  )}
                 </div>
                 
                 <div className="space-y-3">
@@ -520,6 +555,20 @@ const Settings = () => {
                                   item.value ? 'translate-x-6' : 'translate-x-1'
                                 }`}
                               />
+                            </button>
+                          )}
+                          
+                          {item.type === 'button' && (
+                            <button
+                              onClick={item.onClick}
+                              disabled={item.disabled}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                                item.disabled
+                                  ? 'bg-green-600/20 text-green-400 cursor-not-allowed'
+                                  : 'bg-primary-600 hover:bg-primary-500 text-white'
+                              }`}
+                            >
+                              {item.buttonLabel || 'Click'}
                             </button>
                           )}
                           
@@ -594,6 +643,13 @@ const Settings = () => {
           </div>
         </div>
       )}
+
+      {/* Notification Permission Modal */}
+      <NotificationPermissionModal
+        isOpen={showPermissionModal}
+        onClose={() => setShowPermissionModal(false)}
+        onEnable={requestPermission}
+      />
     </div>
   );
 };
