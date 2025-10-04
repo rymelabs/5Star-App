@@ -7,7 +7,7 @@ import { deleteNotification } from '../firebase/notifications';
 
 const NotificationInbox = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const { 
     inboxNotifications, 
     unreadCount, 

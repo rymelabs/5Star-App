@@ -70,7 +70,7 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [fcmToken, setFcmToken] = useState(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   // ========== Toast Notifications (existing functionality) ==========
   const addNotification = useCallback((notification) => {
@@ -128,14 +128,23 @@ export const NotificationProvider = ({ children }) => {
       
       // Save token to Firestore
       await saveFCMToken(currentUser.uid, result.token);
-      showSuccess('Success', 'Notifications enabled!');
+      
+      // Show appropriate success message
+      if (result.isDevMode) {
+        showInfo(
+          'Development Mode', 
+          result.message || 'Preferences saved. Push notifications will work when deployed to production (HTTPS).'
+        );
+      } else {
+        showSuccess('Success', 'Notifications enabled!');
+      }
       
       return { success: true, token: result.token };
     } else {
       showError('Permission Denied', result.error || 'Unable to enable notifications');
       return { success: false, error: result.error };
     }
-  }, [currentUser, showSuccess, showError]);
+  }, [currentUser, showSuccess, showError, showInfo]);
 
   // Load user notifications from Firestore
   const loadNotifications = useCallback(async (options = {}) => {
