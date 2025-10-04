@@ -329,11 +329,11 @@ const TeamDetail = () => {
               )}
 
               {/* Follow Button & Follower Count */}
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                     isFollowing
                       ? 'bg-dark-700 text-white hover:bg-dark-600'
                       : 'bg-primary-600 text-white hover:bg-primary-700'
@@ -361,9 +361,9 @@ const TeamDetail = () => {
                 </div>
 
                 {isFollowing && (
-                  <div className="flex items-center gap-1 text-xs text-primary-400">
-                    <Bell className="w-3 h-3" />
-                    <span>Notifications enabled</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/10 border border-primary-500/20 rounded-lg text-xs text-primary-400">
+                    <Bell className="w-3.5 h-3.5" />
+                    <span>Notifications on</span>
                   </div>
                 )}
               </div>
