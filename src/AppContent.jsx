@@ -17,6 +17,7 @@ import Stats from './pages/Stats';
 import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
+import NotificationInbox from './pages/NotificationInbox';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -126,7 +127,10 @@ const AppContent = () => {
           
           {/* Settings page - not available for anonymous users */}
           {!user.isAnonymous && (
-            <Route path="/settings" element={<Settings />} />
+            <>
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<NotificationInbox />} />
+            </>
           )}
           
           {/* Admin Routes - Only accessible to admins */}
