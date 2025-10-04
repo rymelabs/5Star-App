@@ -277,16 +277,16 @@ const TeamDetail = () => {
         <div className="p-6">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+            className="flex items-center gap-1.5 text-gray-400 hover:text-white mb-3 transition-colors text-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
           </button>
 
           <div className="flex items-start gap-6">
             {/* Team Logo */}
             {team.logo && (
-              <div className="w-24 h-24 bg-dark-700 rounded-xl p-3 flex items-center justify-center flex-shrink-0">
+              <div className="w-20 h-20 bg-dark-700 rounded-lg p-2.5 flex items-center justify-center flex-shrink-0">
                 <img
                   src={team.logo}
                   alt={team.name}
@@ -297,7 +297,7 @@ const TeamDetail = () => {
 
             {/* Team Info */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white mb-2">{team.name}</h1>
+              <h1 className="text-xl font-bold text-white mb-1.5">{team.name}</h1>
               
               <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                 {team.city && (
@@ -333,7 +333,7 @@ const TeamDetail = () => {
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                     isFollowing
                       ? 'bg-dark-700 text-white hover:bg-dark-600'
                       : 'bg-primary-600 text-white hover:bg-primary-700'
@@ -343,27 +343,27 @@ const TeamDetail = () => {
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : isFollowing ? (
                     <>
-                      <UserMinus className="w-4 h-4" />
+                      <UserMinus className="w-3.5 h-3.5" />
                       <span>Unfollow</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus className="w-4 h-4" />
+                      <UserPlus className="w-3.5 h-3.5" />
                       <span>Follow</span>
                     </>
                   )}
                 </button>
                 
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Users className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-white font-semibold">{team.followerCount || 0}</span>
                   <span className="text-gray-400">follower{(team.followerCount || 0) !== 1 ? 's' : ''}</span>
                 </div>
 
                 {isFollowing && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/10 border border-primary-500/20 rounded-lg text-xs text-primary-400">
-                    <Bell className="w-3.5 h-3.5" />
-                    <span>Notifications on</span>
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary-500/10 border border-primary-500/20 rounded-md text-xs text-primary-400">
+                    <Bell className="w-3 h-3" />
+                    <span className="text-[10px]">Notifications on</span>
                   </div>
                 )}
               </div>
@@ -371,13 +371,13 @@ const TeamDetail = () => {
 
             {/* Quick Stats */}
             {teamStats && (
-              <div className="hidden md:flex gap-4">
-                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
-                  <div className="text-2xl font-bold text-green-400">{teamStats.won}</div>
-                  <div className="text-xs text-gray-400">Wins</div>
+              <div className="hidden md:flex gap-3">
+                <div className="bg-dark-700 rounded-md p-2 text-center min-w-[60px]">
+                  <div className="text-lg font-bold text-green-400">{teamStats.won}</div>
+                  <div className="text-[10px] text-gray-400">Wins</div>
                 </div>
-                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
-                  <div className="text-2xl font-bold text-yellow-400">{teamStats.drawn}</div>
+                <div className="bg-dark-700 rounded-md p-2 text-center min-w-[60px]">
+                  <div className="text-lg font-bold text-yellow-400">{teamStats.drawn}</div>
                   <div className="text-xs text-gray-400">Draws</div>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">

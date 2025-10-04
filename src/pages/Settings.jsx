@@ -130,15 +130,15 @@ const Settings = () => {
     return (
       <div className="pb-6">
         {/* Header */}
-        <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
+        <div className="sticky top-0 bg-dark-900 z-10 px-4 py-2.5 border-b border-dark-700">
           <div className="flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
+              className="p-1.5 -ml-1.5 rounded-full hover:bg-dark-800 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <h1 className="ml-2 text-lg font-semibold text-white">Settings</h1>
+            <h1 className="ml-2 text-base font-semibold text-white">Settings</h1>
           </div>
         </div>
         

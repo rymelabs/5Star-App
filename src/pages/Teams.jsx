@@ -80,7 +80,7 @@ const Teams = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search teams by name, city, or manager..."
-            className="w-full pl-10 pr-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
+            className="w-full pl-10 pr-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
           />
         </div>
       </div>
@@ -92,12 +92,12 @@ const Teams = () => {
             <div
               key={team.id}
               onClick={() => navigate(`/teams/${team.id}`)}
-              className="bg-dark-800 border border-dark-700 rounded-xl p-5 hover:border-primary-600 transition-all cursor-pointer group"
+              className="bg-dark-800 border border-dark-700 rounded-lg p-3 hover:border-primary-600 transition-all cursor-pointer group"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 {/* Team Logo */}
                 {team.logo ? (
-                  <div className="w-16 h-16 bg-dark-700 rounded-lg p-2 flex items-center justify-center flex-shrink-0 group-hover:bg-dark-600 transition-colors">
+                  <div className="w-12 h-12 bg-dark-700 rounded-md p-1.5 flex items-center justify-center flex-shrink-0 group-hover:bg-dark-600 transition-colors">
                     <img
                       src={team.logo}
                       alt={team.name}
@@ -105,18 +105,18 @@ const Teams = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 bg-dark-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Users className="w-8 h-8 text-gray-600" />
+                  <div className="w-12 h-12 bg-dark-700 rounded-md flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-gray-600" />
                   </div>
                 )}
 
                 {/* Team Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-primary-400 transition-colors">
+                  <h3 className="text-base font-semibold text-white mb-1.5 group-hover:text-primary-400 transition-colors">
                     {team.name}
                   </h3>
 
-                  <div className="space-y-1 text-sm text-gray-400">
+                  <div className="space-y-0.5 text-xs text-gray-400">
                     {team.city && (
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
