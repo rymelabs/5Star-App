@@ -213,11 +213,11 @@ const NewsArticle = () => {
     <div className="p-6 pb-24">
       {/* Back Button */}
       <button
-        onClick={() => navigate('/news')}
+        onClick={() => navigate(-1)}
         className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to News
+        Back
       </button>
 
       {/* Article Header */}

@@ -222,7 +222,7 @@ const EditSeason = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate('/admin/seasons')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-400" />

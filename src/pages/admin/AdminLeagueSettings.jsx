@@ -116,7 +116,7 @@ const AdminLeagueSettings = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate(-1)}
             className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2"
           >
             <ArrowLeft className="w-5 h-5 text-gray-400" />
