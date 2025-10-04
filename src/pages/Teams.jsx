@@ -1,12 +1,46 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
-import { Search, Users, MapPin, Trophy } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import { Search, Users, MapPin, Trophy, UserPlus, UserMinus } from 'lucide-react';
 
 const Teams = () => {
   const navigate = useNavigate();
-  const { teams } = useFootball();
+  const { user } = useAuth();
+  const { teams, followTeam, unfollowTeam } = useFootball();
+  const { showSuccess, showError } = useNotification();
   const [searchQuery, setSearchQuery] = useState('');
+  const [followingLoading, setFollowingLoading] = useState({});
+
+  const handleFollowToggle = async (e, team) => {
+    e.stopPropagation(); // Prevent navigation when clicking follow button
+    
+    if (!user) {
+      showError('Sign In Required', 'Please sign in to follow teams');
+      navigate('/auth');
+      return;
+    }
+
+    const isFollowing = (team.followers || []).includes(user.uid);
+    
+    try {
+      setFollowingLoading(prev => ({ ...prev, [team.id]: true }));
+      
+      if (isFollowing) {
+        await unfollowTeam(team.id);
+        showSuccess('Unfollowed', `You unfollowed ${team.name}`);
+      } else {
+        await followTeam(team.id);
+        showSuccess('Following', `You're now following ${team.name}!`);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      showError('Error', error.message || 'Failed to update follow status');
+    } finally {
+      setFollowingLoading(prev => ({ ...prev, [team.id]: false }));
+    }
+  };
 
   // Filter teams based on search query
   const filteredTeams = useMemo(() => {
@@ -103,13 +137,39 @@ const Teams = () => {
                     )}
                   </div>
 
-                  {/* Players count */}
-                  {team.players && team.players.length > 0 && (
-                    <div className="mt-3 inline-flex items-center gap-1 px-2 py-1 bg-dark-700 rounded text-xs text-gray-400">
+                  {/* Followers and Follow Button */}
+                  <div className="mt-3 flex items-center gap-3">
+                    {/* Follower count */}
+                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-dark-700 rounded text-xs text-gray-400">
                       <Users className="w-3 h-3" />
-                      <span>{team.players.length} players</span>
+                      <span>{team.followerCount || 0} follower{(team.followerCount || 0) !== 1 ? 's' : ''}</span>
                     </div>
-                  )}
+
+                    {/* Follow button */}
+                    <button
+                      onClick={(e) => handleFollowToggle(e, team)}
+                      disabled={followingLoading[team.id]}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-all ${
+                        (team.followers || []).includes(user?.uid)
+                          ? 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                          : 'bg-primary-600 text-white hover:bg-primary-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {followingLoading[team.id] ? (
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (team.followers || []).includes(user?.uid) ? (
+                        <>
+                          <UserMinus className="w-3 h-3" />
+                          <span>Following</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3 h-3" />
+                          <span>Follow</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

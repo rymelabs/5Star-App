@@ -192,23 +192,101 @@ export const FootballProvider = ({ children }) => {
 
   const deleteTeam = async (teamId) => {
     try {
-      const team = teams.find(t => t.id === teamId);
-      await teamsCollection.delete(teamId);
-      setTeams(prev => prev.filter(team => team.id !== teamId));
+      console.log('🔄 Starting team deletion:', teamId, 'Type:', typeof teamId);
+      
+      // Ensure teamId is a string
+      const id = String(teamId);
+      console.log('🔄 Converted ID:', id, 'Type:', typeof id);
+      
+      const team = teams.find(t => t.id === id || t.id === teamId);
+      console.log('📋 Team found:', team?.name);
+      
+      await teamsCollection.delete(id);
+      console.log('✅ Team deleted from Firestore');
+      
+      setTeams(prev => prev.filter(team => team.id !== id && team.id !== teamId));
+      console.log('✅ Team removed from local state');
       
       // Log activity
       if (user) {
+        console.log('📝 Logging admin activity...');
         await adminActivityCollection.log({
           action: 'delete',
           type: 'team',
-          itemId: teamId,
+          itemId: id,
           itemName: team?.name || 'Unknown Team',
           userId: user.uid,
           userName: user.displayName || user.email
         });
+        console.log('✅ Activity logged');
       }
     } catch (error) {
-      console.error('Error deleting team:', error);
+      console.error('❌ Error in deleteTeam:', error);
+      console.error('Error type:', error.constructor.name);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      throw error;
+    }
+  };
+
+  const followTeam = async (teamId) => {
+    try {
+      if (!user) {
+        throw new Error('You must be signed in to follow teams');
+      }
+
+      console.log('👥 Following team:', teamId);
+      await teamsCollection.follow(teamId, user.uid);
+      
+      // Update local state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId) {
+          const currentFollowers = team.followers || [];
+          if (!currentFollowers.includes(user.uid)) {
+            return {
+              ...team,
+              followers: [...currentFollowers, user.uid],
+              followerCount: (team.followerCount || 0) + 1
+            };
+          }
+        }
+        return team;
+      }));
+      
+      console.log('✅ Team followed successfully');
+    } catch (error) {
+      console.error('❌ Error following team:', error);
+      throw error;
+    }
+  };
+
+  const unfollowTeam = async (teamId) => {
+    try {
+      if (!user) {
+        throw new Error('You must be signed in to unfollow teams');
+      }
+
+      console.log('👥 Unfollowing team:', teamId);
+      await teamsCollection.unfollow(teamId, user.uid);
+      
+      // Update local state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId) {
+          const currentFollowers = team.followers || [];
+          if (currentFollowers.includes(user.uid)) {
+            return {
+              ...team,
+              followers: currentFollowers.filter(id => id !== user.uid),
+              followerCount: Math.max(0, (team.followerCount || 0) - 1)
+            };
+          }
+        }
+        return team;
+      }));
+      
+      console.log('✅ Team unfollowed successfully');
+    } catch (error) {
+      console.error('❌ Error unfollowing team:', error);
       throw error;
     }
   };
@@ -230,6 +308,13 @@ export const FootballProvider = ({ children }) => {
       };
       
       setFixtures(prev => [...prev, newFixture].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)));
+      
+      // ⚡ NOTIFICATION TRIGGER: New fixture created
+      // TODO: Send notifications to followers of homeTeam and awayTeam
+      // - Check if user has 'upcomingMatches' setting enabled
+      // - Send 24 hours before match if 'upcomingMatches' is true
+      // - Include: team names, match date/time, competition
+      // Example notification: "Manchester United vs Liverpool - Tomorrow at 3:00 PM"
       
       // Log activity
       if (user) {
@@ -255,11 +340,28 @@ export const FootballProvider = ({ children }) => {
       const fixture = fixtures.find(f => f.id === fixtureId);
       const wasCompleted = fixture?.status === 'completed';
       const isNowCompleted = updates.status === 'completed';
+      const statusChangedToLive = fixture?.status !== 'live' && updates.status === 'live';
       
       await fixturesCollection.update(fixtureId, updates);
       setFixtures(prev => prev.map(f => 
         f.id === fixtureId ? { ...f, ...updates } : f
       ));
+
+      // ⚡ NOTIFICATION TRIGGER: Match goes live
+      if (statusChangedToLive) {
+        // TODO: Send notifications to followers of both teams
+        // - Check if user has 'liveMatches' setting enabled
+        // - Include: team names, "Match is now LIVE!", current score (0-0)
+        // Example: "🔴 LIVE: Manchester United vs Liverpool - 0-0"
+      }
+
+      // ⚡ NOTIFICATION TRIGGER: Match completed with final score
+      if (!wasCompleted && isNowCompleted && (updates.homeScore !== undefined || updates.awayScore !== undefined)) {
+        // TODO: Send notifications to followers of both teams
+        // - Check if user has 'matchResults' setting enabled
+        // - Include: team names, final score, result (win/loss/draw)
+        // Example: "⚽ Full Time: Manchester United 2-1 Liverpool"
+      }
       
       // If fixture is part of a season and is now completed, update group standings
       if (fixture?.seasonId && fixture?.groupId && isNowCompleted && !wasCompleted) {
@@ -537,6 +639,8 @@ export const FootballProvider = ({ children }) => {
     addBulkTeams,
     updateTeam,
     deleteTeam,
+    followTeam,
+    unfollowTeam,
     addFixture,
     updateFixture,
     updateLeagueTable,

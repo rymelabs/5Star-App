@@ -18,8 +18,18 @@ service cloud.firestore {
     // - Players array (with jerseyNumber, position, isCaptain, isGoalkeeper)
     match /teams/{teamId} {
       allow read: if true; // Public read access
-      allow write: if request.auth != null && 
+      
+      // Admins can create and delete teams
+      allow create, delete: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Admins can update everything
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Authenticated users can update only followers, followerCount, and updatedAt
+      allow update: if request.auth != null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers', 'followerCount', 'updatedAt']);
     }
     
     // Fixtures collection

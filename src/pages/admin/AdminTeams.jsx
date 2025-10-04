@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import BulkTeamUpload from '../../components/BulkTeamUpload';
 import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal } from 'lucide-react';
 
 const AdminTeams = () => {
   const navigate = useNavigate();
-  const { teams, addTeam, updateTeam } = useFootball();
+  const { user } = useAuth();
+  const { teams, addTeam, updateTeam, deleteTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -150,6 +152,44 @@ const AdminTeams = () => {
     } catch (error) {
       console.error('Error saving team:', error);
       showError('Error', 'Failed to save team');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTeam = async (team) => {
+    console.log('🔐 Current user:', user);
+    console.log('🔐 User role:', user?.role);
+    console.log('🎯 Team to delete:', team);
+    console.log('🆔 Team ID:', team.id, 'Type:', typeof team.id);
+    
+    if (!confirm(`Are you sure you want to delete ${team.name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('🗑️ Attempting to delete team:', team.id, team.name);
+      await deleteTeam(team.id);
+      showSuccess('Team Deleted', `${team.name} has been deleted successfully`);
+    } catch (error) {
+      console.error('❌ Error deleting team:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      let errorMessage = 'Failed to delete team. ';
+      if (error.code === 'permission-denied') {
+        errorMessage += 'You do not have permission to delete teams. Your role: ' + (user?.role || 'unknown');
+      } else if (error.code === 'not-found') {
+        errorMessage += 'Team not found.';
+      } else {
+        errorMessage += error.message || 'Please try again.';
+      }
+      
+      showError('Delete Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -526,13 +566,9 @@ const AdminTeams = () => {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm(`Are you sure you want to delete ${team.name}?`)) {
-                        // In a real app, you'd call a delete function
-                        console.log('Delete team:', team.id);
-                      }
-                    }}
-                    className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                    onClick={() => handleDeleteTeam(team)}
+                    disabled={loading}
+                    className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

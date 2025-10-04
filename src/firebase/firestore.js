@@ -102,9 +102,78 @@ export const teamsCollection = {
   delete: async (teamId) => {
     try {
       const database = checkFirebaseInit();
-      await deleteDoc(doc(database, 'teams', teamId));
+      // Ensure teamId is a string
+      const id = String(teamId);
+      console.log('🗑️ Deleting team with ID:', id, 'Type:', typeof id);
+      await deleteDoc(doc(database, 'teams', id));
+      console.log('✅ Team document deleted successfully');
     } catch (error) {
       console.error('Error deleting team:', error);
+      throw error;
+    }
+  },
+
+  // Follow team
+  follow: async (teamId, userId) => {
+    try {
+      const database = checkFirebaseInit();
+      const id = String(teamId);
+      const teamRef = doc(database, 'teams', id);
+      const teamDoc = await getDoc(teamRef);
+      
+      if (!teamDoc.exists()) {
+        throw new Error('Team not found');
+      }
+
+      const currentFollowers = teamDoc.data().followers || [];
+      
+      // Check if already following
+      if (currentFollowers.includes(userId)) {
+        console.log('User already follows this team');
+        return;
+      }
+
+      // Add user to followers array and increment count
+      await updateDoc(teamRef, {
+        followers: [...currentFollowers, userId],
+        followerCount: (teamDoc.data().followerCount || 0) + 1,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error following team:', error);
+      throw error;
+    }
+  },
+
+  // Unfollow team
+  unfollow: async (teamId, userId) => {
+    try {
+      const database = checkFirebaseInit();
+      const id = String(teamId);
+      const teamRef = doc(database, 'teams', id);
+      const teamDoc = await getDoc(teamRef);
+      
+      if (!teamDoc.exists()) {
+        throw new Error('Team not found');
+      }
+
+      const currentFollowers = teamDoc.data().followers || [];
+      
+      // Check if not following
+      if (!currentFollowers.includes(userId)) {
+        console.log('User does not follow this team');
+        return;
+      }
+
+      // Remove user from followers array and decrement count
+      const newFollowers = currentFollowers.filter(id => id !== userId);
+      await updateDoc(teamRef, {
+        followers: newFollowers,
+        followerCount: Math.max(0, (teamDoc.data().followerCount || 0) - 1),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error unfollowing team:', error);
       throw error;
     }
   }

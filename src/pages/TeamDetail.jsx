@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
+import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
+import { useNotification } from '../context/NotificationContext';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -12,20 +14,62 @@ import {
   AlertCircle,
   Newspaper,
   TrendingUp,
-  User
+  User,
+  UserPlus,
+  UserMinus,
+  Bell
 } from 'lucide-react';
 
 const TeamDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { teams, fixtures } = useFootball();
+  const { user } = useAuth();
+  const { teams, fixtures, followTeam, unfollowTeam } = useFootball();
   const { articles } = useNews();
+  const { showSuccess, showError } = useNotification();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   // Find the team
   const team = useMemo(() => {
     return teams.find(t => t.id === id);
   }, [teams, id]);
+
+  // Check if user is following this team
+  useEffect(() => {
+    if (team && user) {
+      const followers = team.followers || [];
+      setIsFollowing(followers.includes(user.uid));
+    }
+  }, [team, user]);
+
+  // Handle follow/unfollow
+  const handleFollowToggle = async () => {
+    if (!user) {
+      showError('Sign In Required', 'Please sign in to follow teams');
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      setFollowLoading(true);
+      if (isFollowing) {
+        await unfollowTeam(team.id);
+        setIsFollowing(false);
+        showSuccess('Unfollowed', `You unfollowed ${team.name}`);
+      } else {
+        await followTeam(team.id);
+        setIsFollowing(true);
+        showSuccess('Following', `You're now following ${team.name}! You'll receive notifications about their matches and news.`);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      showError('Error', error.message || 'Failed to update follow status');
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   // Get team fixtures
   const teamFixtures = useMemo(() => {
@@ -283,6 +327,46 @@ const TeamDetail = () => {
                   <span className="text-white font-medium">{team.manager}</span>
                 </div>
               )}
+
+              {/* Follow Button & Follower Count */}
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    isFollowing
+                      ? 'bg-dark-700 text-white hover:bg-dark-600'
+                      : 'bg-primary-600 text-white hover:bg-primary-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {followLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : isFollowing ? (
+                    <>
+                      <UserMinus className="w-4 h-4" />
+                      <span>Unfollow</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      <span>Follow</span>
+                    </>
+                  )}
+                </button>
+                
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span className="text-white font-semibold">{team.followerCount || 0}</span>
+                  <span className="text-gray-400">follower{(team.followerCount || 0) !== 1 ? 's' : ''}</span>
+                </div>
+
+                {isFollowing && (
+                  <div className="flex items-center gap-1 text-xs text-primary-400">
+                    <Bell className="w-3 h-3" />
+                    <span>Notifications enabled</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Quick Stats */}
