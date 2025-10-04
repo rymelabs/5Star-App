@@ -40,7 +40,31 @@ const AuthRoute = ({ children }) => {
 };
 
 const AppContent = () => {
-  const { user, loading } = useAuth();
+  // Add error handling for context
+  let user, loading;
+  try {
+    const auth = useAuth();
+    user = auth.user;
+    loading = auth.loading;
+  } catch (error) {
+    console.error('❌ Error accessing AuthContext:', error);
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-xl mb-4">⚠️ Authentication Error</div>
+          <p className="text-gray-400 mb-4">
+            Unable to access authentication context. Please refresh the page.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-primary-500 text-white px-6 py-2 rounded-lg hover:bg-primary-600"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading spinner while checking auth state
   if (loading) {
