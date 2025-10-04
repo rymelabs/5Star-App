@@ -73,6 +73,15 @@ export const NewsProvider = ({ children }) => {
         publishedAt: new Date()
       };
       setArticles(prev => [newArticle, ...prev]);
+      
+      // ⚡ NOTIFICATION TRIGGER: New article published
+      // TODO: Send notifications to users following mentioned teams
+      // - Parse article title and content for team names
+      // - Check if user has 'teamNews' setting enabled
+      // - Send to followers of teams mentioned in the article
+      // - Include: article title, snippet, team badge
+      // Example: "📰 New Article: Manchester United signs new striker"
+      
       return newArticle;
     } catch (error) {
       console.error('Error adding article:', error);

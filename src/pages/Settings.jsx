@@ -12,6 +12,12 @@ const Settings = () => {
     email: false,
     matchUpdates: true,
     newsAlerts: false,
+    // Team-specific notifications
+    teamFollowing: true, // Enable notifications for followed teams
+    upcomingMatches: true, // Notify about upcoming matches (24h before)
+    liveMatches: true, // Notify when followed team's match goes live
+    matchResults: true, // Notify when match finishes with score
+    teamNews: true, // Notify about news articles mentioning followed teams
   });
   const [darkMode, setDarkMode] = useState(true);
   const [language, setLanguage] = useState('en');
@@ -230,6 +236,52 @@ const Settings = () => {
           type: 'toggle',
           value: notifications.newsAlerts,
           onChange: () => handleNotificationChange('newsAlerts'),
+        },
+      ],
+    },
+    {
+      title: 'Team Following Notifications',
+      icon: Bell,
+      description: 'Customize notifications for teams you follow',
+      items: [
+        {
+          label: 'Team Notifications',
+          description: 'Enable all notifications for followed teams',
+          type: 'toggle',
+          value: notifications.teamFollowing,
+          onChange: () => handleNotificationChange('teamFollowing'),
+        },
+        {
+          label: 'Upcoming Matches',
+          description: 'Notify 24 hours before followed team plays',
+          type: 'toggle',
+          value: notifications.upcomingMatches,
+          onChange: () => handleNotificationChange('upcomingMatches'),
+          disabled: !notifications.teamFollowing,
+        },
+        {
+          label: 'Live Match Alerts',
+          description: 'Notify when followed team\'s match starts',
+          type: 'toggle',
+          value: notifications.liveMatches,
+          onChange: () => handleNotificationChange('liveMatches'),
+          disabled: !notifications.teamFollowing,
+        },
+        {
+          label: 'Match Results',
+          description: 'Notify when followed team\'s match ends',
+          type: 'toggle',
+          value: notifications.matchResults,
+          onChange: () => handleNotificationChange('matchResults'),
+          disabled: !notifications.teamFollowing,
+        },
+        {
+          label: 'Team News',
+          description: 'Notify about articles mentioning followed teams',
+          type: 'toggle',
+          value: notifications.teamNews,
+          onChange: () => handleNotificationChange('teamNews'),
+          disabled: !notifications.teamFollowing,
         },
       ],
     },
