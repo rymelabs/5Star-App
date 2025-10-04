@@ -6,7 +6,7 @@ import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChar
 const Stats = () => {
   const { fixtures, teams, activeSeason, seasons } = useFootball();
   const { competitions } = useCompetitions();
-  const [selectedSeason, setSelectedSeason] = useState(activeSeason || 'all');
+  const [selectedSeason, setSelectedSeason] = useState('all');
   const [selectedCompetition, setSelectedCompetition] = useState('all');
   const [activeTab, setActiveTab] = useState('scorers');
   const [expandedTeamStats, setExpandedTeamStats] = useState({
