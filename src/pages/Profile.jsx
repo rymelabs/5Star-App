@@ -97,24 +97,24 @@ const Profile = () => {
   return (
     <div className="pb-6">
       {/* Header */}
-      <div className="sticky top-0 mt-16 bg-black z-10 px-4 py-3 border-b border-dark-700">
+      <div className="sticky top-0 mt-16 bg-black z-10 px-4 py-2.5 border-b border-dark-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
+              className="p-1.5 -ml-1.5 rounded-full hover:bg-dark-800 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <h1 className="ml-2 text-lg font-semibold text-white">Profile</h1>
+            <h1 className="ml-2 text-base font-semibold text-white">Profile</h1>
           </div>
           
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="flex items-center px-2.5 py-1.5 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors"
             >
-              <Edit className="w-4 h-4 mr-2" />
+              <Edit className="w-3.5 h-3.5 mr-1.5" />
               Edit
             </button>
           ) : (
@@ -143,7 +143,7 @@ const Profile = () => {
       <div className="px-4 py-6">
         {/* Error Message */}
         {errors.general && (
-          <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-3 mb-6">
+          <div className="bg-red-600/10 border border-red-600/20 rounded-md p-2.5 mb-4">
             <p className="text-red-400 text-sm">{errors.general}</p>
           </div>
         )}
