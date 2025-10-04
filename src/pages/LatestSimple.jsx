@@ -30,7 +30,7 @@ const LatestSimple = () => {
   return (
     <div className="px-4 py-6 space-y-8">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">Latest Updates</h1>
+        <h1 className="text-lg font-bold text-white mb-2">Latest Updates</h1>
         <p className="text-gray-400">Welcome to the 5Star Sports App!</p>
       </div>
       
@@ -46,7 +46,7 @@ const LatestSimple = () => {
       {articles.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Latest News</h2>
+            <h2 className="text-lg font-semibold text-white">Latest News</h2>
             <button
               onClick={() => navigate('/news')}
               className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"

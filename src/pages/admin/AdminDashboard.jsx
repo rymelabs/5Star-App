@@ -47,7 +47,7 @@ const AdminDashboard = () => {
     return (
       <div className="p-4 text-center">
         <div className="card p-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Access Denied</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
           <p className="text-gray-400 mb-6">You don't have permission to access the admin dashboard.</p>
           <button
             onClick={() => navigate('/')}
@@ -199,7 +199,7 @@ const AdminDashboard = () => {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white mb-1">
+              <h2 className="text-lg font-semibold text-white mb-1">
                 Welcome back, {user.name}!
               </h2>
               <p className="text-gray-400">
@@ -220,7 +220,7 @@ const AdminDashboard = () => {
                     <Icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-lg font-bold text-white mb-1">{stat.value}</div>
                 <div className="text-sm text-gray-400">{stat.title}</div>
               </div>
             );

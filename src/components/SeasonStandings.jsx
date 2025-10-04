@@ -186,7 +186,7 @@ const SeasonStandings = ({ season, teams }) => {
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-400">Teams</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-white">{currentGroup.teams?.length || 0}</p>
+            <p className="text-lg sm:text-lg font-bold text-white">{currentGroup.teams?.length || 0}</p>
           </div>
 
           <div className="card p-3 sm:p-4">
@@ -194,7 +194,7 @@ const SeasonStandings = ({ season, teams }) => {
               <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-accent-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-400">Qualifiers</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-white">
+            <p className="text-lg sm:text-lg font-bold text-white">
               {season.knockoutConfig?.qualifiersPerGroup || 0}
             </p>
           </div>
@@ -204,7 +204,7 @@ const SeasonStandings = ({ season, teams }) => {
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-400">Matches</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-white">
+            <p className="text-lg sm:text-lg font-bold text-white">
               {standings.reduce((sum, s) => sum + s.played, 0) / 2 || 0}
             </p>
           </div>
@@ -214,7 +214,7 @@ const SeasonStandings = ({ season, teams }) => {
               <Award className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-400 truncate">Completed</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-white">
+            <p className="text-lg sm:text-lg font-bold text-white">
               {standings.every(s => s.played > 0) ? 'Yes' : 'No'}
             </p>
           </div>

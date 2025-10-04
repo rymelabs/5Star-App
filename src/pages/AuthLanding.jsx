@@ -81,7 +81,7 @@ const AuthLanding = () => {
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2 shadow-2xl hover:shadow-primary-500/20 transition-shadow duration-300">
           <div className="text-center mb-8">
             <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6 animate-[fadeIn_0.8s_ease-out]" />
-            <h1 className="text-2xl font-bold text-left text-white tracking-tight mb-2"></h1>
+            <h1 className="text-lg font-bold text-left text-white tracking-tight mb-2"></h1>
             <p className="text-gray-400 text-center"></p>
           </div>
 

@@ -220,7 +220,7 @@ const SeasonDetail = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-xl font-semibold text-white mb-4">Access Denied</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
           <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
           <button onClick={() => navigate('/')} className="btn-primary">
             Go to Home
@@ -242,7 +242,7 @@ const SeasonDetail = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-xl font-semibold text-white mb-4">Season Not Found</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Season Not Found</h2>
           <p className="text-gray-400 mb-6">The season you're looking for doesn't exist.</p>
           <button onClick={() => navigate('/admin/seasons')} className="btn-primary">
             Back to Seasons
@@ -329,7 +329,7 @@ const SeasonDetail = () => {
               <div className="p-2 bg-blue-500/10 rounded-lg">
                 <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-white">{season.numberOfGroups}</p>
+              <p className="text-lg md:text-lg font-bold text-white">{season.numberOfGroups}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400 truncate">Groups</p>
@@ -343,7 +343,7 @@ const SeasonDetail = () => {
               <div className="p-2 bg-accent-500/10 rounded-lg">
                 <Trophy className="w-4 h-4 md:w-5 md:h-5 text-accent-400" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-white">{season.teamsPerGroup}</p>
+              <p className="text-lg md:text-lg font-bold text-white">{season.teamsPerGroup}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400 truncate">Teams/Group</p>
@@ -357,7 +357,7 @@ const SeasonDetail = () => {
               <div className="p-2 bg-primary-500/10 rounded-lg">
                 <Target className="w-4 h-4 md:w-5 md:h-5 text-primary-400" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-white">
+              <p className="text-lg md:text-lg font-bold text-white">
                 {season.groups?.reduce((sum, g) => sum + (g.teams?.length || 0), 0) || 0}
               </p>
             </div>
@@ -373,7 +373,7 @@ const SeasonDetail = () => {
               <div className="p-2 bg-green-500/10 rounded-lg">
                 <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-white">
+              <p className="text-lg md:text-lg font-bold text-white">
                 {season.knockoutConfig?.qualifiersPerGroup || 2}
               </p>
             </div>

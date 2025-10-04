@@ -74,7 +74,7 @@ const Fixtures = () => {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Football</h1>
+        <h1 className="text-lg font-bold text-white">Football</h1>
         <button onClick={() => setShowFilters(!showFilters)} className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors">
           <Filter className="w-5 h-5 text-gray-400" />
         </button>

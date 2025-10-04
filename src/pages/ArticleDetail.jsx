@@ -112,7 +112,7 @@ const ArticleDetail = () => {
           </span>
         </div>
         
-        <h1 className="text-2xl font-bold text-white mb-4 leading-tight">
+        <h1 className="text-lg font-bold text-white mb-4 leading-tight">
           {article.title}
         </h1>
         
@@ -215,7 +215,7 @@ const ArticleDetail = () => {
 
       {/* Comments Section */}
       <div className="px-4">
-        <h3 className="text-xl font-semibold text-white mb-6">
+        <h3 className="text-lg font-semibold text-white mb-6">
           Comments ({article.comments?.length || 0})
         </h3>
 

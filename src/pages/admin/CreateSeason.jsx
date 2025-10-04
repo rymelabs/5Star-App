@@ -181,7 +181,7 @@ const CreateSeason = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-xl font-semibold text-white mb-4">Access Denied</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
           <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
           <button onClick={() => navigate('/')} className="btn-primary">
             Go to Home

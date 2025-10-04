@@ -228,7 +228,7 @@ const EditSeason = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Edit Season</h1>
+            <h1 className="text-lg sm:text-lg font-bold text-white">Edit Season</h1>
             <p className="text-sm text-gray-400 mt-1">Update season configuration</p>
           </div>
         </div>

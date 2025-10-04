@@ -760,7 +760,7 @@ const AdminFixtures = () => {
             <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
               <div className="sticky top-0 bg-gray-800 p-6 border-b border-gray-700">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Users className="w-6 h-6" />
                     Select {showLineupModal === 'home' ? 'Home' : 'Away'} Team Lineup
                   </h3>
@@ -871,7 +871,7 @@ const AdminFixtures = () => {
             <div className="bg-gray-800 rounded-xl max-w-lg w-full">
               <div className="p-6 border-b border-gray-700">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Zap className="w-6 h-6" />
                     Add Match Event
                   </h3>

@@ -45,7 +45,7 @@ const News = () => {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">News</h1>
+        <h1 className="text-lg font-bold text-white">News</h1>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors"
@@ -118,7 +118,7 @@ const News = () => {
                         {getRelativeTime(article.publishedAt)}
                       </span>
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-3 line-clamp-2">
+                    <h2 className="text-lg font-bold text-white mb-3 line-clamp-2">
                       {article.title}
                     </h2>
                     <p className="text-gray-400 mb-4 line-clamp-3">
