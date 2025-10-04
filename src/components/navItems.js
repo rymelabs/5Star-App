@@ -1,4 +1,4 @@
-import { Home, Calendar, Newspaper, TrendingUp } from 'lucide-react';
+import { Home, Calendar, Users, Newspaper, TrendingUp } from 'lucide-react';
 
 export const navItems = [
   {
@@ -10,6 +10,11 @@ export const navItems = [
     path: '/fixtures',
     label: 'Fixtures',
     icon: Calendar,
+  },
+  {
+    path: '/teams',
+    label: 'Teams',
+    icon: Users,
   },
   {
     path: '/news',

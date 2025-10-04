@@ -5,6 +5,8 @@ import Layout from './components/Layout';
 import Latest from './pages/Latest';
 import Fixtures from './pages/Fixtures';
 import FixtureDetail from './pages/FixtureDetail';
+import Teams from './pages/Teams';
+import TeamDetail from './pages/TeamDetail';
 import News from './pages/News';
 import NewsArticle from './pages/NewsArticle';
 import Login from './pages/Login';
@@ -108,6 +110,8 @@ const AppContent = () => {
           <Route path="/" element={<Latest />} />
           <Route path="/fixtures" element={<Fixtures />} />
           <Route path="/fixtures/:id" element={<FixtureDetail />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/:id" element={<TeamDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
           <Route path="/stats" element={<Stats />} />

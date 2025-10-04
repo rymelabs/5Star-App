@@ -1,0 +1,705 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useFootball } from '../context/FootballContext';
+import { useNews } from '../context/NewsContext';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  Trophy, 
+  Users, 
+  Target,
+  AlertCircle,
+  Newspaper,
+  TrendingUp,
+  User
+} from 'lucide-react';
+
+const TeamDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { teams, fixtures } = useFootball();
+  const { articles } = useNews();
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Find the team
+  const team = useMemo(() => {
+    return teams.find(t => t.id === id);
+  }, [teams, id]);
+
+  // Get team fixtures
+  const teamFixtures = useMemo(() => {
+    if (!team) return { recent: [], upcoming: [] };
+
+    const allTeamFixtures = fixtures.filter(fixture => 
+      fixture.homeTeam?.id === team.id || fixture.awayTeam?.id === team.id
+    );
+
+    const now = new Date();
+    
+    const recent = allTeamFixtures
+      .filter(f => f.status === 'completed')
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    const upcoming = allTeamFixtures
+      .filter(f => f.status === 'scheduled' || f.status === 'upcoming')
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 5);
+
+    return { recent, upcoming };
+  }, [team, fixtures]);
+
+  // Get team statistics from fixtures
+  const teamStats = useMemo(() => {
+    if (!team) return null;
+
+    const completedFixtures = fixtures.filter(fixture => {
+      if (fixture.status !== 'completed') return false;
+      return fixture.homeTeam?.id === team.id || fixture.awayTeam?.id === team.id;
+    });
+
+    let played = completedFixtures.length;
+    let won = 0;
+    let drawn = 0;
+    let lost = 0;
+    let goalsFor = 0;
+    let goalsAgainst = 0;
+    let cleanSheets = 0;
+
+    completedFixtures.forEach(fixture => {
+      const isHome = fixture.homeTeam?.id === team.id;
+      const teamScore = isHome ? parseInt(fixture.homeScore) || 0 : parseInt(fixture.awayScore) || 0;
+      const opponentScore = isHome ? parseInt(fixture.awayScore) || 0 : parseInt(fixture.homeScore) || 0;
+
+      goalsFor += teamScore;
+      goalsAgainst += opponentScore;
+
+      if (opponentScore === 0) cleanSheets++;
+
+      if (teamScore > opponentScore) won++;
+      else if (teamScore < opponentScore) lost++;
+      else drawn++;
+    });
+
+    const points = (won * 3) + drawn;
+    const goalDifference = goalsFor - goalsAgainst;
+
+    return {
+      played,
+      won,
+      drawn,
+      lost,
+      goalsFor,
+      goalsAgainst,
+      goalDifference,
+      cleanSheets,
+      points
+    };
+  }, [team, fixtures]);
+
+  // Get top scorers from this team
+  const topScorers = useMemo(() => {
+    if (!team || !team.players) return [];
+
+    const scorerMap = new Map();
+
+    fixtures.forEach(fixture => {
+      if (!fixture.events || fixture.status !== 'completed') return;
+
+      fixture.events.forEach(event => {
+        if (event.type === 'goal') {
+          const isTeamHome = fixture.homeTeam?.id === team.id;
+          const isTeamAway = fixture.awayTeam?.id === team.id;
+
+          if ((isTeamHome && event.team === fixture.homeTeam?.id) ||
+              (isTeamAway && event.team === fixture.awayTeam?.id)) {
+            
+            const player = team.players.find(p => p.id === event.playerId);
+            if (player) {
+              const key = player.id;
+              if (!scorerMap.has(key)) {
+                scorerMap.set(key, {
+                  ...player,
+                  goals: 0
+                });
+              }
+              scorerMap.get(key).goals++;
+            }
+          }
+        }
+      });
+    });
+
+    return Array.from(scorerMap.values())
+      .sort((a, b) => b.goals - a.goals)
+      .slice(0, 5);
+  }, [team, fixtures]);
+
+  // Get disciplinary records for this team
+  const disciplinaryRecords = useMemo(() => {
+    if (!team || !team.players) return [];
+
+    const cardMap = new Map();
+
+    fixtures.forEach(fixture => {
+      if (!fixture.events || fixture.status !== 'completed') return;
+
+      fixture.events.forEach(event => {
+        if (event.type === 'yellow_card' || event.type === 'red_card') {
+          const isTeamHome = fixture.homeTeam?.id === team.id;
+          const isTeamAway = fixture.awayTeam?.id === team.id;
+
+          if ((isTeamHome && event.team === fixture.homeTeam?.id) ||
+              (isTeamAway && event.team === fixture.awayTeam?.id)) {
+            
+            const player = team.players.find(p => p.id === event.playerId);
+            if (player) {
+              const key = player.id;
+              if (!cardMap.has(key)) {
+                cardMap.set(key, {
+                  ...player,
+                  yellowCards: 0,
+                  redCards: 0
+                });
+              }
+              if (event.type === 'yellow_card') {
+                cardMap.get(key).yellowCards++;
+              } else {
+                cardMap.get(key).redCards++;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    return Array.from(cardMap.values())
+      .sort((a, b) => (b.redCards * 3 + b.yellowCards) - (a.redCards * 3 + a.yellowCards))
+      .slice(0, 5);
+  }, [team, fixtures]);
+
+  // Get related news articles
+  const relatedNews = useMemo(() => {
+    if (!team) return [];
+
+    const teamName = team.name.toLowerCase();
+    const managerName = team.manager?.toLowerCase() || '';
+    const playerNames = (team.players || []).map(p => p.name.toLowerCase());
+
+    return articles.filter(article => {
+      const title = article.title?.toLowerCase() || '';
+      const content = article.content?.toLowerCase() || '';
+      const excerpt = article.excerpt?.toLowerCase() || '';
+      const searchText = `${title} ${content} ${excerpt}`;
+
+      // Check if team name, manager name, or any player name appears in the article
+      if (searchText.includes(teamName)) return true;
+      if (managerName && searchText.includes(managerName)) return true;
+      return playerNames.some(name => searchText.includes(name));
+    }).slice(0, 6);
+  }, [team, articles]);
+
+  if (!team) {
+    return (
+      <div className="min-h-screen bg-dark-900 p-6">
+        <div className="text-center py-20">
+          <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h2 className="text-xl text-white mb-2">Team Not Found</h2>
+          <p className="text-gray-400 mb-6">The team you're looking for doesn't exist.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="text-primary-400 hover:text-primary-300"
+          >
+            Go Back Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: Users },
+    { id: 'fixtures', label: 'Fixtures', icon: Calendar },
+    { id: 'squad', label: 'Squad', icon: Users },
+    { id: 'stats', label: 'Statistics', icon: TrendingUp },
+    { id: 'news', label: 'News', icon: Newspaper }
+  ];
+
+  return (
+    <div className="min-h-screen bg-dark-900 pb-6">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-dark-800 to-dark-900 border-b border-dark-700">
+        <div className="p-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+
+          <div className="flex items-start gap-6">
+            {/* Team Logo */}
+            {team.logo && (
+              <div className="w-24 h-24 bg-dark-700 rounded-xl p-3 flex items-center justify-center flex-shrink-0">
+                <img
+                  src={team.logo}
+                  alt={team.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+
+            {/* Team Info */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-white mb-2">{team.name}</h1>
+              
+              <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                {team.city && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    <span>{team.city}</span>
+                  </div>
+                )}
+                {team.founded && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>Founded {team.founded}</span>
+                  </div>
+                )}
+                {team.stadium && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-4 h-4" />
+                    <span>{team.stadium}</span>
+                  </div>
+                )}
+              </div>
+
+              {team.manager && (
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-400">Manager:</span>
+                  <span className="text-white font-medium">{team.manager}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Stats */}
+            {teamStats && (
+              <div className="hidden md:flex gap-4">
+                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
+                  <div className="text-2xl font-bold text-green-400">{teamStats.won}</div>
+                  <div className="text-xs text-gray-400">Wins</div>
+                </div>
+                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
+                  <div className="text-2xl font-bold text-yellow-400">{teamStats.drawn}</div>
+                  <div className="text-xs text-gray-400">Draws</div>
+                </div>
+                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
+                  <div className="text-2xl font-bold text-red-400">{teamStats.lost}</div>
+                  <div className="text-xs text-gray-400">Losses</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 px-6 overflow-x-auto pb-2">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-dark-800 text-gray-400 hover:bg-dark-700'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Team Description */}
+            {team.description && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-3">About</h2>
+                <p className="text-gray-400 leading-relaxed">{team.description}</p>
+              </div>
+            )}
+
+            {/* Season Statistics */}
+            {teamStats && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Season Statistics</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-white">{teamStats.played}</div>
+                    <div className="text-sm text-gray-400">Played</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-400">{teamStats.points}</div>
+                    <div className="text-sm text-gray-400">Points</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">{teamStats.goalsFor}</div>
+                    <div className="text-sm text-gray-400">Goals For</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-red-400">{teamStats.goalsAgainst}</div>
+                    <div className="text-sm text-gray-400">Goals Against</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className={`text-2xl font-bold ${teamStats.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {teamStats.goalDifference >= 0 ? '+' : ''}{teamStats.goalDifference}
+                    </div>
+                    <div className="text-sm text-gray-400">Goal Diff</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-400">{teamStats.cleanSheets}</div>
+                    <div className="text-sm text-gray-400">Clean Sheets</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">{teamStats.won}</div>
+                    <div className="text-sm text-gray-400">Won</div>
+                  </div>
+                  <div className="text-center p-4 bg-dark-700 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-400">{teamStats.drawn}</div>
+                    <div className="text-sm text-gray-400">Drawn</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Scorers */}
+            {topScorers.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-400" />
+                  Top Scorers
+                </h2>
+                <div className="space-y-3">
+                  {topScorers.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-4 p-3 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+                    >
+                      <span className="text-gray-400 font-semibold w-6">{index + 1}</span>
+                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {player.jerseyNumber || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="text-sm text-gray-400">{player.position || 'Player'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-green-400">{player.goals}</div>
+                        <div className="text-xs text-gray-400">goals</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Form */}
+            {teamFixtures.recent.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Recent Matches</h2>
+                <div className="space-y-3">
+                  {teamFixtures.recent.map(fixture => {
+                    const isHome = fixture.homeTeam?.id === team.id;
+                    const teamScore = isHome ? fixture.homeScore : fixture.awayScore;
+                    const opponentScore = isHome ? fixture.awayScore : fixture.homeScore;
+                    const opponent = isHome ? fixture.awayTeam : fixture.homeTeam;
+                    const result = teamScore > opponentScore ? 'W' : teamScore < opponentScore ? 'L' : 'D';
+                    const resultColor = result === 'W' ? 'bg-green-500' : result === 'L' ? 'bg-red-500' : 'bg-yellow-500';
+
+                    return (
+                      <div
+                        key={fixture.id}
+                        onClick={() => navigate(`/fixtures/${fixture.id}`)}
+                        className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors cursor-pointer"
+                      >
+                        <div className={`w-8 h-8 ${resultColor} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
+                          {result}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-white font-medium">
+                            {!isHome && opponent?.logo && (
+                              <img src={opponent.logo} alt="" className="w-5 h-5" />
+                            )}
+                            <span>{isHome ? 'vs' : '@'} {opponent?.name || 'TBD'}</span>
+                          </div>
+                          <div className="text-sm text-gray-400">{fixture.date}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-white">
+                            {teamScore} - {opponentScore}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Fixtures Tab */}
+        {activeTab === 'fixtures' && (
+          <div className="space-y-6">
+            {/* Upcoming Matches */}
+            {teamFixtures.upcoming.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Upcoming Matches</h2>
+                <div className="space-y-3">
+                  {teamFixtures.upcoming.map(fixture => {
+                    const isHome = fixture.homeTeam?.id === team.id;
+                    const opponent = isHome ? fixture.awayTeam : fixture.homeTeam;
+
+                    return (
+                      <div
+                        key={fixture.id}
+                        onClick={() => navigate(`/fixtures/${fixture.id}`)}
+                        className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors cursor-pointer"
+                      >
+                        <Calendar className="w-5 h-5 text-primary-400" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-white font-medium">
+                            {opponent?.logo && (
+                              <img src={opponent.logo} alt="" className="w-5 h-5" />
+                            )}
+                            <span>{isHome ? 'vs' : '@'} {opponent?.name || 'TBD'}</span>
+                          </div>
+                          <div className="text-sm text-gray-400">{fixture.competition}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-white">{fixture.date}</div>
+                          <div className="text-xs text-gray-400">{fixture.time}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Results */}
+            {teamFixtures.recent.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Recent Results</h2>
+                <div className="space-y-3">
+                  {teamFixtures.recent.map(fixture => {
+                    const isHome = fixture.homeTeam?.id === team.id;
+                    const teamScore = isHome ? fixture.homeScore : fixture.awayScore;
+                    const opponentScore = isHome ? fixture.awayScore : fixture.homeScore;
+                    const opponent = isHome ? fixture.awayTeam : fixture.homeTeam;
+
+                    return (
+                      <div
+                        key={fixture.id}
+                        onClick={() => navigate(`/fixtures/${fixture.id}`)}
+                        className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors cursor-pointer"
+                      >
+                        {opponent?.logo && (
+                          <img src={opponent.logo} alt="" className="w-10 h-10" />
+                        )}
+                        <div className="flex-1">
+                          <div className="text-white font-medium">
+                            {isHome ? 'vs' : '@'} {opponent?.name || 'TBD'}
+                          </div>
+                          <div className="text-sm text-gray-400">{fixture.competition} • {fixture.date}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-white">
+                            {teamScore} - {opponentScore}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Squad Tab */}
+        {activeTab === 'squad' && (
+          <div className="space-y-6">
+            {team.players && team.players.length > 0 ? (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Players</h2>
+                <div className="grid gap-3">
+                  {team.players.map(player => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {player.jerseyNumber || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="text-sm text-gray-400">
+                          {player.position || 'Player'}
+                          {player.isGoalkeeper && ' • Goalkeeper'}
+                        </div>
+                      </div>
+                      {player.nationality && (
+                        <div className="text-sm text-gray-400">{player.nationality}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-dark-800 rounded-xl p-12 border border-dark-700 text-center">
+                <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400">No players registered yet</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Statistics Tab */}
+        {activeTab === 'stats' && (
+          <div className="space-y-6">
+            {/* Top Scorers */}
+            {topScorers.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-400" />
+                  Top Scorers
+                </h2>
+                <div className="space-y-3">
+                  {topScorers.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-4 p-3 bg-dark-700 rounded-lg"
+                    >
+                      <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
+                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {player.jerseyNumber || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="text-sm text-gray-400">{player.position || 'Player'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-green-400">{player.goals}</div>
+                        <div className="text-xs text-gray-400">goals</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Disciplinary */}
+            {disciplinaryRecords.length > 0 && (
+              <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-400" />
+                  Discipline
+                </h2>
+                <div className="space-y-3">
+                  {disciplinaryRecords.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-4 p-3 bg-dark-700 rounded-lg"
+                    >
+                      <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
+                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {player.jerseyNumber || '?'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="text-sm text-gray-400">{player.position || 'Player'}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {player.yellowCards > 0 && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-4 h-5 bg-yellow-400 rounded-sm"></div>
+                            <span className="text-white font-medium">{player.yellowCards}</span>
+                          </div>
+                        )}
+                        {player.redCards > 0 && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-4 h-5 bg-red-500 rounded-sm"></div>
+                            <span className="text-white font-medium">{player.redCards}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* News Tab */}
+        {activeTab === 'news' && (
+          <div className="space-y-6">
+            {relatedNews.length > 0 ? (
+              <div className="grid gap-4">
+                {relatedNews.map(article => (
+                  <div
+                    key={article.id}
+                    onClick={() => navigate(`/news/${article.id}`)}
+                    className="bg-dark-800 rounded-xl overflow-hidden border border-dark-700 hover:border-primary-600 transition-all cursor-pointer"
+                  >
+                    <div className="flex gap-4 p-4">
+                      {article.image && (
+                        <img
+                          src={article.image}
+                          alt={article.title}
+                          className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white mb-2 line-clamp-2">
+                          {article.title}
+                        </h3>
+                        {article.excerpt && (
+                          <p className="text-sm text-gray-400 line-clamp-2">
+                            {article.excerpt}
+                          </p>
+                        )}
+                        <div className="mt-2 text-xs text-gray-500">
+                          {article.publishedAt}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-dark-800 rounded-xl p-12 border border-dark-700 text-center">
+                <Newspaper className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400">No news articles found</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TeamDetail;
