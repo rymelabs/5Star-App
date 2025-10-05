@@ -1,0 +1,227 @@
+/* Compact Text Sizes - Global Overrides */
+/* Header texts: 15px, Subheader: 14px, Content: 11-12px */
+
+/* Headers (h1, h2, h3) - 15px */
+h1, h2, h3,
+.text-xl, .text-2xl, .text-3xl,
+.text-lg {
+  font-size: 15px !important;
+}
+
+/* Subheaders and medium text - 14px */
+.text-base,
+h4, h5, h6 {
+  font-size: 14px !important;
+}
+
+/* Content and body text - 12px */
+.text-sm,
+p, span, div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base) {
+  font-size: 12px !important;
+}
+
+/* Small text and labels - 11px */
+.text-xs,
+label:not(.text-sm):not(.text-base):not(.text-lg) {
+  font-size: 11px !important;
+}
+
+/* Specific component overrides */
+.card h1, .card h2, .card h3 {
+  font-size: 15px !important;
+}
+
+.card .text-base,
+.card h4 {
+  font-size: 14px !important;
+}
+
+.card p,
+.card span:not(.text-xs),
+.card .text-sm {
+  font-size: 12px !important;
+}
+
+.card .text-xs,
+.card label {
+  font-size: 11px !important;
+}
+
+/* Button text sizes */
+button {
+  font-size: 12px !important;
+}
+
+button.text-sm {
+  font-size: 11px !important;
+}
+
+/* Input and form field text */
+input, textarea, select {
+  font-size: 12px !important;
+}
+
+/* Badge and tag text */
+.badge, .tag, span[class*="badge"], span[class*="tag"] {
+  font-size: 11px !important;
+}
+
+/* Table text */
+table th {
+  font-size: 12px !important;
+}
+
+table td {
+  font-size: 11px !important;
+}
+
+/* List items */
+li {
+  font-size: 12px !important;
+}
+
+/* Score displays - keep bold visible */
+.font-bold.text-lg,
+.font-bold.text-xl,
+.font-bold.text-2xl {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+/* Navigation text */
+nav a, nav button {
+  font-size: 12px !important;
+}
+
+/* Modal headers */
+.modal h1, .modal h2, .modal h3 {
+  font-size: 15px !important;
+}
+
+.modal p, .modal span {
+  font-size: 12px !important;
+}
+
+/* Notification text */
+.notification .title {
+  font-size: 14px !important;
+}
+
+.notification .message {
+  font-size: 12px !important;
+}
+
+/* Team/Player names in cards */
+.team-name, .player-name {
+  font-size: 14px !important;
+}
+
+/* Stat numbers */
+.stat-value {
+  font-size: 15px !important;
+}
+
+.stat-label {
+  font-size: 11px !important;
+}
+
+/* Reduce padding to make cards more compact */
+.card {
+  padding: 12px !important;
+}
+
+.card-header {
+  padding: 10px 12px !important;
+}
+
+.card-body {
+  padding: 10px 12px !important;
+}
+
+/* Reduce spacing between elements */
+.space-y-4 > * + * {
+  margin-top: 12px !important;
+}
+
+.space-y-3 > * + * {
+  margin-top: 10px !important;
+}
+
+.space-y-2 > * + * {
+  margin-top: 6px !important;
+}
+
+/* Reduce margins */
+.mb-4 {
+  margin-bottom: 12px !important;
+}
+
+.mb-3 {
+  margin-bottom: 10px !important;
+}
+
+.mb-2 {
+  margin-bottom: 6px !important;
+}
+
+.mt-4 {
+  margin-top: 12px !important;
+}
+
+.mt-3 {
+  margin-top: 10px !important;
+}
+
+.mt-2 {
+  margin-top: 6px !important;
+}
+
+/* Fixture card specific */
+.fixture-card .team-name {
+  font-size: 12px !important;
+}
+
+.fixture-card .score {
+  font-size: 15px !important;
+}
+
+.fixture-card .time,
+.fixture-card .date {
+  font-size: 11px !important;
+}
+
+/* News card specific */
+.news-card h3 {
+  font-size: 14px !important;
+}
+
+.news-card p {
+  font-size: 11px !important;
+}
+
+/* League table specific */
+.league-table th {
+  font-size: 11px !important;
+}
+
+.league-table td {
+  font-size: 11px !important;
+}
+
+.league-table .team-name {
+  font-size: 12px !important;
+}
+
+/* Admin panel specific */
+.admin-panel h1 {
+  font-size: 15px !important;
+}
+
+.admin-panel label {
+  font-size: 11px !important;
+}
+
+.admin-panel input,
+.admin-panel textarea {
+  font-size: 12px !important;
+}
