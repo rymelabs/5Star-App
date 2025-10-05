@@ -47,7 +47,7 @@ const SeasonStandings = ({ season, teams }) => {
   const getPositionColor = (position) => {
     const qualifiers = season.knockoutConfig?.qualifiersPerGroup || 2;
     if (position <= qualifiers) {
-      return 'border-l-4 border-green-500 bg-green-500/5';
+      return 'bg-green-500/5';
     }
     return '';
   };
@@ -75,89 +75,74 @@ const SeasonStandings = ({ season, teams }) => {
 
       {/* Standings Table */}
       {currentGroup && (
-        <div className="card overflow-hidden">
-          {/* Table Header - Desktop */}
-          <div className="hidden sm:block">
-            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 sm:gap-4 px-4 py-3 bg-dark-700 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-dark-600">
-              <div className="text-center">S/N</div>
-              <div>TEAM</div>
-              <div className="text-center">P</div>
-              <div className="text-center">W</div>
-              <div className="text-center">D</div>
-              <div className="text-center">L</div>
-              <div className="text-center">GD</div>
-              <div className="text-center">PTS</div>
-            </div>
-          </div>
-
-          {/* Table Header - Mobile */}
-          <div className="block sm:hidden overflow-x-auto">
-            <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 px-4 py-3 bg-dark-700 text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-dark-600 min-w-max">
-              <div className="text-center sticky left-0 bg-dark-700 z-10">#</div>
-              <div className="sticky left-6 bg-dark-700 z-10 min-w-[140px]">Team</div>
-              <div className="text-center">P</div>
-              <div className="text-center">W</div>
-              <div className="text-center">D</div>
-              <div className="text-center">L</div>
-              <div className="text-center">GD</div>
-              <div className="text-center">PTS</div>
-            </div>
-          </div>
-
-          {/* Table Body */}
+        <div className="card p-4 sm:p-6">
+          {/* Table */}
           {standings.length === 0 ? (
             <div className="p-8 text-center text-gray-400">
               No standings data available
             </div>
           ) : (
             <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="px-4 sm:px-0">
-                {standings.map((standing) => {
-                  const team = teams.find(t => t.id === standing.team?.id || t.id === standing.teamId);
-                  return (
-                    <div
-                      key={standing.position}
-                      className={`grid grid-cols-[auto_1fr_repeat(6,auto)] gap-2 sm:gap-4 px-4 py-3 border-b border-dark-700 last:border-0 hover:bg-dark-700/50 transition-colors ${getPositionColor(standing.position)} min-w-max sm:min-w-0`}
-                    >
-                      {/* Position - Sticky on mobile */}
-                      <div className="text-center font-semibold text-white sticky left-0 bg-dark-800 sm:bg-transparent z-10 sm:static w-6 sm:w-auto">
-                        {standing.position}
-                      </div>
-                      
-                      {/* Team - Sticky on mobile */}
-                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-[140px] max-w-[180px] sm:max-w-[240px] sticky left-6 bg-dark-800 sm:bg-transparent z-10 sm:static">
-                        {team?.logo && (
-                          <img 
-                            src={team.logo} 
-                            alt={team?.name || standing.team?.name} 
-                            className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover flex-shrink-0" 
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
-                          />
-                        )}
-                        <span 
-                          className="font-medium text-white text-sm sm:text-base truncate" 
-                          title={team?.name || standing.team?.name || 'Unknown Team'}
+              <div className="inline-block min-w-full align-middle">
+                <table className="min-w-full">
+                  <thead className="text-xs text-gray-400 uppercase border-b border-gray-700">
+                    <tr>
+                      <th className="text-left py-2 px-2 sm:px-0 sticky left-0 bg-dark-700 sm:bg-transparent z-10">Pos</th>
+                      <th className="text-left py-2 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10 min-w-[120px] sm:min-w-0">Team</th>
+                      <th className="text-center py-2 px-1 sm:px-2">P</th>
+                      <th className="text-center py-2 px-1 sm:px-2">W</th>
+                      <th className="text-center py-2 px-1 sm:px-2">D</th>
+                      <th className="text-center py-2 px-1 sm:px-2">L</th>
+                      <th className="text-center py-2 px-1 sm:px-2">GD</th>
+                      <th className="text-center py-2 px-1 sm:px-2">Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs sm:text-sm">
+                    {standings.map((standing) => {
+                      const team = teams.find(t => t.id === standing.team?.id || t.id === standing.teamId);
+                      const isQualifier = standing.position <= (season.knockoutConfig?.qualifiersPerGroup || 2);
+                      return (
+                        <tr 
+                          key={standing.position} 
+                          className={`border-b border-gray-700/50 hover:bg-dark-700/50 transition-colors ${getPositionColor(standing.position)}`}
                         >
-                          {team?.name || standing.team?.name || 'Unknown Team'}
-                        </span>
-                      </div>
-                      
-                      {/* Stats */}
-                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.played}</div>
-                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.won}</div>
-                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.drawn}</div>
-                      <div className="text-center text-gray-300 text-xs sm:text-base">{standing.lost}</div>
-                      <div className={`text-center font-medium text-sm sm:text-base ${
-                        standing.goalDifference > 0 ? 'text-green-400' : 
-                        standing.goalDifference < 0 ? 'text-red-400' : 
-                        'text-gray-300'
-                      }`}>
-                        {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
-                      </div>
-                      <div className="text-center font-bold text-primary-400 text-sm sm:text-base">{standing.points}</div>
-                    </div>
-                  );
-                })}
+                          <td className="py-3 px-2 sm:px-0 sticky left-0 bg-dark-700 sm:bg-transparent z-10">
+                            <span className={`font-semibold ${isQualifier ? 'text-green-400' : 'text-white'}`}>
+                              {standing.position}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
+                            <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0 max-w-[140px] sm:max-w-[200px]">
+                              {team?.logo && (
+                                <img
+                                  src={team.logo}
+                                  alt={team?.name || standing.team?.name}
+                                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                                  onError={(e) => e.target.style.display = 'none'}
+                                />
+                              )}
+                              <span className="text-white truncate" title={team?.name || standing.team?.name || 'Unknown Team'}>
+                                {team?.name || standing.team?.name || 'Unknown Team'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="text-center text-gray-300 px-1 sm:px-2">{standing.played}</td>
+                          <td className="text-center text-gray-300 px-1 sm:px-2">{standing.won}</td>
+                          <td className="text-center text-gray-300 px-1 sm:px-2">{standing.drawn}</td>
+                          <td className="text-center text-gray-300 px-1 sm:px-2">{standing.lost}</td>
+                          <td className={`text-center px-1 sm:px-2 ${
+                            standing.goalDifference > 0 ? 'text-green-400' : 
+                            standing.goalDifference < 0 ? 'text-red-400' : 
+                            'text-gray-300'
+                          }`}>
+                            {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
+                          </td>
+                          <td className="text-center font-semibold text-white px-1 sm:px-2">{standing.points}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
