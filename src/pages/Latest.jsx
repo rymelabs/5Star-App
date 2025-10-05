@@ -278,13 +278,14 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(match)}
                 className="card p-4 cursor-pointer hover:ring-2 hover:ring-accent-500 transition-all"
               >
+                              >
                 <div className="flex items-center justify-between">
                   {/* Home Team */}
                   <div className="flex items-center flex-1">
                     <img
                       src={match.homeTeam?.logo}
                       alt={match.homeTeam?.name}
-                      className="w-8 h-8 object-contain mr-3"
+                      className="w-6 h-6 object-contain mr-2"
                       onError={(e) => e.target.style.display = 'none'}
                     />
                     <span className="text-white font-medium truncate">
@@ -310,7 +311,7 @@ const Latest = () => {
                     <img
                       src={match.awayTeam?.logo}
                       alt={match.awayTeam?.name}
-                      className="w-8 h-8 object-contain ml-3"
+                      className="w-6 h-6 object-contain ml-2"
                       onError={(e) => e.target.style.display = 'none'}
                     />
                   </div>
@@ -345,7 +346,7 @@ const Latest = () => {
                 >
                   {/* Rank & Team */}
                   <div className="flex items-center flex-1">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 font-bold text-sm ${
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 font-bold text-xs ${
                       index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                       index === 1 ? 'bg-gray-400/20 text-gray-400' :
                       index === 2 ? 'bg-orange-500/20 text-orange-500' :
@@ -356,7 +357,7 @@ const Latest = () => {
                     <img
                       src={scorer.team.logo}
                       alt={scorer.team.name}
-                      className="w-8 h-8 object-contain mr-3"
+                      className="w-6 h-6 object-contain mr-2"
                       onError={(e) => e.target.style.display = 'none'}
                     />
                     <div>
@@ -413,7 +414,7 @@ const Latest = () => {
                         <img
                           src={fixture.homeTeam.logo}
                           alt={fixture.homeTeam.name}
-                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
@@ -458,7 +459,7 @@ const Latest = () => {
                         <img
                           src={fixture.awayTeam.logo}
                           alt={fixture.awayTeam.name}
-                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
@@ -527,7 +528,7 @@ const Latest = () => {
                         <img
                           src={fixture.homeTeam.logo}
                           alt={fixture.homeTeam.name}
-                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
                       )}
@@ -570,7 +571,7 @@ const Latest = () => {
                         <img
                           src={fixture.awayTeam.logo}
                           alt={fixture.awayTeam.name}
-                          className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
                       )}
