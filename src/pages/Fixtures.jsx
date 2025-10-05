@@ -237,7 +237,7 @@ const Fixtures = () => {
                                     <img
                                       src={fixture.homeTeam.logo}
                                       alt={homeName}
-                                      className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                                      className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                                       onError={(e) => (e.currentTarget.style.display = 'none')}
                                     />
                                   )}
@@ -266,7 +266,7 @@ const Fixtures = () => {
                                     <img
                                       src={fixture.awayTeam.logo}
                                       alt={awayName}
-                                      className="w-10 h-10 object-contain rounded-full flex-shrink-0"
+                                      className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                                       onError={(e) => (e.currentTarget.style.display = 'none')}
                                     />
                                   )}
@@ -374,7 +374,7 @@ const Fixtures = () => {
                                   <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
                                     <span className="font-medium text-white truncate max-w-[160px]" title={homeName}>{abbreviateTeamName(homeName)}</span>
                                     {fixture.homeTeam?.logo && (
-                                      <img src={fixture.homeTeam.logo} alt={homeName} className="w-10 h-10 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                      <img src={fixture.homeTeam.logo} alt={homeName} className="w-7 h-7 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
                                     )}
                                   </div>
                                   <div className="flex flex-col items-center px-4 flex-shrink-0">
@@ -398,7 +398,7 @@ const Fixtures = () => {
                                   </div>
                                   <div className="flex items-center space-x-3 flex-1 min-w-0">
                                     {fixture.awayTeam?.logo && (
-                                      <img src={fixture.awayTeam.logo} alt={awayName} className="w-10 h-10 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                      <img src={fixture.awayTeam.logo} alt={awayName} className="w-7 h-7 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
                                     )}
                                     <span className="font-medium text-white truncate max-w-[160px]" title={awayName}>{abbreviateTeamName(awayName)}</span>
                                   </div>
