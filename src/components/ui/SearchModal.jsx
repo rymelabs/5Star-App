@@ -253,11 +253,11 @@ const SearchModal = ({ onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-start justify-center pt-20"
+      className="fixed inset-0 z-50 bg-opacity-75 flex items-start justify-center pt-20"
       onClick={onClose}
     >
       <div 
-        className="bg-dark-800 rounded-lg w-full max-w-2xl mx-4 max-h-[600px] overflow-hidden shadow-2xl"
+        className=" bg-black/50 backdrop-blur-sm border border-dark-700 rounded-lg w-full max-w-2xl mx-4 max-h-[600px] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
