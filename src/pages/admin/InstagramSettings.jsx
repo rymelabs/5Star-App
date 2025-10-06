@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Instagram, Save, AlertCircle, CheckCircle, ExternalLink, Home } from 'lucide-react';
+import { Instagram, Save, AlertCircle, CheckCircle, ExternalLink, Home, ArrowLeft } from 'lucide-react';
 import { getInstagramSettings, saveInstagramSettings } from '../../firebase/instagram';
 import { useAuth } from '../../context/AuthContext';
 
@@ -89,10 +89,16 @@ const InstagramSettings = () => {
     <div className="p-6">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={() => navigate('/admin')}
+            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-400" />
+          </button>
           <Instagram className="w-6 h-6 text-pink-500" />
           <h1 className="admin-header">Instagram Integration</h1>
         </div>
-        <p className="text-gray-400">Connect your Instagram account to display posts on the home page</p>
+        <p className="text-gray-400 ml-9">Connect your Instagram account to display posts on the home page</p>
       </div>
 
       {/* Alert/Success Messages */}

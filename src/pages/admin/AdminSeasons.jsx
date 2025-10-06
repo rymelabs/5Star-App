@@ -111,8 +111,8 @@ const AdminSeasons = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+      <div className="mb-6">
+        <div className="flex items-center mb-4">
           <button
             onClick={() => navigate('/admin')}
             className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2"
@@ -126,9 +126,9 @@ const AdminSeasons = () => {
         </div>
         <button
           onClick={() => navigate('/admin/seasons/create')}
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary w-full flex items-center justify-center text-sm py-2"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 mr-2" />
           <span>New Season</span>
         </button>
       </div>
