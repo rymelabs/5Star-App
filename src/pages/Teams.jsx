@@ -62,7 +62,7 @@ const Teams = () => {
     <div className="p-6 pb-24">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+        <h1 className="page-header mb-2 flex items-center gap-2">
           <Users className="w-7 h-7 text-primary-400" />
           Teams
         </h1>

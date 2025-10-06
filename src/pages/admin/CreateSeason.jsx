@@ -212,7 +212,7 @@ const CreateSeason = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div>
-            <h1 className="text-lg font-semibold text-white">Create New Season</h1>
+            <h1 className="page-header">Create New Season</h1>
             <p className="text-sm text-gray-400">
               Step {step} of 3: {step === 1 ? 'Basic Information' : step === 2 ? 'Configure Groups' : 'Review & Create'}
             </p>

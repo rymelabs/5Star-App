@@ -467,7 +467,7 @@ const Stats = () => {
     <div className="p-6 pb-24">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+        <h1 className="page-header mb-2 flex items-center gap-2">
           <Trophy className="w-7 h-7 text-purple-400" />
           Statistics
         </h1>
