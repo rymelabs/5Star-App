@@ -1,14 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
 import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import NotificationModal from '../components/NotificationModal';
+import NotificationTester from '../components/NotificationTester'; // TEMPORARY - for testing
 
 const Latest = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+
+  useEffect(() => {
+    // Show notification modal for authenticated users on home page
+    console.log('Latest page: Checking notifications modal', { 
+      hasUser: !!user, 
+      userId: user?.uid 
+    });
+    
+    if (user && user.uid) {
+      // Check for new notifications by comparing with last seen timestamp
+      const checkForNewNotifications = async () => {
+        try {
+          const { getFirebaseDb } = await import('../firebase/config');
+          const { collection, query, where, getDocs, orderBy, limit } = await import('firebase/firestore');
+          
+          const db = getFirebaseDb();
+          const lastSeenTimestamp = sessionStorage.getItem('lastNotificationCheck');
+          const dismissedIds = JSON.parse(localStorage.getItem('dismissedNotifications') || '[]');
+          
+          // Get active notifications
+          const notificationsRef = collection(db, 'adminNotifications');
+          const q = query(
+            notificationsRef,
+            where('active', '==', true),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+          );
+          
+          const snapshot = await getDocs(q);
+          const notifications = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter(notif => !dismissedIds.includes(notif.id));
+          
+          console.log('Latest page: Found notifications', { 
+            total: notifications.length,
+            lastSeenTimestamp 
+          });
+          
+          if (notifications.length > 0) {
+            // Check if there are new notifications since last check
+            const latestNotificationTime = notifications[0].createdAt?.toMillis?.() || 0;
+            const shouldShow = !lastSeenTimestamp || latestNotificationTime > parseInt(lastSeenTimestamp);
+            
+            console.log('Latest page: Should show modal?', { 
+              shouldShow,
+              latestNotificationTime,
+              lastSeenTimestamp 
+            });
+            
+            if (shouldShow) {
+              setTimeout(() => {
+                console.log('Latest page: Showing notification modal now');
+                setShowNotificationModal(true);
+                // Update last check timestamp to latest notification time
+                sessionStorage.setItem('lastNotificationCheck', latestNotificationTime.toString());
+              }, 2000);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking notifications:', error);
+        }
+      };
+      
+      checkForNewNotifications();
+    }
+  }, [user]);
   
   // Use hooks at the top level (hooks cannot be in try-catch)
   const newsContext = useNews();
@@ -801,6 +875,24 @@ const Latest = () => {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      {(() => {
+        console.log('Latest page: Render check', { 
+          showNotificationModal, 
+          hasUser: !!user,
+          shouldShow: showNotificationModal && user 
+        });
+        return showNotificationModal && user ? (
+          <NotificationModal 
+            userId={user.uid} 
+            onClose={() => setShowNotificationModal(false)} 
+          />
+        ) : null;
+      })()}
+
+      {/* TEMPORARY: Test Button for Notifications */}
+      <NotificationTester />
     </div>
   );
 };
