@@ -5,23 +5,26 @@ import { NewsProvider } from './NewsContext';
 import { NotificationProvider } from './NotificationContext';
 import { CompetitionsProvider } from './CompetitionsContext';
 import { InstagramProvider } from './InstagramContext';
+import { LanguageProvider } from './LanguageContext';
 
 // Combined provider component
 export const AppProvider = ({ children }) => {
   return (
-    <AuthProvider>
-      <FootballProvider>
-        <NewsProvider>
-          <CompetitionsProvider>
-            <InstagramProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
-            </InstagramProvider>
-          </CompetitionsProvider>
-        </NewsProvider>
-      </FootballProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <FootballProvider>
+          <NewsProvider>
+            <CompetitionsProvider>
+              <InstagramProvider>
+                <NotificationProvider>
+                  {children}
+                </NotificationProvider>
+              </InstagramProvider>
+            </CompetitionsProvider>
+          </NewsProvider>
+        </FootballProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };
 

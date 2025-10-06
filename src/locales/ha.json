@@ -1,0 +1,97 @@
+{
+  "common": {
+    "appName": "5Star App",
+    "loading": "Ana lodi...",
+    "error": "Kuskure",
+    "success": "Nasara",
+    "cancel": "Soke",
+    "confirm": "Tabbatar",
+    "delete": "Share",
+    "edit": "Gyara",
+    "save": "Ajiye",
+    "search": "Nema",
+    "filter": "Tace",
+    "viewAll": "Duba duka",
+    "logout": "Fita"
+  },
+  "navigation": {
+    "latest": "Sabuwa",
+    "fixtures": "Wasanni",
+    "teams": "Kungiyoyi",
+    "news": "Labarai",
+    "dashboard": "Dashboard",
+    "settings": "Saiti",
+    "myAccount": "Asusuna",
+    "adminPanel": "Sashen gudanarwa",
+    "adminDashboard": "Dashboard na gudanarwa"
+  },
+  "pages": {
+    "latest": {
+      "title": "Sabuwa",
+      "recentResults": "Sakamakon kwanan nan",
+      "upcomingMatches": "Wasannin da ke zuwa",
+      "latestNews": "Sabbin labarai",
+      "leagueTable": "Teburin gasar"
+    },
+    "fixtures": {
+      "title": "Wasanni",
+      "allFixtures": "Dukan wasanni",
+      "today": "Yau",
+      "live": "Kai tsaye",
+      "upcoming": "Masu zuwa",
+      "completed": "An gama",
+      "byDate": "Ta kwanan wata",
+      "byGroup": "Ta kungiya",
+      "table": "Tebur"
+    },
+    "teams": {
+      "title": "Kungiyoyi",
+      "searchTeams": "Nema kungiyoyi...",
+      "noTeamsFound": "Ba a sami kungiyoyi ba"
+    },
+    "news": {
+      "title": "Labarai",
+      "readMore": "Karanta kari"
+    },
+    "settings": {
+      "title": "Saiti",
+      "language": "Harshe",
+      "selectLanguage": "Zaɓi harshe",
+      "notifications": "Sanarwa",
+      "account": "Asusun",
+      "about": "Game da",
+      "privacy": "Manufar sirri",
+      "terms": "Sharuɗɗan sabis"
+    },
+    "profile": {
+      "title": "Bayani",
+      "editProfile": "Gyara bayani",
+      "myStats": "Ƙididdigana",
+      "favorites": "Abubuwan da na fi so"
+    }
+  },
+  "match": {
+    "vs": "da",
+    "ft": "Ƙarshe",
+    "ht": "Rabin lokaci",
+    "live": "KAI TSAYE",
+    "upcoming": "Masu zuwa",
+    "postponed": "An jinkirta",
+    "cancelled": "An soke",
+    "kickoff": "Farawa",
+    "venue": "Wurin",
+    "referee": "Alƙali"
+  },
+  "table": {
+    "position": "Matsayi",
+    "team": "Kungiya",
+    "played": "An buga",
+    "won": "Nasara",
+    "drawn": "Zira",
+    "lost": "Rashin nasara",
+    "goalsFor": "Kwallaye masu",
+    "goalsAgainst": "Kwallaye akan",
+    "goalDifference": "Bambancin kwallaye",
+    "points": "Maki"
+  }
+}

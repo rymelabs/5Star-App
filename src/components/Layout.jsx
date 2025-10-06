@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Calendar, Users, Newspaper, LayoutDashboard, Settings, User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import Header from './Header';
 import BottomNavigation from './BottomNavigation';
 
@@ -9,17 +10,18 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
 
   const mainNavItems = [
-    { icon: Home, label: 'Latest', path: '/' },
-    { icon: Calendar, label: 'Fixtures', path: '/fixtures' },
-    { icon: Users, label: 'Teams', path: '/teams' },
-    { icon: Newspaper, label: 'News', path: '/news' },
+    { icon: Home, label: t('navigation.latest'), path: '/' },
+    { icon: Calendar, label: t('navigation.fixtures'), path: '/fixtures' },
+    { icon: Users, label: t('navigation.teams'), path: '/teams' },
+    { icon: Newspaper, label: t('navigation.news'), path: '/news' },
   ];
 
   const userNavItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/profile' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: LayoutDashboard, label: t('navigation.dashboard'), path: '/profile' },
+    { icon: Settings, label: t('navigation.settings'), path: '/settings' },
   ];
 
   const handleLogout = async () => {
@@ -70,7 +72,7 @@ const Layout = ({ children }) => {
           {/* User Section - Dashboard & Settings */}
           <div className="px-3 mt-6 mb-2">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4">
-              My Account
+              {t('navigation.myAccount')}
             </div>
           </div>
           <nav className="px-3 space-y-1">
@@ -99,7 +101,7 @@ const Layout = ({ children }) => {
             <>
               <div className="px-3 mt-6 mb-2">
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4">
-                  Admin Panel
+                  {t('navigation.adminPanel')}
                 </div>
               </div>
               <nav className="px-3 space-y-1">
@@ -112,7 +114,7 @@ const Layout = ({ children }) => {
                   }`}
                 >
                   <Shield className="w-5 h-5" />
-                  <span className="font-medium">Admin Dashboard</span>
+                  <span className="font-medium">{t('navigation.adminDashboard')}</span>
                 </button>
               </nav>
             </>
@@ -137,7 +139,7 @@ const Layout = ({ children }) => {
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-gray-400 hover:bg-dark-700 hover:text-white transition-all"
           >
             <LogOut className="w-4 h-4" />
-            <span className="text-sm">Logout</span>
+            <span className="text-sm">{t('common.logout')}</span>
           </button>
         </div>
       </aside>

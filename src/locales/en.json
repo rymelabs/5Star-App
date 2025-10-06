@@ -1,0 +1,97 @@
+{
+  "common": {
+    "appName": "5Star App",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "search": "Search",
+    "filter": "Filter",
+    "viewAll": "View all",
+    "logout": "Logout"
+  },
+  "navigation": {
+    "latest": "Latest",
+    "fixtures": "Fixtures",
+    "teams": "Teams",
+    "news": "News",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "myAccount": "My Account",
+    "adminPanel": "Admin Panel",
+    "adminDashboard": "Admin Dashboard"
+  },
+  "pages": {
+    "latest": {
+      "title": "Latest",
+      "recentResults": "Recent Results",
+      "upcomingMatches": "Upcoming Matches",
+      "latestNews": "Latest News",
+      "leagueTable": "League Table"
+    },
+    "fixtures": {
+      "title": "Fixtures",
+      "allFixtures": "All Fixtures",
+      "today": "Today",
+      "live": "Live",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "byDate": "By Date",
+      "byGroup": "By Group",
+      "table": "Table"
+    },
+    "teams": {
+      "title": "Teams",
+      "searchTeams": "Search teams...",
+      "noTeamsFound": "No teams found"
+    },
+    "news": {
+      "title": "News",
+      "readMore": "Read more"
+    },
+    "settings": {
+      "title": "Settings",
+      "language": "Language",
+      "selectLanguage": "Select Language",
+      "notifications": "Notifications",
+      "account": "Account",
+      "about": "About",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "profile": {
+      "title": "Profile",
+      "editProfile": "Edit Profile",
+      "myStats": "My Stats",
+      "favorites": "Favorites"
+    }
+  },
+  "match": {
+    "vs": "vs",
+    "ft": "FT",
+    "ht": "HT",
+    "live": "LIVE",
+    "upcoming": "Upcoming",
+    "postponed": "Postponed",
+    "cancelled": "Cancelled",
+    "kickoff": "Kickoff",
+    "venue": "Venue",
+    "referee": "Referee"
+  },
+  "table": {
+    "position": "Pos",
+    "team": "Team",
+    "played": "P",
+    "won": "W",
+    "drawn": "D",
+    "lost": "L",
+    "goalsFor": "GF",
+    "goalsAgainst": "GA",
+    "goalDifference": "GD",
+    "points": "Pts"
+  }
+}

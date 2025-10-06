@@ -1,0 +1,97 @@
+{
+  "common": {
+    "appName": "5Star App",
+    "loading": "N ṣiṣẹ...",
+    "error": "Aṣiṣe",
+    "success": "Aṣeyọri",
+    "cancel": "Fagile",
+    "confirm": "Jẹrisi",
+    "delete": "Pa rẹ",
+    "edit": "Ṣatunkọ",
+    "save": "Fi pamọ",
+    "search": "Wa",
+    "filter": "Ṣẹ",
+    "viewAll": "Wo gbogbo rẹ",
+    "logout": "Jade"
+  },
+  "navigation": {
+    "latest": "Tuntun",
+    "fixtures": "Awọn ere",
+    "teams": "Awọn ẹgbẹ",
+    "news": "Iroyin",
+    "dashboard": "Ojuami",
+    "settings": "Eto",
+    "myAccount": "Akaun mi",
+    "adminPanel": "Aaye abojuto",
+    "adminDashboard": "Ojuami abojuto"
+  },
+  "pages": {
+    "latest": {
+      "title": "Tuntun",
+      "recentResults": "Awọn esi aipẹ",
+      "upcomingMatches": "Awọn ere ti nbọ",
+      "latestNews": "Iroyin tuntun",
+      "leagueTable": "Tabili idije"
+    },
+    "fixtures": {
+      "title": "Awọn ere",
+      "allFixtures": "Gbogbo awọn ere",
+      "today": "Oni",
+      "live": "Taara",
+      "upcoming": "Ti nbọ",
+      "completed": "Ti pari",
+      "byDate": "Nipasẹ ọjọ",
+      "byGroup": "Nipasẹ ẹgbẹ",
+      "table": "Tabili"
+    },
+    "teams": {
+      "title": "Awọn ẹgbẹ",
+      "searchTeams": "Wa awọn ẹgbẹ...",
+      "noTeamsFound": "Ko si ẹgbẹ ti a ri"
+    },
+    "news": {
+      "title": "Iroyin",
+      "readMore": "Ka siwaju sii"
+    },
+    "settings": {
+      "title": "Eto",
+      "language": "Ede",
+      "selectLanguage": "Yan ede",
+      "notifications": "Awọn ikini",
+      "account": "Akaun",
+      "about": "Nipa",
+      "privacy": "Ilana Aṣiri",
+      "terms": "Awọn ofin iṣẹ"
+    },
+    "profile": {
+      "title": "Profaili",
+      "editProfile": "Ṣatunkọ profaili",
+      "myStats": "Awọn iṣiro mi",
+      "favorites": "Awọn ayanfẹ"
+    }
+  },
+  "match": {
+    "vs": "si",
+    "ft": "Ipari",
+    "ht": "Aarin akoko",
+    "live": "TAARA",
+    "upcoming": "Ti nbọ",
+    "postponed": "Ti sun",
+    "cancelled": "Ti fagile",
+    "kickoff": "Ibẹrẹ",
+    "venue": "Ibi",
+    "referee": "Adajọ"
+  },
+  "table": {
+    "position": "Ipo",
+    "team": "Ẹgbẹ",
+    "played": "Ti ṣe",
+    "won": "Bori",
+    "drawn": "Dọgba",
+    "lost": "Padanu",
+    "goalsFor": "Ami fun",
+    "goalsAgainst": "Ami lodi",
+    "goalDifference": "Iyato ami",
+    "points": "Awọn aaye"
+  }
+}
