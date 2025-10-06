@@ -442,7 +442,7 @@ const Settings = () => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
-          <h1 className="ml-2 text-lg font-semibold text-white">Settings</h1>
+          <h1 className="ml-2 page-header">Settings</h1>
         </div>
       </div>
 
