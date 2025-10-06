@@ -306,14 +306,14 @@ const AdminNews = () => {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={() => navigate(`/news/${article.slug || article.id}`)}
-                        className="p-2 rounded-lg bg-accent-600 text-white hover:bg-accent-700 transition-colors"
+                        className="p-1.5 text-accent-400 hover:text-accent-300 hover:bg-accent-500/10 rounded transition-colors"
                         title="View Article"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/news/edit/${article.id}`)}
-                        className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
                         title="Edit Article"
                       >
                         <Edit className="w-4 h-4" />
@@ -337,7 +337,7 @@ const AdminNews = () => {
                             }
                           }
                         }}
-                        className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
                         title="Delete Article"
                       >
                         <Trash2 className="w-4 h-4" />
