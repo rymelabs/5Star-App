@@ -4,6 +4,7 @@ import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import BulkTeamUpload from '../../components/BulkTeamUpload';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal } from 'lucide-react';
 
 const AdminTeams = () => {
@@ -14,6 +15,7 @@ const AdminTeams = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingTeam, setEditingTeam] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, team: null });
   const [formData, setFormData] = useState({
     name: '',
     logo: '',
@@ -206,20 +208,24 @@ const AdminTeams = () => {
   };
 
   const handleDeleteTeam = async (team) => {
+    setConfirmDelete({ isOpen: true, team });
+  };
+
+  const confirmDeleteTeam = async () => {
+    const team = confirmDelete.team;
+    if (!team) return;
+
     console.log('🔐 Current user:', user);
     console.log('🔐 User role:', user?.role);
     console.log('🎯 Team to delete:', team);
     console.log('🆔 Team ID:', team.id, 'Type:', typeof team.id);
-    
-    if (!confirm(`Are you sure you want to delete ${team.name}? This action cannot be undone.`)) {
-      return;
-    }
 
     try {
       setLoading(true);
       console.log('🗑️ Attempting to delete team:', team.id, team.name);
       await deleteTeam(team.id);
       showSuccess('Team Deleted', `${team.name} has been deleted successfully`);
+      setConfirmDelete({ isOpen: false, team: null });
     } catch (error) {
       console.error('❌ Error deleting team:', error);
       console.error('Error details:', {
@@ -783,6 +789,19 @@ const AdminTeams = () => {
       <BulkTeamUpload
         isOpen={showBulkUpload}
         onClose={() => setShowBulkUpload(false)}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, team: null })}
+        onConfirm={confirmDeleteTeam}
+        title="Delete Team"
+        message={`Are you sure you want to delete ${confirmDelete.team?.name}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={loading}
       />
     </div>
   );

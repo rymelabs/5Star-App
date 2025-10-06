@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {

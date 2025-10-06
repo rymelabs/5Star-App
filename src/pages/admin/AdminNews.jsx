@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../../context/NewsContext';
+import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { slugify } from '../../utils/helpers';
 import { ArrowLeft, Plus, Edit, Trash2, Image, FileText, Save, X, Eye, Calendar } from 'lucide-react';
 
@@ -18,6 +20,7 @@ const AdminNews = () => {
     featured: false
   });
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, articleId: null, articleTitle: '' });
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -69,6 +72,26 @@ const AdminNews = () => {
       console.error('Error adding article:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDeleteArticle = async () => {
+    const { articleId } = confirmDelete;
+    setConfirmDelete({ isOpen: false, articleId: null, articleTitle: '' });
+
+    try {
+      console.log('AdminNews: Attempting to delete article:', articleId);
+      await deleteArticle(articleId);
+      console.log('AdminNews: Article deleted successfully');
+      alert('Article deleted successfully!');
+    } catch (error) {
+      console.error('AdminNews: Failed to delete article:', error);
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      const errorMsg = error?.code === 'permission-denied' 
+        ? 'Permission denied. Make sure you have admin access and Firestore rules are deployed.'
+        : error?.message || 'Failed to delete article. Please try again.';
+      alert(errorMsg);
     }
   };
 
@@ -319,24 +342,7 @@ const AdminNews = () => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={async () => {
-                          if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
-                            try {
-                              console.log('AdminNews: Attempting to delete article:', article.id);
-                              await deleteArticle(article.id);
-                              console.log('AdminNews: Article deleted successfully');
-                              alert('Article deleted successfully!');
-                            } catch (error) {
-                              console.error('AdminNews: Failed to delete article:', error);
-                              console.error('Error code:', error?.code);
-                              console.error('Error message:', error?.message);
-                              const errorMsg = error?.code === 'permission-denied' 
-                                ? 'Permission denied. Make sure you have admin access and Firestore rules are deployed.'
-                                : error?.message || 'Failed to delete article. Please try again.';
-                              alert(errorMsg);
-                            }
-                          }
-                        }}
+                        onClick={() => setConfirmDelete({ isOpen: true, articleId: article.id, articleTitle: article.title })}
                         className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
                         title="Delete Article"
                       >
@@ -404,6 +410,16 @@ const AdminNews = () => {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, articleId: null, articleTitle: '' })}
+        onConfirm={confirmDeleteArticle}
+        title="Delete Article"
+        message={`Are you sure you want to delete "${confirmDelete.articleTitle}"? This action cannot be undone.`}
+        confirmText="Delete Article"
+        type="danger"
+      />
     </div>
   );
 };

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const AdminLeagues = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const AdminLeagues = () => {
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, leagueId: null, leagueName: '' });
 
   const isAdmin = user?.role === 'admin';
 
@@ -48,10 +50,13 @@ const AdminLeagues = () => {
     }, 3000);
   };
 
-  const handleDelete = async (leagueId, leagueName) => {
-    if (!confirm(`Are you sure you want to delete "${leagueName}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDelete = (leagueId, leagueName) => {
+    setConfirmDelete({ isOpen: true, leagueId, leagueName });
+  };
+
+  const confirmDeleteLeague = async () => {
+    const { leagueId } = confirmDelete;
+    setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' });
 
     try {
       await leaguesCollection.delete(leagueId);
@@ -194,6 +199,16 @@ const AdminLeagues = () => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' })}
+        onConfirm={confirmDeleteLeague}
+        title="Delete League"
+        message={`Are you sure you want to delete "${confirmDelete.leagueName}"? This action cannot be undone.`}
+        confirmText="Delete League"
+        type="danger"
+      />
     </div>
   );
 };
