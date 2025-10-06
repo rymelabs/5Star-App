@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Search, Filter, Clock, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
 import { formatDate, getRelativeTime } from '../utils/dateUtils';
 import { truncateText, groupBy } from '../utils/helpers';
@@ -9,6 +10,7 @@ import { newsCollection } from '../firebase/firestore';
 const News = () => {
   const navigate = useNavigate();
   const { articles } = useNews();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -111,7 +113,7 @@ const News = () => {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="page-header">News</h1>
+        <h1 className="page-header">{t('pages.news.title')}</h1>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors"
@@ -125,7 +127,7 @@ const News = () => {
         <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
         <input
           type="text"
-          placeholder="Search news articles..."
+          placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="input-field pl-10 w-full"

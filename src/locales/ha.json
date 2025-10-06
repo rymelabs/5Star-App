@@ -1,7 +1,7 @@
 {
   "common": {
     "appName": "5Star App",
-    "loading": "Ana lodi...",
+    "loading": "Ana loda...",
     "error": "Kuskure",
     "success": "Nasara",
     "cancel": "Soke",
@@ -66,8 +66,45 @@
     "profile": {
       "title": "Bayani",
       "editProfile": "Gyara bayani",
-      "myStats": "Ƙididdigana",
-      "favorites": "Abubuwan da na fi so"
+      "myStats": "Ƙididdiga na",
+      "favorites": "Abubuwan da na fi so",
+      "personalInfo": "Bayanan Sirri",
+      "name": "Suna",
+      "email": "Imel",
+      "bio": "Tarihin Rayuwa",
+      "favoriteTeam": "Ƙungiyar Da Na Fi So",
+      "joinedDate": "Ranar Shiga",
+      "saving": "Ana Adanawa...",
+      "followedTeams": "Ƙungiyoyin Da Nake Bi",
+      "statistics": "Ƙididdiga"
+    },
+    "teamDetail": {
+      "overview": "Taƙaitaccen Bayani",
+      "fixtures": "Wasanni",
+      "squad": "Ƙungiyar 'Yan Wasa",
+      "stats": "Ƙididdiga",
+      "newsAbout": "Labarai Game Da",
+      "recentMatches": "Wasannin Kwanan Nan",
+      "upcomingMatches": "Wasannin Da Ke Zuwa",
+      "follow": "Bi",
+      "following": "Ana Bibiya",
+      "teamStats": "Ƙididdigan Ƙungiya",
+      "stadium": "Filin Wasa",
+      "founded": "Ranar Kafa",
+      "manager": "Mai Gudanarwa",
+      "noFixtures": "Ba a sami wasanni ba",
+      "noNews": "Babu labarai"
+    },
+    "fixtureDetail": {
+      "matchDetails": "Cikakkun Bayanan Wasa",
+      "lineup": "Jerin Suna",
+      "stats": "Ƙididdiga",
+      "commentary": "Sharhi",
+      "homeTeam": "Ƙungiyar Gida",
+      "awayTeam": "Ƙungiyar Baƙo",
+      "matchInfo": "Bayanan Wasa",
+      "attendance": "Masu Halartar",
+      "weather": "Yanayi"
     }
   },
   "match": {

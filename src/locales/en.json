@@ -67,7 +67,44 @@
       "title": "Profile",
       "editProfile": "Edit Profile",
       "myStats": "My Stats",
-      "favorites": "Favorites"
+      "favorites": "Favorites",
+      "personalInfo": "Personal Information",
+      "name": "Name",
+      "email": "Email",
+      "bio": "Bio",
+      "favoriteTeam": "Favorite Team",
+      "joinedDate": "Joined Date",
+      "saving": "Saving...",
+      "followedTeams": "Followed Teams",
+      "statistics": "Statistics"
+    },
+    "teamDetail": {
+      "overview": "Overview",
+      "fixtures": "Fixtures",
+      "squad": "Squad",
+      "stats": "Stats",
+      "newsAbout": "News About",
+      "recentMatches": "Recent Matches",
+      "upcomingMatches": "Upcoming Matches",
+      "follow": "Follow",
+      "following": "Following",
+      "teamStats": "Team Statistics",
+      "stadium": "Stadium",
+      "founded": "Founded",
+      "manager": "Manager",
+      "noFixtures": "No fixtures found",
+      "noNews": "No news available"
+    },
+    "fixtureDetail": {
+      "matchDetails": "Match Details",
+      "lineup": "Lineup",
+      "stats": "Stats",
+      "commentary": "Commentary",
+      "homeTeam": "Home Team",
+      "awayTeam": "Away Team",
+      "matchInfo": "Match Information",
+      "attendance": "Attendance",
+      "weather": "Weather"
     }
   },
   "match": {
