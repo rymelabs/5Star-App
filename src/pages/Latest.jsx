@@ -174,7 +174,7 @@ const Latest = () => {
       {latestNews.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Latest News</h2>
+            <h2 className="page-header">Latest News</h2>
             <button
               onClick={() => navigate('/news')}
               className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
@@ -278,7 +278,6 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(match)}
                 className="card p-4 cursor-pointer hover:ring-2 hover:ring-accent-500 transition-all"
               >
-                              >
                 <div className="flex items-center justify-between">
                   {/* Home Team */}
                   <div className="flex items-center flex-1">
