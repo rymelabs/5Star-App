@@ -263,7 +263,7 @@ const AdminTeams = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="page-header">Teams Management</h1>
+              <h1 className="admin-header">Teams Management</h1>
               <p className="text-sm text-gray-400">{teams.length} teams</p>
             </div>
           </div>

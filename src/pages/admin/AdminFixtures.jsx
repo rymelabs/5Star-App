@@ -337,7 +337,7 @@ const AdminFixtures = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="page-header">Fixtures Management</h1>
+              <h1 className="admin-header">Fixtures Management</h1>
               <p className="text-sm text-gray-400">{fixtures.length} fixtures</p>
             </div>
           </div>
