@@ -90,28 +90,34 @@ const PlayerDetail = () => {
       fixture.events.forEach(event => {
         if (event.playerId === playerId) {
           if (event.type === 'goal') stats.goals++;
-          if (event.type === 'assist') stats.assists++;
           if (event.type === 'yellow_card' || event.type === 'yellowCard') stats.yellowCards++;
           if (event.type === 'red_card' || event.type === 'redCard') stats.redCards++;
         }
+        
+        // Check for assists (stored as assistById in goal events)
+        if (event.type === 'goal' && event.assistById === playerId) {
+          stats.assists++;
+        }
       });
 
-      // Check if player was in lineup
-      if (fixture.lineup) {
-        const inHomeLineup = fixture.lineup.home?.some(p => p.playerId === playerId || p.id === playerId);
-        const inAwayLineup = fixture.lineup.away?.some(p => p.playerId === playerId || p.id === playerId);
+      // Check if player was in lineup (lineups are arrays of player IDs)
+      const homeLineup = fixture.homeLineup || [];
+      const awayLineup = fixture.awayLineup || [];
+      const inHomeLineup = homeLineup.includes(playerId);
+      const inAwayLineup = awayLineup.includes(playerId);
 
-        if (inHomeLineup || inAwayLineup) {
-          stats.matchesPlayed++;
+      if (inHomeLineup || inAwayLineup) {
+        stats.matchesPlayed++;
 
-          // Check for clean sheet (goalkeeper)
-          const playerLineup = inHomeLineup
-            ? fixture.lineup.home.find(p => p.playerId === playerId || p.id === playerId)
-            : fixture.lineup.away.find(p => p.playerId === playerId || p.id === playerId);
-
-          if (playerLineup?.position === 'GK' || player?.position === 'GK') {
-            const conceded = inHomeLineup ? fixture.awayScore : fixture.homeScore;
-            if (conceded === 0) stats.cleanSheets++;
+        // Check for clean sheet (goalkeeper only)
+        if (player?.isGoalkeeper) {
+          const homeScore = parseInt(fixture.homeScore) || 0;
+          const awayScore = parseInt(fixture.awayScore) || 0;
+          
+          if (inHomeLineup && awayScore === 0) {
+            stats.cleanSheets++;
+          } else if (inAwayLineup && homeScore === 0) {
+            stats.cleanSheets++;
           }
         }
       }
