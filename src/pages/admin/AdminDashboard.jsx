@@ -3,7 +3,9 @@ import { useNavigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import { useNews } from '../../context/NewsContext';
-import { adminActivityCollection } from '../../firebase/firestore';
+import { adminActivityCollection, teamsCollection, fixturesCollection, leagueTableCollection, newsCollection, seasonsCollection, leaguesCollection } from '../../firebase/firestore';
+import { getFirebaseDb } from '../../firebase/config';
+import { collection, getDocs, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import { 
   ArrowLeft, 
   BarChart3, 
@@ -19,7 +21,9 @@ import {
   Activity,
   Instagram,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  AlertTriangle,
+  Database
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -33,6 +37,8 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [deleting, setDeleting] = useState('');
 
   // Fetch recent activities
   useEffect(() => {
@@ -208,6 +214,74 @@ const AdminDashboard = () => {
       count: '-',
     },
   ];
+
+  // Delete handler functions
+  const deleteAllFromCollection = async (collectionName) => {
+    const database = getFirebaseDb();
+    const querySnapshot = await getDocs(collection(database, collectionName));
+    const batch = writeBatch(database);
+    querySnapshot.docs.forEach((document) => {
+      batch.delete(doc(database, collectionName, document.id));
+    });
+    await batch.commit();
+  };
+
+  const handleDeleteData = async (dataType) => {
+    const confirmMessage = `Are you sure you want to delete ALL ${dataType}? This action CANNOT be undone!`;
+    const doubleConfirm = `Type "DELETE ${dataType.toUpperCase()}" to confirm:`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    const userInput = prompt(doubleConfirm);
+    if (userInput !== `DELETE ${dataType.toUpperCase()}`) {
+      alert('Deletion cancelled. Text did not match.');
+      return;
+    }
+
+    try {
+      setDeleting(dataType);
+      
+      switch (dataType) {
+        case 'seasons':
+          await deleteAllFromCollection('seasons');
+          break;
+        case 'leagues':
+          await deleteAllFromCollection('leagues');
+          break;
+        case 'teams':
+          await deleteAllFromCollection('teams');
+          break;
+        case 'fixtures':
+          await deleteAllFromCollection('fixtures');
+          break;
+        case 'tables':
+          await deleteAllFromCollection('leagueTable');
+          break;
+        case 'articles':
+          await deleteAllFromCollection('news');
+          break;
+        case 'everything':
+          await Promise.all([
+            deleteAllFromCollection('seasons'),
+            deleteAllFromCollection('leagues'),
+            deleteAllFromCollection('teams'),
+            deleteAllFromCollection('fixtures'),
+            deleteAllFromCollection('leagueTable'),
+            deleteAllFromCollection('news'),
+            deleteAllFromCollection('adminActivity'),
+          ]);
+          break;
+      }
+      
+      alert(`Successfully deleted all ${dataType}!`);
+      window.location.reload(); // Refresh to show updated data
+    } catch (error) {
+      console.error(`Error deleting ${dataType}:`, error);
+      alert(`Failed to delete ${dataType}. Error: ${error.message}`);
+    } finally {
+      setDeleting('');
+    }
+  };
 
   return (
     <div className="pb-6">
@@ -419,6 +493,145 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Advanced Settings */}
+        <div className="mt-8">
+          <button
+            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+          >
+            <Database className="w-5 h-5" />
+            <span className="text-lg font-semibold">Advanced Settings</span>
+            {showAdvancedSettings ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+
+          {showAdvancedSettings && (
+            <div className="card p-6">
+              <div className="flex items-start gap-3 mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-yellow-500 font-semibold mb-1">Danger Zone</p>
+                  <p className="text-gray-400 text-sm">
+                    These actions are irreversible. All deleted data will be permanently removed from the database.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleDeleteData('seasons')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Seasons</p>
+                      <p className="text-gray-400 text-sm">Remove all season data</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteData('leagues')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Leagues</p>
+                      <p className="text-gray-400 text-sm">Remove all league data</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteData('teams')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Teams</p>
+                      <p className="text-gray-400 text-sm">Remove all team data</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteData('fixtures')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Fixtures</p>
+                      <p className="text-gray-400 text-sm">Remove all fixture data</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteData('tables')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Tables</p>
+                      <p className="text-gray-400 text-sm">Remove all league table data</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteData('articles')}
+                  disabled={deleting}
+                  className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <div className="text-left">
+                      <p className="text-white font-medium">Delete All Articles</p>
+                      <p className="text-gray-400 text-sm">Remove all news articles</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <button
+                  onClick={() => handleDeleteData('everything')}
+                  disabled={deleting}
+                  className="w-full flex items-center justify-between p-4 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 hover:border-red-600/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <div className="text-left">
+                      <p className="text-white font-semibold">Delete All Data</p>
+                      <p className="text-gray-400 text-sm">Remove all data from all collections (seasons, leagues, teams, fixtures, tables, articles)</p>
+                    </div>
+                  </div>
+                  {deleting && <div className="spinner" />}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
