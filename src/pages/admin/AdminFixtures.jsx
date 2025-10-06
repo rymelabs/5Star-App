@@ -1058,7 +1058,7 @@ const AdminFixtures = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handleEdit(fixture)}
-                      className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
                       title="Edit fixture"
                     >
                       <Edit className="w-4 h-4" />
@@ -1069,7 +1069,8 @@ const AdminFixtures = () => {
                           console.log('Delete fixture:', fixture.id);
                         }
                       }}
-                      className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                      title="Delete fixture"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
