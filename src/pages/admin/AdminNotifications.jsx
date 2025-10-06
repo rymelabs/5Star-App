@@ -304,32 +304,32 @@ const AdminNotifications = () => {
                     className={`p-4 rounded-lg border ${getTypeColor(notification.type)}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-white">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h3 className="font-semibold text-white break-words">
                             {notification.title}
                           </h3>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityBadge.color}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${priorityBadge.color}`}>
                             {priorityBadge.text}
                           </span>
-                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-dark-700 text-gray-400">
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-dark-700 text-gray-400 whitespace-nowrap">
                             {notification.type}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-300 mb-2">
+                        <p className="text-sm text-gray-300 mb-2 break-words whitespace-pre-wrap">
                           {notification.message}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>
+                        <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                          <span className="whitespace-nowrap">
                             {notification.createdAt?.toDate?.()?.toLocaleString() || 'Just now'}
                           </span>
-                          <span>👁️ {notification.viewCount || 0} views</span>
-                          <span>✕ {notification.dismissCount || 0} dismissed</span>
+                          <span className="whitespace-nowrap">👁️ {notification.viewCount || 0} views</span>
+                          <span className="whitespace-nowrap">✕ {notification.dismissCount || 0} dismissed</span>
                         </div>
                       </div>
                       <button
                         onClick={() => handleDeleteNotification(notification.id)}
-                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors flex-shrink-0"
                       >
                         <Trash2 className="w-4 h-4 text-red-400" />
                       </button>

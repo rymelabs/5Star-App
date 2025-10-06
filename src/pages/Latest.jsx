@@ -8,7 +8,6 @@ import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } 
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
-import NotificationTester from '../components/NotificationTester'; // TEMPORARY - for testing
 
 const Latest = () => {
   const navigate = useNavigate();
@@ -877,22 +876,12 @@ const Latest = () => {
       )}
 
       {/* Notification Modal */}
-      {(() => {
-        console.log('Latest page: Render check', { 
-          showNotificationModal, 
-          hasUser: !!user,
-          shouldShow: showNotificationModal && user 
-        });
-        return showNotificationModal && user ? (
-          <NotificationModal 
-            userId={user.uid} 
-            onClose={() => setShowNotificationModal(false)} 
-          />
-        ) : null;
-      })()}
-
-      {/* TEMPORARY: Test Button for Notifications */}
-      <NotificationTester />
+      {showNotificationModal && user && (
+        <NotificationModal 
+          userId={user.uid} 
+          onClose={() => setShowNotificationModal(false)} 
+        />
+      )}
     </div>
   );
 };
