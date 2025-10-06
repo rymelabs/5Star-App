@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection } from '../firebase/firestore';
+import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection, leaguesCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const FootballContext = createContext();
@@ -17,6 +17,7 @@ export const FootballProvider = ({ children }) => {
   const [teams, setTeams] = useState([]);
   const [fixtures, setFixtures] = useState([]);
   const [leagueTable, setLeagueTable] = useState([]);
+  const [leagues, setLeagues] = useState([]);
   const [leagueSettings, setLeagueSettings] = useState({
     qualifiedPosition: 4,
     relegationPosition: 18,
@@ -80,19 +81,21 @@ export const FootballProvider = ({ children }) => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [teamsData, fixturesData, leagueData, settingsData, activeSeasonData, seasonsData] = await Promise.all([
+      const [teamsData, fixturesData, leagueData, settingsData, activeSeasonData, seasonsData, leaguesData] = await Promise.all([
         teamsCollection.getAll(),
         fixturesCollection.getAll(),
         leagueTableCollection.getCurrent(),
         leagueSettingsCollection.get(),
         seasonsCollection.getActive(),
-        seasonsCollection.getAll()
+        seasonsCollection.getAll(),
+        leaguesCollection.getAll()
       ]);
 
       setTeams(teamsData);
       setLeagueSettings(settingsData);
       setActiveSeason(activeSeasonData);
       setSeasons(seasonsData);
+      setLeagues(leaguesData);
       
       // Debug: Log available team IDs
       console.log('📋 Available Teams:', teamsData.map(t => ({ id: t.id, name: t.name })));
@@ -626,11 +629,55 @@ export const FootballProvider = ({ children }) => {
     }
   };
 
+  // League management functions
+  const fetchLeagues = async () => {
+    try {
+      const leaguesData = await leaguesCollection.getAll();
+      setLeagues(leaguesData);
+      return leaguesData;
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+      throw error;
+    }
+  };
+
+  const addLeague = async (leagueData) => {
+    try {
+      const leagueId = await leaguesCollection.add(leagueData);
+      await fetchLeagues(); // Refresh leagues
+      return leagueId;
+    } catch (error) {
+      console.error('Error adding league:', error);
+      throw error;
+    }
+  };
+
+  const updateLeague = async (leagueId, leagueData) => {
+    try {
+      await leaguesCollection.update(leagueId, leagueData);
+      await fetchLeagues(); // Refresh leagues
+    } catch (error) {
+      console.error('Error updating league:', error);
+      throw error;
+    }
+  };
+
+  const deleteLeague = async (leagueId) => {
+    try {
+      await leaguesCollection.delete(leagueId);
+      await fetchLeagues(); // Refresh leagues
+    } catch (error) {
+      console.error('Error deleting league:', error);
+      throw error;
+    }
+  };
+
   const value = {
     teams,
     fixtures,
     leagueTable,
     leagueSettings,
+    leagues,
     activeSeason,
     seasons,
     loading,
@@ -645,6 +692,10 @@ export const FootballProvider = ({ children }) => {
     updateFixture,
     updateLeagueTable,
     updateLeagueSettings,
+    fetchLeagues,
+    addLeague,
+    updateLeague,
+    deleteLeague,
     setActiveSeasonById,
     getSeasonFixtures,
     getGroupStandings,

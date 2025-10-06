@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users,
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
-  const { fixtures, teams, addFixture, updateFixture, seasons, activeSeason } = useFootball();
+  const { fixtures, teams, leagues, addFixture, updateFixture, seasons, activeSeason } = useFootball();
   const { competitions } = useCompetitions();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -22,6 +22,7 @@ const AdminFixtures = () => {
     homeScore: '',
     awayScore: '',
     seasonId: '',
+    leagueId: '',
     groupId: '',
     stage: '',
     homeLineup: [],
@@ -74,10 +75,10 @@ const AdminFixtures = () => {
       const dateTimeString = `${formData.date}T${formData.time}`;
       const dateTime = new Date(dateTimeString);
       
-      const newFixture = {
+      const fixtureData = {
         homeTeamId: formData.homeTeam,
         awayTeamId: formData.awayTeam,
-        dateTime: dateTime,
+        dateTime: dateTimeString,
         venue: formData.venue || '',
         competition: formData.competition || 'Premier League',
         round: formData.round || '',
@@ -85,6 +86,7 @@ const AdminFixtures = () => {
         homeScore: formData.homeScore || null,
         awayScore: formData.awayScore || null,
         seasonId: formData.seasonId || null,
+        leagueId: formData.leagueId || null,
         groupId: formData.groupId || null,
         stage: formData.stage || null,
         homeLineup: formData.homeLineup || [],
@@ -491,6 +493,30 @@ const AdminFixtures = () => {
                   {seasons.length === 0 && (
                     <p className="text-xs text-gray-500 mt-1">
                       No seasons yet. Create one from seasons page.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    League
+                  </label>
+                  <select
+                    name="leagueId"
+                    value={formData.leagueId}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                  >
+                    <option value="">Select league</option>
+                    {leagues.map(league => (
+                      <option key={league.id} value={league.id}>
+                        {league.name}
+                      </option>
+                    ))}
+                  </select>
+                  {leagues.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No leagues yet. Create one from leagues page.
                     </p>
                   )}
                 </div>
