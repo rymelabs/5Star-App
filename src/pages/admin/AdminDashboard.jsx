@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
-  Database
+  Database,
+  Bell
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -192,6 +193,14 @@ const AdminDashboard = () => {
       path: '/admin/news',
       color: 'text-purple-400',
       count: articles.length,
+    },
+    {
+      title: 'Notifications Management',
+      description: 'Send announcements and notifications to users',
+      icon: Bell,
+      path: '/admin/notifications',
+      color: 'text-cyan-400',
+      count: '-',
     },
     {
       title: 'League Settings',
