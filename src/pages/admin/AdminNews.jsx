@@ -275,14 +275,14 @@ const AdminNews = () => {
         {/* Articles List */}
         <div className="space-y-4">
           {articles.map((article) => (
-            <div key={article.id} className="card p-4">
-              <div className="flex items-start space-x-4">
+            <div key={article.id} className="card p-4 overflow-hidden">
+              <div className="flex items-start gap-4">
                 {/* Article Image */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 w-24 h-20">
                   <img
                     src={article.image}
                     alt={article.title}
-                    className="w-20 h-16 object-cover rounded-lg bg-dark-700"
+                    className="w-full h-full object-cover rounded-lg bg-dark-700"
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=160&fit=crop';
                     }}
@@ -290,20 +290,20 @@ const AdminNews = () => {
                 </div>
 
                 {/* Article Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.category)}`}>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getCategoryColor(article.category)}`}>
                         {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
                       </span>
                       {article.featured && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-500 bg-yellow-500/20">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-500 bg-yellow-500/20 whitespace-nowrap">
                           Featured
                         </span>
                       )}
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={() => navigate(`/news/${article.slug || article.id}`)}
                         className="p-2 rounded-lg bg-accent-600 text-white hover:bg-accent-700 transition-colors"
@@ -345,39 +345,39 @@ const AdminNews = () => {
                     </div>
                   </div>
 
-                  <h3 className="font-semibold text-white mb-2 line-clamp-2">
+                  <h3 className="font-semibold text-white mb-2 line-clamp-2 break-words">
                     {article.title}
                   </h3>
 
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2 break-words">
                     {article.excerpt || article.summary}
                   </p>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center space-x-4">
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(article.publishedAt)}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="flex items-center gap-1 whitespace-nowrap">
+                        <Calendar className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{formatDate(article.publishedAt)}</span>
                       </span>
-                      <span className="flex items-center space-x-1">
-                        <FileText className="w-3 h-3" />
-                        <span>{article.readTime} min read</span>
+                      <span className="flex items-center gap-1 whitespace-nowrap">
+                        <FileText className="w-3 h-3 flex-shrink-0" />
+                        <span>{article.readTime} min</span>
                       </span>
-                      <span className="flex items-center space-x-1">
-                        <Eye className="w-3 h-3" />
-                        <span>{article.views || 0} views</span>
+                      <span className="flex items-center gap-1 whitespace-nowrap">
+                        <Eye className="w-3 h-3 flex-shrink-0" />
+                        <span>{article.views || 0}</span>
                       </span>
                     </div>
 
                     {article.tags && article.tags.length > 0 && (
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center gap-1 flex-wrap">
                         {article.tags.slice(0, 3).map((tag, index) => (
-                          <span key={index} className="px-1 py-0.5 bg-dark-700 text-gray-400 rounded text-xs">
+                          <span key={index} className="px-1.5 py-0.5 bg-dark-700 text-gray-400 rounded text-xs whitespace-nowrap">
                             #{tag}
                           </span>
                         ))}
                         {article.tags.length > 3 && (
-                          <span className="text-gray-500">+{article.tags.length - 3}</span>
+                          <span className="text-gray-500 whitespace-nowrap">+{article.tags.length - 3}</span>
                         )}
                       </div>
                     )}
