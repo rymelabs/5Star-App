@@ -10,11 +10,14 @@ import {
 } from 'lucide-react';
 import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 
 const EditLeague = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast, showToast, hideToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -44,12 +47,12 @@ const EditLeague = () => {
           totalTeams: league.totalTeams
         });
       } else {
-        alert('League not found');
+        showToast('League not found', 'error');
         navigate('/admin/leagues');
       }
     } catch (error) {
       console.error('Error loading league:', error);
-      alert('Failed to load league');
+      showToast('Failed to load league', 'error');
       navigate('/admin/leagues');
     } finally {
       setLoading(false);
@@ -68,17 +71,17 @@ const EditLeague = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('Please enter a league name');
+      showToast('Please enter a league name', 'warning');
       return;
     }
 
     if (formData.qualifiedPosition >= formData.relegationPosition) {
-      alert('Qualified position must be less than relegation position');
+      showToast('Qualified position must be less than relegation position', 'warning');
       return;
     }
 
     if (formData.relegationPosition > formData.totalTeams) {
-      alert('Relegation position cannot exceed total teams');
+      showToast('Relegation position cannot exceed total teams', 'warning');
       return;
     }
 
@@ -88,7 +91,7 @@ const EditLeague = () => {
       navigate('/admin/leagues');
     } catch (error) {
       console.error('Error updating league:', error);
-      alert('Failed to update league. Please try again.');
+      showToast('Failed to update league. Please try again.', 'error');
     } finally {
       setSaving(false);
     }
@@ -317,6 +320,14 @@ const EditLeague = () => {
           </button>
         </div>
       </form>
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNa      navigate('/admin/leagues');
+    } catch (error) {
+      console.error('Error creating league:', error);
+      showToast('Failed to create league. Please try again.', 'error');
+    } finally {e } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Save,
@@ -10,10 +14,13 @@ import {
 } from 'lucide-react';
 import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 
 const CreateLeague = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast, showToast, hideToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -36,17 +43,17 @@ const CreateLeague = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('Please enter a league name');
+      showToast('Please enter a league name', 'warning');
       return;
     }
 
     if (formData.qualifiedPosition >= formData.relegationPosition) {
-      alert('Qualified position must be less than relegation position');
+      showToast('Qualified position must be less than relegation position', 'warning');
       return;
     }
 
     if (formData.relegationPosition > formData.totalTeams) {
-      alert('Relegation position cannot exceed total teams');
+      showToast('Relegation position cannot exceed total teams', 'warning');
       return;
     }
 
@@ -277,6 +284,14 @@ const CreateLeague = () => {
           </button>
         </div>
       </form>
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 };

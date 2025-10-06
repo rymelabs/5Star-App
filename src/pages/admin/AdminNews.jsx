@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useNews } from '../../context/NewsContext';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import { slugify } from '../../utils/helpers';
 import { ArrowLeft, Plus, Edit, Trash2, Image, FileText, Save, X, Eye, Calendar } from 'lucide-react';
 
 const AdminNews = () => {
   const navigate = useNavigate();
   const { articles, addArticle, deleteArticle } = useNews();
+  const { toast, showToast, hideToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -83,7 +86,7 @@ const AdminNews = () => {
       console.log('AdminNews: Attempting to delete article:', articleId);
       await deleteArticle(articleId);
       console.log('AdminNews: Article deleted successfully');
-      alert('Article deleted successfully!');
+      showToast('Article deleted successfully!', 'success');
     } catch (error) {
       console.error('AdminNews: Failed to delete article:', error);
       console.error('Error code:', error?.code);
@@ -91,7 +94,7 @@ const AdminNews = () => {
       const errorMsg = error?.code === 'permission-denied' 
         ? 'Permission denied. Make sure you have admin access and Firestore rules are deployed.'
         : error?.message || 'Failed to delete article. Please try again.';
-      alert(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -420,6 +423,14 @@ const AdminNews = () => {
         confirmText="Delete Article"
         type="danger"
       />
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 };
