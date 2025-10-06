@@ -164,6 +164,7 @@ const AppContent = () => {
           {user.role === 'admin' && (
             <>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/teams" element={<AdminTeams />} />
               <Route path="/admin/teams/edit/:teamId" element={<EditTeam />} />
               <Route path="/admin/fixtures" element={<AdminFixtures />} />
