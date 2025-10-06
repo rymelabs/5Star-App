@@ -728,14 +728,16 @@ const AdminTeams = () => {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleEdit(team)}
-                    className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
+                    title="Edit team"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteTeam(team)}
                     disabled={loading}
-                    className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Delete team"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
