@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { teamsCollection } from '../firebase/firestore';
+import { addCalendarRemindersForTeam, removeCalendarRemindersForTeam } from '../services/calendarReminderService';
 
 const Teams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { teams, followTeam, unfollowTeam } = useFootball();
+  const { teams, followTeam, unfollowTeam, fixtures } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [searchQuery, setSearchQuery] = useState('');
   const [followingLoading, setFollowingLoading] = useState({});
@@ -92,10 +93,45 @@ const Teams = () => {
       
       if (isFollowing) {
         await unfollowTeam(team.id);
+        
+        // Remove calendar reminders for this team
+        removeCalendarRemindersForTeam(team.id, fixtures);
+        
         showSuccess('Unfollowed', `You unfollowed ${team.name}`);
       } else {
         await followTeam(team.id);
-        showSuccess('Following', `You're now following ${team.name}!`);
+        
+        // Get user notification settings
+        const savedSettings = localStorage.getItem('userSettings');
+        let notificationSettings = {
+          upcomingMatches: true,
+          teamFollowing: true
+        };
+        
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings);
+            notificationSettings = parsed.notifications || notificationSettings;
+          } catch (error) {
+            console.error('Error parsing settings:', error);
+          }
+        }
+        
+        // Add calendar reminders if notifications are enabled
+        if (notificationSettings.upcomingMatches && notificationSettings.teamFollowing) {
+          const addedCount = await addCalendarRemindersForTeam(team.id, fixtures, notificationSettings);
+          
+          if (addedCount > 0) {
+            showSuccess(
+              'Following with Reminders!', 
+              `You're now following ${team.name}! ${addedCount} upcoming match${addedCount > 1 ? 'es' : ''} added to your calendar.`
+            );
+          } else {
+            showSuccess('Following', `You're now following ${team.name}!`);
+          }
+        } else {
+          showSuccess('Following', `You're now following ${team.name}!`);
+        }
       }
     } catch (error) {
       console.error('Error toggling follow:', error);

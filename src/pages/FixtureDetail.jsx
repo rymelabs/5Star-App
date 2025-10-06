@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Users, MessageCircle, Heart, User, Shield, Target } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, MessageCircle, Heart, User, Shield, Target, Bell, BellOff } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { fixturesCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
+import { addFixtureToCalendar } from '../utils/calendar';
 
 const FixtureDetail = () => {
   const { id } = useParams();
@@ -13,12 +15,14 @@ const FixtureDetail = () => {
   const { fixtures } = useFootball();
   const { getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
   const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [fixture, setFixture] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [hasCalendarReminder, setHasCalendarReminder] = useState(false);
 
   useEffect(() => {
     const foundFixture = fixtures.find(f => f.id === id);
@@ -28,6 +32,17 @@ const FixtureDetail = () => {
     if (foundFixture) {
       setLikes(foundFixture.likes || 0);
       setIsLiked(foundFixture.likedBy?.includes(user?.uid) || false);
+      
+      // Check if calendar reminder exists in localStorage
+      const savedReminders = localStorage.getItem('calendarReminders');
+      if (savedReminders) {
+        try {
+          const reminders = JSON.parse(savedReminders);
+          setHasCalendarReminder(reminders.includes(id));
+        } catch (error) {
+          console.error('Error parsing calendar reminders:', error);
+        }
+      }
     }
   }, [id, fixtures, user]);
 
@@ -89,6 +104,50 @@ const FixtureDetail = () => {
     }
   };
 
+  const handleAddToCalendar = async () => {
+    if (!fixture) return;
+    
+    try {
+      const success = await addFixtureToCalendar(fixture);
+      
+      if (success) {
+        // Save reminder in localStorage
+        const savedReminders = localStorage.getItem('calendarReminders');
+        let reminders = [];
+        
+        if (savedReminders) {
+          try {
+            reminders = JSON.parse(savedReminders);
+          } catch (error) {
+            console.error('Error parsing calendar reminders:', error);
+          }
+        }
+        
+        if (!reminders.includes(id)) {
+          reminders.push(id);
+          localStorage.setItem('calendarReminders', JSON.stringify(reminders));
+          setHasCalendarReminder(true);
+        }
+        
+        showSuccess(
+          'Added to Calendar!',
+          'The match has been added to your calendar with reminders.'
+        );
+      } else {
+        showError(
+          'Failed to Add',
+          'Could not add the match to your calendar. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Error adding to calendar:', error);
+      showError(
+        'Error',
+        'An error occurred while adding to calendar.'
+      );
+    }
+  };
+
   if (!fixture) {
     return (
       <div className="p-6 text-center">
@@ -106,14 +165,33 @@ const FixtureDetail = () => {
 
   return (
     <div className="p-6 pb-24">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </button>
+      {/* Header with Back Button and Calendar Button */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </button>
+        
+        {/* Add to Calendar Button */}
+        <button
+          onClick={handleAddToCalendar}
+          className={`p-2 rounded-full transition-all ${
+            hasCalendarReminder
+              ? 'bg-primary-500 text-white'
+              : 'bg-dark-800 text-gray-400 hover:bg-dark-700 hover:text-white'
+          }`}
+          title={hasCalendarReminder ? 'Added to calendar' : 'Add to calendar'}
+        >
+          {hasCalendarReminder ? (
+            <Bell className="w-5 h-5" />
+          ) : (
+            <BellOff className="w-5 h-5" />
+          )}
+        </button>
+      </div>
 
       {/* Match Header */}
       <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
@@ -155,11 +233,11 @@ const FixtureDetail = () => {
 
           <div className="text-center px-8">
             {isLiveMatch || isCompleted ? (
-              <div className="text-lg font-bold text-white">
+              <div className="text-4xl font-bold text-white">
                 {fixture.homeScore} - {fixture.awayScore}
               </div>
             ) : (
-              <div className="text-lg font-bold text-gray-400">VS</div>
+              <div className="text-3xl font-bold text-gray-400">VS</div>
             )}
             <div className="text-sm text-gray-400 mt-1">
               {isLiveMatch && `${fixture.minute || 0}'`}
