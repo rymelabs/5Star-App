@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { settingsCollection } from '../firebase/settings';
 import { ArrowLeft, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, Check, Inbox } from 'lucide-react';
 import NotificationPermissionModal from '../components/NotificationPermissionModal';
@@ -10,6 +11,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { unreadCount, permissionGranted, requestPermission } = useNotification();
+  const { language: currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -46,7 +48,11 @@ const Settings = () => {
           if (firestoreSettings) {
             setNotifications(firestoreSettings.notifications || notifications);
             setDarkMode(firestoreSettings.darkMode !== undefined ? firestoreSettings.darkMode : true);
-            setLanguage(firestoreSettings.language || 'en');
+            const savedLang = firestoreSettings.language || currentLanguage;
+            setLanguage(savedLang);
+            if (savedLang !== currentLanguage) {
+              changeLanguage(savedLang); // Sync with LanguageContext
+            }
             console.log('✅ Settings loaded from Firestore');
           } else {
             // No settings in Firestore, use defaults
@@ -61,7 +67,11 @@ const Settings = () => {
               const parsed = JSON.parse(savedSettings);
               setNotifications(parsed.notifications || notifications);
               setDarkMode(parsed.darkMode !== undefined ? parsed.darkMode : true);
-              setLanguage(parsed.language || 'en');
+              const savedLang = parsed.language || currentLanguage;
+              setLanguage(savedLang);
+              if (savedLang !== currentLanguage) {
+                changeLanguage(savedLang); // Sync with LanguageContext
+              }
               console.log('✅ Settings loaded from localStorage');
             } catch (error) {
               console.error('Error parsing localStorage settings:', error);
@@ -191,13 +201,9 @@ const Settings = () => {
 
   const handleLanguageChange = (value) => {
     setLanguage(value);
-    const languageLabels = {
-      en: 'English',
-      es: 'Spanish',
-      fr: 'French',
-      de: 'German'
-    };
-    showToast(`Language changed to ${languageLabels[value]}`, 'success');
+    changeLanguage(value); // Update the language context
+    const selectedLang = availableLanguages.find(lang => lang.code === value);
+    showToast(`Language changed to ${selectedLang?.nativeName || value}`, 'success');
   };
 
   const handleLogout = () => {
@@ -325,12 +331,12 @@ const Settings = () => {
           label: 'Language',
           description: 'Choose your preferred language',
           type: 'select',
-          value: language,
+          value: currentLanguage,
           options: [
             { value: 'en', label: 'English' },
-            { value: 'es', label: 'Spanish' },
-            { value: 'fr', label: 'French' },
-            { value: 'de', label: 'German' },
+            { value: 'yo', label: 'Yoruba (Èdè Yorùbá)' },
+            { value: 'ig', label: 'Igbo (Asụsụ Igbo)' },
+            { value: 'ha', label: 'Hausa (Harshen Hausa)' },
           ],
           onChange: handleLanguageChange,
         },

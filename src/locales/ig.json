@@ -1,0 +1,97 @@
+{
+  "common": {
+    "appName": "5Star App",
+    "loading": "Na-ebu...",
+    "error": "Njehie",
+    "success": "Ihe ịga nke ọma",
+    "cancel": "Kagbuo",
+    "confirm": "Kwenye",
+    "delete": "Hichapụ",
+    "edit": "Dezie",
+    "save": "Chekwa",
+    "search": "Chọọ",
+    "filter": "Kpochapụ",
+    "viewAll": "Lee ha niile",
+    "logout": "Pụọ"
+  },
+  "navigation": {
+    "latest": "Ọhụrụ",
+    "fixtures": "Egwuregwu",
+    "teams": "Ndị otu",
+    "news": "Akụkọ",
+    "dashboard": "Dashibọọdụ",
+    "settings": "Ntọala",
+    "myAccount": "Akaụntụ m",
+    "adminPanel": "Ngalaba nchịkwa",
+    "adminDashboard": "Dashibọọdụ nchịkwa"
+  },
+  "pages": {
+    "latest": {
+      "title": "Ọhụrụ",
+      "recentResults": "Nsonaazụ nso nso a",
+      "upcomingMatches": "Egwuregwu na-abịa",
+      "latestNews": "Akụkọ ọhụrụ",
+      "leagueTable": "Tebụl asọmpi"
+    },
+    "fixtures": {
+      "title": "Egwuregwu",
+      "allFixtures": "Egwuregwu niile",
+      "today": "Taa",
+      "live": "Na-aga ugbu a",
+      "upcoming": "Na-abịa",
+      "completed": "Emechara",
+      "byDate": "Site na ụbọchị",
+      "byGroup": "Site na otu",
+      "table": "Tebụl"
+    },
+    "teams": {
+      "title": "Ndị otu",
+      "searchTeams": "Chọọ ndị otu...",
+      "noTeamsFound": "Achọtaghị ndị otu"
+    },
+    "news": {
+      "title": "Akụkọ",
+      "readMore": "Gụkwuo"
+    },
+    "settings": {
+      "title": "Ntọala",
+      "language": "Asụsụ",
+      "selectLanguage": "Họrọ asụsụ",
+      "notifications": "Ọkwa",
+      "account": "Akaụntụ",
+      "about": "Banyere",
+      "privacy": "Iwu nzuzo",
+      "terms": "Usoro ọrụ"
+    },
+    "profile": {
+      "title": "Profaịlụ",
+      "editProfile": "Dezie profaịlụ",
+      "myStats": "Ọnụ ọgụgụ m",
+      "favorites": "Ndị kacha amasị m"
+    }
+  },
+  "match": {
+    "vs": "megide",
+    "ft": "Ngwụcha",
+    "ht": "Ọkara oge",
+    "live": "NA-AGA",
+    "upcoming": "Na-abịa",
+    "postponed": "Yigharịrị",
+    "cancelled": "Kagburu",
+    "kickoff": "Mmalite",
+    "venue": "Ebe",
+    "referee": "Onye nchịkọta"
+  },
+  "table": {
+    "position": "Ọnọdụ",
+    "team": "Otu",
+    "played": "Gbara",
+    "won": "Meriri",
+    "drawn": "Doro",
+    "lost": "Tụfuru",
+    "goalsFor": "Ihe mgbaru maka",
+    "goalsAgainst": "Ihe mgbaru megide",
+    "goalDifference": "Ọdịiche ihe mgbaru",
+    "points": "Isi ihe"
+  }
+}
