@@ -1,8 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { navItems } from './navItems';
 
 const BottomNavigation = () => {
+  const { t } = useLanguage();
+  
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 pb-4 px-4">
       <nav className="bg-black/30 backdrop-blur-[26px] border border-primary-500 rounded-2xl py-3 mx-4">
@@ -16,7 +19,7 @@ const BottomNavigation = () => {
               }
             >
               <item.icon className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium tracking-tight">{item.label}</span>
+              <span className="text-xs font-medium tracking-tight">{t(item.labelKey)}</span>
             </NavLink>
           ))}
         </div>

@@ -87,7 +87,7 @@ const Fixtures = () => {
         <div className="card p-4 mb-6 space-y-4">
           {seasons && seasons.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Season</h3>
+              <h3 className="text-sm font-medium text-gray-300 mb-3">{t('pages.fixtures.season')}</h3>
               <select
                 value={selectedSeasonId}
                 onChange={(e) => setSelectedSeasonId(e.target.value)}
@@ -105,7 +105,7 @@ const Fixtures = () => {
           )}
 
           <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Filter by Status</h3>
+            <h3 className="text-sm font-medium text-gray-300 mb-3">{t('pages.fixtures.filterByStatus')}</h3>
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'all', label: t('pages.fixtures.allFixtures') },
@@ -314,14 +314,14 @@ const Fixtures = () => {
             ) : (
               <div className="text-center py-12">
                 <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400">No fixtures found</p>
-                <p className="text-sm text-gray-500">Try adjusting your filters</p>
+                <p className="text-gray-400">{t('pages.fixtures.noFixturesFound')}</p>
+                <p className="text-sm text-gray-500">{t('common.tryAdjustingFilters')}</p>
               </div>
             )
           ) : (
             <>
               {!groupViewSeason && (
-                <div className="card p-3 text-sm text-gray-300">Select a season to view fixtures grouped by groups.</div>
+                <div className="card p-3 text-sm text-gray-300">{t('pages.fixtures.selectSeasonMessage')}</div>
               )}
               {groupViewSeason && Object.keys(groupedByGroup).length > 0 ? (
                 Object.entries(groupedByGroup).map(([groupKey, list]) => {
@@ -492,7 +492,7 @@ const Fixtures = () => {
               {/* Table Header */}
               <div className="grid grid-cols-[auto_1fr_repeat(6,auto)] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
                 <div className="text-left">S/N</div>
-                <div className="text-left">TEAM</div>
+                <div className="text-left">{t('pages.fixtures.team')}</div>
                 <div className="text-center w-8">P</div>
                 <div className="text-center w-8">W</div>
                 <div className="text-center w-8">D</div>

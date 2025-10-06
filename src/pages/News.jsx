@@ -137,7 +137,7 @@ const News = () => {
       {/* Filters */}
       {showFilters && (
         <div className="card p-4 mb-6">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Filter by Category</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">{t('pages.news.filterByCategory')}</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
@@ -261,7 +261,7 @@ const News = () => {
         ) : (
           <div className="text-center py-12">
             <Search className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-            <p className="text-gray-400 mb-2">No articles found</p>
+            <p className="text-gray-400 mb-2">{t('pages.news.noArticlesFound')}</p>
             <p className="text-sm text-gray-500">
               {searchQuery ? `No results for "${searchQuery}"` : 'Try adjusting your filters'}
             </p>
@@ -275,7 +275,7 @@ const News = () => {
           {loadingMore ? (
             <div className="flex items-center justify-center gap-2 text-primary-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">Loading more articles...</span>
+              <span className="text-sm">{t('pages.news.loadingMoreArticles')}</span>
             </div>
           ) : (
             <button 

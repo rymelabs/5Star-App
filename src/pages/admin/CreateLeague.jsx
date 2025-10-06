@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { useNa      navigate('/admin/leagues');
-    } catch (error) {
-      console.error('Error creating league:', error);
-      showToast('Failed to create league. Please try again.', 'error');
-    } finally {e } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Save,

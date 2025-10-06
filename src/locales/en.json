@@ -12,7 +12,19 @@
     "search": "Search",
     "filter": "Filter",
     "viewAll": "View all",
-    "logout": "Logout"
+    "logout": "Logout",
+    "back": "Back",
+    "submit": "Submit",
+    "reset": "Reset",
+    "continue": "Continue",
+    "notSpecified": "Not specified",
+    "loadingMore": "Loading more...",
+    "noDataAvailable": "No data available",
+    "tryAdjustingFilters": "Try adjusting your filters",
+    "signInRequired": "Sign In Required",
+    "official": "Official",
+    "version": "Version",
+    "admin": "Admin"
   },
   "navigation": {
     "latest": "Latest",
@@ -31,7 +43,14 @@
       "recentResults": "Recent Results",
       "upcomingMatches": "Upcoming Matches",
       "latestNews": "Latest News",
-      "leagueTable": "League Table"
+      "leagueTable": "League Table",
+      "topScoringTeams": "Top Scoring Teams",
+      "goals": "goals",
+      "form": "FORM",
+      "followInstagram": "Follow Us on Instagram",
+      "connectInstagram": "Connect with us on Instagram!",
+      "latestUpdates": "See our latest updates and behind-the-scenes content",
+      "sportsContent": "Sports content will appear here."
     },
     "fixtures": {
       "title": "Fixtures",
@@ -42,7 +61,12 @@
       "completed": "Completed",
       "byDate": "By Date",
       "byGroup": "By Group",
-      "table": "Table"
+      "table": "Table",
+      "season": "Season",
+      "filterByStatus": "Filter by Status",
+      "noFixturesFound": "No fixtures found",
+      "selectSeasonMessage": "Select a season to view fixtures grouped by groups.",
+      "team": "TEAM"
     },
     "teams": {
       "title": "Teams",
@@ -51,7 +75,10 @@
     },
     "news": {
       "title": "News",
-      "readMore": "Read more"
+      "readMore": "Read more",
+      "filterByCategory": "Filter by Category",
+      "noArticlesFound": "No articles found",
+      "loadingMoreArticles": "Loading more articles..."
     },
     "settings": {
       "title": "Settings",
@@ -61,7 +88,12 @@
       "account": "Account",
       "about": "About",
       "privacy": "Privacy Policy",
-      "terms": "Terms of Service"
+      "terms": "Terms of Service",
+      "loadingSettings": "Loading settings...",
+      "confirmLogout": "Confirm Logout",
+      "logoutConfirmMessage": "Are you sure you want to log out of your account?",
+      "settingsSynced": "Settings synced across devices",
+      "settingsSavedLocally": "Settings saved locally only (Sign in to sync)"
     },
     "profile": {
       "title": "Profile",
@@ -76,7 +108,14 @@
       "joinedDate": "Joined Date",
       "saving": "Saving...",
       "followedTeams": "Followed Teams",
-      "statistics": "Statistics"
+      "statistics": "Statistics",
+      "activity": "Activity",
+      "comments": "Comments",
+      "articlesRead": "Articles Read",
+      "quickActions": "Quick Actions",
+      "enterFullName": "Enter your full name",
+      "enterEmail": "Enter your email",
+      "tellAboutYourself": "Tell us about yourself..."
     },
     "teamDetail": {
       "overview": "Overview",
@@ -93,7 +132,29 @@
       "founded": "Founded",
       "manager": "Manager",
       "noFixtures": "No fixtures found",
-      "noNews": "No news available"
+      "noNews": "No news available",
+      "teamNotFound": "Team Not Found",
+      "teamNotFoundMessage": "The team you're looking for doesn't exist.",
+      "follower": "follower",
+      "followers": "followers",
+      "notificationsOn": "Notifications on",
+      "wins": "Wins",
+      "draws": "Draws",
+      "losses": "Losses",
+      "about": "About",
+      "seasonStats": "Season Statistics",
+      "played": "Played",
+      "points": "Points",
+      "goalsFor": "Goals For",
+      "goalsAgainst": "Goals Against",
+      "goalDiff": "Goal Diff",
+      "cleanSheets": "Clean Sheets",
+      "won": "Won",
+      "drawn": "Drawn",
+      "recentResults": "Recent Results",
+      "players": "Players",
+      "noPlayersRegistered": "No players registered yet",
+      "noNewsArticles": "No news articles found"
     },
     "fixtureDetail": {
       "matchDetails": "Match Details",
@@ -104,7 +165,13 @@
       "awayTeam": "Away Team",
       "matchInfo": "Match Information",
       "attendance": "Attendance",
-      "weather": "Weather"
+      "weather": "Weather",
+      "noLineup": "No lineup",
+      "liveCommentary": "Live Commentary",
+      "matchStatistics": "Match Statistics",
+      "matchDiscussion": "Match Discussion",
+      "addComment": "Add a comment...",
+      "noCommentsYet": "No comments yet. Be the first to share your thoughts!"
     }
   },
   "match": {
@@ -130,5 +197,95 @@
     "goalsAgainst": "GA",
     "goalDifference": "GD",
     "points": "Pts"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "adminAnnouncements": "Admin Announcements",
+    "yourNotifications": "Your Notifications",
+    "noNotificationsYet": "No notifications yet"
+  },
+  "stats": {
+    "title": "Stats",
+    "trackPerformance": "Track player and team performance across all competitions",
+    "filters": "Filters",
+    "season": "Season",
+    "competition": "Competition",
+    "allSeasons": "All Seasons",
+    "allCompetitions": "All Competitions",
+    "topScorers": "Top Scorers",
+    "topAssists": "Top Assists",
+    "cleanSheets": "Clean Sheets",
+    "discipline": "Discipline",
+    "teamStats": "Team Stats",
+    "noGoalScorers": "No goal scorers found",
+    "goalsMessage": "Goals will appear here once matches are completed",
+    "noAssists": "No assists found",
+    "assistsMessage": "Assists will appear here once matches are completed",
+    "noCleanSheets": "No clean sheets found",
+    "cleanSheetsMessage": "Clean sheets will appear here once matches are completed",
+    "noCards": "No cards issued yet",
+    "cardsMessage": "Yellow and red cards will appear here once issued",
+    "topScoringTeams": "Top Scoring Teams",
+    "bestDefense": "Best Defense (Fewest Goals Conceded)",
+    "bestGoalDiff": "Best Goal Difference",
+    "mostConceded": "Most Goals Conceded",
+    "matches": "matches",
+    "conceded": "conceded",
+    "scored": "scored",
+    "showLess": "Show Less",
+    "seeMore": "See More",
+    "more": "more",
+    "noTeamData": "No team data available"
+  },
+  "player": {
+    "loadingPlayer": "Loading player...",
+    "age": "Age",
+    "nationality": "Nationality",
+    "height": "Height",
+    "foot": "Foot",
+    "currentTeam": "Current Team",
+    "matchesPlayed": "Matches Played",
+    "goals": "Goals",
+    "assists": "Assists",
+    "cleanSheets": "Clean Sheets",
+    "yellowCards": "Yellow Cards",
+    "redCards": "Red Cards",
+    "fairPlayScore": "Fair Play Score",
+    "dateOfBirth": "Date of Birth",
+    "placeOfBirth": "Place of Birth",
+    "preferredFoot": "Preferred Foot",
+    "marketValue": "Market Value",
+    "contractUntil": "Contract Until"
+  },
+  "register": {
+    "title": "Register",
+    "createAccount": "Create your account",
+    "enterName": "Enter your name",
+    "enterPassword": "Enter your password",
+    "confirmPassword": "Confirm your password"
+  },
+  "about": {
+    "title": "About",
+    "officialApp": "Official App",
+    "liveScores": "Live Scores & Updates",
+    "liveScoresDesc": "Real-time match scores and live commentary",
+    "fixturesResults": "Fixtures & Results",
+    "fixturesResultsDesc": "Complete schedule and match results",
+    "leagueTables": "League Tables",
+    "leagueTablesDesc": "Up-to-date standings and team statistics",
+    "teamFollowing": "Team Following",
+    "teamFollowingDesc": "Follow your favorite teams and get personalized updates",
+    "newsArticles": "News & Articles",
+    "newsArticlesDesc": "Latest news, interviews, and match reports",
+    "smartNotifications": "Smart Notifications",
+    "smartNotificationsDesc": "Customizable alerts for matches and team news",
+    "developedBy": "RymeLabs",
+    "digitalStudio": "Digital Innovation Studio",
+    "needHelp": "Need help or have feedback?",
+    "emailUs": "Email us at:",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "termsConditions": "Terms & Conditions",
+    "openSourceLicenses": "Open Source Licenses"
   }
 }

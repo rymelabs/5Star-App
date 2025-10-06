@@ -4,6 +4,7 @@ import { useFootball } from '../context/FootballContext';
 import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -27,6 +28,7 @@ const TeamDetail = () => {
   const { teams, fixtures, followTeam, unfollowTeam } = useFootball();
   const { articles } = useNews();
   const { showSuccess, showError } = useNotification();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -249,8 +251,8 @@ const TeamDetail = () => {
       <div className="min-h-screen bg-dark-900 p-6">
         <div className="text-center py-20">
           <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl text-white mb-2">Team Not Found</h2>
-          <p className="text-gray-400 mb-6">The team you're looking for doesn't exist.</p>
+          <h2 className="text-xl text-white mb-2">{t('pages.teamDetail.teamNotFound')}</h2>
+          <p className="text-gray-400 mb-6">{t('pages.teamDetail.teamNotFoundMessage')}</p>
           <button
             onClick={() => navigate('/')}
             className="text-primary-400 hover:text-primary-300"
@@ -323,7 +325,7 @@ const TeamDetail = () => {
               {team.manager && (
                 <div className="mt-3 flex items-center gap-2 text-sm">
                   <User className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-400">Manager:</span>
+                  <span className="text-gray-400">{t('pages.teamDetail.manager')}:</span>
                   <span className="text-white font-medium">{team.manager}</span>
                 </div>
               )}
@@ -357,13 +359,13 @@ const TeamDetail = () => {
                 <div className="flex items-center gap-1.5 text-xs">
                   <Users className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-white font-semibold">{team.followerCount || 0}</span>
-                  <span className="text-gray-400">follower{(team.followerCount || 0) !== 1 ? 's' : ''}</span>
+                  <span className="text-gray-400">{(team.followerCount || 0) !== 1 ? t('pages.teamDetail.followers') : t('pages.teamDetail.follower')}</span>
                 </div>
 
                 {isFollowing && (
                   <div className="flex items-center gap-1 px-2 py-1 bg-primary-500/10 border border-primary-500/20 rounded-md text-xs text-primary-400">
                     <Bell className="w-3 h-3" />
-                    <span className="text-[10px]">Notifications on</span>
+                    <span className="text-[10px]">{t('pages.teamDetail.notificationsOn')}</span>
                   </div>
                 )}
               </div>
@@ -378,7 +380,10 @@ const TeamDetail = () => {
                 </div>
                 <div className="bg-dark-700 rounded-md p-2 text-center min-w-[60px]">
                   <div className="text-lg font-bold text-yellow-400">{teamStats.drawn}</div>
-                  <div className="text-xs text-gray-400">Draws</div>
+                                  <div className="text-center">
+                  <div className="text-sm font-semibold text-white">{team.stats?.draws || 0}</div>
+                  <div className="text-xs text-gray-400">{t('pages.teamDetail.draws')}</div>
+                </div>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
                   <div className="text-2xl font-bold text-red-400">{teamStats.lost}</div>
@@ -419,7 +424,7 @@ const TeamDetail = () => {
             {/* Team Description */}
             {team.description && (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-3">About</h2>
+                <h2 className="text-lg font-semibold text-white mb-3">{t('pages.teamDetail.about')}</h2>
                 <p className="text-gray-400 leading-relaxed">{team.description}</p>
               </div>
             )}
@@ -427,15 +432,15 @@ const TeamDetail = () => {
             {/* Season Statistics */}
             {teamStats && (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-4">Season Statistics</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{t('pages.teamDetail.seasonStats')}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-dark-700 rounded-lg">
                     <div className="text-2xl font-bold text-white">{teamStats.played}</div>
-                    <div className="text-sm text-gray-400">Played</div>
+                    <div className="text-sm text-gray-400">{t('pages.teamDetail.played')}</div>
                   </div>
                   <div className="text-center p-4 bg-dark-700 rounded-lg">
                     <div className="text-2xl font-bold text-blue-400">{teamStats.points}</div>
-                    <div className="text-sm text-gray-400">Points</div>
+                    <div className="text-sm text-gray-400">{t('pages.teamDetail.points')}</div>
                   </div>
                   <div className="text-center p-4 bg-dark-700 rounded-lg">
                     <div className="text-2xl font-bold text-green-400">{teamStats.goalsFor}</div>
@@ -502,7 +507,7 @@ const TeamDetail = () => {
             {/* Recent Form */}
             {teamFixtures.recent.length > 0 && (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-4">Recent Matches</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{t('pages.teamDetail.recentMatches')}</h2>
                 <div className="space-y-3">
                   {teamFixtures.recent.map(fixture => {
                     const isHome = fixture.homeTeam?.id === team.id;
@@ -550,7 +555,7 @@ const TeamDetail = () => {
             {/* Upcoming Matches */}
             {teamFixtures.upcoming.length > 0 && (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-4">Upcoming Matches</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{t('pages.teamDetail.upcomingMatches')}</h2>
                 <div className="space-y-3">
                   {teamFixtures.upcoming.map(fixture => {
                     const isHome = fixture.homeTeam?.id === team.id;
@@ -586,7 +591,7 @@ const TeamDetail = () => {
             {/* Recent Results */}
             {teamFixtures.recent.length > 0 && (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-4">Recent Results</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{t('pages.teamDetail.recentResults')}</h2>
                 <div className="space-y-3">
                   {teamFixtures.recent.map(fixture => {
                     const isHome = fixture.homeTeam?.id === team.id;
@@ -628,7 +633,7 @@ const TeamDetail = () => {
           <div className="space-y-6">
             {team.players && team.players.length > 0 ? (
               <div className="bg-dark-800 rounded-xl p-6 border border-dark-700">
-                <h2 className="text-lg font-semibold text-white mb-4">Players</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">{t('pages.teamDetail.players')}</h2>
                 <div className="grid gap-3">
                   {team.players.map(player => (
                     <button
@@ -656,7 +661,7 @@ const TeamDetail = () => {
             ) : (
               <div className="bg-dark-800 rounded-xl p-12 border border-dark-700 text-center">
                 <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">No players registered yet</p>
+                <p className="text-gray-400">{t('pages.teamDetail.noPlayersRegistered')}</p>
               </div>
             )}
           </div>
@@ -778,7 +783,7 @@ const TeamDetail = () => {
             ) : (
               <div className="bg-dark-800 rounded-xl p-12 border border-dark-700 text-center">
                 <Newspaper className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">No news articles found</p>
+                <p className="text-gray-400">{t('pages.teamDetail.noNewsArticles')}</p>
               </div>
             )}
           </div>

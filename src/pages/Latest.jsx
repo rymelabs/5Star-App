@@ -407,7 +407,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Target className="w-5 h-5 text-primary-500 mr-2" />
-              <h2 className="text-lg font-semibold text-white">Top Scoring Teams</h2>
+              <h2 className="text-lg font-semibold text-white">{t('pages.latest.topScoringTeams')}</h2>
             </div>
           </div>
           
@@ -443,7 +443,7 @@ const Latest = () => {
                   {/* Goals */}
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary-500">{scorer.goals}</div>
-                    <div className="text-xs text-gray-500">goals</div>
+                    <div className="text-xs text-gray-500">{t('pages.latest.goals')}</div>
                   </div>
                 </div>
               ))}
@@ -689,7 +689,7 @@ const Latest = () => {
               <div className="text-center w-8">{t('table.lost')}</div>
               <div className="text-center w-10">{t('table.goalDifference')}</div>
               <div className="text-center w-10">{t('table.points')}</div>
-              <div className="text-center w-24">FORM</div>
+              <div className="text-center w-24">{t('pages.latest.form')}</div>
             </div>
             
             {/* Table Body */}
@@ -781,7 +781,7 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Instagram className="w-5 h-5 text-pink-500 mr-2" />
-              <h2 className="text-lg font-semibold text-white">Follow Us on Instagram</h2>
+              <h2 className="text-lg font-semibold text-white">{t('pages.latest.followInstagram')}</h2>
             </div>
             <a
               href={`https://instagram.com/${instagramSettings.username.replace('@', '')}`}
@@ -846,8 +846,8 @@ const Latest = () => {
           ) : (
             <div className="card p-8 text-center bg-gradient-to-br from-pink-500/5 to-purple-500/5 border-pink-500/20">
               <Instagram className="w-12 h-12 text-pink-500 mx-auto mb-3 opacity-50" />
-              <p className="text-gray-300 mb-1">Connect with us on Instagram!</p>
-              <p className="text-sm text-gray-500 mb-4">See our latest updates and behind-the-scenes content</p>
+              <p className="text-gray-300 mb-1">{t('pages.latest.connectInstagram')}</p>
+              <p className="text-sm text-gray-500 mb-4">{t('pages.latest.latestUpdates')}</p>
             </div>
           )}
           
@@ -872,7 +872,7 @@ const Latest = () => {
           <div className="text-gray-400 mb-4">
             <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>Welcome to 5Star!</p>
-            <p className="text-sm">Sports content will appear here.</p>
+            <p className="text-sm">{t('pages.latest.sportsContent')}</p>
           </div>
         </div>
       )}
