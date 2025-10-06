@@ -128,11 +128,11 @@ const Fixtures = () => {
       )}
 
       {/* Tabs */}
-      <div className="flex mb-6 bg-dark-800 rounded-lg p-1">
+      <div className="flex gap-3 mb-6">
         <button
           onClick={() => setActiveTab('fixtures')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'fixtures' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'fixtures' ? 'border-2 border-primary-500 text-primary-400' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
           }`}
         >
           <Calendar className="w-4 h-4 inline mr-2" />
@@ -140,8 +140,8 @@ const Fixtures = () => {
         </button>
         <button
           onClick={() => setActiveTab('table')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'table' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'table' ? 'border-2 border-primary-500 text-primary-400' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
           }`}
         >
           <Trophy className="w-4 h-4 inline mr-2" />
@@ -153,19 +153,19 @@ const Fixtures = () => {
       {activeTab === 'fixtures' ? (
         <div className="space-y-6">
           {/* View mode toggle */}
-          <div className="flex mb-2 bg-dark-800 rounded-lg p-1 w-full max-w-sm">
+          <div className="flex gap-2 mb-2 w-full max-w-sm">
             <button
               onClick={() => setViewMode('date')}
-              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'date' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
+              className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${
+                viewMode === 'date' ? 'border-2 border-primary-400 text-primary-300' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
               }`}
             >
               By Date
             </button>
             <button
               onClick={() => setViewMode('group')}
-              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'group' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
+              className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${
+                viewMode === 'group' ? 'border-2 border-primary-400 text-primary-300' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
               }`}
             >
               By Group

@@ -174,7 +174,7 @@ const Latest = () => {
       {latestNews.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="page-header">Latest News</h2>
+            <h2 className="page-header">Latest</h2>
             <button
               onClick={() => navigate('/news')}
               className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
