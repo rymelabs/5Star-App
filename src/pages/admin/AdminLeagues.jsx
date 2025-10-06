@@ -80,8 +80,8 @@ const AdminLeagues = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+      <div className="mb-6">
+        <div className="flex items-center mb-4">
           <button
             onClick={() => navigate('/admin')}
             className="mr-4 p-2 hover:bg-dark-700 rounded-lg transition-colors"
@@ -97,9 +97,9 @@ const AdminLeagues = () => {
         </div>
         <button
           onClick={() => navigate('/admin/leagues/create')}
-          className="btn-primary flex items-center text-xs px-2 py-1.5"
+          className="btn-primary w-full flex items-center justify-center text-sm py-2"
         >
-          <Plus className="w-3.5 h-3.5 mr-1" />
+          <Plus className="w-4 h-4 mr-2" />
           Create League
         </button>
       </div>

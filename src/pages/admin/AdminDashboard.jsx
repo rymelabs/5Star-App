@@ -17,7 +17,9 @@ import {
   Trash2,
   Eye,
   Activity,
-  Instagram
+  Instagram,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -29,18 +31,44 @@ const AdminDashboard = () => {
   const { teams, fixtures, leagueTable } = useFootball();
   const { articles } = useNews();
   const [recentActivities, setRecentActivities] = useState([]);
+  const [showAllActivities, setShowAllActivities] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch recent activities
   useEffect(() => {
     // Only fetch activities if user is admin
     if (!user || user.role !== 'admin') return;
 
-    const unsubscribe = adminActivityCollection.onSnapshot(10, (activities) => {
+    // Initial load - get first 4 activities
+    const unsubscribe = adminActivityCollection.onSnapshot(4, (activities) => {
       setRecentActivities(activities);
     });
 
     return () => unsubscribe();
   }, [user]);
+
+  // Load more activities
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    
+    try {
+      setLoadingMore(true);
+      // Fetch all activities (up to 50)
+      const allActivities = await adminActivityCollection.getRecent(50);
+      setRecentActivities(allActivities);
+      setShowAllActivities(true);
+    } catch (error) {
+      console.error('Error loading more activities:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Show less activities
+  const handleShowLess = () => {
+    setRecentActivities(prev => prev.slice(0, 4));
+    setShowAllActivities(false);
+  };
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -296,66 +324,94 @@ const AdminDashboard = () => {
           <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {recentActivities.length > 0 ? (
-              recentActivities.map((activity) => {
-                // Determine icon and color based on activity type
-                let Icon, bgColor;
-                switch (activity.type) {
-                  case 'team':
-                    Icon = Users;
-                    bgColor = 'bg-blue-600';
-                    break;
-                  case 'fixture':
-                    Icon = Calendar;
-                    bgColor = 'bg-accent-600';
-                    break;
-                  case 'news':
-                  case 'article':
-                    Icon = Newspaper;
-                    bgColor = 'bg-purple-600';
-                    break;
-                  default:
-                    Icon = Activity;
-                    bgColor = 'bg-gray-600';
-                }
+              <>
+                {recentActivities.map((activity) => {
+                  // Determine icon and color based on activity type
+                  let Icon, bgColor;
+                  switch (activity.type) {
+                    case 'team':
+                      Icon = Users;
+                      bgColor = 'bg-blue-600';
+                      break;
+                    case 'fixture':
+                      Icon = Calendar;
+                      bgColor = 'bg-accent-600';
+                      break;
+                    case 'news':
+                    case 'article':
+                      Icon = Newspaper;
+                      bgColor = 'bg-purple-600';
+                      break;
+                    default:
+                      Icon = Activity;
+                      bgColor = 'bg-gray-600';
+                  }
 
-                // Format action text
-                let actionText = '';
-                if (activity.action === 'add') actionText = 'Added';
-                else if (activity.action === 'update') actionText = 'Updated';
-                else if (activity.action === 'delete') actionText = 'Deleted';
-                else actionText = activity.action;
+                  // Format action text
+                  let actionText = '';
+                  if (activity.action === 'add') actionText = 'Added';
+                  else if (activity.action === 'update') actionText = 'Updated';
+                  else if (activity.action === 'delete') actionText = 'Deleted';
+                  else actionText = activity.action;
 
-                // Format time ago
-                const timeAgo = (date) => {
-                  const seconds = Math.floor((new Date() - date) / 1000);
-                  if (seconds < 60) return 'just now';
-                  const minutes = Math.floor(seconds / 60);
-                  if (minutes < 60) return `${minutes}m ago`;
-                  const hours = Math.floor(minutes / 60);
-                  if (hours < 24) return `${hours}h ago`;
-                  const days = Math.floor(hours / 24);
-                  if (days < 7) return `${days}d ago`;
-                  return date.toLocaleDateString();
-                };
+                  // Format time ago
+                  const timeAgo = (date) => {
+                    const seconds = Math.floor((new Date() - date) / 1000);
+                    if (seconds < 60) return 'just now';
+                    const minutes = Math.floor(seconds / 60);
+                    if (minutes < 60) return `${minutes}m ago`;
+                    const hours = Math.floor(minutes / 60);
+                    if (hours < 24) return `${hours}h ago`;
+                    const days = Math.floor(hours / 24);
+                    if (days < 7) return `${days}d ago`;
+                    return date.toLocaleDateString();
+                  };
 
-                return (
-                  <div key={activity.id} className="card p-4">
-                    <div className="flex items-center">
-                      <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center mr-3 flex-shrink-0`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm truncate">
-                          {actionText} {activity.type}: {activity.itemName}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {timeAgo(activity.createdAt)} • by {activity.userName}
-                        </p>
+                  return (
+                    <div key={activity.id} className="card p-4">
+                      <div className="flex items-center">
+                        <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center mr-3 flex-shrink-0`}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm truncate">
+                            {actionText} {activity.type}: {activity.itemName}
+                          </p>
+                          <p className="text-gray-500 text-xs">
+                            {timeAgo(activity.createdAt)} • by {activity.userName}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+                
+                {/* See More / See Less Button */}
+                {recentActivities.length >= 4 && (
+                  <button
+                    onClick={showAllActivities ? handleShowLess : handleLoadMore}
+                    disabled={loadingMore}
+                    className="w-full card p-3 flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white hover:bg-dark-700 transition-colors"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                        Loading...
+                      </>
+                    ) : showAllActivities ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        See Less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        See More
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
             ) : (
               <div className="card p-8 text-center">
                 <Activity className="w-12 h-12 text-gray-600 mx-auto mb-3" />

@@ -109,8 +109,8 @@ const AdminNews = () => {
     <div className="pb-6">
       {/* Header */}
       <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+        <div className="mb-4">
+          <div className="flex items-center mb-4">
             <button
               onClick={() => navigate(-1)}
               className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
@@ -125,7 +125,7 @@ const AdminNews = () => {
           
           <button
             onClick={() => setShowAddForm(true)}
-            className="btn-primary"
+            className="btn-primary w-full flex items-center justify-center text-sm py-2"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Article

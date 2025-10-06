@@ -255,8 +255,8 @@ const AdminTeams = () => {
     <div className="pb-6">
       {/* Header */}
       <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+        <div className="mb-4">
+          <div className="flex items-center mb-4">
             <button
               onClick={() => navigate(-1)}
               className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
@@ -272,14 +272,14 @@ const AdminTeams = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setShowBulkUpload(true)}
-              className="group px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center"
+              className="group w-full px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
             >
               <Upload className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>Bulk Upload</span>
             </button>
             <button
               onClick={() => setShowAddForm(true)}
-              className="group px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center"
+              className="group w-full px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
             >
               <Plus className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>Add Team</span>
