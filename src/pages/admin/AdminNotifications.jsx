@@ -4,6 +4,7 @@ import { ArrowLeft, Bell, Send, Trash2, Users, AlertCircle, CheckCircle } from '
 import { getFirebaseDb } from '../../firebase/config';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import Toast from '../../components/Toast';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AdminNotifications = () => {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, notification: null });
   const [formData, setFormData] = useState({
     title: '',
     message: '',
@@ -116,18 +118,22 @@ const AdminNotifications = () => {
   };
 
   const handleDeleteNotification = async (notificationId) => {
-    if (!confirm('Are you sure you want to delete this notification?')) {
-      return;
-    }
+    setConfirmDelete({ isOpen: true, notification: notificationId });
+  };
+
+  const confirmDeleteNotification = async () => {
+    if (!confirmDelete.notification) return;
 
     try {
       const db = getFirebaseDb();
-      await deleteDoc(doc(db, 'adminNotifications', notificationId));
+      await deleteDoc(doc(db, 'adminNotifications', confirmDelete.notification));
       showToast('Notification deleted', 'success');
       fetchNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
       showToast('Failed to delete notification', 'error');
+    } finally {
+      setConfirmDelete({ isOpen: false, notification: null });
     }
   };
 
@@ -373,6 +379,18 @@ const AdminNotifications = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, notification: null })}
+        onConfirm={confirmDeleteNotification}
+        title="Delete Notification"
+        message="Are you sure you want to delete this notification? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

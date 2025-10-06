@@ -15,6 +15,7 @@ import {
 import { seasonsCollection, fixturesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { seasonsCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const AdminSeasons = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const AdminSeasons = () => {
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, seasonId: null });
 
   const isAdmin = user?.role === 'admin';
 
@@ -62,17 +64,21 @@ const AdminSeasons = () => {
   };
 
   const handleDelete = async (seasonId) => {
-    if (!confirm('Are you sure you want to delete this season? This action cannot be undone.')) {
-      return;
-    }
+    setConfirmDelete({ isOpen: true, seasonId });
+  };
+
+  const confirmDeleteSeason = async () => {
+    if (!confirmDelete.seasonId) return;
 
     try {
-      await seasonsCollection.delete(seasonId);
+      await seasonsCollection.delete(confirmDelete.seasonId);
       showToast('Season deleted successfully!', 'success');
       loadSeasons();
     } catch (error) {
       console.error('Error deleting season:', error);
       showToast('Failed to delete season', 'error');
+    } finally {
+      setConfirmDelete({ isOpen: false, seasonId: null });
     }
   };
 
@@ -263,6 +269,18 @@ const AdminSeasons = () => {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, seasonId: null })}
+        onConfirm={confirmDeleteSeason}
+        title="Delete Season"
+        message="Are you sure you want to delete this season? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };
