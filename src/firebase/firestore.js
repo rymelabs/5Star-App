@@ -1419,3 +1419,167 @@ export const seasonsCollection = {
     });
   }
 };
+
+// Players collection functions
+export const playersCollection = {
+  // Get all players
+  getAll: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const querySnapshot = await getDocs(collection(database, 'players'));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching players:', error);
+      throw error;
+    }
+  },
+
+  // Get player by ID
+  getById: async (playerId) => {
+    try {
+      const database = checkFirebaseInit();
+      const playerDoc = await getDoc(doc(database, 'players', playerId));
+      
+      if (!playerDoc.exists()) {
+        return null;
+      }
+      
+      return {
+        id: playerDoc.id,
+        ...playerDoc.data()
+      };
+    } catch (error) {
+      console.error('Error fetching player:', error);
+      throw error;
+    }
+  },
+
+  // Get players by team ID
+  getByTeamId: async (teamId) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'players'),
+        where('teamId', '==', teamId),
+        orderBy('jerseyNumber', 'asc')
+      );
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching team players:', error);
+      throw error;
+    }
+  },
+
+  // Create new player
+  create: async (playerData) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'players'), {
+        ...playerData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating player:', error);
+      throw error;
+    }
+  },
+
+  // Update player
+  update: async (playerId, updates) => {
+    try {
+      const database = checkFirebaseInit();
+      await updateDoc(doc(database, 'players', playerId), {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating player:', error);
+      throw error;
+    }
+  },
+
+  // Delete player
+  delete: async (playerId) => {
+    try {
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'players', playerId));
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      throw error;
+    }
+  },
+
+  // Get player stats across all fixtures
+  getStats: async (playerId) => {
+    try {
+      const database = checkFirebaseInit();
+      
+      // Get all fixtures where this player participated
+      const fixturesRef = collection(database, 'fixtures');
+      const querySnapshot = await getDocs(fixturesRef);
+      
+      const stats = {
+        matchesPlayed: 0,
+        goals: 0,
+        assists: 0,
+        yellowCards: 0,
+        redCards: 0,
+        minutesPlayed: 0,
+        cleanSheets: 0
+      };
+      
+      querySnapshot.docs.forEach(doc => {
+        const fixture = doc.data();
+        
+        // Check events for this player
+        if (fixture.events && Array.isArray(fixture.events)) {
+          fixture.events.forEach(event => {
+            if (event.playerId === playerId) {
+              if (event.type === 'goal') stats.goals++;
+              if (event.type === 'assist') stats.assists++;
+              if (event.type === 'yellow_card') stats.yellowCards++;
+              if (event.type === 'red_card') stats.redCards++;
+            }
+          });
+        }
+        
+        // Check if player was in lineup
+        if (fixture.lineup) {
+          const inHomeLineup = fixture.lineup.home?.some(p => p.playerId === playerId);
+          const inAwayLineup = fixture.lineup.away?.some(p => p.playerId === playerId);
+          
+          if (inHomeLineup || inAwayLineup) {
+            stats.matchesPlayed++;
+            
+            // Check for clean sheet (goalkeeper)
+            if (fixture.status === 'completed') {
+              const playerLineup = inHomeLineup 
+                ? fixture.lineup.home.find(p => p.playerId === playerId)
+                : fixture.lineup.away.find(p => p.playerId === playerId);
+              
+              if (playerLineup?.position === 'GK') {
+                const conceded = inHomeLineup ? fixture.awayScore : fixture.homeScore;
+                if (conceded === 0) stats.cleanSheets++;
+              }
+            }
+          }
+        }
+      });
+      
+      return stats;
+    } catch (error) {
+      console.error('Error fetching player stats:', error);
+      throw error;
+    }
+  }
+};

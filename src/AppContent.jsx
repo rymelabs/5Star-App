@@ -7,6 +7,7 @@ import Fixtures from './pages/Fixtures';
 import FixtureDetail from './pages/FixtureDetail';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
+import PlayerDetail from './pages/PlayerDetail';
 import News from './pages/News';
 import NewsArticle from './pages/NewsArticle';
 import Login from './pages/Login';
@@ -123,6 +124,7 @@ const AppContent = () => {
           <Route path="/fixtures/:id" element={<FixtureDetail />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/:id" element={<TeamDetail />} />
+          <Route path="/teams/:teamId/players/:id" element={<PlayerDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
           <Route path="/stats" element={<Stats />} />
