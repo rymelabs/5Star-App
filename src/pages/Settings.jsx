@@ -532,7 +532,10 @@ const Settings = () => {
                   {section.items.map((item, index) => (
                     <div 
                       key={index} 
-                      className="card p-4 hover:bg-dark-700 transition-all duration-200 animate-[fadeInUp_0.5s_ease-out]"
+                      onClick={item.type === 'link' ? item.onClick : undefined}
+                      className={`card p-4 transition-all duration-200 animate-[fadeInUp_0.5s_ease-out] ${
+                        item.type === 'link' ? 'cursor-pointer hover:bg-dark-700 active:scale-[0.98]' : 'hover:bg-dark-700'
+                      }`}
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <div className="flex items-center justify-between">
@@ -587,12 +590,7 @@ const Settings = () => {
                           )}
                           
                           {item.type === 'link' && (
-                            <button
-                              onClick={item.onClick}
-                              className="text-gray-400 hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
-                            >
-                              <ChevronRight className="w-5 h-5" />
-                            </button>
+                            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                           )}
                         </div>
                       </div>

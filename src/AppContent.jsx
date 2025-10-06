@@ -18,6 +18,7 @@ import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
 import NotificationInbox from './pages/NotificationInbox';
+import About from './pages/About';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -90,6 +91,7 @@ const AppContent = () => {
         <Route path="/auth" element={<AuthLanding />} />
         <Route path="/email-auth" element={<EmailAuth />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/about" element={<About />} />
         {/* Legacy routes for backward compatibility */}
         <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/register" element={<Navigate to="/auth" replace />} />
@@ -116,6 +118,9 @@ const AppContent = () => {
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
           <Route path="/stats" element={<Stats />} />
+          
+          {/* About page - accessible to all users */}
+          <Route path="/about" element={<About />} />
           
           {/* Profile setup for new users */}
           <Route path="/profile-setup" element={<ProfileSetup />} />
