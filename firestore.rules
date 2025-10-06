@@ -106,7 +106,7 @@ service cloud.firestore {
     match /adminActivity/{activityId} {
       allow read: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      allow create: if request.auth != null && 
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
@@ -141,6 +141,13 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       // Admins can create notifications for any user
       allow create: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Admin Notifications collection - Public read, admin write
+    match /adminNotifications/{notificationId} {
+      allow read: if true; // All users can read admin notifications
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
