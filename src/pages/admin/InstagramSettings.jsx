@@ -90,7 +90,7 @@ const InstagramSettings = () => {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <Instagram className="w-6 h-6 text-pink-500" />
-          <h1 className="text-lg font-bold text-white">Instagram Integration</h1>
+          <h1 className="page-header">Instagram Integration</h1>
         </div>
         <p className="text-gray-400">Connect your Instagram account to display posts on the home page</p>
       </div>

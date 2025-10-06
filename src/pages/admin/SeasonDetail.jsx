@@ -284,7 +284,7 @@ const SeasonDetail = () => {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                <h1 className="text-lg font-semibold text-white truncate">{season.name}</h1>
+                <h1 className="page-header truncate">{season.name}</h1>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {season.isActive && (
                     <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded whitespace-nowrap">

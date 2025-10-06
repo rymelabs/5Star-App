@@ -106,7 +106,7 @@ const Profile = () => {
             >
               <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <h1 className="ml-2 text-base font-semibold text-white">Profile</h1>
+            <h1 className="ml-2 page-header">Profile</h1>
           </div>
           
           {!isEditing ? (

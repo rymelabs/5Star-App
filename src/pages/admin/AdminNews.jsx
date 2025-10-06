@@ -118,7 +118,7 @@ const AdminNews = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="text-lg font-semibold text-white">News Management</h1>
+              <h1 className="page-header">News Management</h1>
               <p className="text-sm text-gray-400">{articles.length} articles</p>
             </div>
           </div>

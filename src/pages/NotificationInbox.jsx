@@ -112,7 +112,7 @@ const NotificationInbox = () => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-xl font-bold">Notifications</h1>
+                <h1 className="page-header">Notifications</h1>
                 {unreadCount > 0 && (
                   <p className="text-sm text-gray-400">
                     {unreadCount} unread

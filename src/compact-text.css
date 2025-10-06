@@ -1,6 +1,43 @@
 /* Compact Text Sizes - Global Overrides */
 /* Header texts: 15px, Subheader: 14px, Content: 11-12px */
 
+/* ========================================
+   PAGE HEADER STYLING CLASS
+   ======================================== */
+/* Use this class for main page titles/headers */
+.page-header {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  color: red !important;
+  line-height: 1.2 !important;
+}
+
+/* Page header variants */
+.page-header-white {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  line-height: 1.2 !important;
+}
+
+.page-header-lg {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #3B82F6 !important;
+  line-height: 1.2 !important;
+}
+
+.page-subheader {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #9CA3AF !important; /* gray-400 */
+  line-height: 1.3 !important;
+}
+
+/* ========================================
+   END PAGE HEADER STYLING
+   ======================================== */
+
 /* Headers (h1, h2, h3) - 15px */
 h1, h2, h3,
 .text-xl, .text-2xl, .text-3xl,
