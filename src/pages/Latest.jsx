@@ -294,7 +294,7 @@ const Latest = () => {
 
             {/* Other Articles - Smaller Cards in Grid */}
             {latestNews.length > 1 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {latestNews.slice(1, 3).map((article) => (
                   <div
                     key={article.id}
@@ -344,7 +344,7 @@ const Latest = () => {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recentResults.map((match) => (
               <div
                 key={match.id}
