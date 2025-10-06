@@ -476,15 +476,16 @@ const TeamDetail = () => {
                 </h2>
                 <div className="space-y-3">
                   {topScorers.map((player, index) => (
-                    <div
+                    <button
                       key={player.id}
-                      className="flex items-center gap-4 p-3 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+                      onClick={() => navigate(`/teams/${team.id}/players/${player.id}`)}
+                      className="flex items-center gap-4 p-3 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors w-full"
                     >
                       <span className="text-gray-400 font-semibold w-6">{index + 1}</span>
-                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                         {player.jerseyNumber || '?'}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 text-left">
                         <div className="font-medium text-white">{player.name}</div>
                         <div className="text-sm text-gray-400">{player.position || 'Player'}</div>
                       </div>
@@ -492,7 +493,7 @@ const TeamDetail = () => {
                         <div className="text-xl font-bold text-green-400">{player.goals}</div>
                         <div className="text-xs text-gray-400">goals</div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -630,9 +631,10 @@ const TeamDetail = () => {
                 <h2 className="text-lg font-semibold text-white mb-4">Players</h2>
                 <div className="grid gap-3">
                   {team.players.map(player => (
-                    <div
+                    <button
                       key={player.id}
-                      className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+                      onClick={() => navigate(`/teams/${team.id}/players/${player.id}`)}
+                      className="flex items-center gap-4 p-4 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors w-full text-left"
                     >
                       <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                         {player.jerseyNumber || '?'}
@@ -647,7 +649,7 @@ const TeamDetail = () => {
                       {player.nationality && (
                         <div className="text-sm text-gray-400">{player.nationality}</div>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
