@@ -28,8 +28,16 @@ const AdminTeams = () => {
     jerseyNumber: '',
     isCaptain: false,
     isGoalkeeper: false,
+    dateOfBirth: '',
+    placeOfBirth: '',
+    nationality: '',
+    height: '',
+    preferredFoot: '',
+    marketValue: '',
+    contractExpiry: '',
   });
   const [showPlayerForm, setShowPlayerForm] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -48,14 +56,36 @@ const AdminTeams = () => {
     }));
   };
 
+  const handleEditPlayer = (player) => {
+    setEditingPlayer(player.id);
+    setPlayerForm({
+      name: player.name || '',
+      position: player.position || 'Forward',
+      jerseyNumber: player.jerseyNumber ? player.jerseyNumber.toString() : '',
+      isCaptain: player.isCaptain || false,
+      isGoalkeeper: player.isGoalkeeper || false,
+      dateOfBirth: player.dateOfBirth || '',
+      placeOfBirth: player.placeOfBirth || '',
+      nationality: player.nationality || '',
+      height: player.height ? player.height.toString() : '',
+      preferredFoot: player.preferredFoot || '',
+      marketValue: player.marketValue || '',
+      contractExpiry: player.contractExpiry || '',
+    });
+    setShowPlayerForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleAddPlayer = () => {
     if (!playerForm.name.trim() || !playerForm.jerseyNumber) {
       showError('Validation Error', 'Please enter player name and jersey number');
       return;
     }
 
-    // Validate jersey number uniqueness
-    const jerseyExists = formData.players.some(p => p.jerseyNumber === playerForm.jerseyNumber);
+    // Validate jersey number uniqueness (exclude current player if editing)
+    const jerseyExists = formData.players.some(p => 
+      p.jerseyNumber === playerForm.jerseyNumber && p.id !== editingPlayer
+    );
     if (jerseyExists) {
       showError('Duplicate Jersey Number', 'This jersey number is already assigned');
       return;
@@ -77,16 +107,35 @@ const AdminTeams = () => {
       }));
     }
 
-    const newPlayer = {
-      ...playerForm,
-      id: Date.now().toString(),
-      jerseyNumber: parseInt(playerForm.jerseyNumber)
-    };
+    if (editingPlayer) {
+      // Update existing player
+      setFormData(prev => ({
+        ...prev,
+        players: prev.players.map(p => 
+          p.id === editingPlayer
+            ? {
+                ...p,
+                ...playerForm,
+                jerseyNumber: parseInt(playerForm.jerseyNumber)
+              }
+            : p
+        )
+      }));
+      showSuccess('Player Updated', `${playerForm.name} has been updated`);
+    } else {
+      // Add new player
+      const newPlayer = {
+        ...playerForm,
+        id: Date.now().toString(),
+        jerseyNumber: parseInt(playerForm.jerseyNumber)
+      };
 
-    setFormData(prev => ({
-      ...prev,
-      players: [...prev.players, newPlayer]
-    }));
+      setFormData(prev => ({
+        ...prev,
+        players: [...prev.players, newPlayer]
+      }));
+      showSuccess('Player Added', `${newPlayer.name} added to squad`);
+    }
 
     // Reset player form
     setPlayerForm({
@@ -95,9 +144,16 @@ const AdminTeams = () => {
       jerseyNumber: '',
       isCaptain: false,
       isGoalkeeper: false,
+      dateOfBirth: '',
+      placeOfBirth: '',
+      nationality: '',
+      height: '',
+      preferredFoot: '',
+      marketValue: '',
+      contractExpiry: '',
     });
+    setEditingPlayer(null);
     setShowPlayerForm(false);
-    showSuccess('Player Added', `${newPlayer.name} added to squad`);
   };
 
   const handleRemovePlayer = (playerId) => {
@@ -109,17 +165,8 @@ const AdminTeams = () => {
   };
 
   const handleEdit = (team) => {
-    setEditingTeam(team);
-    setFormData({
-      name: team.name,
-      logo: team.logo || '',
-      stadium: team.stadium || '',
-      founded: team.founded || '',
-      manager: team.manager || '',
-      players: team.players || [],
-    });
-    setShowAddForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Navigate to edit page with team ID
+    navigate(`/admin/teams/edit/${team.id}`);
   };
 
   const handleSubmit = async (e) => {
@@ -347,10 +394,10 @@ const AdminTeams = () => {
                   </button>
                 </div>
 
-                {/* Add Player Form */}
+                {/* Add/Edit Player Form */}
                 {showPlayerForm && (
                   <div className="bg-dark-800 border border-dark-700 rounded-lg p-4 mb-4">
-                    <h5 className="text-sm font-semibold text-white mb-3">New Player</h5>
+                    <h5 className="text-sm font-semibold text-white mb-3">{editingPlayer ? 'Edit Player' : 'New Player'}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
@@ -399,7 +446,108 @@ const AdminTeams = () => {
                         </select>
                       </div>
 
-                      <div className="flex items-center gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          name="dateOfBirth"
+                          value={playerForm.dateOfBirth}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Place of Birth
+                        </label>
+                        <input
+                          type="text"
+                          name="placeOfBirth"
+                          value={playerForm.placeOfBirth}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                          placeholder="e.g., London, England"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Nationality
+                        </label>
+                        <input
+                          type="text"
+                          name="nationality"
+                          value={playerForm.nationality}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                          placeholder="e.g., England"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Height (cm)
+                        </label>
+                        <input
+                          type="number"
+                          name="height"
+                          value={playerForm.height}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                          placeholder="e.g., 180"
+                          min="150"
+                          max="220"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Preferred Foot
+                        </label>
+                        <select
+                          name="preferredFoot"
+                          value={playerForm.preferredFoot}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                        >
+                          <option value="">Select...</option>
+                          <option value="right">Right</option>
+                          <option value="left">Left</option>
+                          <option value="both">Both</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Market Value
+                        </label>
+                        <input
+                          type="text"
+                          name="marketValue"
+                          value={playerForm.marketValue}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                          placeholder="e.g., €50M"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Contract Expiry
+                        </label>
+                        <input
+                          type="date"
+                          name="contractExpiry"
+                          value={playerForm.contractExpiry}
+                          onChange={handlePlayerInputChange}
+                          className="input-field w-full text-sm"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-4 md:col-span-2">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -435,12 +583,20 @@ const AdminTeams = () => {
                         type="button"
                         onClick={() => {
                           setShowPlayerForm(false);
+                          setEditingPlayer(null);
                           setPlayerForm({
                             name: '',
                             position: 'Forward',
                             jerseyNumber: '',
                             isCaptain: false,
                             isGoalkeeper: false,
+                            dateOfBirth: '',
+                            placeOfBirth: '',
+                            nationality: '',
+                            height: '',
+                            preferredFoot: '',
+                            marketValue: '',
+                            contractExpiry: '',
                           });
                         }}
                         className="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-white rounded-lg text-sm transition-colors"
@@ -452,7 +608,7 @@ const AdminTeams = () => {
                         onClick={handleAddPlayer}
                         className="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm transition-colors"
                       >
-                        Add Player
+                        {editingPlayer ? 'Update Player' : 'Add Player'}
                       </button>
                     </div>
                   </div>
@@ -485,13 +641,24 @@ const AdminTeams = () => {
                               <span className="text-xs text-gray-500">{player.position}</span>
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePlayer(player.id)}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditPlayer(player)}
+                              className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
+                              title="Edit player"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePlayer(player.id)}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                              title="Remove player"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                   </div>

@@ -379,56 +379,86 @@ const PlayerDetail = () => {
           Additional Information
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {player.dateOfBirth && (
-            <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
-              <Calendar className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <div className="text-xs text-gray-400">Date of Birth</div>
-                <div className="text-white">
-                  {new Date(player.dateOfBirth).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </div>
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <Calendar className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Date of Birth</div>
+              <div className="text-white">
+                {player.dateOfBirth
+                  ? new Date(player.dateOfBirth).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                  : <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
-          )}
+          </div>
 
-          {player.placeOfBirth && (
-            <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
-              <User className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <div className="text-xs text-gray-400">Place of Birth</div>
-                <div className="text-white">{player.placeOfBirth}</div>
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <User className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Place of Birth</div>
+              <div className="text-white">
+                {player.placeOfBirth || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
-          )}
+          </div>
 
-          {player.marketValue && (
-            <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <div className="text-xs text-gray-400">Market Value</div>
-                <div className="text-white">{player.marketValue}</div>
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <User className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Nationality</div>
+              <div className="text-white">
+                {player.nationality || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
-          )}
+          </div>
 
-          {player.contractExpiry && (
-            <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
-              <Clock className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <div className="text-xs text-gray-400">Contract Until</div>
-                <div className="text-white">
-                  {new Date(player.contractExpiry).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long'
-                  })}
-                </div>
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <Activity className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Height</div>
+              <div className="text-white">
+                {player.height ? `${player.height} cm` : <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
-          )}
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <Activity className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Preferred Foot</div>
+              <div className="text-white capitalize">
+                {player.preferredFoot || <span className="text-gray-500">Not specified</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Market Value</div>
+              <div className="text-white">
+                {player.marketValue || <span className="text-gray-500">Not specified</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+            <Clock className="w-5 h-5 text-gray-400 mt-1" />
+            <div>
+              <div className="text-xs text-gray-400">Contract Until</div>
+              <div className="text-white">
+                {player.contractExpiry
+                  ? new Date(player.contractExpiry).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long'
+                    })
+                  : <span className="text-gray-500">Not specified</span>}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

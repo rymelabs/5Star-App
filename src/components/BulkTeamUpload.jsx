@@ -19,9 +19,9 @@ const BulkTeamUpload = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const csvTemplate = `name,logo,stadium,founded,manager,players
-Arsenal,https://logos-world.net/wp-content/uploads/2020/06/Arsenal-Logo.png,Emirates Stadium,1886,Mikel Arteta,"[{""name"":""Bukayo Saka"",""position"":""Forward"",""jerseyNumber"":""7"",""isCaptain"":false,""isGoalkeeper"":false},{""name"":""Martin Odegaard"",""position"":""Midfielder"",""jerseyNumber"":""8"",""isCaptain"":true,""isGoalkeeper"":false},{""name"":""Aaron Ramsdale"",""position"":""Goalkeeper"",""jerseyNumber"":""1"",""isCaptain"":false,""isGoalkeeper"":true}]"
-Chelsea,https://logos-world.net/wp-content/uploads/2020/06/Chelsea-Logo.png,Stamford Bridge,1905,Mauricio Pochettino,"[{""name"":""Cole Palmer"",""position"":""Forward"",""jerseyNumber"":""20"",""isCaptain"":false,""isGoalkeeper"":false},{""name"":""Reece James"",""position"":""Defender"",""jerseyNumber"":""24"",""isCaptain"":true,""isGoalkeeper"":false},{""name"":""Robert Sanchez"",""position"":""Goalkeeper"",""jerseyNumber"":""1"",""isCaptain"":false,""isGoalkeeper"":true}]"
-Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-United-Logo.png,Old Trafford,1878,Erik ten Hag,"[{""name"":""Marcus Rashford"",""position"":""Forward"",""jerseyNumber"":""10"",""isCaptain"":false,""isGoalkeeper"":false},{""name"":""Bruno Fernandes"",""position"":""Midfielder"",""jerseyNumber"":""8"",""isCaptain"":true,""isGoalkeeper"":false},{""name"":""Andre Onana"",""position"":""Goalkeeper"",""jerseyNumber"":""24"",""isCaptain"":false,""isGoalkeeper"":true}]"`;
+Arsenal,https://logos-world.net/wp-content/uploads/2020/06/Arsenal-Logo.png,Emirates Stadium,1886,Mikel Arteta,"[{""name"":""Bukayo Saka"",""position"":""Forward"",""jerseyNumber"":""7"",""isCaptain"":false,""isGoalkeeper"":false,""dateOfBirth"":""2001-09-05"",""placeOfBirth"":""London, England"",""nationality"":""England"",""height"":""178"",""preferredFoot"":""left"",""marketValue"":""€120M"",""contractExpiry"":""2027-06-30""},{""name"":""Martin Odegaard"",""position"":""Midfielder"",""jerseyNumber"":""8"",""isCaptain"":true,""isGoalkeeper"":false,""dateOfBirth"":""1998-12-17"",""placeOfBirth"":""Drammen, Norway"",""nationality"":""Norway"",""height"":""178"",""preferredFoot"":""left"",""marketValue"":""€110M"",""contractExpiry"":""2028-06-30""},{""name"":""Aaron Ramsdale"",""position"":""Goalkeeper"",""jerseyNumber"":""1"",""isCaptain"":false,""isGoalkeeper"":true,""dateOfBirth"":""1998-05-14"",""placeOfBirth"":""Stoke-on-Trent, England"",""nationality"":""England"",""height"":""188"",""preferredFoot"":""right"",""marketValue"":""€30M"",""contractExpiry"":""2026-06-30""}]"
+Chelsea,https://logos-world.net/wp-content/uploads/2020/06/Chelsea-Logo.png,Stamford Bridge,1905,Mauricio Pochettino,"[{""name"":""Cole Palmer"",""position"":""Forward"",""jerseyNumber"":""20"",""isCaptain"":false,""isGoalkeeper"":false,""dateOfBirth"":""2002-05-06"",""placeOfBirth"":""Wythenshawe, England"",""nationality"":""England"",""height"":""189"",""preferredFoot"":""left"",""marketValue"":""€80M"",""contractExpiry"":""2030-06-30""},{""name"":""Reece James"",""position"":""Defender"",""jerseyNumber"":""24"",""isCaptain"":true,""isGoalkeeper"":false,""dateOfBirth"":""1999-12-08"",""placeOfBirth"":""Redbridge, England"",""nationality"":""England"",""height"":""182"",""preferredFoot"":""right"",""marketValue"":""€70M"",""contractExpiry"":""2028-06-30""},{""name"":""Robert Sanchez"",""position"":""Goalkeeper"",""jerseyNumber"":""1"",""isCaptain"":false,""isGoalkeeper"":true,""dateOfBirth"":""1997-11-18"",""placeOfBirth"":""Cartagena, Spain"",""nationality"":""Spain"",""height"":""197"",""preferredFoot"":""left"",""marketValue"":""€25M"",""contractExpiry"":""2030-06-30""}]"
+Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-United-Logo.png,Old Trafford,1878,Erik ten Hag,"[{""name"":""Marcus Rashford"",""position"":""Forward"",""jerseyNumber"":""10"",""isCaptain"":false,""isGoalkeeper"":false,""dateOfBirth"":""1997-10-31"",""placeOfBirth"":""Manchester, England"",""nationality"":""England"",""height"":""180"",""preferredFoot"":""right"",""marketValue"":""€75M"",""contractExpiry"":""2028-06-30""},{""name"":""Bruno Fernandes"",""position"":""Midfielder"",""jerseyNumber"":""8"",""isCaptain"":true,""isGoalkeeper"":false,""dateOfBirth"":""1994-09-08"",""placeOfBirth"":""Maia, Portugal"",""nationality"":""Portugal"",""height"":""179"",""preferredFoot"":""right"",""marketValue"":""€80M"",""contractExpiry"":""2026-06-30""},{""name"":""Andre Onana"",""position"":""Goalkeeper"",""jerseyNumber"":""24"",""isCaptain"":false,""isGoalkeeper"":true,""dateOfBirth"":""1996-04-02"",""placeOfBirth"":""Nkol Ngok, Cameroon"",""nationality"":""Cameroon"",""height"":""190"",""preferredFoot"":""right"",""marketValue"":""€40M"",""contractExpiry"":""2028-06-30""}]"`;
 
   const jsonTemplate = JSON.stringify([
     {
@@ -31,11 +31,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       founded: "1886",
       manager: "Mikel Arteta",
       players: [
-        { name: "Bukayo Saka", position: "Forward", jerseyNumber: "7", isCaptain: false, isGoalkeeper: false },
-        { name: "Martin Odegaard", position: "Midfielder", jerseyNumber: "8", isCaptain: true, isGoalkeeper: false },
-        { name: "Aaron Ramsdale", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true },
-        { name: "William Saliba", position: "Defender", jerseyNumber: "2", isCaptain: false, isGoalkeeper: false },
-        { name: "Gabriel Jesus", position: "Forward", jerseyNumber: "9", isCaptain: false, isGoalkeeper: false }
+        { name: "Bukayo Saka", position: "Forward", jerseyNumber: "7", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2001-09-05", placeOfBirth: "London, England", nationality: "England", height: "178", preferredFoot: "left", marketValue: "€120M", contractExpiry: "2027-06-30" },
+        { name: "Martin Odegaard", position: "Midfielder", jerseyNumber: "8", isCaptain: true, isGoalkeeper: false, dateOfBirth: "1998-12-17", placeOfBirth: "Drammen, Norway", nationality: "Norway", height: "178", preferredFoot: "left", marketValue: "€110M", contractExpiry: "2028-06-30" },
+        { name: "Aaron Ramsdale", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true, dateOfBirth: "1998-05-14", placeOfBirth: "Stoke-on-Trent, England", nationality: "England", height: "188", preferredFoot: "right", marketValue: "€30M", contractExpiry: "2026-06-30" },
+        { name: "William Saliba", position: "Defender", jerseyNumber: "2", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2001-03-24", placeOfBirth: "Bondy, France", nationality: "France", height: "192", preferredFoot: "right", marketValue: "€80M", contractExpiry: "2027-06-30" },
+        { name: "Gabriel Jesus", position: "Forward", jerseyNumber: "9", isCaptain: false, isGoalkeeper: false, dateOfBirth: "1997-04-03", placeOfBirth: "São Paulo, Brazil", nationality: "Brazil", height: "175", preferredFoot: "right", marketValue: "€70M", contractExpiry: "2027-06-30" }
       ]
     },
     {
@@ -45,11 +45,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       founded: "1905",
       manager: "Mauricio Pochettino",
       players: [
-        { name: "Cole Palmer", position: "Forward", jerseyNumber: "20", isCaptain: false, isGoalkeeper: false },
-        { name: "Reece James", position: "Defender", jerseyNumber: "24", isCaptain: true, isGoalkeeper: false },
-        { name: "Robert Sanchez", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true },
-        { name: "Enzo Fernandez", position: "Midfielder", jerseyNumber: "5", isCaptain: false, isGoalkeeper: false },
-        { name: "Nicolas Jackson", position: "Forward", jerseyNumber: "15", isCaptain: false, isGoalkeeper: false }
+        { name: "Cole Palmer", position: "Forward", jerseyNumber: "20", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2002-05-06", placeOfBirth: "Wythenshawe, England", nationality: "England", height: "189", preferredFoot: "left", marketValue: "€80M", contractExpiry: "2030-06-30" },
+        { name: "Reece James", position: "Defender", jerseyNumber: "24", isCaptain: true, isGoalkeeper: false, dateOfBirth: "1999-12-08", placeOfBirth: "Redbridge, England", nationality: "England", height: "182", preferredFoot: "right", marketValue: "€70M", contractExpiry: "2028-06-30" },
+        { name: "Robert Sanchez", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true, dateOfBirth: "1997-11-18", placeOfBirth: "Cartagena, Spain", nationality: "Spain", height: "197", preferredFoot: "left", marketValue: "€25M", contractExpiry: "2030-06-30" },
+        { name: "Enzo Fernandez", position: "Midfielder", jerseyNumber: "5", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2001-01-17", placeOfBirth: "San Martín, Argentina", nationality: "Argentina", height: "178", preferredFoot: "right", marketValue: "€75M", contractExpiry: "2031-06-30" },
+        { name: "Nicolas Jackson", position: "Forward", jerseyNumber: "15", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2001-06-20", placeOfBirth: "Banjul, Gambia", nationality: "Senegal", height: "185", preferredFoot: "right", marketValue: "€40M", contractExpiry: "2031-06-30" }
       ]
     }
   ], null, 2);
@@ -65,9 +65,9 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
           founded: "1886",
           manager: "Mikel Arteta",
           players: JSON.stringify([
-            { name: "Bukayo Saka", position: "Forward", jerseyNumber: "7", isCaptain: false, isGoalkeeper: false },
-            { name: "Martin Odegaard", position: "Midfielder", jerseyNumber: "8", isCaptain: true, isGoalkeeper: false },
-            { name: "Aaron Ramsdale", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true }
+            { name: "Bukayo Saka", position: "Forward", jerseyNumber: "7", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2001-09-05", placeOfBirth: "London, England", nationality: "England", height: "178", preferredFoot: "left", marketValue: "€120M", contractExpiry: "2027-06-30" },
+            { name: "Martin Odegaard", position: "Midfielder", jerseyNumber: "8", isCaptain: true, isGoalkeeper: false, dateOfBirth: "1998-12-17", placeOfBirth: "Drammen, Norway", nationality: "Norway", height: "178", preferredFoot: "left", marketValue: "€110M", contractExpiry: "2028-06-30" },
+            { name: "Aaron Ramsdale", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true, dateOfBirth: "1998-05-14", placeOfBirth: "Stoke-on-Trent, England", nationality: "England", height: "188", preferredFoot: "right", marketValue: "€30M", contractExpiry: "2026-06-30" }
           ])
         },
         {
@@ -77,9 +77,9 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
           founded: "1905",
           manager: "Mauricio Pochettino",
           players: JSON.stringify([
-            { name: "Cole Palmer", position: "Forward", jerseyNumber: "20", isCaptain: false, isGoalkeeper: false },
-            { name: "Reece James", position: "Defender", jerseyNumber: "24", isCaptain: true, isGoalkeeper: false },
-            { name: "Robert Sanchez", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true }
+            { name: "Cole Palmer", position: "Forward", jerseyNumber: "20", isCaptain: false, isGoalkeeper: false, dateOfBirth: "2002-05-06", placeOfBirth: "Wythenshawe, England", nationality: "England", height: "189", preferredFoot: "left", marketValue: "€80M", contractExpiry: "2030-06-30" },
+            { name: "Reece James", position: "Defender", jerseyNumber: "24", isCaptain: true, isGoalkeeper: false, dateOfBirth: "1999-12-08", placeOfBirth: "Redbridge, England", nationality: "England", height: "182", preferredFoot: "right", marketValue: "€70M", contractExpiry: "2028-06-30" },
+            { name: "Robert Sanchez", position: "Goalkeeper", jerseyNumber: "1", isCaptain: false, isGoalkeeper: true, dateOfBirth: "1997-11-18", placeOfBirth: "Cartagena, Spain", nationality: "Spain", height: "197", preferredFoot: "left", marketValue: "€25M", contractExpiry: "2030-06-30" }
           ])
         }
       ];
