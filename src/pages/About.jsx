@@ -23,8 +23,12 @@ const About = () => {
       <div className="px-4 py-6 space-y-6">
         {/* App Logo & Name */}
         <div className="text-center py-8">
-          <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-xl">
-            <span className="text-4xl font-bold text-white">5★</span>
+          <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden shadow-xl bg-white p-2">
+            <img 
+              src="/5Star.jpg" 
+              alt="5Star Premier League" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">5Star Premier League</h2>
           <p className="text-gray-400 text-sm">Official App</p>
@@ -98,8 +102,12 @@ const About = () => {
             Built With Love By
           </h3>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-bold text-white">RL</span>
+            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center shadow-lg p-2">
+              <img 
+                src="/RymeLabs.svg" 
+                alt="RymeLabs" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white">RymeLabs</h4>
