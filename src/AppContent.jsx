@@ -28,6 +28,7 @@ import Licenses from './pages/Licenses';
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
 const AdminTeams = React.lazy(() => import('./pages/admin/AdminTeams').catch(() => ({ default: () => <div>Admin Teams not available</div> })));
+const EditTeam = React.lazy(() => import('./pages/admin/EditTeam').catch(() => ({ default: () => <div>Edit Team not available</div> })));
 const AdminFixtures = React.lazy(() => import('./pages/admin/AdminFixtures').catch(() => ({ default: () => <div>Admin Fixtures not available</div> })));
 const AdminNews = React.lazy(() => import('./pages/admin/AdminNews').catch(() => ({ default: () => <div>Admin News not available</div> })));
 const AdminLeagueSettings = React.lazy(() => import('./pages/admin/AdminLeagueSettings').catch(() => ({ default: () => <div>Admin League Settings not available</div> })));
@@ -159,6 +160,7 @@ const AppContent = () => {
             <>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/teams" element={<AdminTeams />} />
+              <Route path="/admin/teams/edit/:teamId" element={<EditTeam />} />
               <Route path="/admin/fixtures" element={<AdminFixtures />} />
               <Route path="/admin/news" element={<AdminNews />} />
               <Route path="/admin/league-settings" element={<AdminLeagueSettings />} />
