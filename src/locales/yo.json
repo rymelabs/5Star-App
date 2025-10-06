@@ -67,7 +67,44 @@
       "title": "Profaili",
       "editProfile": "Ṣatunkọ profaili",
       "myStats": "Awọn iṣiro mi",
-      "favorites": "Awọn ayanfẹ"
+      "favorites": "Awọn ayanfẹ",
+      "personalInfo": "Alaye Ti Ara Ẹni",
+      "name": "Orukọ",
+      "email": "Imeeli",
+      "bio": "Itan Kukuru",
+      "favoriteTeam": "Ẹgbẹ Ayanfẹ",
+      "joinedDate": "Ọjọ Ti O Darapọ",
+      "saving": "N fipamọ...",
+      "followedTeams": "Àwọn Ẹgbẹ Ti Mo Tẹle",
+      "statistics": "Àwọn Iṣiro"
+    },
+    "teamDetail": {
+      "overview": "Akopọ",
+      "fixtures": "Àwọn Ere",
+      "squad": "Ẹgbẹ Oṣere",
+      "stats": "Iṣiro",
+      "newsAbout": "Iroyin Nipa",
+      "recentMatches": "Àwọn Ere Laipe",
+      "upcomingMatches": "Àwọn Ere To Nbọ",
+      "follow": "Tẹle",
+      "following": "N Tẹle",
+      "teamStats": "Iṣiro Ẹgbẹ",
+      "stadium": "Papa Iṣere",
+      "founded": "Ọjọ Ipilẹṣẹ",
+      "manager": "Oluṣakoso",
+      "noFixtures": "Ko si ere ti a ri",
+      "noNews": "Ko si iroyin"
+    },
+    "fixtureDetail": {
+      "matchDetails": "Alaye Ere",
+      "lineup": "Ilana",
+      "stats": "Iṣiro",
+      "commentary": "Asọye",
+      "homeTeam": "Ẹgbẹ Ile",
+      "awayTeam": "Ẹgbẹ Alejo",
+      "matchInfo": "Alaye Ere",
+      "attendance": "Awọn Olugbọ",
+      "weather": "Oju Ọjọ"
     }
   },
   "match": {

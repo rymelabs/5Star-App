@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Filter, Trophy } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatDate, getMatchDayLabel, isToday } from '../utils/dateUtils';
 import { groupBy, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import SeasonStandings from '../components/SeasonStandings';
@@ -9,6 +10,7 @@ import SeasonStandings from '../components/SeasonStandings';
 const Fixtures = () => {
   const navigate = useNavigate();
   const { fixtures = [], leagueTable = [], leagueSettings = {}, seasons = [], activeSeason = null, teams = [] } = useFootball();
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -74,7 +76,7 @@ const Fixtures = () => {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="page-header">Fixtures</h1>
+        <h1 className="page-header">{t('pages.fixtures.title')}</h1>
         <button onClick={() => setShowFilters(!showFilters)} className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors">
           <Filter className="w-5 h-5 text-gray-400" />
         </button>
@@ -106,11 +108,11 @@ const Fixtures = () => {
             <h3 className="text-sm font-medium text-gray-300 mb-3">Filter by Status</h3>
             <div className="flex flex-wrap gap-2">
               {[
-                { key: 'all', label: 'All Fixtures' },
-                { key: 'today', label: 'Today' },
-                { key: 'live', label: 'Live' },
-                { key: 'upcoming', label: 'Upcoming' },
-                { key: 'completed', label: 'Completed' },
+                { key: 'all', label: t('pages.fixtures.allFixtures') },
+                { key: 'today', label: t('pages.fixtures.today') },
+                { key: 'live', label: t('pages.fixtures.live') },
+                { key: 'upcoming', label: t('pages.fixtures.upcoming') },
+                { key: 'completed', label: t('pages.fixtures.completed') },
               ].map((filter) => (
                 <button
                   key={filter.key}
@@ -136,7 +138,7 @@ const Fixtures = () => {
           }`}
         >
           <Calendar className="w-4 h-4 inline mr-2" />
-          Fixtures
+          {t('navigation.fixtures')}
         </button>
         <button
           onClick={() => setActiveTab('table')}
@@ -145,7 +147,7 @@ const Fixtures = () => {
           }`}
         >
           <Trophy className="w-4 h-4 inline mr-2" />
-          Table
+          {t('pages.fixtures.table')}
         </button>
       </div>
 

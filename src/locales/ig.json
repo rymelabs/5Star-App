@@ -67,7 +67,44 @@
       "title": "Profaịlụ",
       "editProfile": "Dezie profaịlụ",
       "myStats": "Ọnụ ọgụgụ m",
-      "favorites": "Ndị kacha amasị m"
+      "favorites": "Ndị kacha amasị m",
+      "personalInfo": "Ozi Nkeonwe",
+      "name": "Aha",
+      "email": "Ozi-Eletrọniki",
+      "bio": "Akụkọ Ndụ",
+      "favoriteTeam": "Otu Kacha Amasị",
+      "joinedDate": "Ụbọchị Isonyere",
+      "saving": "Na-echekwa...",
+      "followedTeams": "Ndị Otu M Na-eso",
+      "statistics": "Ọnụ Ọgụgụ"
+    },
+    "teamDetail": {
+      "overview": "Nchịkọta",
+      "fixtures": "Egwuregwu",
+      "squad": "Ndị Otu",
+      "stats": "Ọnụ Ọgụgụ",
+      "newsAbout": "Akụkọ Gbasara",
+      "recentMatches": "Egwuregwu Nso Nso A",
+      "upcomingMatches": "Egwuregwu Na-abịa",
+      "follow": "Soro",
+      "following": "Na-eso",
+      "teamStats": "Ọnụ Ọgụgụ Otu",
+      "stadium": "Ebe Egwuregwu",
+      "founded": "Ụbọchị E Hiwere",
+      "manager": "Onye Nchịkwa",
+      "noFixtures": "Enweghị egwuregwu",
+      "noNews": "Enweghị akụkọ"
+    },
+    "fixtureDetail": {
+      "matchDetails": "Nkọwa Egwuregwu",
+      "lineup": "Nhazi",
+      "stats": "Ọnụ Ọgụgụ",
+      "commentary": "Nkọwa",
+      "homeTeam": "Otu Ụlọ",
+      "awayTeam": "Otu Ọbịa",
+      "matchInfo": "Ozi Egwuregwu",
+      "attendance": "Ndị Bịara",
+      "weather": "Ihu Igwe"
     }
   },
   "match": {

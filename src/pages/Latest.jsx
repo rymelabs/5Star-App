@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
@@ -12,6 +13,7 @@ import NotificationModal from '../components/NotificationModal';
 const Latest = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   useEffect(() => {
@@ -333,13 +335,13 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <TrendingUp className="w-5 h-5 text-accent-500 mr-2" />
-              <h2 className="text-lg font-semibold text-white">Recent Results</h2>
+              <h2 className="text-lg font-semibold text-white">{t('pages.latest.recentResults')}</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
               className="flex items-center text-accent-500 text-sm font-medium hover:text-accent-400 transition-colors"
             >
-              View all
+              {t('common.viewAll')}
               <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
@@ -371,7 +373,7 @@ const Latest = () => {
                       <div className="text-lg font-bold text-white">
                         {match.homeScore} - {match.awayScore}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">FT</div>
+                      <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
                     </div>
                   </div>
                   
@@ -456,13 +458,13 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Calendar className="w-5 h-5 text-primary-500 mr-2" />
-              <h2 className="text-lg font-semibold text-white">Upcoming Fixtures</h2>
+              <h2 className="text-lg font-semibold text-white">{t('pages.latest.upcomingMatches')}</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
               className="flex items-center text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
             >
-              See more
+              {t('common.viewAll')}
               <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
@@ -501,7 +503,7 @@ const Latest = () => {
                           <div className="text-lg font-bold text-white">
                             {fixture.homeScore} - {fixture.awayScore}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">FT</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
                         </div>
                       ) : isFixtureLive(fixture) ? (
                         <div className="text-center">
@@ -509,12 +511,12 @@ const Latest = () => {
                             {fixture.homeScore || 0} - {fixture.awayScore || 0}
                           </div>
                           <div className="text-sm font-bold animate-live-pulse mt-1">
-                            LIVE
+                            {t('match.live')}
                           </div>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-primary-500">VS</div>
+                          <div className="text-sm font-semibold text-primary-500">{t('match.vs').toUpperCase()}</div>
                           <div className="text-xs text-gray-400 mt-1">
                             {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
                           </div>
@@ -613,7 +615,7 @@ const Latest = () => {
                           <div className="text-lg font-bold text-white">
                             {fixture.homeScore} - {fixture.awayScore}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">FT</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
                         </div>
                       ) : isFixtureLive(fixture) ? (
                         <div className="text-center">
@@ -621,12 +623,12 @@ const Latest = () => {
                             {fixture.homeScore || 0} - {fixture.awayScore || 0}
                           </div>
                           <div className="text-sm font-bold animate-live-pulse mt-1">
-                            LIVE
+                            {t('match.live')}
                           </div>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-primary-500">VS</div>
+                          <div className="text-sm font-semibold text-primary-500">{t('match.vs').toUpperCase()}</div>
                           <div className="text-xs text-gray-400 mt-1">
                             {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
                           </div>
@@ -665,13 +667,13 @@ const Latest = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Trophy className="w-5 h-5 text-accent-500 mr-2" />
-              <h2 className="text-lg font-semibold text-white">League Table</h2>
+              <h2 className="text-lg font-semibold text-white">{t('pages.latest.leagueTable')}</h2>
             </div>
             <button
               onClick={() => navigate('/fixtures')}
               className="flex items-center text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
             >
-              View full table
+              {t('common.viewAll')}
               <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
@@ -679,14 +681,14 @@ const Latest = () => {
           <div className="bg-transparent border border-gray-700 rounded-lg overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-[auto_1fr_repeat(6,auto)_auto] gap-3 px-4 py-3 bg-dark-800/30 border-b border-gray-700 text-xs font-medium text-gray-400 uppercase tracking-wide">
-              <div className="text-left">S/N</div>
-              <div className="text-left">TEAM</div>
-              <div className="text-center w-8">P</div>
-              <div className="text-center w-8">W</div>
-              <div className="text-center w-8">D</div>
-              <div className="text-center w-8">L</div>
-              <div className="text-center w-10">GD</div>
-              <div className="text-center w-10">PTS</div>
+              <div className="text-left">{t('table.position')}</div>
+              <div className="text-left">{t('table.team')}</div>
+              <div className="text-center w-8">{t('table.played')}</div>
+              <div className="text-center w-8">{t('table.won')}</div>
+              <div className="text-center w-8">{t('table.drawn')}</div>
+              <div className="text-center w-8">{t('table.lost')}</div>
+              <div className="text-center w-10">{t('table.goalDifference')}</div>
+              <div className="text-center w-10">{t('table.points')}</div>
               <div className="text-center w-24">FORM</div>
             </div>
             

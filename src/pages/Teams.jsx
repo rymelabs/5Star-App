@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { teamsCollection } from '../firebase/firestore';
 import { addCalendarRemindersForTeam, removeCalendarRemindersForTeam } from '../services/calendarReminderService';
@@ -12,6 +13,7 @@ const Teams = () => {
   const { user } = useAuth();
   const { teams, followTeam, unfollowTeam, fixtures } = useFootball();
   const { showSuccess, showError } = useNotification();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [followingLoading, setFollowingLoading] = useState({});
   
@@ -167,7 +169,7 @@ const Teams = () => {
       <div className="mb-6">
         <h1 className="page-header mb-2 flex items-center gap-2">
           <Users className="w-7 h-7 text-primary-400" />
-          Teams
+          {t('pages.teams.title')}
         </h1>
         <p className="text-gray-400">
           Browse all teams in the competition
@@ -182,7 +184,7 @@ const Teams = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search teams by name, city, or manager..."
+            placeholder={t('pages.teams.searchTeams')}
             className="w-full pl-10 pr-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
           />
         </div>
@@ -302,7 +304,7 @@ const Teams = () => {
       ) : (
         <div className="text-center py-20">
           <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No teams found</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">{t('pages.teams.noTeamsFound')}</h3>
           <p className="text-gray-400">
             {searchQuery ? `No teams match "${searchQuery}"` : 'No teams available yet'}
           </p>
