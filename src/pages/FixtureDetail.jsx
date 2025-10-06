@@ -233,11 +233,11 @@ const FixtureDetail = () => {
 
           <div className="text-center px-8">
             {isLiveMatch || isCompleted ? (
-              <div className="text-4xl font-bold text-white">
+              <div className="fixture-score text-white">
                 {fixture.homeScore} - {fixture.awayScore}
               </div>
             ) : (
-              <div className="text-3xl font-bold text-gray-400">VS</div>
+              <div className="fixture-score-vs text-gray-400">VS</div>
             )}
             <div className="text-sm text-gray-400 mt-1">
               {isLiveMatch && `${fixture.minute || 0}'`}

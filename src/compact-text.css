@@ -35,6 +35,28 @@
 }
 
 /* ========================================
+   FIXTURE SCORE STYLING CLASS
+   ======================================== */
+/* Use this class for fixture detail page scores */
+.fixture-score {
+  font-size: 30px !important; /* 3rem */
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.fixture-score-vs {
+  font-size: 36px !important; /* 2.25rem */
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* ========================================
+   END FIXTURE SCORE STYLING
+   ======================================== */
+
+/* ========================================
    END PAGE HEADER STYLING
    ======================================== */
 
@@ -53,7 +75,7 @@ h4, h5, h6 {
 
 /* Content and body text - 12px */
 .text-sm,
-p, span, div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base) {
+p, span, div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base):not(.fixture-score):not(.fixture-score-vs) {
   font-size: 12px !important;
 }
 
