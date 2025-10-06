@@ -2,6 +2,43 @@
 /* Header texts: 15px, Subheader: 14px, Content: 11-12px */
 
 /* ========================================
+   ZOOM PREVENTION & USER INTERACTION
+   ======================================== */
+/* Prevent zoom on all elements */
+* {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Allow text selection in specific content areas */
+p, span, div[contenteditable], textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Prevent zoom on inputs (iOS zooms if font-size < 16px) */
+input, select, textarea, button {
+  font-size: 16px !important;
+  touch-action: manipulation !important;
+}
+
+/* Keep small inputs from triggering zoom */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="number"] {
+  font-size: 16px !important;
+}
+
+/* ========================================
+   END ZOOM PREVENTION
+   ======================================== */
+
+/* ========================================
    PAGE HEADER STYLING CLASS
    ======================================== */
 /* Use this class for main page titles/headers */
