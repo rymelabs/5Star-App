@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, CheckCheck, Trash2, Clock, Megaphone } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { deleteNotification } from '../firebase/notifications';
 import { getFirebaseDb } from '../firebase/config';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
@@ -10,6 +11,7 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
 const NotificationInbox = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   const { 
     inboxNotifications, 
     unreadCount, 
@@ -141,7 +143,7 @@ const NotificationInbox = () => {
       <div className="min-h-screen bg-dark-900 text-white p-6">
         <div className="text-center py-12">
           <Bell className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-          <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
+          <h2 className="text-xl font-semibold mb-2">{t('common.signInRequired')}</h2>
           <p className="text-gray-400 mb-4">
             You need to be signed in to view notifications
           </p>
@@ -170,7 +172,7 @@ const NotificationInbox = () => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="page-header">Notifications</h1>
+                <h1 className="page-header">{t('notifications.title')}</h1>
                 {unreadCount > 0 && (
                   <p className="text-sm text-gray-400">
                     {unreadCount} unread
@@ -199,7 +201,7 @@ const NotificationInbox = () => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Megaphone className="w-5 h-5 text-purple-400" />
-              <h2 className="text-lg font-semibold text-white">Admin Announcements</h2>
+              <h2 className="text-lg font-semibold text-white">{t('notifications.adminAnnouncements')}</h2>
             </div>
             <div className="space-y-2">
               {adminNotifications.map((notification) => {
@@ -260,12 +262,12 @@ const NotificationInbox = () => {
         {/* User Notifications Section */}
         <div>
           {adminNotifications.length > 0 && (
-            <h2 className="text-lg font-semibold text-white mb-3">Your Notifications</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">{t('notifications.yourNotifications')}</h2>
           )}
           {inboxNotifications.length === 0 && adminNotifications.length === 0 ? (
             <div className="text-center py-12">
               <Bell className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-              <h2 className="text-xl font-semibold mb-2">No notifications yet</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('notifications.noNotificationsYet')}</h2>
               <p className="text-gray-400">
                 We'll notify you about your followed teams' matches and news
               </p>

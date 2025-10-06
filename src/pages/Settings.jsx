@@ -160,7 +160,7 @@ const Settings = () => {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading settings...</p>
+            <p className="text-gray-400">{t('pages.settings.loadingSettings')}</p>
           </div>
         </div>
       </div>
@@ -415,8 +415,8 @@ const Settings = () => {
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-600/20 mx-auto mb-4">
               <LogOut className="w-6 h-6 text-red-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2 text-center">Confirm Logout</h3>
-            <p className="text-gray-400 mb-6 text-center">Are you sure you want to log out of your account?</p>
+            <h3 className="text-lg font-semibold text-white mb-2 text-center">{t('pages.settings.confirmLogout')}</h3>
+            <p className="text-gray-400 mb-6 text-center">{t('pages.settings.logoutConfirmMessage')}</p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
@@ -492,14 +492,14 @@ const Settings = () => {
                   <svg className="w-4 h-4 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                   </svg>
-                  <span className="text-gray-400">Settings synced across devices</span>
+                  <span className="text-gray-400">{t('pages.settings.settingsSynced')}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <span className="text-gray-400">Settings saved locally only (Sign in to sync)</span>
+                  <span className="text-gray-400">{t('pages.settings.settingsSavedLocally')}</span>
                 </>
               )}
             </div>
@@ -616,7 +616,7 @@ const Settings = () => {
           >
             <div className="flex items-center">
               <LogOut className="w-5 h-5 text-red-400 mr-3 group-hover:rotate-12 transition-transform duration-200" />
-              <span className="text-red-400 font-medium">Logout</span>
+              <span className="text-red-400 font-medium">{t('common.logout')}</span>
             </div>
           </button>
         </div>
@@ -624,7 +624,7 @@ const Settings = () => {
         {/* App Info */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">5Star Sports App</p>
-          <p className="text-xs text-gray-600">Version 1.0.0</p>
+          <p className="text-xs text-gray-600">{t('common.version')} 1.0.0</p>
         </div>
       </div>
 

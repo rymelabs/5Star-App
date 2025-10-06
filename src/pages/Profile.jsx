@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ArrowLeft, Camera, Edit, Save, X, User, Mail, Calendar, Shield } from 'lucide-react';
 import { validateEmail } from '../utils/helpers';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -106,7 +108,7 @@ const Profile = () => {
             >
               <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <h1 className="ml-2 page-header">Profile</h1>
+            <h1 className="ml-2 page-header">{t('pages.profile.title')}</h1>
           </div>
           
           {!isEditing ? (
@@ -195,7 +197,7 @@ const Profile = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`input-field w-full ${errors.name ? 'border-red-500' : ''}`}
-                  placeholder="Enter your full name"
+                  placeholder={t('pages.profile.enterFullName')}
                 />
                 {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
               </div>
@@ -222,7 +224,7 @@ const Profile = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`input-field w-full ${errors.email ? 'border-red-500' : ''}`}
-                  placeholder="Enter your email"
+                  placeholder={t('pages.profile.enterEmail')}
                 />
                 {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
               </div>
@@ -249,7 +251,7 @@ const Profile = () => {
                   onChange={handleChange}
                   rows="4"
                   className={`input-field w-full resize-none ${errors.bio ? 'border-red-500' : ''}`}
-                  placeholder="Tell us about yourself..."
+                  placeholder={t('pages.profile.tellAboutYourself')}
                 />
                 <div className="flex justify-between items-center mt-1">
                   {errors.bio && <p className="text-red-400 text-sm">{errors.bio}</p>}
@@ -318,33 +320,33 @@ const Profile = () => {
 
         {/* Statistics Section */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Activity</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.profile.activity')}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="card p-4 text-center">
               <div className="text-lg font-bold text-primary-500 mb-1">
                 {Math.floor(Math.random() * 50) + 10}
               </div>
-              <div className="text-sm text-gray-400">Comments</div>
+              <div className="text-sm text-gray-400">{t('pages.profile.comments')}</div>
             </div>
             <div className="card p-4 text-center">
               <div className="text-lg font-bold text-accent-500 mb-1">
                 {Math.floor(Math.random() * 20) + 5}
               </div>
-              <div className="text-sm text-gray-400">Articles Read</div>
+              <div className="text-sm text-gray-400">{t('pages.profile.articlesRead')}</div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.profile.quickActions')}</h3>
           <div className="space-y-3">
             <button
               onClick={() => navigate('/settings')}
               className="w-full card p-4 text-left hover:bg-dark-700 transition-colors"
             >
               <div className="flex items-center justify-between">
-                <span className="text-white">Settings</span>
+                <span className="text-white">{t('navigation.settings')}</span>
                 <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
               </div>
             </button>
@@ -356,7 +358,7 @@ const Profile = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Shield className="w-5 h-5 text-accent-500 mr-3" />
-                    <span className="text-white">Admin Dashboard</span>
+                    <span className="text-white">{t('navigation.adminDashboard')}</span>
                   </div>
                   <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
                 </div>

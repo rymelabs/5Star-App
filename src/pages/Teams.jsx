@@ -288,7 +288,7 @@ const Teams = () => {
               {loadingMore ? (
                 <div className="flex items-center justify-center gap-2 text-primary-400">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">Loading more teams...</span>
+                  <span className="text-sm">{t('common.loadingMore')} {t('navigation.teams').toLowerCase()}...</span>
                 </div>
               ) : (
                 <button

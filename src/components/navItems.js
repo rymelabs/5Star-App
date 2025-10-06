@@ -1,29 +1,30 @@
 import { Home, Calendar, Users, Newspaper, TrendingUp } from 'lucide-react';
 
+// Translation keys - actual labels will be translated in the component
 export const navItems = [
   {
     path: '/',
-    label: 'Latest',
+    labelKey: 'navigation.latest',
     icon: Home,
   },
   {
     path: '/fixtures',
-    label: 'Fixtures',
+    labelKey: 'navigation.fixtures',
     icon: Calendar,
   },
   {
     path: '/teams',
-    label: 'Teams',
+    labelKey: 'navigation.teams',
     icon: Users,
   },
   {
     path: '/news',
-    label: 'News',
+    labelKey: 'navigation.news',
     icon: Newspaper,
   },
   {
     path: '/stats',
-    label: 'Stats',
+    labelKey: 'stats.title',
     icon: TrendingUp,
   },
 ];

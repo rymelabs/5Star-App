@@ -5,6 +5,7 @@ import { useFootball } from '../context/FootballContext';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { fixturesCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
 import { addFixtureToCalendar } from '../utils/calendar';
@@ -16,6 +17,7 @@ const FixtureDetail = () => {
   const { getCommentsForItem, addComment, subscribeToComments, comments } = useNews();
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
+  const { t } = useLanguage();
   const [fixture, setFixture] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
@@ -454,7 +456,7 @@ const FixtureDetail = () => {
       {/* Live Commentary */}
       {isLiveMatch && fixture.commentary && (
         <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Live Commentary</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.fixtureDetail.liveCommentary')}</h3>
           <div className="space-y-3">
             {fixture.commentary.map((event, index) => (
               <div key={index} className="flex gap-3">
@@ -469,7 +471,7 @@ const FixtureDetail = () => {
       {/* Match Stats */}
       {(isLiveMatch || isCompleted) && fixture.stats && (
         <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Match Statistics</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.fixtureDetail.matchStatistics')}</h3>
           <div className="space-y-4">
             {Object.entries(fixture.stats).map(([stat, values]) => (
               <div key={stat} className="flex items-center justify-between">
@@ -507,7 +509,7 @@ const FixtureDetail = () => {
 
       {/* Comments Section */}
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-white">Match Discussion ({fixtureComments.length})</h3>
+        <h3 className="text-lg font-semibold text-white">{t('pages.fixtureDetail.matchDiscussion')} ({fixtureComments.length})</h3>
 
         {/* Add Comment Form - Instagram Style */}
         {user ? (
@@ -524,7 +526,7 @@ const FixtureDetail = () => {
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
+                  placeholder={t('pages.fixtureDetail.addComment')}
                   className="flex-1 bg-transparent text-white placeholder-gray-500 text-sm outline-none"
                   disabled={isCommenting}
                 />
@@ -566,7 +568,7 @@ const FixtureDetail = () => {
         {/* Comments List - Instagram Style */}
         <div className="space-y-4 pt-2">
           {fixtureComments.length === 0 ? (
-            <p className="text-gray-500 text-center py-8 text-sm">No comments yet. Be the first to share your thoughts!</p>
+            <p className="text-gray-500 text-center py-8 text-sm">{t('pages.fixtureDetail.noCommentsYet')}</p>
           ) : (
             fixtureComments.map((comment) => (
               <div key={comment.id} className="flex gap-3">

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { X, User, Settings, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 const ProfileModal = ({ onClose }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -23,20 +25,20 @@ const ProfileModal = ({ onClose }) => {
     return (
       <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
         <div className="bg-dark-800 rounded-lg w-full max-w-sm mx-4 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Confirm Logout</h3>
-          <p className="text-gray-400 mb-6">Are you sure you want to log out?</p>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.settings.confirmLogout')}</h3>
+          <p className="text-gray-400 mb-6">{t('pages.settings.logoutConfirmMessage')}</p>
           <div className="flex space-x-3">
             <button
               onClick={() => setShowLogoutConfirm(false)}
               className="flex-1 py-2 px-4 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleLogout}
               className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              Logout
+              {t('common.logout')}
             </button>
           </div>
         </div>
@@ -49,7 +51,7 @@ const ProfileModal = ({ onClose }) => {
       <div className="bg-dark-800 rounded-lg w-full max-w-sm mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-dark-700">
-          <h2 className="text-lg font-semibold text-white">Profile</h2>
+          <h2 className="text-lg font-semibold text-white">{t('pages.profile.title')}</h2>
           <button
             onClick={onClose}
             className="p-1 rounded-full hover:bg-dark-700 transition-colors"
@@ -78,7 +80,7 @@ const ProfileModal = ({ onClose }) => {
               {user?.role === 'admin' && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent-600 text-white mt-1">
                   <Shield className="w-3 h-3 mr-1" />
-                  Admin
+                  {t('common.admin')}
                 </span>
               )}
             </div>
@@ -92,7 +94,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center px-4 py-3 text-left hover:bg-dark-700 transition-colors"
           >
             <User className="w-5 h-5 text-gray-400 mr-3" />
-            <span className="text-white">Edit Profile</span>
+            <span className="text-white">{t('pages.profile.editProfile')}</span>
           </button>
           
           <button
@@ -100,7 +102,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center px-4 py-3 text-left hover:bg-dark-700 transition-colors"
           >
             <Settings className="w-5 h-5 text-gray-400 mr-3" />
-            <span className="text-white">Settings</span>
+            <span className="text-white">{t('navigation.settings')}</span>
           </button>
           
           {user?.role === 'admin' && (
@@ -109,7 +111,7 @@ const ProfileModal = ({ onClose }) => {
               className="w-full flex items-center px-4 py-3 text-left hover:bg-dark-700 transition-colors"
             >
               <Shield className="w-5 h-5 text-gray-400 mr-3" />
-              <span className="text-white">Admin Dashboard</span>
+              <span className="text-white">{t('navigation.adminDashboard')}</span>
             </button>
           )}
           
@@ -118,7 +120,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center px-4 py-3 text-left hover:bg-dark-700 transition-colors text-red-400"
           >
             <LogOut className="w-5 h-5 mr-3" />
-            <span>Logout</span>
+            <span>{t('common.logout')}</span>
           </button>
         </div>
       </div>

@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChart3 } from 'lucide-react';
 
 const Stats = () => {
   const { fixtures, teams, activeSeason, seasons } = useFootball();
   const { competitions } = useCompetitions();
+  const { t } = useLanguage();
   const [selectedSeason, setSelectedSeason] = useState('all');
   const [selectedCompetition, setSelectedCompetition] = useState('all');
   const [activeTab, setActiveTab] = useState('scorers');
@@ -355,11 +357,11 @@ const Stats = () => {
   }, [teamStats]);
 
   const tabs = [
-    { id: 'scorers', label: 'Top Scorers', icon: Target, color: 'text-green-400' },
-    { id: 'assists', label: 'Top Assists', icon: TrendingUp, color: 'text-blue-400' },
-    { id: 'cleansheets', label: 'Clean Sheets', icon: Shield, color: 'text-purple-400' },
-    { id: 'discipline', label: 'Discipline', icon: AlertCircle, color: 'text-yellow-400' },
-    { id: 'teams', label: 'Team Stats', icon: BarChart3, color: 'text-orange-400' }
+    { id: 'scorers', label: t('stats.topScorers'), icon: Target, color: 'text-green-400' },
+    { id: 'assists', label: t('stats.topAssists'), icon: TrendingUp, color: 'text-blue-400' },
+    { id: 'cleansheets', label: t('stats.cleanSheets'), icon: Shield, color: 'text-purple-400' },
+    { id: 'discipline', label: t('stats.discipline'), icon: AlertCircle, color: 'text-yellow-400' },
+    { id: 'teams', label: t('stats.teamStats'), icon: BarChart3, color: 'text-orange-400' }
   ];
 
   const renderPlayerCard = (player, index, stat) => {
@@ -469,10 +471,10 @@ const Stats = () => {
       <div className="mb-6">
         <h1 className="page-header mb-2 flex items-center gap-2">
           <Trophy className="w-7 h-7 text-purple-400" />
-          Statistics
+          {t('stats.title')}
         </h1>
         <p className="text-gray-400">
-          Track player and team performance across all competitions
+          {t('stats.trackPerformance')}
         </p>
       </div>
 
@@ -480,18 +482,18 @@ const Stats = () => {
       <div className="bg-dark-900 border border-dark-700 rounded-xl p-4 mb-6">
         <div className="flex items-center gap-2 mb-3 text-gray-300">
           <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">Filters</span>
+          <span className="text-sm font-medium">{t('stats.filters')}</span>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           {/* Season Filter */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Season</label>
+            <label className="block text-sm text-gray-400 mb-2">{t('stats.season')}</label>
             <select
               value={selectedSeason}
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="input-field w-full"
             >
-              <option value="all">All Seasons</option>
+              <option value="all">{t('stats.allSeasons')}</option>
               {seasons.map(season => (
                 <option key={season.id} value={season.id}>{season.name}</option>
               ))}
@@ -500,13 +502,13 @@ const Stats = () => {
 
           {/* Competition Filter */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Competition</label>
+            <label className="block text-sm text-gray-400 mb-2">{t('stats.competition')}</label>
             <select
               value={selectedCompetition}
               onChange={(e) => setSelectedCompetition(e.target.value)}
               className="input-field w-full"
             >
-              <option value="all">All Competitions</option>
+              <option value="all">{t('stats.allCompetitions')}</option>
               {availableCompetitions.map(comp => (
                 <option key={comp} value={comp}>{comp}</option>
               ))}
@@ -546,8 +548,8 @@ const Stats = () => {
             ) : (
               <div className="text-center py-12 text-gray-400">
                 <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No goal scorers found</p>
-                <p className="text-sm mt-1">Goals will appear here once matches are completed</p>
+                <p>{t('stats.noGoalScorers')}</p>
+                <p className="text-sm mt-1">{t('stats.goalsMessage')}</p>
               </div>
             )}
           </>
@@ -561,8 +563,8 @@ const Stats = () => {
             ) : (
               <div className="text-center py-12 text-gray-400">
                 <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No assists found</p>
-                <p className="text-sm mt-1">Assists will appear here once matches are completed</p>
+                <p>{t('stats.noAssists')}</p>
+                <p className="text-sm mt-1">{t('stats.assistsMessage')}</p>
               </div>
             )}
           </>
@@ -576,8 +578,8 @@ const Stats = () => {
             ) : (
               <div className="text-center py-12 text-gray-400">
                 <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No clean sheets found</p>
-                <p className="text-sm mt-1">Clean sheets will appear here once matches are completed</p>
+                <p>{t('stats.noCleanSheets')}</p>
+                <p className="text-sm mt-1">{t('stats.cleanSheetsMessage')}</p>
               </div>
             )}
           </>
@@ -591,8 +593,8 @@ const Stats = () => {
             ) : (
               <div className="text-center py-12 text-gray-400">
                 <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No cards issued yet</p>
-                <p className="text-sm mt-1">Yellow and red cards will appear here once issued</p>
+                <p>{t('stats.noCards')}</p>
+                <p className="text-sm mt-1">{t('stats.cardsMessage')}</p>
               </div>
             )}
           </>
@@ -605,7 +607,7 @@ const Stats = () => {
             <div>
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <Target className="w-5 h-5 text-green-400" />
-                Top Scoring Teams
+                {t('stats.topScoringTeams')}
               </h3>
               {topScoringTeams.length > 0 ? (
                 <>
@@ -623,11 +625,11 @@ const Stats = () => {
                         )}
                         <div className="flex-1">
                           <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.played} matches</p>
+                          <p className="text-xs text-gray-400">{team.played} {t('stats.matches')}</p>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-green-400">{team.goalsFor}</div>
-                          <div className="text-xs text-gray-400">goals</div>
+                          <div className="text-xs text-gray-400">{t('pages.latest.goals')}</div>
                         </div>
                       </div>
                     ))}
@@ -637,13 +639,13 @@ const Stats = () => {
                       onClick={() => setExpandedTeamStats(prev => ({ ...prev, topScoring: !prev.topScoring }))}
                       className="w-full mt-3 py-2 text-sm text-green-400 hover:text-green-300 font-medium transition-colors"
                     >
-                      {expandedTeamStats.topScoring ? 'Show Less' : `See More (${topScoringTeams.length - 3} more)`}
+                      {expandedTeamStats.topScoring ? t('stats.showLess') : `${t('stats.seeMore')} (${topScoringTeams.length - 3} ${t('stats.more')})`}
                     </button>
                   )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">No team data available</p>
+                  <p className="text-sm">{t('stats.noTeamData')}</p>
                 </div>
               )}
             </div>
@@ -652,7 +654,7 @@ const Stats = () => {
             <div>
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-400" />
-                Best Defense (Fewest Goals Conceded)
+                {t('stats.bestDefense')}
               </h3>
               {bestDefense.length > 0 ? (
                 <>
@@ -670,11 +672,11 @@ const Stats = () => {
                         )}
                         <div className="flex-1">
                           <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.cleanSheets} clean sheets</p>
+                          <p className="text-xs text-gray-400">{team.cleanSheets} {t('stats.cleanSheets').toLowerCase()}</p>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-blue-400">{team.goalsAgainst}</div>
-                          <div className="text-xs text-gray-400">conceded</div>
+                          <div className="text-xs text-gray-400">{t('stats.conceded')}</div>
                         </div>
                       </div>
                     ))}
@@ -684,13 +686,13 @@ const Stats = () => {
                       onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestDefense: !prev.bestDefense }))}
                       className="w-full mt-3 py-2 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
                     >
-                      {expandedTeamStats.bestDefense ? 'Show Less' : `See More (${bestDefense.length - 3} more)`}
+                      {expandedTeamStats.bestDefense ? t('stats.showLess') : `${t('stats.seeMore')} (${bestDefense.length - 3} ${t('stats.more')})`}
                     </button>
                   )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">No team data available</p>
+                  <p className="text-sm">{t('stats.noTeamData')}</p>
                 </div>
               )}
             </div>
@@ -699,7 +701,7 @@ const Stats = () => {
             <div>
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-purple-400" />
-                Best Goal Difference
+                {t('stats.bestGoalDiff')}
               </h3>
               {bestGoalDifference.length > 0 ? (
                 <>
@@ -717,7 +719,7 @@ const Stats = () => {
                         )}
                         <div className="flex-1">
                           <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.goalsFor} scored, {team.goalsAgainst} conceded</p>
+                          <p className="text-xs text-gray-400">{team.goalsFor} {t('stats.scored')}, {team.goalsAgainst} {t('stats.conceded')}</p>
                         </div>
                         <div className="text-right">
                           <div className={`text-lg font-bold ${team.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -733,13 +735,13 @@ const Stats = () => {
                       onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestGD: !prev.bestGD }))}
                       className="w-full mt-3 py-2 text-sm text-purple-400 hover:text-purple-300 font-medium transition-colors"
                     >
-                      {expandedTeamStats.bestGD ? 'Show Less' : `See More (${bestGoalDifference.length - 3} more)`}
+                      {expandedTeamStats.bestGD ? t('stats.showLess') : `${t('stats.seeMore')} (${bestGoalDifference.length - 3} ${t('stats.more')})`}
                     </button>
                   )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">No team data available</p>
+                  <p className="text-sm">{t('stats.noTeamData')}</p>
                 </div>
               )}
             </div>
@@ -748,7 +750,7 @@ const Stats = () => {
             <div>
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-400" />
-                Most Goals Conceded
+                {t('stats.mostConceded')}
               </h3>
               {mostGoalsConceded.length > 0 ? (
                 <>
@@ -764,11 +766,11 @@ const Stats = () => {
                         )}
                         <div className="flex-1">
                           <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.played} matches</p>
+                          <p className="text-xs text-gray-400">{team.played} {t('stats.matches')}</p>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-red-400">{team.goalsAgainst}</div>
-                          <div className="text-xs text-gray-400">conceded</div>
+                          <div className="text-xs text-gray-400">{t('stats.conceded')}</div>
                         </div>
                       </div>
                     ))}
@@ -778,13 +780,13 @@ const Stats = () => {
                       onClick={() => setExpandedTeamStats(prev => ({ ...prev, mostConceded: !prev.mostConceded }))}
                       className="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
                     >
-                      {expandedTeamStats.mostConceded ? 'Show Less' : `See More (${mostGoalsConceded.length - 3} more)`}
+                      {expandedTeamStats.mostConceded ? t('stats.showLess') : `${t('stats.seeMore')} (${mostGoalsConceded.length - 3} ${t('stats.more')})`}
                     </button>
                   )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">No team data available</p>
+                  <p className="text-sm">{t('stats.noTeamData')}</p>
                 </div>
               )}
             </div>
