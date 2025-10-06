@@ -157,21 +157,39 @@ const About = () => {
             Legal
           </h3>
           <div className="space-y-3">
-            <button className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group">
+            <button 
+              onClick={() => navigate('/privacy-policy')}
+              className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-300 group-hover:text-white">Privacy Policy</span>
                 <ArrowLeft className="w-4 h-4 text-gray-500 rotate-180" />
               </div>
             </button>
-            <button className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group">
+            <button 
+              onClick={() => navigate('/terms-of-service')}
+              className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-300 group-hover:text-white">Terms of Service</span>
                 <ArrowLeft className="w-4 h-4 text-gray-500 rotate-180" />
               </div>
             </button>
-            <button className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group">
+            <button 
+              onClick={() => navigate('/terms-and-conditions')}
+              className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-300 group-hover:text-white">Licenses</span>
+                <span className="text-sm text-gray-300 group-hover:text-white">Terms & Conditions</span>
+                <ArrowLeft className="w-4 h-4 text-gray-500 rotate-180" />
+              </div>
+            </button>
+            <button 
+              onClick={() => navigate('/licenses')}
+              className="w-full text-left px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-300 group-hover:text-white">Open Source Licenses</span>
                 <ArrowLeft className="w-4 h-4 text-gray-500 rotate-180" />
               </div>
             </button>

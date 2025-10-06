@@ -19,6 +19,10 @@ import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
 import NotificationInbox from './pages/NotificationInbox';
 import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import TermsConditions from './pages/TermsConditions';
+import Licenses from './pages/Licenses';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -92,6 +96,10 @@ const AppContent = () => {
         <Route path="/email-auth" element={<EmailAuth />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/about" element={<About />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/terms-and-conditions" element={<TermsConditions />} />
+        <Route path="/licenses" element={<Licenses />} />
         {/* Legacy routes for backward compatibility */}
         <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/register" element={<Navigate to="/auth" replace />} />
@@ -121,6 +129,12 @@ const AppContent = () => {
           
           {/* About page - accessible to all users */}
           <Route path="/about" element={<About />} />
+          
+          {/* Legal pages - accessible to all users */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/terms-and-conditions" element={<TermsConditions />} />
+          <Route path="/licenses" element={<Licenses />} />
           
           {/* Profile setup for new users */}
           <Route path="/profile-setup" element={<ProfileSetup />} />
