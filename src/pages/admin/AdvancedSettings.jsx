@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { getFirebaseDb } from '../../firebase/config';
 import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { ArrowLeft, AlertTriangle, Trash2, Database } from 'lucide-react';
+import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
+import Toast from '../../components/Toast';
 
 const AdvancedSettings = () => {
   const navigate = useNavigate();
-  const [deleting, setDeleting] = useState('');
+  const [modalConfig, setModalConfig] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Delete handler functions
   const deleteAllFromCollection = async (collectionName) => {
@@ -19,61 +22,76 @@ const AdvancedSettings = () => {
     await batch.commit();
   };
 
-  const handleDeleteData = async (dataType) => {
-    const confirmMessage = `Are you sure you want to delete ALL ${dataType}? This action CANNOT be undone!`;
-    const doubleConfirm = `Type "DELETE ${dataType.toUpperCase()}" to confirm:`;
-    
-    if (!confirm(confirmMessage)) return;
-    
-    const userInput = prompt(doubleConfirm);
-    if (userInput !== `DELETE ${dataType.toUpperCase()}`) {
-      alert('Deletion cancelled. Text did not match.');
-      return;
-    }
+  const handleDeleteData = (dataType) => {
+    const dataTypeLabels = {
+      seasons: 'Seasons',
+      leagues: 'Leagues',
+      teams: 'Teams',
+      fixtures: 'Fixtures',
+      tables: 'League Tables',
+      articles: 'News Articles',
+      everything: 'All Data',
+    };
 
-    try {
-      setDeleting(dataType);
-      
-      switch (dataType) {
-        case 'seasons':
-          await deleteAllFromCollection('seasons');
-          break;
-        case 'leagues':
-          await deleteAllFromCollection('leagues');
-          break;
-        case 'teams':
-          await deleteAllFromCollection('teams');
-          break;
-        case 'fixtures':
-          await deleteAllFromCollection('fixtures');
-          break;
-        case 'tables':
-          await deleteAllFromCollection('leagueTable');
-          break;
-        case 'articles':
-          await deleteAllFromCollection('news');
-          break;
-        case 'everything':
-          await Promise.all([
-            deleteAllFromCollection('seasons'),
-            deleteAllFromCollection('leagues'),
-            deleteAllFromCollection('teams'),
-            deleteAllFromCollection('fixtures'),
-            deleteAllFromCollection('leagueTable'),
-            deleteAllFromCollection('news'),
-            deleteAllFromCollection('adminActivity'),
-          ]);
-          break;
-      }
-      
-      alert(`Successfully deleted all ${dataType}!`);
-      window.location.reload(); // Refresh to show updated data
-    } catch (error) {
-      console.error(`Error deleting ${dataType}:`, error);
-      alert(`Failed to delete ${dataType}. Error: ${error.message}`);
-    } finally {
-      setDeleting('');
-    }
+    const label = dataTypeLabels[dataType];
+    
+    setModalConfig({
+      title: `Delete ${label}`,
+      message: `You are about to permanently delete all ${label.toLowerCase()}. This action cannot be undone and will remove all data from the database.`,
+      confirmText: `DELETE ${dataType.toUpperCase()}`,
+      onConfirm: async () => {
+        try {
+          switch (dataType) {
+            case 'seasons':
+              await deleteAllFromCollection('seasons');
+              break;
+            case 'leagues':
+              await deleteAllFromCollection('leagues');
+              break;
+            case 'teams':
+              await deleteAllFromCollection('teams');
+              break;
+            case 'fixtures':
+              await deleteAllFromCollection('fixtures');
+              break;
+            case 'tables':
+              await deleteAllFromCollection('leagueTable');
+              break;
+            case 'articles':
+              await deleteAllFromCollection('news');
+              break;
+            case 'everything':
+              await Promise.all([
+                deleteAllFromCollection('seasons'),
+                deleteAllFromCollection('leagues'),
+                deleteAllFromCollection('teams'),
+                deleteAllFromCollection('fixtures'),
+                deleteAllFromCollection('leagueTable'),
+                deleteAllFromCollection('news'),
+                deleteAllFromCollection('adminActivity'),
+              ]);
+              break;
+          }
+          
+          setToast({
+            type: 'success',
+            message: `Successfully deleted all ${label.toLowerCase()}!`,
+          });
+          
+          // Reload after a short delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch (error) {
+          console.error(`Error deleting ${dataType}:`, error);
+          setToast({
+            type: 'error',
+            message: `Failed to delete ${label.toLowerCase()}. ${error.message}`,
+          });
+          throw error;
+        }
+      },
+    });
   };
 
   return (
@@ -117,8 +135,7 @@ const AdvancedSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => handleDeleteData('seasons')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -127,13 +144,11 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all season data</p>
                   </div>
                 </div>
-                {deleting === 'seasons' && <div className="spinner" />}
               </button>
 
               <button
                 onClick={() => handleDeleteData('leagues')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -142,13 +157,11 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all league data</p>
                   </div>
                 </div>
-                {deleting === 'leagues' && <div className="spinner" />}
               </button>
 
               <button
                 onClick={() => handleDeleteData('teams')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -157,13 +170,11 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all team data</p>
                   </div>
                 </div>
-                {deleting === 'teams' && <div className="spinner" />}
               </button>
 
               <button
                 onClick={() => handleDeleteData('fixtures')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -172,13 +183,11 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all fixture data</p>
                   </div>
                 </div>
-                {deleting === 'fixtures' && <div className="spinner" />}
               </button>
 
               <button
                 onClick={() => handleDeleteData('tables')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -187,13 +196,11 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all league table data</p>
                   </div>
                 </div>
-                {deleting === 'tables' && <div className="spinner" />}
               </button>
 
               <button
                 onClick={() => handleDeleteData('articles')}
-                disabled={deleting}
-                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-between p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
@@ -202,7 +209,6 @@ const AdvancedSettings = () => {
                     <p className="text-gray-400 text-sm">Remove all news articles</p>
                   </div>
                 </div>
-                {deleting === 'articles' && <div className="spinner" />}
               </button>
             </div>
           </div>
@@ -212,8 +218,7 @@ const AdvancedSettings = () => {
             <h2 className="text-lg font-semibold text-white mb-4">Nuclear Option</h2>
             <button
               onClick={() => handleDeleteData('everything')}
-              disabled={deleting}
-              className="w-full flex items-center justify-between p-6 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 hover:border-red-600/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-between p-6 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 hover:border-red-600/50 rounded-lg transition-colors"
             >
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -222,11 +227,31 @@ const AdvancedSettings = () => {
                   <p className="text-gray-400 text-sm">Remove all data from all collections (seasons, leagues, teams, fixtures, tables, articles, activity logs)</p>
                 </div>
               </div>
-              {deleting === 'everything' && <div className="spinner" />}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {modalConfig && (
+        <ConfirmDeleteModal
+          isOpen={!!modalConfig}
+          onClose={() => setModalConfig(null)}
+          onConfirm={modalConfig.onConfirm}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          confirmText={modalConfig.confirmText}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 };
