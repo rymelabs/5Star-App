@@ -11,6 +11,7 @@ import {
   where, 
   orderBy, 
   limit,
+  startAfter,
   onSnapshot,
   serverTimestamp,
   writeBatch
@@ -39,6 +40,45 @@ export const teamsCollection = {
       }));
     } catch (error) {
       console.error('Error fetching teams:', error);
+      throw error;
+    }
+  },
+
+  // Get paginated teams
+  getPaginated: async (pageSize = 12, lastDoc = null) => {
+    try {
+      const database = checkFirebaseInit();
+      let q;
+      
+      if (lastDoc) {
+        q = query(
+          collection(database, 'teams'),
+          orderBy('name', 'asc'),
+          startAfter(lastDoc),
+          limit(pageSize)
+        );
+      } else {
+        q = query(
+          collection(database, 'teams'),
+          orderBy('name', 'asc'),
+          limit(pageSize)
+        );
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const teams = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        _doc: doc
+      }));
+      
+      return {
+        teams,
+        lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
+        hasMore: querySnapshot.docs.length === pageSize
+      };
+    } catch (error) {
+      console.error('Error fetching paginated teams:', error);
       throw error;
     }
   },
@@ -194,6 +234,47 @@ export const fixturesCollection = {
       }));
     } catch (error) {
       console.error('Error fetching fixtures:', error);
+      throw error;
+    }
+  },
+
+  // Get paginated fixtures
+  getPaginated: async (pageSize = 20, lastDoc = null, filters = {}) => {
+    try {
+      const database = checkFirebaseInit();
+      let queryConstraints = [orderBy('dateTime', 'desc')];
+      
+      // Add filters if provided
+      if (filters.seasonId) {
+        queryConstraints.push(where('seasonId', '==', filters.seasonId));
+      }
+      if (filters.status) {
+        queryConstraints.push(where('status', '==', filters.status));
+      }
+      
+      // Add pagination
+      if (lastDoc) {
+        queryConstraints.push(startAfter(lastDoc));
+      }
+      queryConstraints.push(limit(pageSize));
+      
+      const q = query(collection(database, 'fixtures'), ...queryConstraints);
+      const querySnapshot = await getDocs(q);
+      
+      const fixtures = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime),
+        _doc: doc
+      }));
+      
+      return {
+        fixtures,
+        lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
+        hasMore: querySnapshot.docs.length === pageSize
+      };
+    } catch (error) {
+      console.error('Error fetching paginated fixtures:', error);
       throw error;
     }
   },
@@ -420,6 +501,46 @@ export const newsCollection = {
       }));
     } catch (error) {
       console.error('Error fetching articles:', error);
+      throw error;
+    }
+  },
+
+  // Get paginated articles
+  getPaginated: async (pageSize = 10, lastDoc = null) => {
+    try {
+      const database = checkFirebaseInit();
+      let q;
+      
+      if (lastDoc) {
+        q = query(
+          collection(database, 'articles'),
+          orderBy('publishedAt', 'desc'),
+          startAfter(lastDoc),
+          limit(pageSize)
+        );
+      } else {
+        q = query(
+          collection(database, 'articles'),
+          orderBy('publishedAt', 'desc'),
+          limit(pageSize)
+        );
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const articles = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        publishedAt: doc.data().publishedAt?.toDate?.() || new Date(doc.data().publishedAt),
+        _doc: doc // Store the document snapshot for pagination
+      }));
+      
+      return {
+        articles,
+        lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
+        hasMore: querySnapshot.docs.length === pageSize
+      };
+    } catch (error) {
+      console.error('Error fetching paginated articles:', error);
       throw error;
     }
   },

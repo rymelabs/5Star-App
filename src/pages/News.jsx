@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
-import { Search, Filter, Clock, Eye, MessageCircle, Heart } from 'lucide-react';
+import { Search, Filter, Clock, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
 import { formatDate, getRelativeTime } from '../utils/dateUtils';
 import { truncateText, groupBy } from '../utils/helpers';
+import { newsCollection } from '../firebase/firestore';
 
 const News = () => {
   const navigate = useNavigate();
@@ -11,31 +12,96 @@ const News = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Pagination state
+  const [paginatedArticles, setPaginatedArticles] = useState([]);
+  const [newsLastDoc, setNewsLastDoc] = useState(null);
+  const [hasMoreNews, setHasMoreNews] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+  
+  // Intersection observer for infinite scroll
+  const observerRef = useRef(null);
+  const loadMoreRef = useCallback(node => {
+    if (loadingMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMoreNews && !searchQuery && categoryFilter === 'all') {
+        loadMoreArticles();
+      }
+    });
+    
+    if (node) observerRef.current.observe(node);
+  }, [loadingMore, hasMoreNews, searchQuery, categoryFilter]);
+  
+  // Load initial articles
+  useEffect(() => {
+    if (!initialLoaded) {
+      loadInitialArticles();
+    }
+  }, []);
+  
+  const loadInitialArticles = async () => {
+    try {
+      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
+      setPaginatedArticles(newArticles);
+      setNewsLastDoc(lastDoc);
+      setHasMoreNews(hasMore);
+      setInitialLoaded(true);
+    } catch (error) {
+      console.error('Error loading initial articles:', error);
+      setInitialLoaded(true);
+    }
+  };
+  
+  const loadMoreArticles = async () => {
+    if (!hasMoreNews || loadingMore || !newsLastDoc) return;
+    
+    setLoadingMore(true);
+    try {
+      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20, newsLastDoc);
+      setPaginatedArticles(prev => [...prev, ...newArticles]);
+      setNewsLastDoc(lastDoc);
+      setHasMoreNews(hasMore);
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
-  // Get unique categories
+  // Get unique categories - use both context articles and paginated articles
   const categories = useMemo(() => {
-    const cats = [...new Set(articles.map(article => article.category))];
+    const allArticles = searchQuery || categoryFilter !== 'all' ? articles : paginatedArticles;
+    const cats = [...new Set(allArticles.map(article => article.category))];
     return ['all', ...cats];
-  }, [articles]);
+  }, [articles, paginatedArticles, searchQuery, categoryFilter]);
 
-  // Filter articles
+  // Filter articles - use context articles for filtering, paginated for normal view
   const filteredArticles = useMemo(() => {
-    let filtered = articles;
+    // If user is searching or filtering, use context articles (already loaded)
+    if (searchQuery.trim() || categoryFilter !== 'all') {
+      let filtered = articles;
 
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(article =>
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (article.excerpt || article.summary || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (article.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      if (searchQuery.trim()) {
+        filtered = filtered.filter(article =>
+          article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (article.excerpt || article.summary || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (article.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+      }
+
+      if (categoryFilter !== 'all') {
+        filtered = filtered.filter(article => article.category === categoryFilter);
+      }
+
+      return filtered.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
     }
-
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(article => article.category === categoryFilter);
-    }
-
-    return filtered.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-  }, [articles, searchQuery, categoryFilter]);
+    
+    // Otherwise, use paginated articles
+    return paginatedArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  }, [articles, paginatedArticles, searchQuery, categoryFilter]);
 
   const handleArticleClick = (article) => {
     navigate(`/news/${article.slug}`);
@@ -201,12 +267,22 @@ const News = () => {
         )}
       </div>
 
-      {/* Load More Button (for future pagination) */}
-      {filteredArticles.length > 10 && (
-        <div className="text-center mt-8">
-          <button className="btn-primary">
-            Load More Articles
-          </button>
+      {/* Load More Button - Only show when not filtering */}
+      {!searchQuery && categoryFilter === 'all' && hasMoreNews && (
+        <div ref={loadMoreRef} className="text-center mt-8">
+          {loadingMore ? (
+            <div className="flex items-center justify-center gap-2 text-primary-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Loading more articles...</span>
+            </div>
+          ) : (
+            <button 
+              onClick={loadMoreArticles}
+              className="btn-primary"
+            >
+              Load More Articles
+            </button>
+          )}
         </div>
       )}
     </div>

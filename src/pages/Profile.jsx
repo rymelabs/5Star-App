@@ -97,7 +97,7 @@ const Profile = () => {
   return (
     <div className="pb-6">
       {/* Header */}
-      <div className="sticky top-0 mt-16 bg-black z-10 px-4 py-2.5 border-b border-dark-700">
+      <div className="sticky top-0 mt-1 bg-black z-10 px-4 py-2.5 border-b border-dark-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
