@@ -187,7 +187,7 @@ const Fixtures = () => {
                     <h3 className="text-lg font-semibold text-white mb-3 sticky top-16 bg-dark-900 py-2">
                       {getMatchDayLabel(dayFixtures[0].dateTime)}
                     </h3>
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                       {items.map((fixture) => {
                         const isSeasonFixture = fixture.seasonId && fixture.seasonId === activeSeason?.id;
                         const season = seasons?.find(s => s.id === fixture.seasonId);
@@ -198,7 +198,7 @@ const Fixtures = () => {
                           <div
                             key={fixture.id}
                             onClick={() => handleFixtureClick(fixture)}
-                            className={`card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden ${
+                            className={`card p-4 cursor-pointer hover:bg-dark-700 hover:scale-[1.01] transition-all duration-200 overflow-hidden ${
                               isSeasonFixture ? 'border-l-2 border-primary-500' : ''
                             }`}
                           >
