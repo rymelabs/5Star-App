@@ -9,6 +9,13 @@
   
   html {
     @apply scroll-smooth;
+    /* Hide scrollbar for all browsers */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
   
   body {
@@ -16,6 +23,8 @@
     background-image: radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
                       radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.02) 0%, transparent 50%),
                       radial-gradient(circle at 40% 80%, rgba(249, 115, 22, 0.02) 0%, transparent 50%);
+    /* Prevent zoom on double-tap */
+    touch-action: manipulation;
   }
 }
 

@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {
   const navigate = useNavigate();
   const { fixtures, teams, leagues, addFixture, updateFixture, seasons, activeSeason } = useFootball();
   const { competitions } = useCompetitions();
+  const { toast, showToast, hideToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -112,7 +115,7 @@ const AdminFixtures = () => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error adding fixture:', error);
-      alert('Failed to add fixture: ' + error.message);
+      showToast('Failed to add fixture: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -137,7 +140,7 @@ const AdminFixtures = () => {
           [lineupKey]: [...currentLineup, playerId]
         }));
       } else {
-        alert('Maximum 11 players allowed in lineup');
+        showToast('Maximum 11 players allowed in lineup', 'warning');
       }
     }
   };
@@ -145,7 +148,7 @@ const AdminFixtures = () => {
   // Event Management
   const handleAddEvent = () => {
     if (!eventForm.player || !eventForm.minute) {
-      alert('Please select player and enter minute');
+      showToast('Please select player and enter minute', 'warning');
       return;
     }
 
@@ -296,7 +299,7 @@ const AdminFixtures = () => {
       handleCancel();
     } catch (error) {
       console.error('Error updating fixture:', error);
-      alert('Failed to update fixture: ' + error.message);
+      showToast('Failed to update fixture: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -1183,6 +1186,14 @@ const AdminFixtures = () => {
           </div>
         )}
       </div>
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 };
