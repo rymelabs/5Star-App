@@ -214,7 +214,12 @@ const FixtureDetail = () => {
 
         {/* Teams and Score */}
         <div className="flex items-center justify-between mb-6">
-          <div className="text-center flex-1">
+          {/* Home Team - Clickable */}
+          <button
+            onClick={() => fixture.homeTeam?.id && navigate(`/teams/${fixture.homeTeam.id}`)}
+            className="text-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+            disabled={!fixture.homeTeam?.id}
+          >
             {fixture.homeTeam?.logo && fixture.homeTeam.logo.trim() ? (
               <img 
                 src={fixture.homeTeam.logo} 
@@ -229,7 +234,7 @@ const FixtureDetail = () => {
               </div>
             )}
             <h2 className="font-semibold text-white">{fixture.homeTeam?.name || 'Home Team'}</h2>
-          </div>
+          </button>
 
           <div className="text-center px-8">
             {isLiveMatch || isCompleted ? (
@@ -244,7 +249,12 @@ const FixtureDetail = () => {
             </div>
           </div>
 
-          <div className="text-center flex-1">
+          {/* Away Team - Clickable */}
+          <button
+            onClick={() => fixture.awayTeam?.id && navigate(`/teams/${fixture.awayTeam.id}`)}
+            className="text-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+            disabled={!fixture.awayTeam?.id}
+          >
             {fixture.awayTeam?.logo && fixture.awayTeam.logo.trim() ? (
               <img 
                 src={fixture.awayTeam.logo} 
@@ -259,7 +269,7 @@ const FixtureDetail = () => {
               </div>
             )}
             <h2 className="font-semibold text-white">{fixture.awayTeam?.name || 'Away Team'}</h2>
-          </div>
+          </button>
         </div>
 
         {/* Match Info */}
