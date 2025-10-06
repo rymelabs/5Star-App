@@ -34,7 +34,6 @@ const NotificationModal = ({ userId, onClose }) => {
       const q = query(
         notificationsRef,
         where('active', '==', true),
-        orderBy('priority', 'desc'),
         orderBy('createdAt', 'desc')
       );
       
@@ -44,9 +43,19 @@ const NotificationModal = ({ userId, onClose }) => {
           id: doc.id,
           ...doc.data(),
         }))
-        .filter(notif => !dismissedIds.includes(notif.id)); // Filter out dismissed ones
+        .filter(notif => !dismissedIds.includes(notif.id))
+        .sort((a, b) => {
+          // Sort by priority first (high > normal > low)
+          const priorityOrder = { high: 3, normal: 2, low: 1 };
+          const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
+          if (priorityDiff !== 0) return priorityDiff;
+          
+          // Then by creation date (newest first)
+          return (b.createdAt?.toDate?.() || new Date()) - (a.createdAt?.toDate?.() || new Date());
+        });
       
       setNotifications(notificationsList);
+      console.log('Fetched notifications:', notificationsList.length, notificationsList);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -132,11 +141,11 @@ const NotificationModal = ({ userId, onClose }) => {
 
   const getNotificationStyles = (type, priority) => {
     const baseStyles = {
-      info: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
-      announcement: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
-      warning: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
-      update: 'from-green-500/20 to-green-600/20 border-green-500/30',
-      event: 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
+      info: 'from-dark-800 to-dark-900 border-blue-500/50',
+      announcement: 'from-dark-800 to-dark-900 border-purple-500/50',
+      warning: 'from-dark-800 to-dark-900 border-yellow-500/50',
+      update: 'from-dark-800 to-dark-900 border-green-500/50',
+      event: 'from-dark-800 to-dark-900 border-orange-500/50',
     };
 
     const iconColors = {
@@ -172,10 +181,10 @@ const NotificationModal = ({ userId, onClose }) => {
   const styles = getNotificationStyles(currentNotification.type, currentNotification.priority);
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="relative w-full max-w-md">
         {/* Modal Content */}
-        <div className={`bg-gradient-to-br ${styles.gradient} ${styles.border} rounded-2xl shadow-2xl overflow-hidden`}>
+        <div className={`bg-gradient-to-br ${styles.gradient} ${styles.border} rounded-3xl shadow-2xl shadow-black/50 overflow-hidden`}>
           {/* Header */}
           <div className="relative p-6 pb-4">
             <button
@@ -186,7 +195,7 @@ const NotificationModal = ({ userId, onClose }) => {
             </button>
 
             <div className="flex items-start gap-4">
-              <div className={`p-3 bg-dark-800/50 rounded-xl ${styles.iconColor}`}>
+              <div className={`p-3 bg-dark-700/50 backdrop-blur-sm rounded-xl ${styles.iconColor} shadow-lg`}>
                 {getNotificationIcon(currentNotification.type)}
               </div>
               <div className="flex-1">
@@ -220,7 +229,7 @@ const NotificationModal = ({ userId, onClose }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-dark-800/30 border-t border-white/10">
+          <div className="px-6 py-4 bg-dark-900/80 backdrop-blur-sm border-t border-gray-700/50">
             <div className="flex items-center justify-between">
               {/* Navigation */}
               <div className="flex items-center gap-2">
