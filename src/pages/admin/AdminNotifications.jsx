@@ -11,6 +11,7 @@ const AdminNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     message: '',
@@ -277,13 +278,22 @@ const AdminNotifications = () => {
 
         {/* Notification History */}
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-primary-400" />
-            Notification History
-            <span className="ml-auto text-sm text-gray-400">
-              {notifications.length} notifications
-            </span>
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-primary-400" />
+              <h2 className="text-lg font-semibold text-white">
+                Notification History ({notifications.length})
+              </h2>
+            </div>
+            {notifications.length > 3 && (
+              <button
+                onClick={() => setShowAllNotifications(!showAllNotifications)}
+                className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                {showAllNotifications ? 'See less' : 'See more'}
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -295,49 +305,62 @@ const AdminNotifications = () => {
               <p className="text-gray-400">No notifications sent yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {notifications.map(notification => {
-                const priorityBadge = getPriorityBadge(notification.priority);
-                return (
-                  <div
-                    key={notification.id}
-                    className={`p-4 rounded-lg border ${getTypeColor(notification.type)}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-white break-words">
-                            {notification.title}
-                          </h3>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${priorityBadge.color}`}>
-                            {priorityBadge.text}
-                          </span>
-                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-dark-700 text-gray-400 whitespace-nowrap">
-                            {notification.type}
-                          </span>
+            <>
+              <div className="space-y-3">
+                {(showAllNotifications ? notifications : notifications.slice(0, 3)).map(notification => {
+                  const priorityBadge = getPriorityBadge(notification.priority);
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`p-4 rounded-lg border ${getTypeColor(notification.type)}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <h3 className="font-semibold text-white break-words">
+                              {notification.title}
+                            </h3>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${priorityBadge.color}`}>
+                              {priorityBadge.text}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-dark-700 text-gray-400 whitespace-nowrap">
+                              {notification.type}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-2 break-words whitespace-pre-wrap">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                            <span className="whitespace-nowrap">
+                              {notification.createdAt?.toDate?.()?.toLocaleString() || 'Just now'}
+                            </span>
+                            <span className="whitespace-nowrap">👁️ {notification.viewCount || 0} views</span>
+                            <span className="whitespace-nowrap">✕ {notification.dismissCount || 0} dismissed</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-300 mb-2 break-words whitespace-pre-wrap">
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-                          <span className="whitespace-nowrap">
-                            {notification.createdAt?.toDate?.()?.toLocaleString() || 'Just now'}
-                          </span>
-                          <span className="whitespace-nowrap">👁️ {notification.viewCount || 0} views</span>
-                          <span className="whitespace-nowrap">✕ {notification.dismissCount || 0} dismissed</span>
-                        </div>
+                        <button
+                          onClick={() => handleDeleteNotification(notification.id)}
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors flex-shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteNotification(notification.id)}
-                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors flex-shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                      </button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              
+              {notifications.length > 3 && showAllNotifications && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowAllNotifications(false)}
+                    className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                  >
+                    See less
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
