@@ -44,7 +44,7 @@ const Layout = ({ children }) => {
       
       {/* Desktop Sidebar - Hidden on mobile, visible on tablet/desktop (md+) screens */}
       <aside className="hidden md:flex md:flex-col fixed left-0 top-16 bottom-0 w-64 bg-dark-800 border-r border-dark-700 z-30">
-        <div className="flex-1 overflow-y-auto py-6">
+        <div className="flex-1 overflow-y-auto py-6 hide-scrollbar">
           {/* Main Navigation */}
           <nav className="px-3 space-y-1">
             {mainNavItems.map((item) => {
@@ -143,7 +143,7 @@ const Layout = ({ children }) => {
       </aside>
       
       {/* Main Content - Add left padding on tablet/desktop to account for sidebar */}
-      <main className="flex-1 overflow-y-auto bg-black pt-16 pb-24 md:pl-64 md:pb-6">
+      <main className="flex-1 overflow-y-auto bg-black pt-16 pb-24 md:pl-64 md:pb-6 hide-scrollbar">
         {children}
       </main>
       

@@ -5,17 +5,29 @@
 @layer base {
   * {
     @apply box-border;
-  }
-  
-  html {
-    @apply scroll-smooth;
-    /* Hide scrollbar for all browsers */
+    /* Hide scrollbar for all elements */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
   }
   
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera, iOS */
+    width: 0;
+    height: 0;
+  }
+  
+  html {
+    @apply scroll-smooth;
+    /* Additional scrollbar hiding */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow: auto;
+  }
+  
   html::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
+    width: 0;
+    height: 0;
   }
   
   body {
@@ -23,8 +35,20 @@
     background-image: radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
                       radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.02) 0%, transparent 50%),
                       radial-gradient(circle at 40% 80%, rgba(249, 115, 22, 0.02) 0%, transparent 50%);
-    /* Prevent zoom on double-tap */
+    /* Prevent zoom on double-tap - iOS and Android */
     touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }
 
@@ -188,5 +212,17 @@
 
   .animate-slide-in-right {
     animation: slideInRight 0.3s ease-out;
+  }
+  
+  /* Hide scrollbar utility class */
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }
