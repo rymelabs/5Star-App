@@ -40,6 +40,7 @@ const CreateSeason = React.lazy(() => import('./pages/admin/CreateSeason').catch
 const EditSeason = React.lazy(() => import('./pages/admin/EditSeason').catch(() => ({ default: () => <div>Edit Season not available</div> })));
 const SeasonDetail = React.lazy(() => import('./pages/admin/SeasonDetail').catch(() => ({ default: () => <div>Season Detail not available</div> })));
 const InstagramSettings = React.lazy(() => import('./pages/admin/InstagramSettings').catch(() => ({ default: () => <div>Instagram Settings not available</div> })));
+const AdvancedSettings = React.lazy(() => import('./pages/admin/AdvancedSettings').catch(() => ({ default: () => <div>Advanced Settings not available</div> })));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -175,6 +176,7 @@ const AppContent = () => {
               <Route path="/admin/seasons/:seasonId/edit" element={<EditSeason />} />
               <Route path="/admin/seasons/:seasonId" element={<SeasonDetail />} />
               <Route path="/admin/instagram" element={<InstagramSettings />} />
+              <Route path="/admin/advanced-settings" element={<AdvancedSettings />} />
             </>
           )}
           
