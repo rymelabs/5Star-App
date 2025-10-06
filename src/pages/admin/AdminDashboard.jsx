@@ -132,6 +132,14 @@ const AdminDashboard = () => {
       count: '-',
     },
     {
+      title: 'Leagues Management',
+      description: 'Create and manage multiple leagues',
+      icon: Trophy,
+      path: '/admin/leagues',
+      color: 'text-green-400',
+      count: '-',
+    },
+    {
       title: 'Teams Management',
       description: 'Manage team profiles, logos, and information',
       icon: Users,

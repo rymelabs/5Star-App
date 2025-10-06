@@ -9,7 +9,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield
 const AdminTeams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { teams, addTeam, updateTeam, deleteTeam } = useFootball();
+  const { teams, leagues, addTeam, updateTeam, deleteTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -20,6 +20,7 @@ const AdminTeams = () => {
     stadium: '',
     founded: '',
     manager: '',
+    leagueId: '',
     players: [],
   });
   const [playerForm, setPlayerForm] = useState({
@@ -193,7 +194,7 @@ const AdminTeams = () => {
         showSuccess('Team Added', `${newTeam.name} has been added successfully`);
       }
       
-      setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', players: [] });
+      setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', leagueId: '', players: [] });
       setShowAddForm(false);
       setEditingTeam(null);
     } catch (error) {
@@ -316,6 +317,26 @@ const AdminTeams = () => {
                     placeholder="Enter team name"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    League *
+                  </label>
+                  <select
+                    name="leagueId"
+                    value={formData.leagueId}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    required
+                  >
+                    <option value="">Select a league</option>
+                    {leagues.map(league => (
+                      <option key={league.id} value={league.id}>
+                        {league.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

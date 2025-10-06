@@ -9,7 +9,7 @@ const EditTeam = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { teams, updateTeam } = useFootball();
+  const { teams, leagues, updateTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
   
   const [formData, setFormData] = useState({
@@ -18,6 +18,7 @@ const EditTeam = () => {
     stadium: '',
     founded: '',
     manager: '',
+    leagueId: '',
     players: [],
   });
   const [playerForm, setPlayerForm] = useState({
@@ -48,6 +49,7 @@ const EditTeam = () => {
         stadium: team.stadium || '',
         founded: team.founded || '',
         manager: team.manager || '',
+        leagueId: team.leagueId || '',
         players: team.players || [],
       });
     } else {
@@ -250,6 +252,26 @@ const EditTeam = () => {
                   placeholder="Enter team name"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  League *
+                </label>
+                <select
+                  name="leagueId"
+                  value={formData.leagueId}
+                  onChange={handleInputChange}
+                  className="input-field w-full"
+                  required
+                >
+                  <option value="">Select a league</option>
+                  {leagues.map(league => (
+                    <option key={league.id} value={league.id}>
+                      {league.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

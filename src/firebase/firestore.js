@@ -1583,3 +1583,90 @@ export const playersCollection = {
     }
   }
 };
+
+// Leagues collection functions
+export const leaguesCollection = {
+  // Get all leagues
+  getAll: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const querySnapshot = await getDocs(collection(database, 'leagues'));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+      throw error;
+    }
+  },
+
+  // Get league by ID
+  getById: async (leagueId) => {
+    try {
+      const database = checkFirebaseInit();
+      const leagueDoc = await getDoc(doc(database, 'leagues', leagueId));
+      if (leagueDoc.exists()) {
+        return { id: leagueDoc.id, ...leagueDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching league:', error);
+      throw error;
+    }
+  },
+
+  // Add new league
+  add: async (leagueData) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = await addDoc(collection(database, 'leagues'), {
+        ...leagueData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding league:', error);
+      throw error;
+    }
+  },
+
+  // Update league
+  update: async (leagueId, leagueData) => {
+    try {
+      const database = checkFirebaseInit();
+      await updateDoc(doc(database, 'leagues', leagueId), {
+        ...leagueData,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating league:', error);
+      throw error;
+    }
+  },
+
+  // Delete league
+  delete: async (leagueId) => {
+    try {
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'leagues', leagueId));
+    } catch (error) {
+      console.error('Error deleting league:', error);
+      throw error;
+    }
+  },
+
+  // Real-time listener
+  onSnapshot: (callback) => {
+    const database = checkFirebaseInit();
+    const leaguesRef = collection(database, 'leagues');
+    return onSnapshot(leaguesRef, (snapshot) => {
+      const leagues = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(leagues);
+    });
+  }
+};
