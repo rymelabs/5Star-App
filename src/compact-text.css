@@ -27,6 +27,13 @@
   line-height: 1.2 !important;
 }
 
+.admin-header {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  line-height: 1.2 !important;
+}
+
 .page-subheader {
   font-size: 16px !important;
   font-weight: 600 !important;
