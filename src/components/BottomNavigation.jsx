@@ -4,9 +4,9 @@ import { navItems } from './navItems';
 
 const BottomNavigation = () => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-      <nav className="bg-black/30 backdrop-blur-[26px] border border-primary-500 rounded-2xl mx-4 px-4 py-3">
-        <div className="flex justify-around">
+    <div className="fixed bottom-0 left-0 right-0 z-50 pb-4 px-4">
+      <nav className="bg-black/30 backdrop-blur-[26px] border border-primary-500 rounded-2xl py-3 mx-4">
+        <div className="flex justify-around px-2">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
