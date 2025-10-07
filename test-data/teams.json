@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Rivers United",
+    "logo": "https://example.com/logos/rivers.png",
+    "stadium": "Yakubu Gowon Stadium",
+    "founded": "1970",
+    "manager": "Coach Rivers",
+    "players": [
+      { "name": "Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Player 2", "position": "Defender", "jerseyNumber": "2", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Player 3", "position": "Midfielder", "jerseyNumber": "6", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Player 4", "position": "Forward", "jerseyNumber": "9", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Player 5", "position": "Forward", "jerseyNumber": "11", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Enyimba FC",
+    "logo": "https://example.com/logos/enyimba.png",
+    "stadium": "Enyimba Stadium",
+    "founded": "1976",
+    "manager": "Mauricio",
+    "players": [
+      { "name": "Eny Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Eny Player 2", "position": "Defender", "jerseyNumber": "3", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Eny Player 3", "position": "Midfielder", "jerseyNumber": "8", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Eny Player 4", "position": "Midfielder", "jerseyNumber": "10", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Eny Player 5", "position": "Forward", "jerseyNumber": "19", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Kano Pillars",
+    "logo": "https://example.com/logos/kano.png",
+    "stadium": "Sani Abacha Stadium",
+    "founded": "1971",
+    "manager": "Coach Kano",
+    "players": [
+      { "name": "Kano Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Kano Player 2", "position": "Defender", "jerseyNumber": "4", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Kano Player 3", "position": "Defender", "jerseyNumber": "5", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Kano Player 4", "position": "Midfielder", "jerseyNumber": "7", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Kano Player 5", "position": "Forward", "jerseyNumber": "11", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Lagos City",
+    "logo": "https://example.com/logos/lagos.png",
+    "stadium": "Teslim Balogun Stadium",
+    "founded": "1985",
+    "manager": "Coach Lagos",
+    "players": [
+      { "name": "Lagos Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Lagos Player 2", "position": "Defender", "jerseyNumber": "2", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Lagos Player 3", "position": "Midfielder", "jerseyNumber": "6", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Lagos Player 4", "position": "Forward", "jerseyNumber": "9", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Lagos Player 5", "position": "Forward", "jerseyNumber": "10", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Abuja Warriors",
+    "logo": "https://example.com/logos/abuja.png",
+    "stadium": "Moshood Abiola National Stadium",
+    "founded": "1995",
+    "manager": "Coach Abuja",
+    "players": [
+      { "name": "Abuja Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Abuja Player 2", "position": "Defender", "jerseyNumber": "3", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Abuja Player 3", "position": "Midfielder", "jerseyNumber": "8", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Abuja Player 4", "position": "Midfielder", "jerseyNumber": "14", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Abuja Player 5", "position": "Forward", "jerseyNumber": "20", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Kaduna United",
+    "logo": "https://example.com/logos/kaduna.png",
+    "stadium": "Kaduna Stadium",
+    "founded": "1969",
+    "manager": "Coach Kaduna",
+    "players": [
+      { "name": "Kaduna Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Kaduna Player 2", "position": "Defender", "jerseyNumber": "4", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Kaduna Player 3", "position": "Midfielder", "jerseyNumber": "6", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Kaduna Player 4", "position": "Midfielder", "jerseyNumber": "8", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Kaduna Player 5", "position": "Forward", "jerseyNumber": "11", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Jos Stars",
+    "logo": "https://example.com/logos/jos.png",
+    "stadium": "Rwang Pam Stadium",
+    "founded": "1978",
+    "manager": "Coach Jos",
+    "players": [
+      { "name": "Jos Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Jos Player 2", "position": "Defender", "jerseyNumber": "3", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Jos Player 3", "position": "Midfielder", "jerseyNumber": "5", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Jos Player 4", "position": "Midfielder", "jerseyNumber": "7", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Jos Player 5", "position": "Forward", "jerseyNumber": "9", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  },
+  {
+    "name": "Gold FC",
+    "logo": "https://example.com/logos/gold.png",
+    "stadium": "Gold Arena",
+    "founded": "2000",
+    "manager": "Coach Gold",
+    "players": [
+      { "name": "Gold Player 1", "position": "Goalkeeper", "jerseyNumber": "1", "isCaptain": false, "isGoalkeeper": true },
+      { "name": "Gold Player 2", "position": "Defender", "jerseyNumber": "2", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Gold Player 3", "position": "Midfielder", "jerseyNumber": "6", "isCaptain": true, "isGoalkeeper": false },
+      { "name": "Gold Player 4", "position": "Midfielder", "jerseyNumber": "8", "isCaptain": false, "isGoalkeeper": false },
+      { "name": "Gold Player 5", "position": "Forward", "jerseyNumber": "11", "isCaptain": false, "isGoalkeeper": false }
+    ]
+  }
+]
