@@ -11,7 +11,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { unreadCount, permissionGranted, requestPermission } = useNotification();
-  const { language: currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+  const { language: currentLanguage, changeLanguage, availableLanguages, t } = useLanguage();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
