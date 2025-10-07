@@ -132,20 +132,20 @@ const FixtureDetail = () => {
         }
         
         showSuccess(
-          'Added to Calendar!',
-          'The match has been added to your calendar with reminders.'
+          t('pages.fixtureDetail.addedToCalendar'),
+          t('pages.fixtureDetail.addedToCalendarDesc')
         );
       } else {
         showError(
-          'Failed to Add',
-          'Could not add the match to your calendar. Please try again.'
+          t('pages.fixtureDetail.failedToAdd'),
+          t('pages.fixtureDetail.failedToAddDesc')
         );
       }
     } catch (error) {
       console.error('Error adding to calendar:', error);
       showError(
-        'Error',
-        'An error occurred while adding to calendar.'
+        t('common.error'),
+        t('pages.fixtureDetail.calendarError')
       );
     }
   };
@@ -153,9 +153,9 @@ const FixtureDetail = () => {
   if (!fixture) {
     return (
       <div className="p-6 text-center">
-        <div className="text-red-400 mb-4">❌ Fixture not found</div>
+        <div className="text-red-400 mb-4">{t('pages.fixtureDetail.fixtureNotFound')}</div>
         <button onClick={() => navigate('/fixtures')} className="btn-primary">
-          Back to Fixtures
+          {t('pages.fixtureDetail.backToFixtures')}
         </button>
       </div>
     );
@@ -174,7 +174,7 @@ const FixtureDetail = () => {
           className="flex items-center text-gray-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          {t('common.back')}
         </button>
         
         {/* Add to Calendar Button */}
@@ -185,7 +185,7 @@ const FixtureDetail = () => {
               ? 'bg-primary-500 text-white'
               : 'bg-dark-800 text-gray-400 hover:bg-dark-700 hover:text-white'
           }`}
-          title={hasCalendarReminder ? 'Added to calendar' : 'Add to calendar'}
+          title={hasCalendarReminder ? t('pages.fixtureDetail.addedToCalendarTitle') : t('pages.fixtureDetail.addToCalendarTitle')}
         >
           {hasCalendarReminder ? (
             <Bell className="w-5 h-5" />
@@ -205,11 +205,11 @@ const FixtureDetail = () => {
             'bg-gray-600 text-gray-300'
           }`}>
             {isLiveMatch ? (
-              <span className="animate-live-pulse font-bold">● LIVE</span>
+              <span className="animate-live-pulse font-bold">● {t('match.live')}</span>
             ) : isCompleted ? (
-              'FULL TIME'
+              t('match.ft')
             ) : (
-              'UPCOMING'
+              t('match.upcoming')
             )}
           </span>
         </div>
@@ -235,7 +235,7 @@ const FixtureDetail = () => {
                 </span>
               </div>
             )}
-            <h2 className="font-semibold text-white">{fixture.homeTeam?.name || 'Home Team'}</h2>
+            <h2 className="font-semibold text-white">{fixture.homeTeam?.name || t('pages.fixtureDetail.homeTeam')}</h2>
           </button>
 
           <div className="text-center px-8">
@@ -270,7 +270,7 @@ const FixtureDetail = () => {
                 </span>
               </div>
             )}
-            <h2 className="font-semibold text-white">{fixture.awayTeam?.name || 'Away Team'}</h2>
+            <h2 className="font-semibold text-white">{fixture.awayTeam?.name || t('pages.fixtureDetail.awayTeam')}</h2>
           </button>
         </div>
 
@@ -307,7 +307,7 @@ const FixtureDetail = () => {
         <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Starting Lineups
+            {t('pages.fixtureDetail.startingLineups')}
           </h3>
           
           {/* Debug Info - Remove after testing */}
@@ -340,17 +340,17 @@ const FixtureDetail = () => {
                           <div className="text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                             <span className="truncate">{player.name}</span>
                             {player.isCaptain && (
-                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title="Captain" />
+                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title={t('pages.fixtureDetail.captain')} />
                             )}
                           </div>
                           <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
                         </div>
                       </div>
                     );
-                  })}
+                  })}  
                 </div>
               ) : (
-                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">No lineup</div>
+                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">{t('pages.fixtureDetail.noLineup')}</div>
               )}
             </div>
 
@@ -375,7 +375,7 @@ const FixtureDetail = () => {
                           <div className="text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                             <span className="truncate">{player.name}</span>
                             {player.isCaptain && (
-                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title="Captain" />
+                              <Shield className="w-3 h-3 text-yellow-400 flex-shrink-0" title={t('pages.fixtureDetail.captain')} />
                             )}
                           </div>
                           <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
@@ -385,7 +385,7 @@ const FixtureDetail = () => {
                   })}
                 </div>
               ) : (
-                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">No lineup</div>
+                <div className="text-xs sm:text-sm text-gray-400 text-center py-4">{t('pages.fixtureDetail.noLineup')}</div>
               )}
             </div>
           </div>
@@ -397,7 +397,7 @@ const FixtureDetail = () => {
         <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Target className="w-5 h-5" />
-            Match Events
+            {t('pages.fixtureDetail.matchEvents')}
           </h3>
           <div className="space-y-3">
             {fixture.events
@@ -434,12 +434,12 @@ const FixtureDetail = () => {
                     {/* Event Details */}
                     <div className="flex-1">
                       <div className="text-white text-sm font-medium">
-                        {player?.name || 'Unknown Player'}
+                        {player?.name || t('pages.fixtureDetail.unknownPlayer')}
                         {event.type === 'goal' && ' ⚽'}
                       </div>
                       {assistant && (
                         <div className="text-xs text-gray-400 mt-0.5">
-                          Assist: {assistant.name}
+                          {t('pages.fixtureDetail.assist')}: {assistant.name}
                         </div>
                       )}
                       <div className="text-xs text-gray-500 mt-0.5">
@@ -498,12 +498,12 @@ const FixtureDetail = () => {
           <Heart 
             className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} 
           />
-          <span>{likes} {isLiked ? 'Liked' : 'Like'}</span>
+          <span>{likes} {isLiked ? t('pages.fixtureDetail.liked') : t('pages.fixtureDetail.like')}</span>
         </button>
         
         <div className="flex items-center gap-2 text-gray-400">
           <MessageCircle className="w-5 h-5" />
-          <span>{fixtureComments.length} Comments</span>
+          <span>{fixtureComments.length} {t('pages.fixtureDetail.comments')}</span>
         </div>
       </div>
 
@@ -538,7 +538,7 @@ const FixtureDetail = () => {
                     disabled={isCommenting}
                     className="text-primary-500 hover:text-primary-400 font-semibold text-sm transition-colors disabled:opacity-50"
                   >
-                    {isCommenting ? 'Posting...' : 'Post'}
+                    {isCommenting ? t('pages.fixtureDetail.posting') : t('pages.fixtureDetail.post')}
                   </button>
                 )}
               </div>
@@ -556,9 +556,9 @@ const FixtureDetail = () => {
                     onClick={() => navigate('/login')}
                     className="text-primary-500 hover:text-primary-400 font-medium"
                   >
-                    Log in
+                    {t('pages.fixtureDetail.logIn')}
                   </button>
-                  {' '}to comment
+                  {' '}{t('pages.fixtureDetail.toComment')}
                 </p>
               </div>
             </div>
