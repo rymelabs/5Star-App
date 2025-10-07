@@ -15,13 +15,11 @@ import {
 } from 'lucide-react';
 import { teamsCollection, fixturesCollection } from '../firebase/firestore';
 import { useFootball } from '../context/FootballContext';
-import { useLanguage } from '../context/LanguageContext';
 
 const PlayerDetail = () => {
   const { teamId, id } = useParams();
   const navigate = useNavigate();
   const { teams, fixtures } = useFootball();
-  const { t } = useLanguage();
   const [player, setPlayer] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -150,7 +148,7 @@ const PlayerDetail = () => {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">{t('pages.playerDetail.loading')}</p>
+            <p className="text-gray-400">Loading player...</p>
           </div>
         </div>
       </div>
@@ -165,12 +163,12 @@ const PlayerDetail = () => {
           className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t('common.back')}
+          Back
         </button>
         <div className="text-center py-20">
-          <div className="text-red-400 mb-4">❌ {error || t('pages.playerDetail.notFound')}</div>
+          <div className="text-red-400 mb-4">❌ {error || 'Player not found'}</div>
           <button onClick={() => navigate(-1)} className="btn-primary">
-            {t('pages.playerDetail.goBack')}
+            Go Back
           </button>
         </div>
       </div>
@@ -187,7 +185,7 @@ const PlayerDetail = () => {
         className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        {t('common.back')}
+        Back
       </button>
 
       {/* Player Profile Card */}
@@ -220,7 +218,7 @@ const PlayerDetail = () => {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-white mb-1">{player.name}</h1>
-                <p className="text-gray-400">{player.position || t('pages.playerDetail.player')}</p>
+                <p className="text-gray-400">{player.position || 'Player'}</p>
               </div>
               {player.jerseyNumber && (
                 <div className="w-16 h-16 bg-dark-800 border-2 border-primary-500 rounded-xl flex items-center justify-center">
@@ -233,25 +231,25 @@ const PlayerDetail = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               {age && (
                 <div className="bg-dark-800 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">{t('pages.playerDetail.age')}</div>
-                  <div className="text-lg font-semibold text-white">{age} {t('pages.playerDetail.years')}</div>
+                  <div className="text-xs text-gray-400 mb-1">Age</div>
+                  <div className="text-lg font-semibold text-white">{age} years</div>
                 </div>
               )}
               {player.nationality && (
                 <div className="bg-dark-800 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">{t('pages.playerDetail.nationality')}</div>
+                  <div className="text-xs text-gray-400 mb-1">Nationality</div>
                   <div className="text-lg font-semibold text-white">{player.nationality}</div>
                 </div>
               )}
               {player.height && (
                 <div className="bg-dark-800 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">{t('pages.playerDetail.height')}</div>
+                  <div className="text-xs text-gray-400 mb-1">Height</div>
                   <div className="text-lg font-semibold text-white">{player.height} cm</div>
                 </div>
               )}
               {player.preferredFoot && (
                 <div className="bg-dark-800 rounded-lg p-3">
-                  <div className="text-xs text-gray-400 mb-1">{t('pages.playerDetail.foot')}</div>
+                  <div className="text-xs text-gray-400 mb-1">Foot</div>
                   <div className="text-lg font-semibold text-white capitalize">{player.preferredFoot}</div>
                 </div>
               )}
@@ -267,7 +265,7 @@ const PlayerDetail = () => {
                   <img src={team.logo} alt={team.name} className="w-8 h-8 object-contain rounded-full" />
                 )}
                 <div className="text-left">
-                  <div className="text-xs text-gray-400">{t('pages.playerDetail.currentTeam')}</div>
+                  <div className="text-xs text-gray-400">Current Team</div>
                   <div className="font-medium text-white">{team.name}</div>
                 </div>
               </button>
@@ -283,7 +281,7 @@ const PlayerDetail = () => {
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary-400" />
-              {t('pages.playerDetail.performanceStats')}
+              Performance Statistics
             </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-dark-800 rounded-lg">
@@ -291,7 +289,7 @@ const PlayerDetail = () => {
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-blue-400" />
                   </div>
-                  <span className="text-gray-300">{t('pages.playerDetail.matchesPlayed')}</span>
+                  <span className="text-gray-300">Matches Played</span>
                 </div>
                 <span className="text-xl font-bold text-white">{stats.matchesPlayed}</span>
               </div>
@@ -301,7 +299,7 @@ const PlayerDetail = () => {
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <Target className="w-5 h-5 text-green-400" />
                   </div>
-                  <span className="text-gray-300">{t('pages.playerDetail.goals')}</span>
+                  <span className="text-gray-300">Goals</span>
                 </div>
                 <span className="text-xl font-bold text-green-400">{stats.goals}</span>
               </div>
@@ -311,7 +309,7 @@ const PlayerDetail = () => {
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-purple-400" />
                   </div>
-                  <span className="text-gray-300">{t('pages.playerDetail.assists')}</span>
+                  <span className="text-gray-300">Assists</span>
                 </div>
                 <span className="text-xl font-bold text-purple-400">{stats.assists}</span>
               </div>
@@ -322,7 +320,7 @@ const PlayerDetail = () => {
                     <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                       <Shield className="w-5 h-5 text-cyan-400" />
                     </div>
-                    <span className="text-gray-300">{t('pages.playerDetail.cleanSheets')}</span>
+                    <span className="text-gray-300">Clean Sheets</span>
                   </div>
                   <span className="text-xl font-bold text-cyan-400">{stats.cleanSheets}</span>
                 </div>
@@ -334,7 +332,7 @@ const PlayerDetail = () => {
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-yellow-400" />
-              {t('pages.playerDetail.disciplinaryRecord')}
+              Disciplinary Record
             </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-dark-800 rounded-lg">
@@ -342,7 +340,7 @@ const PlayerDetail = () => {
                   <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                     <div className="w-6 h-8 bg-yellow-500 rounded"></div>
                   </div>
-                  <span className="text-gray-300">{t('pages.playerDetail.yellowCards')}</span>
+                  <span className="text-gray-300">Yellow Cards</span>
                 </div>
                 <span className="text-xl font-bold text-yellow-400">{stats.yellowCards}</span>
               </div>
@@ -352,7 +350,7 @@ const PlayerDetail = () => {
                   <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
                     <div className="w-6 h-8 bg-red-500 rounded"></div>
                   </div>
-                  <span className="text-gray-300">{t('pages.playerDetail.redCards')}</span>
+                  <span className="text-gray-300">Red Cards</span>
                 </div>
                 <span className="text-xl font-bold text-red-400">{stats.redCards}</span>
               </div>
@@ -360,7 +358,7 @@ const PlayerDetail = () => {
               {/* Fair Play Score */}
               <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-300">{t('pages.playerDetail.fairPlayScore')}</span>
+                  <span className="text-sm text-gray-300">Fair Play Score</span>
                   <Award className="w-4 h-4 text-blue-400" />
                 </div>
                 <div className="w-full bg-dark-700 rounded-full h-2">
@@ -372,7 +370,7 @@ const PlayerDetail = () => {
                   ></div>
                 </div>
                 <div className="text-xs text-gray-400 mt-2">
-                  {stats.yellowCards === 0 && stats.redCards === 0 ? t('pages.playerDetail.perfectDiscipline') : t('pages.playerDetail.basedOnRecord')}
+                  {stats.yellowCards === 0 && stats.redCards === 0 ? 'Perfect discipline!' : 'Based on disciplinary record'}
                 </div>
               </div>
             </div>
@@ -384,13 +382,13 @@ const PlayerDetail = () => {
       <div className="card p-6">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <User className="w-5 h-5 text-primary-400" />
-          {t('pages.playerDetail.additionalInfo')}
+          Additional Information
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <Calendar className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.dateOfBirth')}</div>
+              <div className="text-xs text-gray-400">Date of Birth</div>
               <div className="text-white">
                 {player.dateOfBirth
                   ? new Date(player.dateOfBirth).toLocaleDateString('en-US', {
@@ -398,7 +396,7 @@ const PlayerDetail = () => {
                       month: 'long',
                       day: 'numeric'
                     })
-                  : <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                  : <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -406,9 +404,9 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <User className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.placeOfBirth')}</div>
+              <div className="text-xs text-gray-400">Place of Birth</div>
               <div className="text-white">
-                {player.placeOfBirth || <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                {player.placeOfBirth || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -416,9 +414,9 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <User className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.nationality')}</div>
+              <div className="text-xs text-gray-400">Nationality</div>
               <div className="text-white">
-                {player.nationality || <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                {player.nationality || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -426,9 +424,9 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <Activity className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.height')}</div>
+              <div className="text-xs text-gray-400">Height</div>
               <div className="text-white">
-                {player.height ? `${player.height} cm` : <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                {player.height ? `${player.height} cm` : <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -436,9 +434,9 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <Activity className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.preferredFoot')}</div>
+              <div className="text-xs text-gray-400">Preferred Foot</div>
               <div className="text-white capitalize">
-                {player.preferredFoot || <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                {player.preferredFoot || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -446,9 +444,9 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <TrendingUp className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.marketValue')}</div>
+              <div className="text-xs text-gray-400">Market Value</div>
               <div className="text-white">
-                {player.marketValue || <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                {player.marketValue || <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>
@@ -456,14 +454,14 @@ const PlayerDetail = () => {
           <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
             <Clock className="w-5 h-5 text-gray-400 mt-1" />
             <div>
-              <div className="text-xs text-gray-400">{t('pages.playerDetail.contractUntil')}</div>
+              <div className="text-xs text-gray-400">Contract Until</div>
               <div className="text-white">
                 {player.contractExpiry
                   ? new Date(player.contractExpiry).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long'
                     })
-                  : <span className="text-gray-500">{t('common.notSpecified')}</span>}
+                  : <span className="text-gray-500">Not specified</span>}
               </div>
             </div>
           </div>

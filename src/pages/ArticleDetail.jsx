@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 import { ArrowLeft, Clock, User, Heart, MessageCircle, Send, Share, Bookmark } from 'lucide-react';
 import { formatDate, getRelativeTime } from '../utils/dateUtils';
 
@@ -11,7 +10,6 @@ const ArticleDetail = () => {
   const navigate = useNavigate();
   const { getArticleBySlug, addComment, updateArticle } = useNews();
   const { user } = useAuth();
-  const { t } = useLanguage();
   
   const [article, setArticle] = useState(null);
   const [comment, setComment] = useState('');
@@ -71,7 +69,7 @@ const ArticleDetail = () => {
   if (!article) {
     return (
       <div className="p-4 text-center text-gray-400">
-        <div className="animate-pulse">{t('pages.articleDetail.loading')}</div>
+        <div className="animate-pulse">Loading article...</div>
       </div>
     );
   }
@@ -198,7 +196,7 @@ const ArticleDetail = () => {
             className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-dark-700 text-gray-300 hover:bg-dark-600 transition-colors"
           >
             <Share className="w-5 h-5" />
-            <span>{t('pages.articleDetail.share')}</span>
+            <span>Share</span>
           </button>
           
           <button
@@ -210,7 +208,7 @@ const ArticleDetail = () => {
             }`}
           >
             <Bookmark className="w-5 h-5" fill={isBookmarked ? 'currentColor' : 'none'} />
-            <span>{t('pages.articleDetail.save')}</span>
+            <span>Save</span>
           </button>
         </div>
       </div>
@@ -218,7 +216,7 @@ const ArticleDetail = () => {
       {/* Comments Section */}
       <div className="px-4">
         <h3 className="text-lg font-semibold text-white mb-6">
-          {t('pages.articleDetail.comments')} ({article.comments?.length || 0})
+          Comments ({article.comments?.length || 0})
         </h3>
 
         {/* Add Comment */}
@@ -234,7 +232,7 @@ const ArticleDetail = () => {
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder={t('pages.articleDetail.thoughtsPlaceholder')}
+                  placeholder="What are your thoughts on this article?"
                   className="input-field w-full h-24 resize-none"
                   rows="4"
                 />
@@ -245,7 +243,7 @@ const ArticleDetail = () => {
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    {t('pages.articleDetail.postComment')}
+                    Post Comment
                   </button>
                 </div>
               </div>
@@ -254,13 +252,13 @@ const ArticleDetail = () => {
         ) : (
           <div className="card p-4 mb-6 text-center">
             <p className="text-gray-400 mb-3">
-              {t('pages.articleDetail.signInToComment')}
+              Sign in to join the conversation
             </p>
             <button
               onClick={() => navigate('/auth/login')}
               className="btn-primary"
             >
-              {t('pages.articleDetail.signIn')}
+              Sign In
             </button>
           </div>
         )}
@@ -294,7 +292,7 @@ const ArticleDetail = () => {
                         <span>{comment.likes}</span>
                       </button>
                       <button className="text-sm text-gray-500 hover:text-white transition-colors">
-                        {t('pages.articleDetail.reply')}
+                        Reply
                       </button>
                     </div>
                   </div>
@@ -304,8 +302,8 @@ const ArticleDetail = () => {
           ) : (
             <div className="text-center py-8 text-gray-400">
               <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="mb-1">{t('pages.articleDetail.noComments')}</p>
-              <p className="text-sm">{t('pages.articleDetail.beFirstToComment')}</p>
+              <p className="mb-1">No comments yet</p>
+              <p className="text-sm">Be the first to share your thoughts!</p>
             </div>
           )}
         </div>
