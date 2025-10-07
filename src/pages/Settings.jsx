@@ -203,12 +203,13 @@ const Settings = () => {
     setLanguage(value);
     changeLanguage(value); // Update the language context
     const selectedLang = availableLanguages.find(lang => lang.code === value);
-    showToast(`Language changed to ${selectedLang?.nativeName || value}`, 'success');
+    const message = t('pages.settings.languageChanged').replace('{language}', selectedLang?.nativeName || value);
+    showToast(message, 'success');
   };
 
   const handleLogout = () => {
     logout();
-    showToast('Logged out successfully', 'success');
+    showToast(t('pages.settings.loggedOutSuccess'), 'success');
     setTimeout(() => {
       navigate('/auth');
     }, 500);
@@ -216,47 +217,47 @@ const Settings = () => {
 
   const settingSections = [
     {
-      title: 'Notifications',
+      title: t('pages.settings.notifications'),
       icon: Bell,
       badge: unreadCount > 0 ? unreadCount : null,
       action: {
-        label: 'Inbox',
+        label: t('pages.settings.inbox'),
         icon: Inbox,
         onClick: () => navigate('/notifications'),
       },
       items: [
         {
-          label: 'Enable Notifications',
-          description: permissionGranted ? 'Push notifications are enabled ✓' : 'Enable browser notifications',
+          label: t('pages.settings.enableNotifications'),
+          description: permissionGranted ? t('pages.settings.notificationsEnabled') : t('pages.settings.enableBrowserNotifications'),
           type: 'button',
-          buttonLabel: permissionGranted ? 'Enabled' : 'Enable',
+          buttonLabel: permissionGranted ? t('pages.settings.enabled') : t('pages.settings.enable'),
           onClick: () => !permissionGranted && setShowPermissionModal(true),
           disabled: permissionGranted,
         },
         {
-          label: 'Push Notifications',
-          description: 'Receive push notifications on your device',
+          label: t('pages.settings.pushNotifications'),
+          description: t('pages.settings.pushNotificationsDesc'),
           type: 'toggle',
           value: notifications.push,
           onChange: () => handleNotificationChange('push'),
         },
         {
-          label: 'Email Notifications',
-          description: 'Receive notifications via email',
+          label: t('pages.settings.emailNotifications'),
+          description: t('pages.settings.emailNotificationsDesc'),
           type: 'toggle',
           value: notifications.email,
           onChange: () => handleNotificationChange('email'),
         },
         {
-          label: 'Match Updates',
-          description: 'Get notified about live match events',
+          label: t('pages.settings.matchUpdates'),
+          description: t('pages.settings.matchUpdatesDesc'),
           type: 'toggle',
           value: notifications.matchUpdates,
           onChange: () => handleNotificationChange('matchUpdates'),
         },
         {
-          label: 'News Alerts',
-          description: 'Receive alerts for breaking news',
+          label: t('pages.settings.newsAlerts'),
+          description: t('pages.settings.newsAlertsDesc'),
           type: 'toggle',
           value: notifications.newsAlerts,
           onChange: () => handleNotificationChange('newsAlerts'),
@@ -264,44 +265,44 @@ const Settings = () => {
       ],
     },
     {
-      title: 'Team Following Notifications',
+      title: t('pages.settings.teamFollowingNotifications'),
       icon: Bell,
-      description: 'Customize notifications for teams you follow',
+      description: t('pages.settings.teamFollowingDesc'),
       items: [
         {
-          label: 'Team Notifications',
-          description: 'Enable all notifications for followed teams',
+          label: t('pages.settings.teamNotifications'),
+          description: t('pages.settings.teamNotificationsDesc'),
           type: 'toggle',
           value: notifications.teamFollowing,
           onChange: () => handleNotificationChange('teamFollowing'),
         },
         {
-          label: 'Upcoming Matches',
-          description: 'Notify 24 hours before followed team plays',
+          label: t('pages.settings.upcomingMatches'),
+          description: t('pages.settings.upcomingMatchesDesc'),
           type: 'toggle',
           value: notifications.upcomingMatches,
           onChange: () => handleNotificationChange('upcomingMatches'),
           disabled: !notifications.teamFollowing,
         },
         {
-          label: 'Live Match Alerts',
-          description: 'Notify when followed team\'s match starts',
+          label: t('pages.settings.liveMatchAlerts'),
+          description: t('pages.settings.liveMatchAlertsDesc'),
           type: 'toggle',
           value: notifications.liveMatches,
           onChange: () => handleNotificationChange('liveMatches'),
           disabled: !notifications.teamFollowing,
         },
         {
-          label: 'Match Results',
-          description: 'Notify when followed team\'s match ends',
+          label: t('pages.settings.matchResults'),
+          description: t('pages.settings.matchResultsDesc'),
           type: 'toggle',
           value: notifications.matchResults,
           onChange: () => handleNotificationChange('matchResults'),
           disabled: !notifications.teamFollowing,
         },
         {
-          label: 'Team News',
-          description: 'Notify about articles mentioning followed teams',
+          label: t('pages.settings.teamNews'),
+          description: t('pages.settings.teamNewsDesc'),
           type: 'toggle',
           value: notifications.teamNews,
           onChange: () => handleNotificationChange('teamNews'),
@@ -310,12 +311,12 @@ const Settings = () => {
       ],
     },
     {
-      title: 'Appearance',
+      title: t('pages.settings.appearance'),
       icon: Moon,
       items: [
         {
-          label: 'Dark Mode',
-          description: darkMode ? 'Dark theme enabled' : 'Light theme enabled',
+          label: t('pages.settings.darkMode'),
+          description: darkMode ? t('pages.settings.darkThemeEnabled') : t('pages.settings.lightThemeEnabled'),
           type: 'toggle',
           value: darkMode,
           onChange: handleDarkModeToggle,
@@ -324,12 +325,12 @@ const Settings = () => {
       ],
     },
     {
-      title: 'General',
+      title: t('pages.settings.general'),
       icon: Globe,
       items: [
         {
-          label: 'Language',
-          description: 'Choose your preferred language',
+          label: t('pages.settings.language'),
+          description: t('pages.settings.languageDesc'),
           type: 'select',
           value: currentLanguage,
           options: [
@@ -343,48 +344,48 @@ const Settings = () => {
       ],
     },
     {
-      title: 'Privacy & Security',
+      title: t('pages.settings.privacySecurity'),
       icon: Shield,
       items: [
         {
-          label: 'Change Password',
-          description: 'Update your account password',
+          label: t('pages.settings.changePassword'),
+          description: t('pages.settings.changePasswordDesc'),
           type: 'link',
           onClick: () => navigate('/settings/password'),
         },
         {
-          label: 'Privacy Policy',
-          description: 'Read our privacy policy',
+          label: t('pages.settings.privacyPolicy'),
+          description: t('pages.settings.privacyPolicyDesc'),
           type: 'link',
           onClick: () => navigate('/privacy-policy'),
         },
         {
-          label: 'Terms of Service',
-          description: 'View terms and conditions',
+          label: t('pages.settings.termsOfService'),
+          description: t('pages.settings.termsOfServiceDesc'),
           type: 'link',
           onClick: () => navigate('/terms-of-service'),
         },
       ],
     },
     {
-      title: 'Support',
+      title: t('pages.settings.support'),
       icon: HelpCircle,
       items: [
         {
-          label: 'Help Center',
-          description: 'Get help and support',
+          label: t('pages.settings.helpCenter'),
+          description: t('pages.settings.helpCenterDesc'),
           type: 'link',
           onClick: () => window.open('mailto:RymeLabs@gmail.com?subject=5Star Premier League - Help Request', '_blank'),
         },
         {
-          label: 'Contact Us',
-          description: 'Send feedback or report issues',
+          label: t('pages.settings.contactUs'),
+          description: t('pages.settings.contactUsDesc'),
           type: 'link',
           onClick: () => window.open('mailto:RymeLabs@gmail.com?subject=5Star Premier League - Feedback', '_blank'),
         },
         {
-          label: 'About',
-          description: 'App version and information',
+          label: t('pages.settings.about'),
+          description: t('pages.settings.aboutDesc'),
           type: 'link',
           onClick: () => navigate('/about'),
         },
@@ -405,7 +406,7 @@ const Settings = () => {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-400" />
               </button>
-              <h1 className="ml-2 text-lg font-semibold text-white">Settings</h1>
+              <h1 className="ml-2 text-lg font-semibold text-white">{t('navigation.settings')}</h1>
             </div>
           </div>
         </div>
@@ -422,13 +423,13 @@ const Settings = () => {
                 onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 py-3 px-4 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-all duration-200 font-medium hover:scale-[1.02] active:scale-[0.98]"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleLogout}
                 className="flex-1 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 font-medium hover:scale-[1.02] active:scale-[0.98]"
               >
-                Logout
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -448,7 +449,7 @@ const Settings = () => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
-          <h1 className="ml-2 page-header">Settings</h1>
+          <h1 className="ml-2 page-header">{t('navigation.settings')}</h1>
         </div>
       </div>
 
@@ -471,15 +472,15 @@ const Settings = () => {
               )}
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-white">{user?.name || 'Guest User'}</h3>
-              <p className="text-sm text-gray-400">{user?.email || 'Not logged in'}</p>
+              <h3 className="font-medium text-white">{user?.name || t('pages.settings.guestUser')}</h3>
+              <p className="text-sm text-gray-400">{user?.email || t('pages.settings.notLoggedIn')}</p>
             </div>
             {!user?.isAnonymous && (
               <button
                 onClick={() => navigate('/profile')}
                 className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-all duration-200 hover:scale-105 active:scale-95"
               >
-                Edit Profile
+                {t('pages.profile.editProfile')}
               </button>
             )}
           </div>

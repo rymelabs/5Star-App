@@ -18,8 +18,8 @@ const BottomNavigation = () => {
                 `nav-item ${isActive ? 'active' : ''}`
               }
             >
-              <item.icon className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium tracking-tight">{t(item.labelKey)}</span>
+              <item.icon className="w-5 h-5 mb-1 flex-shrink-0" />
+              <span className="text-xs font-medium tracking-tight truncate max-w-full block">{t(item.labelKey)}</span>
             </NavLink>
           ))}
         </div>

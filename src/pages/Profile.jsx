@@ -39,19 +39,19 @@ const Profile = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('pages.profile.nameRequired');
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('pages.profile.nameMinLength');
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('pages.profile.emailRequired');
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('pages.profile.validEmail');
     }
 
     if (formData.bio && formData.bio.length > 500) {
-      newErrors.bio = 'Bio must be less than 500 characters';
+      newErrors.bio = t('pages.profile.bioMaxLength');
     }
 
     setErrors(newErrors);
@@ -69,7 +69,7 @@ const Profile = () => {
       updateProfile(formData);
       setIsEditing(false);
     } catch (error) {
-      setErrors({ general: 'Failed to update profile' });
+      setErrors({ general: t('pages.profile.updateFailed') });
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ const Profile = () => {
               className="flex items-center px-2.5 py-1.5 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors"
             >
               <Edit className="w-3.5 h-3.5 mr-1.5" />
-              Edit
+              {t('common.edit')}
             </button>
           ) : (
             <div className="flex items-center space-x-2">
@@ -126,7 +126,7 @@ const Profile = () => {
                 className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4 mr-2" />
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
@@ -134,7 +134,7 @@ const Profile = () => {
                 className="flex items-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {loading ? 'Saving...' : 'Save'}
+                {loading ? t('pages.profile.saving') : t('common.save')}
               </button>
             </div>
           )}
@@ -177,7 +177,7 @@ const Profile = () => {
           {user?.role === 'admin' && (
             <div className="inline-flex items-center px-3 py-1 bg-accent-600 text-white rounded-full text-sm">
               <Shield className="w-4 h-4 mr-1" />
-              Admin
+              {t('common.admin')}
             </div>
           )}
         </div>
@@ -187,7 +187,7 @@ const Profile = () => {
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Full Name
+              {t('pages.profile.fullName')}
             </label>
             {isEditing ? (
               <div>
@@ -205,7 +205,7 @@ const Profile = () => {
               <div className="card p-3">
                 <div className="flex items-center">
                   <User className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-white">{user?.name || 'Not set'}</span>
+                  <span className="text-white">{user?.name || t('pages.profile.notSet')}</span>
                 </div>
               </div>
             )}
@@ -214,7 +214,7 @@ const Profile = () => {
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
+              {t('pages.profile.emailAddress')}
             </label>
             {isEditing ? (
               <div>
@@ -232,7 +232,7 @@ const Profile = () => {
               <div className="card p-3">
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-white">{user?.email || 'Not set'}</span>
+                  <span className="text-white">{user?.email || t('pages.profile.notSet')}</span>
                 </div>
               </div>
             )}
@@ -241,7 +241,7 @@ const Profile = () => {
           {/* Bio */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Bio
+              {t('pages.profile.bio')}
             </label>
             {isEditing ? (
               <div>
@@ -263,7 +263,7 @@ const Profile = () => {
             ) : (
               <div className="card p-3">
                 <p className="text-white">
-                  {user?.bio || 'No bio added yet'}
+                  {user?.bio || t('pages.profile.noBio')}
                 </p>
               </div>
             )}
@@ -272,7 +272,7 @@ const Profile = () => {
           {/* Favorite Team */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Favorite Team
+              {t('pages.profile.favoriteTeam')}
             </label>
             {isEditing ? (
               <select
@@ -281,7 +281,7 @@ const Profile = () => {
                 onChange={handleChange}
                 className="input-field w-full"
               >
-                <option value="">Select a team</option>
+                <option value="">{t('pages.profile.selectTeam')}</option>
                 <option value="Arsenal">Arsenal</option>
                 <option value="Chelsea">Chelsea</option>
                 <option value="Liverpool">Liverpool</option>
@@ -292,7 +292,7 @@ const Profile = () => {
             ) : (
               <div className="card p-3">
                 <span className="text-white">
-                  {user?.favoriteTeam || 'No team selected'}
+                  {user?.favoriteTeam || t('pages.profile.noTeamSelected')}
                 </span>
               </div>
             )}
@@ -301,7 +301,7 @@ const Profile = () => {
           {/* Join Date */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Member Since
+              {t('pages.profile.memberSince')}
             </label>
             <div className="card p-3">
               <div className="flex items-center">
