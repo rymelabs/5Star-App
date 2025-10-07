@@ -251,6 +251,26 @@
     "more": "síi",
     "noTeamData": "Kò sí ìfitọ́nisọ́nà ẹgbẹ́ tó wà"
   },
+  "search": {
+    "team": "Ẹgbẹ́",
+    "player": "Agbábọ́ọ̀lù",
+    "competition": "Ìdíje",
+    "season": "Àsìkò",
+    "match": "Eré",
+    "news": "Ìròyìn",
+    "unknownTeam": "Ẹgbẹ́ tí a kò mọ̀",
+    "unknownPlayer": "Agbábọ́ọ̀lù tí a kò mọ̀",
+    "unknownCompetition": "Ìdíje tí a kò mọ̀",
+    "unknownSeason": "Àsìkò tí a kò mọ̀",
+    "tbd": "A ò tíì mọ̀",
+    "untitled": "Kò ní àkọlé",
+    "placeholder": "Wá àwọn ẹgbẹ́, agbábọ́ọ̀lù, ìdíje, eré, ìròyìn...",
+    "searching": "Ń wá...",
+    "noResults": "Kò rí èsì kankan",
+    "trySearching": "Gbìyànjú láti wá àwọn ẹgbẹ́, agbábọ́ọ̀lù, tàbí ìròyìn",
+    "startTyping": "Bẹ̀rẹ̀ sí ní tẹ láti wá",
+    "searchAcross": "Wá kárí àwọn ẹgbẹ́, agbábọ́ọ̀lù, ìdíje, eré, àti ìròyìn"
+  },
   "player": {
     "loadingPlayer": "Ń ṣí agbábọ́ọ̀lù...",
     "age": "Ọjọ́ orí",

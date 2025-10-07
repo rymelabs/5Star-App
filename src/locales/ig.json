@@ -251,6 +251,26 @@
     "more": "ọzọ",
     "noTeamData": "Enweghị data otu dị"
   },
+  "search": {
+    "team": "Otu",
+    "player": "Onye egwuregwu",
+    "competition": "Asọmpi",
+    "season": "Oge",
+    "match": "Egwuregwu",
+    "news": "Akụkọ",
+    "unknownTeam": "Otu amaghị aha",
+    "unknownPlayer": "Onye egwuregwu amaghị aha",
+    "unknownCompetition": "Asọmpi amaghị aha",
+    "unknownSeason": "Oge amaghị aha",
+    "tbd": "Ka akọwapụtaghị",
+    "untitled": "Enweghị aha",
+    "placeholder": "Chọọ otu, ndị egwuregwu, asọmpi, egwuregwu, akụkọ...",
+    "searching": "Na-achọ...",
+    "noResults": "Achọtaghị ihe ọ bụla",
+    "trySearching": "Gbalịa ịchọ otu, ndị egwuregwu, ma ọ bụ akụkọ",
+    "startTyping": "Malite ịpịnye ka ị chọọ",
+    "searchAcross": "Chọọ n'otu niile, ndị egwuregwu, asọmpi, egwuregwu, na akụkọ"
+  },
   "player": {
     "loadingPlayer": "Na-ebu onye egwuregwu...",
     "age": "Afọ",

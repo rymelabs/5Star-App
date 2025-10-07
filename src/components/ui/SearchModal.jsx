@@ -4,6 +4,7 @@ import { useNews } from '../../context/NewsContext';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SearchModal = ({ onClose }) => {
   const [query, setQuery] = useState('');
@@ -14,6 +15,7 @@ const SearchModal = ({ onClose }) => {
   const { fixtures, teams, seasons } = useFootball();
   const { competitions } = useCompetitions();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Memoized search function
   const performSearch = useCallback((searchQuery) => {
@@ -40,9 +42,9 @@ const SearchModal = ({ onClose }) => {
           .map(team => ({
             id: team.id,
             type: 'team',
-            category: 'Team',
+            category: t('search.team'),
             icon: Users,
-            title: team.name || 'Unknown Team',
+            title: team.name || t('search.unknownTeam'),
             subtitle: team.city || '',
             image: team.logo || null,
             data: team
@@ -66,10 +68,10 @@ const SearchModal = ({ onClose }) => {
                 playerResults.push({
                   id: `${team.id}-${player.id}`,
                   type: 'player',
-                  category: 'Player',
+                  category: t('search.player'),
                   icon: Shield,
-                  title: player.name || 'Unknown Player',
-                  subtitle: `${team.name || 'Unknown Team'} • #${player.jerseyNumber || '?'}`,
+                  title: player.name || t('search.unknownPlayer'),
+                  subtitle: `${team.name || t('search.unknownTeam')} • #${player.jerseyNumber || '?'}`,
                   image: team.logo || null,
                   data: { player, team }
                 });
@@ -92,9 +94,9 @@ const SearchModal = ({ onClose }) => {
           .map(comp => ({
             id: comp.id,
             type: 'competition',
-            category: 'Competition',
+            category: t('search.competition'),
             icon: Trophy,
-            title: comp.name || 'Unknown Competition',
+            title: comp.name || t('search.unknownCompetition'),
             subtitle: comp.season || '',
             image: null,
             data: comp
@@ -115,9 +117,9 @@ const SearchModal = ({ onClose }) => {
           .map(season => ({
             id: season.id,
             type: 'season',
-            category: 'Season',
+            category: t('search.season'),
             icon: Calendar,
-            title: season.name || 'Unknown Season',
+            title: season.name || t('search.unknownSeason'),
             subtitle: `${season.startDate || ''} - ${season.endDate || ''}`,
             image: null,
             data: season
@@ -144,9 +146,9 @@ const SearchModal = ({ onClose }) => {
           .map(fixture => ({
             id: fixture.id,
             type: 'fixture',
-            category: 'Match',
+            category: t('search.match'),
             icon: Trophy,
-            title: `${fixture.homeTeam?.name || 'TBD'} vs ${fixture.awayTeam?.name || 'TBD'}`,
+            title: `${fixture.homeTeam?.name || t('search.tbd')} vs ${fixture.awayTeam?.name || t('search.tbd')}`,
             subtitle: `${fixture.competition || ''} • ${fixture.date || ''}`,
             image: null,
             data: fixture
@@ -173,9 +175,9 @@ const SearchModal = ({ onClose }) => {
           .map(article => ({
             id: article.id,
             type: 'news',
-            category: 'News',
+            category: t('search.news'),
             icon: Newspaper,
-            title: article.title || 'Untitled',
+            title: article.title || t('search.untitled'),
             subtitle: article.excerpt || '',
             image: article.image || null,
             data: article
@@ -241,12 +243,12 @@ const SearchModal = ({ onClose }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Team': 'text-blue-400',
-      'Player': 'text-green-400',
-      'Competition': 'text-purple-400',
-      'Season': 'text-orange-400',
-      'Match': 'text-red-400',
-      'News': 'text-yellow-400'
+      [t('search.team')]: 'text-blue-400',
+      [t('search.player')]: 'text-green-400',
+      [t('search.competition')]: 'text-purple-400',
+      [t('search.season')]: 'text-orange-400',
+      [t('search.match')]: 'text-red-400',
+      [t('search.news')]: 'text-yellow-400'
     };
     return colors[category] || 'text-gray-400';
   };
@@ -265,7 +267,7 @@ const SearchModal = ({ onClose }) => {
           <Search className="w-5 h-5 text-gray-400 mr-3" />
           <input
             type="text"
-            placeholder="Search teams, players, competitions, fixtures, news..."
+            placeholder={t('search.placeholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
@@ -284,7 +286,7 @@ const SearchModal = ({ onClose }) => {
           {loading ? (
             <div className="p-8 text-center text-gray-400">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              Searching...
+              {t('search.searching')}
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
@@ -338,14 +340,14 @@ const SearchModal = ({ onClose }) => {
           ) : query.trim().length >= 2 ? (
             <div className="p-8 text-center text-gray-400">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">No results found</p>
-              <p className="text-sm mt-1">Try searching for teams, players, or news</p>
+              <p className="font-medium">{t('search.noResults')}</p>
+              <p className="text-sm mt-1">{t('search.trySearching')}</p>
             </div>
           ) : (
             <div className="p-8 text-center text-gray-400">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">Start typing to search</p>
-              <p className="text-sm mt-1">Search across teams, players, competitions, fixtures, and news</p>
+              <p className="font-medium">{t('search.startTyping')}</p>
+              <p className="text-sm mt-1">{t('search.searchAcross')}</p>
             </div>
           )}
         </div>
