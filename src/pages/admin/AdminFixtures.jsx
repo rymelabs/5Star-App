@@ -5,9 +5,11 @@ import { useCompetitions } from '../../context/CompetitionsContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { fixtures, teams, leagues, addFixture, updateFixture, seasons, activeSeason } = useFootball();
   const { competitions } = useCompetitions();
@@ -115,7 +117,7 @@ const AdminFixtures = () => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error adding fixture:', error);
-      showToast('Failed to add fixture: ' + error.message, 'error');
+      showToast(t('adminFixtures.addFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -140,7 +142,7 @@ const AdminFixtures = () => {
           [lineupKey]: [...currentLineup, playerId]
         }));
       } else {
-        showToast('Maximum 11 players allowed in lineup', 'warning');
+        showToast(t('adminFixtures.maxPlayersWarning'), 'warning');
       }
     }
   };
@@ -148,7 +150,7 @@ const AdminFixtures = () => {
   // Event Management
   const handleAddEvent = () => {
     if (!eventForm.player || !eventForm.minute) {
-      showToast('Please select player and enter minute', 'warning');
+      showToast(t('adminFixtures.eventValidation'), 'warning');
       return;
     }
 
@@ -299,7 +301,7 @@ const AdminFixtures = () => {
       handleCancel();
     } catch (error) {
       console.error('Error updating fixture:', error);
-      showToast('Failed to update fixture: ' + error.message, 'error');
+      showToast(t('adminFixtures.updateFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -343,8 +345,8 @@ const AdminFixtures = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="admin-header">Fixtures Management</h1>
-              <p className="text-sm text-gray-400">{fixtures.length} fixtures</p>
+              <h1 className="admin-header">{t('adminFixtures.title')}</h1>
+              <p className="text-sm text-gray-400">{fixtures.length} {t('adminFixtures.fixtures')}</p>
             </div>
           </div>
           
@@ -353,7 +355,7 @@ const AdminFixtures = () => {
             className="btn-primary w-full flex items-center justify-center text-sm py-2"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Fixture
+            {t('adminFixtures.addFixture')}
           </button>
         </div>
       </div>
@@ -364,7 +366,7 @@ const AdminFixtures = () => {
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">
-                {editingId ? 'Edit Fixture' : 'Add New Fixture'}
+                {editingId ? t('adminFixtures.editFixture') : t('adminFixtures.addNewFixture')}
               </h3>
               <button
                 onClick={handleCancel}
@@ -378,7 +380,7 @@ const AdminFixtures = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Home Team *
+                    {t('adminFixtures.homeTeam')} *
                   </label>
                   <select
                     name="homeTeam"
@@ -387,7 +389,7 @@ const AdminFixtures = () => {
                     className="input-field w-full"
                     required
                   >
-                    <option value="">Select home team</option>
+                    <option value="">{t('adminFixtures.selectHomeTeam')}</option>
                     {teams.map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
@@ -396,7 +398,7 @@ const AdminFixtures = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Away Team *
+                    {t('adminFixtures.awayTeam')} *
                   </label>
                   <select
                     name="awayTeam"
@@ -405,7 +407,7 @@ const AdminFixtures = () => {
                     className="input-field w-full"
                     required
                   >
-                    <option value="">Select away team</option>
+                    <option value="">{t('adminFixtures.selectAwayTeam')}</option>
                     {teams.filter(team => team.id !== formData.homeTeam).map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
@@ -414,7 +416,7 @@ const AdminFixtures = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Date *
+                    {t('adminFixtures.date')} *
                   </label>
                   <input
                     type="date"
@@ -429,7 +431,7 @@ const AdminFixtures = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Time *
+                    {t('adminFixtures.time')} *
                   </label>
                   <input
                     type="time"
@@ -443,7 +445,7 @@ const AdminFixtures = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Venue
+                    {t('adminFixtures.venue')}
                   </label>
                   <input
                     type="text"
@@ -451,13 +453,13 @@ const AdminFixtures = () => {
                     value={formData.venue}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    placeholder="Stadium name"
+                    placeholder={t('adminFixtures.stadiumPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Competition
+                    {t('adminFixtures.competition')}
                   </label>
                   <select
                     name="competition"
@@ -465,21 +467,21 @@ const AdminFixtures = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="">Select competition</option>
+                    <option value="">{t('adminFixtures.selectCompetition')}</option>
                     {competitions.map(comp => (
                       <option key={comp.id} value={comp.name}>{comp.name}</option>
                     ))}
                   </select>
                   {competitions.length === 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      No competitions yet. Add one from the competitions page.
+                      {t('adminFixtures.noCompetitions')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Season
+                    {t('adminFixtures.season')}
                   </label>
                   <select
                     name="seasonId"
@@ -487,7 +489,7 @@ const AdminFixtures = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="">None (Friendly)</option>
+                    <option value="">{t('adminFixtures.noneFriendly')}</option>
                     {seasons.map(season => (
                       <option key={season.id} value={season.id}>
                         {season.name} ({season.year})
@@ -496,14 +498,14 @@ const AdminFixtures = () => {
                   </select>
                   {seasons.length === 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      No seasons yet. Create one from seasons page.
+                      {t('adminFixtures.noSeasons')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    League
+                    {t('adminFixtures.league')}
                   </label>
                   <select
                     name="leagueId"
@@ -511,7 +513,7 @@ const AdminFixtures = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="">Select league</option>
+                    <option value="">{t('adminFixtures.selectLeague')}</option>
                     {leagues.map(league => (
                       <option key={league.id} value={league.id}>
                         {league.name}
@@ -520,14 +522,14 @@ const AdminFixtures = () => {
                   </select>
                   {leagues.length === 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      No leagues yet. Create one from leagues page.
+                      {t('adminFixtures.noLeagues')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Stage
+                    {t('adminFixtures.stage')}
                   </label>
                   <select
                     name="stage"
@@ -536,15 +538,15 @@ const AdminFixtures = () => {
                     className="input-field w-full"
                     disabled={!formData.seasonId}
                   >
-                    <option value="">Select stage</option>
-                    <option value="group">Group Stage</option>
-                    <option value="knockout">Knockout Stage</option>
+                    <option value="">{t('adminFixtures.selectStage')}</option>
+                    <option value="group">{t('adminFixtures.groupStage')}</option>
+                    <option value="knockout">{t('adminFixtures.knockoutStage')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Group
+                    {t('adminFixtures.group')}
                   </label>
                   <select
                     name="groupId"
@@ -553,7 +555,7 @@ const AdminFixtures = () => {
                     className="input-field w-full"
                     disabled={!formData.seasonId || formData.stage !== 'group'}
                   >
-                    <option value="">Select group</option>
+                    <option value="">{t('adminFixtures.selectGroup')}</option>
                     {selectedSeasonGroups.map(group => (
                       <option key={group.id} value={group.id}>
                         {group.name}
@@ -562,14 +564,14 @@ const AdminFixtures = () => {
                   </select>
                   {formData.stage === 'group' && selectedSeasonGroups.length === 0 && formData.seasonId && (
                     <p className="text-xs text-gray-500 mt-1">
-                      No groups configured for this season.
+                      {t('adminFixtures.noGroups')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Round/Matchday
+                    {t('adminFixtures.round')}
                   </label>
                   <input
                     type="text"
@@ -577,13 +579,13 @@ const AdminFixtures = () => {
                     value={formData.round}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    placeholder="e.g., Matchday 15, Quarter Final"
+                    placeholder={t('adminFixtures.roundPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Status
+                    {t('adminFixtures.status')}
                   </label>
                   <select
                     name="status"
@@ -591,18 +593,18 @@ const AdminFixtures = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="live">Live</option>
-                    <option value="playing">Playing</option>
-                    <option value="completed">Completed</option>
-                    <option value="postponed">Postponed</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="scheduled">{t('adminFixtures.scheduled')}</option>
+                    <option value="live">{t('adminFixtures.live')}</option>
+                    <option value="playing">{t('adminFixtures.playing')}</option>
+                    <option value="completed">{t('adminFixtures.completed')}</option>
+                    <option value="postponed">{t('adminFixtures.postponed')}</option>
+                    <option value="cancelled">{t('adminFixtures.cancelled')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Home Score
+                    {t('adminFixtures.homeScore')}
                   </label>
                   <input
                     type="number"
@@ -617,7 +619,7 @@ const AdminFixtures = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Away Score
+                    {t('adminFixtures.awayScore')}
                   </label>
                   <input
                     type="number"
@@ -636,7 +638,7 @@ const AdminFixtures = () => {
                 <div className="border-t border-gray-700 pt-6 space-y-4">
                   <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    Team Lineups
+                    {t('adminFixtures.teamLineups')}
                   </h3>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -644,10 +646,10 @@ const AdminFixtures = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-300">
-                          {teams.find(t => t.id === formData.homeTeam)?.name} Lineup
+                          {teams.find(t => t.id === formData.homeTeam)?.name} {t('adminFixtures.lineup')}
                         </label>
                         <span className="text-xs text-gray-400">
-                          {formData.homeLineup.length}/11 selected
+                          {formData.homeLineup.length}/11 {t('adminFixtures.selected')}
                         </span>
                       </div>
                       <button
@@ -656,11 +658,11 @@ const AdminFixtures = () => {
                         className="btn-secondary w-full justify-center"
                       >
                         <Users className="w-4 h-4 mr-2" />
-                        Select Home Lineup
+                        {t('adminFixtures.selectHomeLineup')}
                       </button>
                       {formData.homeLineup.length > 0 && (
                         <div className="mt-2 text-xs text-gray-400">
-                          {formData.homeLineup.length} player{formData.homeLineup.length !== 1 ? 's' : ''} selected
+                          {formData.homeLineup.length} {formData.homeLineup.length !== 1 ? t('adminFixtures.playersSelected') : t('adminFixtures.playerSelected')}
                         </div>
                       )}
                     </div>
@@ -669,10 +671,10 @@ const AdminFixtures = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-300">
-                          {teams.find(t => t.id === formData.awayTeam)?.name} Lineup
+                          {teams.find(t => t.id === formData.awayTeam)?.name} {t('adminFixtures.lineup')}
                         </label>
                         <span className="text-xs text-gray-400">
-                          {formData.awayLineup.length}/11 selected
+                          {formData.awayLineup.length}/11 {t('adminFixtures.selected')}
                         </span>
                       </div>
                       <button
@@ -681,11 +683,11 @@ const AdminFixtures = () => {
                         className="btn-secondary w-full justify-center"
                       >
                         <Users className="w-4 h-4 mr-2" />
-                        Select Away Lineup
+                        {t('adminFixtures.selectAwayLineup')}
                       </button>
                       {formData.awayLineup.length > 0 && (
                         <div className="mt-2 text-xs text-gray-400">
-                          {formData.awayLineup.length} player{formData.awayLineup.length !== 1 ? 's' : ''} selected
+                          {formData.awayLineup.length} {formData.awayLineup.length !== 1 ? t('adminFixtures.playersSelected') : t('adminFixtures.playerSelected')}
                         </div>
                       )}
                     </div>
@@ -699,7 +701,7 @@ const AdminFixtures = () => {
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                       <Target className="w-5 h-5" />
-                      Match Events ({formData.events.length})
+                      {t('adminFixtures.matchEvents')} ({formData.events.length})
                     </h3>
                     <button
                       type="button"
@@ -707,7 +709,7 @@ const AdminFixtures = () => {
                       className="btn-secondary text-sm"
                     >
                       <Zap className="w-4 h-4 mr-2" />
-                      Add Event
+                      {t('adminFixtures.addEvent')}
                     </button>
                   </div>
 
@@ -738,7 +740,7 @@ const AdminFixtures = () => {
                                     </div>
                                     {assistant && (
                                       <div className="text-xs text-gray-400">
-                                        Assist: {assistant.name}
+                                        {t('adminFixtures.assist')}: {assistant.name}
                                       </div>
                                     )}
                                   </div>
@@ -757,7 +759,7 @@ const AdminFixtures = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-400 text-sm">
-                      No events added yet. Click "Add Event" to record goals, cards, etc.
+                      {t('adminFixtures.noEvents')}
                     </div>
                   )}
                 </div>
@@ -769,7 +771,7 @@ const AdminFixtures = () => {
                   onClick={handleCancel}
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  Cancel
+                  {t('adminFixtures.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -777,7 +779,7 @@ const AdminFixtures = () => {
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {loading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Fixture' : 'Add Fixture')}
+                  {loading ? (editingId ? t('adminFixtures.updating') : t('adminFixtures.adding')) : (editingId ? t('adminFixtures.updateFixture') : t('adminFixtures.addFixtureButton'))}
                 </button>
               </div>
             </form>
@@ -792,7 +794,7 @@ const AdminFixtures = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Users className="w-6 h-6" />
-                    Select {showLineupModal === 'home' ? 'Home' : 'Away'} Team Lineup
+                    {t('adminFixtures.selectLineupTitle')} {showLineupModal === 'home' ? t('adminFixtures.home') : t('adminFixtures.away')} {t('adminFixtures.team')}
                   </h3>
                   <button
                     onClick={() => setShowLineupModal(null)}
@@ -802,9 +804,9 @@ const AdminFixtures = () => {
                   </button>
                 </div>
                 <p className="text-sm text-gray-400 mt-2">
-                  Select up to 11 players for the starting lineup
-                  {showLineupModal === 'home' && ` • ${formData.homeLineup.length}/11 selected`}
-                  {showLineupModal === 'away' && ` • ${formData.awayLineup.length}/11 selected`}
+                  {t('adminFixtures.selectUpTo11')}
+                  {showLineupModal === 'home' && ` • ${formData.homeLineup.length}/11 ${t('adminFixtures.selected')}`}
+                  {showLineupModal === 'away' && ` • ${formData.awayLineup.length}/11 ${t('adminFixtures.selected')}`}
                 </p>
               </div>
 
@@ -819,8 +821,8 @@ const AdminFixtures = () => {
                     return (
                       <div className="text-center py-12 text-gray-400">
                         <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>No players added to this team yet.</p>
-                        <p className="text-sm mt-1">Add players to the team first in Team Management.</p>
+                        <p>{t('adminFixtures.noPlayersAdded')}</p>
+                        <p className="text-sm mt-1">{t('adminFixtures.addPlayersFirst')}</p>
                       </div>
                     );
                   }
@@ -888,7 +890,7 @@ const AdminFixtures = () => {
                   onClick={() => setShowLineupModal(null)}
                   className="btn-primary w-full justify-center"
                 >
-                  Done
+                  {t('adminFixtures.done')}
                 </button>
               </div>
             </div>
@@ -903,7 +905,7 @@ const AdminFixtures = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Zap className="w-6 h-6" />
-                    Add Match Event
+                    {t('adminFixtures.addMatchEvent')}
                   </h3>
                   <button
                     onClick={() => {
@@ -921,23 +923,23 @@ const AdminFixtures = () => {
                 {/* Event Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Event Type
+                    {t('adminFixtures.eventType')}
                   </label>
                   <select
                     value={eventForm.type}
                     onChange={(e) => setEventForm({ ...eventForm, type: e.target.value })}
                     className="input-field w-full"
                   >
-                    <option value="goal">⚽ Goal</option>
-                    <option value="yellow_card">🟨 Yellow Card</option>
-                    <option value="red_card">🟥 Red Card</option>
+                    <option value="goal">⚽ {t('adminFixtures.goal')}</option>
+                    <option value="yellow_card">🟨 {t('adminFixtures.yellowCard')}</option>
+                    <option value="red_card">🟥 {t('adminFixtures.redCard')}</option>
                   </select>
                 </div>
 
                 {/* Team Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Team
+                    {t('adminFixtures.team')}
                   </label>
                   <select
                     value={eventForm.team}
@@ -946,7 +948,7 @@ const AdminFixtures = () => {
                     }}
                     className="input-field w-full"
                   >
-                    <option value="">Select Team</option>
+                    <option value="">{t('adminFixtures.selectTeam')}</option>
                     <option value={formData.homeTeam}>
                       {teams.find(t => t.id === formData.homeTeam)?.name}
                     </option>
@@ -960,14 +962,14 @@ const AdminFixtures = () => {
                 {eventForm.team && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Player
+                      {t('adminFixtures.player')}
                     </label>
                     <select
                       value={eventForm.player}
                       onChange={(e) => setEventForm({ ...eventForm, player: e.target.value })}
                       className="input-field w-full"
                     >
-                      <option value="">Select Player</option>
+                      <option value="">{t('adminFixtures.selectPlayer')}</option>
                       {(() => {
                         const team = teams.find(t => t.id === eventForm.team);
                         const lineup = eventForm.team === formData.homeTeam ? formData.homeLineup : formData.awayLineup;
@@ -988,14 +990,14 @@ const AdminFixtures = () => {
                 {/* Minute */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Minute
+                    {t('adminFixtures.minute')}
                   </label>
                   <input
                     type="number"
                     value={eventForm.minute}
                     onChange={(e) => setEventForm({ ...eventForm, minute: e.target.value })}
                     className="input-field w-full"
-                    placeholder="e.g., 45"
+                    placeholder={t('adminFixtures.minutePlaceholder')}
                     min="1"
                     max="120"
                   />
@@ -1005,14 +1007,14 @@ const AdminFixtures = () => {
                 {eventForm.type === 'goal' && eventForm.team && eventForm.player && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Assist By (Optional)
+                      {t('adminFixtures.assistBy')}
                     </label>
                     <select
                       value={eventForm.assistBy}
                       onChange={(e) => setEventForm({ ...eventForm, assistBy: e.target.value })}
                       className="input-field w-full"
                     >
-                      <option value="">No Assist</option>
+                      <option value="">{t('adminFixtures.noAssist')}</option>
                       {(() => {
                         const team = teams.find(t => t.id === eventForm.team);
                         const lineup = eventForm.team === formData.homeTeam ? formData.homeLineup : formData.awayLineup;
@@ -1039,7 +1041,7 @@ const AdminFixtures = () => {
                   }}
                   className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  Cancel
+                  {t('adminFixtures.cancel')}
                 </button>
                 <button
                   onClick={handleAddEvent}
@@ -1047,7 +1049,7 @@ const AdminFixtures = () => {
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed justify-center"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Event
+                  {t('adminFixtures.addEventButton')}
                 </button>
               </div>
             </div>
@@ -1095,12 +1097,12 @@ const AdminFixtures = () => {
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm('Are you sure you want to delete this fixture?')) {
+                        if (confirm(t('adminFixtures.deleteConfirm'))) {
                           console.log('Delete fixture:', fixture.id);
                         }
                       }}
                       className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                      title="Delete fixture"
+                      title={t('adminFixtures.deleteFixture')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1175,13 +1177,13 @@ const AdminFixtures = () => {
             <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No fixtures yet</h3>
-            <p className="text-gray-400 mb-4">Get started by adding your first fixture</p>
+            <h3 className="text-lg font-semibold text-white mb-2">{t('adminFixtures.noFixtures')}</h3>
+            <p className="text-gray-400 mb-4">{t('adminFixtures.getStarted')}</p>
             <button
               onClick={() => setShowAddForm(true)}
               className="btn-primary"
             >
-              Add First Fixture
+              {t('adminFixtures.addFirstFixture')}
             </button>
           </div>
         )}

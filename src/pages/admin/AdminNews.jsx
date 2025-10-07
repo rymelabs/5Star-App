@@ -5,10 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { useLanguage } from '../../context/LanguageContext';
 import { slugify } from '../../utils/helpers';
 import { ArrowLeft, Plus, Edit, Trash2, Image, FileText, Save, X, Eye, Calendar } from 'lucide-react';
 
 const AdminNews = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { articles, addArticle, deleteArticle } = useNews();
   const { toast, showToast, hideToast } = useToast();
@@ -86,14 +88,14 @@ const AdminNews = () => {
       console.log('AdminNews: Attempting to delete article:', articleId);
       await deleteArticle(articleId);
       console.log('AdminNews: Article deleted successfully');
-      showToast('Article deleted successfully!', 'success');
+      showToast(t('adminNews.deleteSuccess'), 'success');
     } catch (error) {
       console.error('AdminNews: Failed to delete article:', error);
       console.error('Error code:', error?.code);
       console.error('Error message:', error?.message);
       const errorMsg = error?.code === 'permission-denied' 
-        ? 'Permission denied. Make sure you have admin access and Firestore rules are deployed.'
-        : error?.message || 'Failed to delete article. Please try again.';
+        ? t('adminNews.permissionDenied')
+        : error?.message || t('adminNews.deleteFailed');
       showToast(errorMsg, 'error');
     }
   };
@@ -144,8 +146,8 @@ const AdminNews = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="admin-header">News Management</h1>
-              <p className="text-sm text-gray-400">{articles.length} articles</p>
+              <h1 className="admin-header">{t('adminNews.title')}</h1>
+              <p className="text-sm text-gray-400">{articles.length} {t('adminNews.articles')}</p>
             </div>
           </div>
           
@@ -154,7 +156,7 @@ const AdminNews = () => {
             className="btn-primary w-full flex items-center justify-center text-sm py-2"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Article
+            {t('adminNews.addArticle')}
           </button>
         </div>
       </div>
@@ -164,7 +166,7 @@ const AdminNews = () => {
         {showAddForm && (
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Add New Article</h3>
+              <h3 className="text-lg font-semibold text-white">{t('adminNews.addNewArticle')}</h3>
               <button
                 onClick={handleCancel}
                 className="p-2 rounded-full hover:bg-dark-700 transition-colors"
@@ -176,7 +178,7 @@ const AdminNews = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Title *
+                  {t('adminNews.titleLabel')} *
                 </label>
                 <input
                   type="text"
@@ -184,34 +186,34 @@ const AdminNews = () => {
                   value={formData.title}
                   onChange={handleInputChange}
                   className="input-field w-full"
-                  placeholder="Enter article title"
+                  placeholder={t('adminNews.titlePlaceholder')}
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Summary
+                  {t('adminNews.summary')}
                 </label>
                 <textarea
                   name="summary"
                   value={formData.summary}
                   onChange={handleInputChange}
                   className="input-field w-full h-20 resize-none"
-                  placeholder="Brief summary (optional - will auto-generate from content if empty)"
+                  placeholder={t('adminNews.summaryPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Content *
+                  {t('adminNews.content')} *
                 </label>
                 <textarea
                   name="content"
                   value={formData.content}
                   onChange={handleInputChange}
                   className="input-field w-full h-40 resize-y"
-                  placeholder="Write your article content here..."
+                  placeholder={t('adminNews.contentPlaceholder')}
                   required
                 />
               </div>
@@ -219,7 +221,7 @@ const AdminNews = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Featured Image URL
+                    {t('adminNews.featuredImage')}
                   </label>
                   <input
                     type="url"
@@ -227,13 +229,13 @@ const AdminNews = () => {
                     value={formData.image}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder={t('adminNews.imagePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Category
+                    {t('adminNews.category')}
                   </label>
                   <select
                     name="category"
@@ -241,18 +243,18 @@ const AdminNews = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="general">General</option>
-                    <option value="transfer">Transfer</option>
-                    <option value="match">Match Report</option>
-                    <option value="injury">Injury</option>
-                    <option value="interview">Interview</option>
+                    <option value="general">{t('adminNews.general')}</option>
+                    <option value="transfer">{t('adminNews.transfer')}</option>
+                    <option value="match">{t('adminNews.matchReport')}</option>
+                    <option value="injury">{t('adminNews.injury')}</option>
+                    <option value="interview">{t('adminNews.interview')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tags
+                  {t('adminNews.tags')}
                 </label>
                 <input
                   type="text"
@@ -260,7 +262,7 @@ const AdminNews = () => {
                   value={formData.tags}
                   onChange={handleInputChange}
                   className="input-field w-full"
-                  placeholder="Tag1, Tag2, Tag3 (comma separated)"
+                  placeholder={t('adminNews.tagsPlaceholder')}
                 />
               </div>
 
@@ -273,7 +275,7 @@ const AdminNews = () => {
                     onChange={handleInputChange}
                     className="w-4 h-4 text-primary bg-dark-700 border-dark-600 rounded focus:ring-primary focus:ring-2"
                   />
-                  <span className="text-sm text-gray-300">Featured article</span>
+                  <span className="text-sm text-gray-300">{t('adminNews.featuredArticle')}</span>
                 </label>
               </div>
 
@@ -283,7 +285,7 @@ const AdminNews = () => {
                   onClick={handleCancel}
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  Cancel
+                  {t('adminNews.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -291,7 +293,7 @@ const AdminNews = () => {
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Publishing...' : 'Publish Article'}
+                  {loading ? t('adminNews.publishing') : t('adminNews.publishArticle')}
                 </button>
               </div>
             </form>
@@ -324,7 +326,7 @@ const AdminNews = () => {
                       </span>
                       {article.featured && (
                         <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-500 bg-yellow-500/20 whitespace-nowrap">
-                          Featured
+                          {t('adminNews.featured')}
                         </span>
                       )}
                     </div>
@@ -333,21 +335,21 @@ const AdminNews = () => {
                       <button
                         onClick={() => navigate(`/news/${article.slug || article.id}`)}
                         className="p-1.5 text-accent-400 hover:text-accent-300 hover:bg-accent-500/10 rounded transition-colors"
-                        title="View Article"
+                        title={t('adminNews.viewArticle')}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/news/edit/${article.id}`)}
                         className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                        title="Edit Article"
+                        title={t('adminNews.editArticle')}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setConfirmDelete({ isOpen: true, articleId: article.id, articleTitle: article.title })}
                         className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                        title="Delete Article"
+                        title={t('adminNews.deleteArticle')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -370,7 +372,7 @@ const AdminNews = () => {
                       </span>
                       <span className="flex items-center gap-1 whitespace-nowrap">
                         <FileText className="w-3 h-3 flex-shrink-0" />
-                        <span>{article.readTime} min</span>
+                        <span>{article.readTime} {t('adminNews.min')}</span>
                       </span>
                       <span className="flex items-center gap-1 whitespace-nowrap">
                         <Eye className="w-3 h-3 flex-shrink-0" />
@@ -402,13 +404,13 @@ const AdminNews = () => {
             <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No articles yet</h3>
-            <p className="text-gray-400 mb-4">Get started by publishing your first article</p>
+            <h3 className="text-lg font-semibold text-white mb-2">{t('adminNews.noArticles')}</h3>
+            <p className="text-gray-400 mb-4">{t('adminNews.getStarted')}</p>
             <button
               onClick={() => setShowAddForm(true)}
               className="btn-primary"
             >
-              Publish First Article
+              {t('adminNews.publishFirst')}
             </button>
           </div>
         )}
@@ -418,9 +420,9 @@ const AdminNews = () => {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, articleId: null, articleTitle: '' })}
         onConfirm={confirmDeleteArticle}
-        title="Delete Article"
-        message={`Are you sure you want to delete "${confirmDelete.articleTitle}"? This action cannot be undone.`}
-        confirmText="Delete Article"
+        title={t('adminNews.deleteArticleTitle')}
+        message={t('adminNews.deleteConfirm').replace('{title}', confirmDelete.articleTitle)}
+        confirmText={t('adminNews.deleteArticleButton')}
         type="danger"
       />
 

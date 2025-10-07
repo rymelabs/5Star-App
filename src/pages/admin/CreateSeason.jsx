@@ -13,8 +13,10 @@ import {
 import { seasonsCollection } from '../../firebase/firestore';
 import { teamsCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CreateSeason = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
@@ -92,11 +94,11 @@ const CreateSeason = () => {
     setGroups(prev => prev.map(g => {
       if (g.id === groupId) {
         if (g.teams.length >= formData.teamsPerGroup) {
-          showToast(`Group ${g.name} is full`, 'error');
+          showToast(t('createSeason.groupFull').replace('{name}', g.name), 'error');
           return g;
         }
         if (g.teams.find(t => t.id === team.id)) {
-          showToast('Team already in this group', 'error');
+          showToast(t('createSeason.teamAlreadyInGroup'), 'error');
           return g;
         }
         return { ...g, teams: [...g.teams, team] };
@@ -118,14 +120,14 @@ const CreateSeason = () => {
   const handleSubmit = async () => {
     // Validate
     if (!formData.name.trim()) {
-      showToast('Please enter a season name', 'error');
+      showToast(t('createSeason.enterSeasonName'), 'error');
       return;
     }
 
     // Check if all groups have teams
     const emptyGroups = groups.filter(g => g.teams.length === 0);
     if (emptyGroups.length > 0) {
-      showToast(`Please assign teams to all groups`, 'error');
+      showToast(t('createSeason.assignTeamsToAllGroups'), 'error');
       return;
     }
 
@@ -164,14 +166,14 @@ const CreateSeason = () => {
       };
 
       const seasonId = await seasonsCollection.create(seasonData);
-      showToast('Season created successfully!', 'success');
+      showToast(t('createSeason.seasonCreated'), 'success');
       
       setTimeout(() => {
         navigate(`/admin/seasons/${seasonId}`);
       }, 1500);
     } catch (error) {
       console.error('Error creating season:', error);
-      showToast('Failed to create season', 'error');
+      showToast(t('createSeason.createFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -181,10 +183,10 @@ const CreateSeason = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('createSeason.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('createSeason.adminRequired')}</p>
           <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Home
+            {t('createSeason.goHome')}
           </button>
         </div>
       </div>
@@ -212,9 +214,9 @@ const CreateSeason = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div>
-            <h1 className="admin-header">Create New Season</h1>
+            <h1 className="admin-header">{t('createSeason.title')}</h1>
             <p className="text-sm text-gray-400">
-              Step {step} of 3: {step === 1 ? 'Basic Information' : step === 2 ? 'Configure Groups' : 'Review & Create'}
+              {t('createSeason.step')} {step} {t('createSeason.of')} 3: {step === 1 ? t('createSeason.basicInfo') : step === 2 ? t('createSeason.configureGroups') : t('createSeason.reviewCreate')}
             </p>
           </div>
         </div>
@@ -231,7 +233,7 @@ const CreateSeason = () => {
                 {s}
               </div>
               <span className="text-xs text-gray-400 mt-2">
-                {s === 1 ? 'Info' : s === 2 ? 'Groups' : 'Review'}
+                {s === 1 ? t('createSeason.info') : s === 2 ? t('createSeason.groups') : t('createSeason.review')}
               </span>
             </div>
             {s < 3 && (
@@ -249,30 +251,30 @@ const CreateSeason = () => {
           <div className="card p-6">
             <div className="flex items-center mb-4">
               <Trophy className="w-6 h-6 text-primary-500 mr-3" />
-              <h3 className="text-lg font-semibold text-white">Season Details</h3>
+              <h3 className="text-lg font-semibold text-white">{t('createSeason.seasonDetails')}</h3>
             </div>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Season Name
+                  {t('createSeason.seasonName')}
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder={`5Star Premier League Season ${currentYear}`}
+                  placeholder={t('createSeason.seasonNamePlaceholder').replace('{year}', currentYear)}
                   className="input-field w-full"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Leave empty to use default name with current year
+                  {t('createSeason.defaultNameHint')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Year
+                  {t('createSeason.year')}
                 </label>
                 <input
                   type="number"
@@ -290,13 +292,13 @@ const CreateSeason = () => {
           <div className="card p-6">
             <div className="flex items-center mb-4">
               <Users className="w-6 h-6 text-accent-500 mr-3" />
-              <h3 className="text-lg font-semibold text-white">Group Stage Configuration</h3>
+              <h3 className="text-lg font-semibold text-white">{t('createSeason.groupStageConfig')}</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Number of Groups
+                  {t('createSeason.numberOfGroups')}
                 </label>
                 <input
                   type="number"
@@ -311,7 +313,7 @@ const CreateSeason = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Teams per Group
+                  {t('createSeason.teamsPerGroup')}
                 </label>
                 <input
                   type="number"
@@ -327,10 +329,10 @@ const CreateSeason = () => {
 
             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-400">
-                <strong>Total teams needed:</strong> {formData.numberOfGroups * formData.teamsPerGroup} teams
+                <strong>{t('createSeason.totalTeamsNeeded')}:</strong> {formData.numberOfGroups * formData.teamsPerGroup} {t('createSeason.teams')}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Available teams: {allTeams.length}
+                {t('createSeason.availableTeams')}: {allTeams.length}
               </p>
             </div>
           </div>
@@ -338,13 +340,13 @@ const CreateSeason = () => {
           <div className="card p-6">
             <div className="flex items-center mb-4">
               <Calendar className="w-6 h-6 text-green-500 mr-3" />
-              <h3 className="text-lg font-semibold text-white">Knockout Stage Configuration</h3>
+              <h3 className="text-lg font-semibold text-white">{t('createSeason.knockoutStageConfig')}</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Matches per Knockout Round
+                  {t('createSeason.matchesPerRound')}
                 </label>
                 <select
                   name="matchesPerRound"
@@ -352,14 +354,14 @@ const CreateSeason = () => {
                   onChange={handleChange}
                   className="input-field w-full"
                 >
-                  <option value="1">Single Leg</option>
-                  <option value="2">Home & Away</option>
+                  <option value="1">{t('createSeason.singleLeg')}</option>
+                  <option value="2">{t('createSeason.homeAway')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Qualifiers per Group
+                  {t('createSeason.qualifiersPerGroup')}
                 </label>
                 <input
                   type="number"
@@ -375,7 +377,7 @@ const CreateSeason = () => {
 
             <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
               <p className="text-sm text-green-400">
-                <strong>Knockout teams:</strong> {formData.numberOfGroups * formData.qualifiersPerGroup} teams will qualify
+                <strong>{t('createSeason.knockoutTeams')}:</strong> {formData.numberOfGroups * formData.qualifiersPerGroup} {t('createSeason.teamsWillQualify')}
               </p>
             </div>
           </div>
@@ -385,7 +387,7 @@ const CreateSeason = () => {
               onClick={initializeGroups}
               className="btn-primary flex items-center space-x-2"
             >
-              <span>Next: Configure Groups</span>
+              <span>{t('createSeason.nextConfigureGroups')}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -396,7 +398,7 @@ const CreateSeason = () => {
       {step === 2 && (
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Assign Teams to Groups</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('createSeason.assignTeamsToGroups')}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {groups.map((group, index) => (
@@ -407,7 +409,7 @@ const CreateSeason = () => {
                       value={group.name}
                       onChange={(e) => updateGroupName(group.id, e.target.value)}
                       className="input-field w-full font-semibold"
-                      placeholder={`Group ${index + 1}`}
+                      placeholder={t('createSeason.groupPlaceholder').replace('{index}', index + 1)}
                     />
                   </div>
 
@@ -439,7 +441,7 @@ const CreateSeason = () => {
                   </div>
 
                   <div className="text-sm text-gray-400 mb-2">
-                    {group.teams.length} / {formData.teamsPerGroup} teams
+                    {group.teams.length} / {formData.teamsPerGroup} {t('createSeason.teams')}
                   </div>
 
                   {group.teams.length < formData.teamsPerGroup && (
@@ -454,7 +456,7 @@ const CreateSeason = () => {
                       className="input-field w-full text-sm"
                       defaultValue=""
                     >
-                      <option value="" disabled>Add team...</option>
+                      <option value="" disabled>{t('createSeason.addTeam')}</option>
                       {allTeams
                         .filter(team => !isTeamAssigned(team.id))
                         .map(team => (
@@ -474,13 +476,13 @@ const CreateSeason = () => {
               onClick={() => setStep(1)}
               className="px-6 py-2 bg-dark-800 text-white rounded-lg hover:bg-dark-700 transition-colors"
             >
-              Back
+              {t('createSeason.back')}
             </button>
             <button
               onClick={() => setStep(3)}
               className="btn-primary flex items-center space-x-2"
             >
-              <span>Next: Review</span>
+              <span>{t('createSeason.nextReview')}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -491,48 +493,48 @@ const CreateSeason = () => {
       {step === 3 && (
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Review Season Configuration</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('createSeason.reviewConfiguration')}</h3>
             
             <div className="space-y-4">
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Season Name</span>
+                <span className="text-gray-400">{t('createSeason.seasonName')}</span>
                 <span className="text-white font-medium">
                   {formData.name || `5Star Premier League Season ${currentYear}`}
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Year</span>
+                <span className="text-gray-400">{t('createSeason.year')}</span>
                 <span className="text-white font-medium">{formData.year}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Number of Groups</span>
+                <span className="text-gray-400">{t('createSeason.numberOfGroups')}</span>
                 <span className="text-white font-medium">{formData.numberOfGroups}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Teams per Group</span>
+                <span className="text-gray-400">{t('createSeason.teamsPerGroup')}</span>
                 <span className="text-white font-medium">{formData.teamsPerGroup}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Total Teams</span>
+                <span className="text-gray-400">{t('createSeason.totalTeams')}</span>
                 <span className="text-white font-medium">
                   {groups.reduce((sum, g) => sum + g.teams.length, 0)}
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Knockout Format</span>
+                <span className="text-gray-400">{t('createSeason.knockoutFormat')}</span>
                 <span className="text-white font-medium">
-                  {formData.matchesPerRound === 1 ? 'Single Leg' : 'Home & Away'}
+                  {formData.matchesPerRound === 1 ? t('createSeason.singleLeg') : t('createSeason.homeAway')}
                 </span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-gray-400">Qualifiers per Group</span>
+                <span className="text-gray-400">{t('createSeason.qualifiersPerGroup')}</span>
                 <span className="text-white font-medium">{formData.qualifiersPerGroup}</span>
               </div>
             </div>
 
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-400 mb-2">
-                <strong>Groups configured:</strong>
+                <strong>{t('createSeason.groupsConfigured')}:</strong>
               </p>
               <div className="flex flex-wrap gap-2">
                 {groups.map(g => (
@@ -549,7 +551,7 @@ const CreateSeason = () => {
               onClick={() => setStep(2)}
               className="px-6 py-2 bg-dark-800 text-white rounded-lg hover:bg-dark-700 transition-colors"
             >
-              Back
+              {t('createSeason.back')}
             </button>
             <button
               onClick={handleSubmit}
@@ -559,12 +561,12 @@ const CreateSeason = () => {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Creating...</span>
+                  <span>{t('createSeason.creating')}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>Create Season</span>
+                  <span>{t('createSeason.createSeason')}</span>
                 </>
               )}
             </button>
