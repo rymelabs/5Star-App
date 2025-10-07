@@ -186,6 +186,20 @@
     "venue": "Ebe",
     "referee": "Onye nkpe"
   },
+  "fixtures": {
+    "active": "Na-arụ ọrụ",
+    "seeLess": "Hụ obere",
+    "seeMore": "Hụkwuo",
+    "more": "Karịa",
+    "knockoutStage": "Ọkwa Mkpochasị",
+    "otherFixtures": "Egwuregwu ndị ọzọ",
+    "group": "Otu",
+    "knockout": "Mkpochasị",
+    "groupStage": "Ọkwa Otu",
+    "viewStandings": "Lee ọnọdụ",
+    "qualification": "Ntozu",
+    "relegation": "Nkwụsị"
+  },
   "table": {
     "position": "Ọnọdụ",
     "team": "Otu",

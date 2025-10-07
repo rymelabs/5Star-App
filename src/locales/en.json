@@ -66,7 +66,19 @@
       "filterByStatus": "Filter by Status",
       "noFixturesFound": "No fixtures found",
       "selectSeasonMessage": "Select a season to view fixtures grouped by groups.",
-      "team": "TEAM"
+      "team": "TEAM",
+      "active": "Active",
+      "seeLess": "See less",
+      "seeMore": "See more",
+      "more": "more",
+      "knockoutStage": "Knockout Stage",
+      "otherFixtures": "Other Fixtures",
+      "group": "Group",
+      "knockout": "Knockout",
+      "groupStage": "Group Stage",
+      "viewStandings": "View Standings",
+      "qualification": "Qualification",
+      "relegation": "Relegation"
     },
     "teams": {
       "title": "Teams",
@@ -185,6 +197,20 @@
     "kickoff": "Kickoff",
     "venue": "Venue",
     "referee": "Referee"
+  },
+  "fixtures": {
+    "active": "Active",
+    "seeLess": "See less",
+    "seeMore": "See more",
+    "more": "more",
+    "knockoutStage": "Knockout Stage",
+    "otherFixtures": "Other Fixtures",
+    "group": "Group",
+    "knockout": "Knockout",
+    "groupStage": "Group Stage",
+    "viewStandings": "View Standings",
+    "qualification": "Qualification",
+    "relegation": "Relegation"
   },
   "table": {
     "position": "Pos",

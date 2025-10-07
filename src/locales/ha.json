@@ -185,6 +185,20 @@
     "venue": "Wurin",
     "referee": "Mai wasa"
   },
+  "fixtures": {
+    "active": "Mai aiki",
+    "seeLess": "Duba kaɗan",
+    "seeMore": "Duba ƙari",
+    "more": "Ƙari",
+    "knockoutStage": "Matakin Ƙarshe",
+    "otherFixtures": "Sauran Wasanni",
+    "group": "Rukunin",
+    "knockout": "Ƙarshe",
+    "groupStage": "Matakin Rukuni",
+    "viewStandings": "Duba Matsayi",
+    "qualification": "Canƙanta",
+    "relegation": "Saukewa"
+  },
   "table": {
     "position": "Matsayi",
     "team": "Ƙungiya",

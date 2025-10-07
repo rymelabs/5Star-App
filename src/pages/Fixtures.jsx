@@ -93,11 +93,11 @@ const Fixtures = () => {
                 onChange={(e) => setSelectedSeasonId(e.target.value)}
                 className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
               >
-                <option value="all">All Seasons</option>
+                <option value="all">{t('stats.allSeasons')}</option>
                 {seasons.map(season => (
                   <option key={season.id} value={season.id}>
                     {season.name} ({season.year})
-                    {season.isActive && ' - Active'}
+                    {season.isActive && ` - ${t('fixtures.active')}`}
                   </option>
                 ))}
               </select>
@@ -162,7 +162,7 @@ const Fixtures = () => {
                 viewMode === 'date' ? 'border-2 border-primary-400 text-primary-300' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
               }`}
             >
-              By Date
+              {t('pages.fixtures.byDate')}
             </button>
             <button
               onClick={() => setViewMode('group')}
@@ -170,7 +170,7 @@ const Fixtures = () => {
                 viewMode === 'group' ? 'border-2 border-primary-400 text-primary-300' : 'border-2 border-dark-700 text-gray-400 hover:text-white hover:border-dark-600'
               }`}
             >
-              By Group
+              {t('pages.fixtures.byGroup')}
             </button>
           </div>
 
@@ -218,7 +218,7 @@ const Fixtures = () => {
                                 )}
                                 {fixture.stage && (
                                   <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
-                                    {fixture.stage === 'knockout' ? fixture.round || 'Knockout' : 'Group Stage'}
+                                    {fixture.stage === 'knockout' ? fixture.round || t('fixtures.knockout') : t('fixtures.groupStage')}
                                   </span>
                                 )}
                                 {!fixture.seasonId && fixture.competition && (
@@ -303,7 +303,7 @@ const Fixtures = () => {
                             onClick={() => toggleSection(date)}
                             className="px-3 py-1.5 text-sm rounded-md bg-dark-800 hover:bg-dark-700 text-gray-300 border border-dark-700"
                           >
-                            {expanded ? 'See less' : `See more (${remaining} more)`}
+                            {expanded ? t('fixtures.seeLess') : `${t('fixtures.seeMore')} (${remaining} ${t('fixtures.more')})`}
                           </button>
                         </div>
                       )}
@@ -328,7 +328,7 @@ const Fixtures = () => {
                   const isKnockout = groupKey === 'knockout';
                   const isUngrouped = groupKey === 'ungrouped';
                   const groupMeta = groupViewSeason?.groups?.find(g => g.id === groupKey);
-                  const header = isKnockout ? 'Knockout Stage' : isUngrouped ? 'Other Fixtures' : (groupMeta?.name || 'Group');
+                  const header = isKnockout ? t('fixtures.knockoutStage') : isUngrouped ? t('fixtures.otherFixtures') : (groupMeta?.name || t('fixtures.group'));
                   const expanded = isSectionExpanded(groupKey);
                   const items = expanded ? list : list.slice(0, 3);
                   const remaining = Math.max(0, list.length - 3);
@@ -364,7 +364,7 @@ const Fixtures = () => {
                                     <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">{group.name}</span>
                                   )}
                                   {fixture.stage && (
-                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">{fixture.stage === 'knockout' ? fixture.round || 'Knockout' : 'Group Stage'}</span>
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">{fixture.stage === 'knockout' ? fixture.round || t('fixtures.knockout') : t('fixtures.groupStage')}</span>
                                   )}
                                   {!fixture.seasonId && fixture.competition && (
                                     <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded">{fixture.competition}</span>
@@ -428,7 +428,7 @@ const Fixtures = () => {
                               onClick={() => toggleSection(groupKey)}
                               className="px-3 py-1.5 text-sm rounded-md bg-dark-800 hover:bg-dark-700 text-gray-300 border border-dark-700"
                             >
-                              {expanded ? 'See less' : `See more (${remaining} more)`}
+                              {expanded ? t('fixtures.seeLess') : `${t('fixtures.seeMore')} (${remaining} ${t('fixtures.more')})`}
                             </button>
                           </div>
                         )}
@@ -439,8 +439,8 @@ const Fixtures = () => {
               ) : (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">No fixtures found</p>
-                  <p className="text-sm text-gray-500">Try adjusting your filters</p>
+                  <p className="text-gray-400">{t('pages.fixtures.noFixturesFound')}</p>
+                  <p className="text-sm text-gray-500">{t('common.tryAdjustingFilters')}</p>
                 </div>
               )}
             </>
@@ -453,7 +453,7 @@ const Fixtures = () => {
           {seasons && seasons.length > 0 && (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
               <label className="text-sm font-medium text-gray-300 whitespace-nowrap">
-                View Standings:
+                {t('fixtures.viewStandings')}:
               </label>
               <div className="flex flex-wrap gap-2 flex-1">
                 <button
@@ -464,7 +464,7 @@ const Fixtures = () => {
                       : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
                   }`}
                 >
-                  League Table
+                  {t('pages.latest.leagueTable')}
                 </button>
                 {seasons.map(season => (
                   <button
@@ -581,13 +581,13 @@ const Fixtures = () => {
                     {leagueSettings.qualifiedPosition > 0 && (
                       <div className="flex items-center">
                         <div className="w-3 h-3 bg-primary-500 rounded-full mr-2"></div>
-                        <span>Qualification</span>
+                        <span>{t('fixtures.qualification')}</span>
                       </div>
                     )}
                     {leagueSettings.relegationPosition > 0 && (
                       <div className="flex items-center">
                         <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                        <span>Relegation</span>
+                        <span>{t('fixtures.relegation')}</span>
                       </div>
                     )}
                   </div>
