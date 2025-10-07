@@ -196,7 +196,7 @@ const News = () => {
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <div className="flex items-center">
                           <Eye className="w-4 h-4 mr-1" />
-                          <span>Read more</span>
+                          <span>{t('pages.news.readMore')}</span>
                         </div>
                         <div className="flex items-center">
                           <MessageCircle className="w-4 h-4 mr-1" />
@@ -208,7 +208,7 @@ const News = () => {
                         </div>
                       </div>
                       <span className="text-sm font-medium text-gray-400">
-                        By {article.author}
+                        {t('pages.news.by')} {article.author}
                       </span>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ const News = () => {
             <Search className="w-12 h-12 mx-auto mb-4 text-gray-600" />
             <p className="text-gray-400 mb-2">{t('pages.news.noArticlesFound')}</p>
             <p className="text-sm text-gray-500">
-              {searchQuery ? `No results for "${searchQuery}"` : 'Try adjusting your filters'}
+              {searchQuery ? t('pages.news.noResultsFor').replace('{query}', searchQuery) : t('pages.news.tryAdjustingFilters')}
             </p>
           </div>
         )}
@@ -282,7 +282,7 @@ const News = () => {
               onClick={loadMoreArticles}
               className="btn-primary"
             >
-              Load More Articles
+              {t('pages.news.loadMore')}
             </button>
           )}
         </div>
