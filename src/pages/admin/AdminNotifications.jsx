@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Bell, Send, Trash2, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import { getFirebaseDb } from '../../firebase/config';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
@@ -8,6 +9,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -22,17 +24,17 @@ const AdminNotifications = () => {
   });
 
   const notificationTypes = [
-    { value: 'info', label: 'Information', color: 'blue' },
-    { value: 'announcement', label: 'Announcement', color: 'purple' },
-    { value: 'warning', label: 'Warning', color: 'yellow' },
-    { value: 'update', label: 'App Update', color: 'green' },
-    { value: 'event', label: 'Special Event', color: 'orange' },
+    { value: 'info', label: t('adminNotifications.typeInfo'), color: 'blue' },
+    { value: 'announcement', label: t('adminNotifications.typeAnnouncement'), color: 'purple' },
+    { value: 'warning', label: t('adminNotifications.typeWarning'), color: 'yellow' },
+    { value: 'update', label: t('adminNotifications.typeUpdate'), color: 'green' },
+    { value: 'event', label: t('adminNotifications.typeEvent'), color: 'orange' },
   ];
 
   const priorities = [
-    { value: 'low', label: 'Low Priority' },
-    { value: 'normal', label: 'Normal Priority' },
-    { value: 'high', label: 'High Priority' },
+    { value: 'low', label: t('adminNotifications.priorityLow') },
+    { value: 'normal', label: t('adminNotifications.priorityNormal') },
+    { value: 'high', label: t('adminNotifications.priorityHigh') },
   ];
 
   useEffect(() => {
@@ -55,7 +57,7 @@ const AdminNotifications = () => {
       setNotifications(notificationsList);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      showToast('Failed to load notifications', 'error');
+      showToast(t('adminNotifications.failedLoad'), 'error');
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ const AdminNotifications = () => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.message.trim()) {
-      showToast('Please fill in all required fields', 'error');
+      showToast(t('adminNotifications.fillRequired'), 'error');
       return;
     }
 
@@ -107,11 +109,11 @@ const AdminNotifications = () => {
         priority: 'normal',
       });
 
-      showToast('Notification sent successfully!', 'success');
+      showToast(t('adminNotifications.sendSuccess'), 'success');
       fetchNotifications();
     } catch (error) {
       console.error('Error sending notification:', error);
-      showToast('Failed to send notification', 'error');
+      showToast(t('adminNotifications.sendFailed'), 'error');
     } finally {
       setSending(false);
     }
@@ -127,11 +129,11 @@ const AdminNotifications = () => {
     try {
       const db = getFirebaseDb();
       await deleteDoc(doc(db, 'adminNotifications', confirmDelete.notification));
-      showToast('Notification deleted', 'success');
+      showToast(t('adminNotifications.deleteSuccess'), 'success');
       fetchNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
-      showToast('Failed to delete notification', 'error');
+      showToast(t('adminNotifications.deleteFailed'), 'error');
     } finally {
       setConfirmDelete({ isOpen: false, notification: null });
     }
@@ -150,9 +152,9 @@ const AdminNotifications = () => {
 
   const getPriorityBadge = (priority) => {
     const badges = {
-      low: { text: 'Low', color: 'bg-gray-500/20 text-gray-400' },
-      normal: { text: 'Normal', color: 'bg-blue-500/20 text-blue-400' },
-      high: { text: 'High', color: 'bg-red-500/20 text-red-400' },
+      low: { text: t('adminNotifications.low'), color: 'bg-gray-500/20 text-gray-400' },
+      normal: { text: t('adminNotifications.normal'), color: 'bg-blue-500/20 text-blue-400' },
+      high: { text: t('adminNotifications.high'), color: 'bg-red-500/20 text-red-400' },
     };
     return badges[priority] || badges.normal;
   };
@@ -171,8 +173,8 @@ const AdminNotifications = () => {
           <div className="ml-2 flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary-500" />
             <div>
-              <h1 className="admin-header">Notifications Management</h1>
-              <p className="text-sm text-gray-400">Send notifications to all users</p>
+              <h1 className="admin-header">{t('adminNotifications.title')}</h1>
+              <p className="text-sm text-gray-400">{t('adminNotifications.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -183,13 +185,13 @@ const AdminNotifications = () => {
         <div className="card p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Send className="w-5 h-5 text-primary-400" />
-            Create New Notification
+            {t('adminNotifications.createNew')}
           </h2>
 
           <form onSubmit={handleSendNotification} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Title *
+                {t('adminNotifications.titleLabel')} *
               </label>
               <input
                 type="text"
@@ -197,21 +199,21 @@ const AdminNotifications = () => {
                 value={formData.title}
                 onChange={handleInputChange}
                 className="input-field w-full"
-                placeholder="Enter notification title"
+                placeholder={t('adminNotifications.titlePlaceholder')}
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Message *
+                {t('adminNotifications.messageLabel')} *
               </label>
               <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleInputChange}
                 className="input-field w-full resize-none"
-                placeholder="Enter notification message"
+                placeholder={t('adminNotifications.messagePlaceholder')}
                 rows="4"
                 required
               />
@@ -220,7 +222,7 @@ const AdminNotifications = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Type
+                  {t('adminNotifications.type')}
                 </label>
                 <select
                   name="type"
@@ -238,7 +240,7 @@ const AdminNotifications = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Priority
+                  {t('adminNotifications.priority')}
                 </label>
                 <select
                   name="priority"
@@ -258,7 +260,7 @@ const AdminNotifications = () => {
             <div className="flex items-center gap-2 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <Users className="w-5 h-5 text-blue-400" />
               <p className="text-sm text-blue-300">
-                This notification will be shown to all active users
+                {t('adminNotifications.allUsersInfo')}
               </p>
             </div>
 
@@ -270,12 +272,12 @@ const AdminNotifications = () => {
               {sending ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Sending...
+                  {t('adminNotifications.sending')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Send Notification
+                  {t('adminNotifications.sendNotification')}
                 </>
               )}
             </button>
@@ -288,7 +290,7 @@ const AdminNotifications = () => {
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5 text-primary-400" />
               <h2 className="text-lg font-semibold text-white">
-                Notification History ({notifications.length})
+                {t('adminNotifications.history')} ({notifications.length})
               </h2>
             </div>
             {notifications.length > 3 && (
@@ -296,7 +298,7 @@ const AdminNotifications = () => {
                 onClick={() => setShowAllNotifications(!showAllNotifications)}
                 className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
               >
-                {showAllNotifications ? 'See less' : 'See more'}
+                {showAllNotifications ? t('adminNotifications.seeLess') : t('adminNotifications.seeMore')}
               </button>
             )}
           </div>
@@ -308,7 +310,7 @@ const AdminNotifications = () => {
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
               <Bell className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-              <p className="text-gray-400">No notifications sent yet</p>
+              <p className="text-gray-400">{t('adminNotifications.noNotifications')}</p>
             </div>
           ) : (
             <>
@@ -338,10 +340,10 @@ const AdminNotifications = () => {
                           </p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
                             <span className="whitespace-nowrap">
-                              {notification.createdAt?.toDate?.()?.toLocaleString() || 'Just now'}
+                              {notification.createdAt?.toDate?.()?.toLocaleString() || t('adminNotifications.justNow')}
                             </span>
-                            <span className="whitespace-nowrap">👁️ {notification.viewCount || 0} views</span>
-                            <span className="whitespace-nowrap">✕ {notification.dismissCount || 0} dismissed</span>
+                            <span className="whitespace-nowrap">👁️ {notification.viewCount || 0} {t('adminNotifications.views')}</span>
+                            <span className="whitespace-nowrap">✕ {notification.dismissCount || 0} {t('adminNotifications.dismissed')}</span>
                           </div>
                         </div>
                         <button
@@ -362,7 +364,7 @@ const AdminNotifications = () => {
                     onClick={() => setShowAllNotifications(false)}
                     className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
                   >
-                    See less
+                    {t('adminNotifications.seeLess')}
                   </button>
                 </div>
               )}
@@ -385,10 +387,10 @@ const AdminNotifications = () => {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, notification: null })}
         onConfirm={confirmDeleteNotification}
-        title="Delete Notification"
-        message="Are you sure you want to delete this notification? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('adminNotifications.deleteTitle')}
+        message={t('adminNotifications.deleteMessage')}
+        confirmText={t('adminNotifications.delete')}
+        cancelText={t('adminNotifications.cancel')}
         type="danger"
       />
     </div>

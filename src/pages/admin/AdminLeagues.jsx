@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   ArrowLeft, 
   Plus, 
@@ -17,6 +18,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 const AdminLeagues = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -37,7 +39,7 @@ const AdminLeagues = () => {
       setLeagues(data.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (error) {
       console.error('Error loading leagues:', error);
-      showToast('Failed to load leagues', 'error');
+      showToast(t('adminLeagues.failedLoad'), 'error');
     } finally {
       setLoading(false);
     }
@@ -60,11 +62,11 @@ const AdminLeagues = () => {
 
     try {
       await leaguesCollection.delete(leagueId);
-      showToast('League deleted successfully!', 'success');
+      showToast(t('adminLeagues.deleteSuccess'), 'success');
       loadLeagues();
     } catch (error) {
       console.error('Error deleting league:', error);
-      showToast('Failed to delete league', 'error');
+      showToast(t('adminLeagues.deleteFailed'), 'error');
     }
   };
 
@@ -72,10 +74,10 @@ const AdminLeagues = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('adminLeagues.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('adminLeagues.accessDeniedMessage')}</p>
           <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Home
+            {t('adminLeagues.goToHome')}
           </button>
         </div>
       </div>
@@ -94,9 +96,9 @@ const AdminLeagues = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div>
-            <h1 className="admin-header">Leagues Management</h1>
+            <h1 className="admin-header">{t('adminLeagues.title')}</h1>
             <p className="text-sm text-gray-400 mt-1">
-              Create and manage multiple leagues
+              {t('adminLeagues.subtitle')}
             </p>
           </div>
         </div>
@@ -105,7 +107,7 @@ const AdminLeagues = () => {
           className="btn-primary w-full flex items-center justify-center text-sm py-2"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Create League
+          {t('adminLeagues.createLeague')}
         </button>
       </div>
 
@@ -118,16 +120,16 @@ const AdminLeagues = () => {
         /* Empty State */
         <div className="card p-12 text-center">
           <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">No Leagues Yet</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">{t('adminLeagues.noLeagues')}</h2>
           <p className="text-gray-400 mb-6">
-            Create your first league to get started
+            {t('adminLeagues.noLeaguesMessage')}
           </p>
           <button
             onClick={() => navigate('/admin/leagues/create')}
             className="btn-primary inline-flex items-center"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Create League
+            {t('adminLeagues.createLeague')}
           </button>
         </div>
       ) : (
@@ -150,19 +152,19 @@ const AdminLeagues = () => {
                 <div className="flex items-center text-sm">
                   <Users className="w-4 h-4 text-gray-400 mr-2" />
                   <span className="text-gray-300">
-                    {league.totalTeams} Teams
+                    {league.totalTeams} {t('adminLeagues.teams')}
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
                   <TrendingUp className="w-4 h-4 text-primary-400 mr-2" />
                   <span className="text-gray-300">
-                    Top {league.qualifiedPosition} Qualify
+                    {t('adminLeagues.topQualify').replace('{position}', league.qualifiedPosition)}
                   </span>
                 </div>
                 <div className="flex items-center text-sm">
                   <TrendingDown className="w-4 h-4 text-red-400 mr-2" />
                   <span className="text-gray-300">
-                    Position {league.relegationPosition}+ Relegated
+                    {t('adminLeagues.relegated').replace('{position}', league.relegationPosition)}
                   </span>
                 </div>
               </div>
@@ -172,14 +174,14 @@ const AdminLeagues = () => {
                 <button
                   onClick={() => navigate(`/admin/leagues/edit/${league.id}`)}
                   className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                  title="Edit League"
+                  title={t('adminLeagues.editLeague')}
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(league.id, league.name)}
                   className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                  title="Delete League"
+                  title={t('adminLeagues.deleteLeague')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -204,9 +206,9 @@ const AdminLeagues = () => {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' })}
         onConfirm={confirmDeleteLeague}
-        title="Delete League"
-        message={`Are you sure you want to delete "${confirmDelete.leagueName}"? This action cannot be undone.`}
-        confirmText="Delete League"
+        title={t('adminLeagues.deleteLeague')}
+        message={t('adminLeagues.confirmDelete').replace('{name}', confirmDelete.leagueName)}
+        confirmText={t('adminLeagues.deleteLeague')}
         type="danger"
       />
     </div>
