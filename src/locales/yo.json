@@ -186,6 +186,20 @@
     "venue": "Ibi",
     "referee": "Adájọ́"
   },
+  "fixtures": {
+    "active": "Tó ń ṣiṣẹ́",
+    "seeLess": "Wo díẹ̀",
+    "seeMore": "Wo síi",
+    "more": "Síi",
+    "knockoutStage": "Ipele Ìparí",
+    "otherFixtures": "Àwọn Eré Míràn",
+    "group": "Ẹgbẹ́",
+    "knockout": "Ìparí",
+    "groupStage": "Ipele Ẹgbẹ́",
+    "viewStandings": "Wo Ipò",
+    "qualification": "Ìyẹ̀wù",
+    "relegation": "Ìsọ̀kalẹ̀"
+  },
   "table": {
     "position": "Ipò",
     "team": "Ẹgbẹ́",
