@@ -24,7 +24,6 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import TermsConditions from './pages/TermsConditions';
 import Licenses from './pages/Licenses';
-import LanguageSelector from './pages/LanguageSelector';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -100,8 +99,6 @@ const AppContent = () => {
   if (!user) {
     return (
       <Routes>
-        {/* First-time language selector - shown before authentication */}
-        <Route path="/language" element={<LanguageSelector />} />
         <Route path="/auth" element={<AuthLanding />} />
         <Route path="/email-auth" element={<EmailAuth />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
@@ -111,9 +108,9 @@ const AppContent = () => {
         <Route path="/terms-and-conditions" element={<TermsConditions />} />
         <Route path="/licenses" element={<Licenses />} />
         {/* Legacy routes for backward compatibility */}
-        <Route path="/login" element={<Navigate to="/language" replace />} />
-        <Route path="/register" element={<Navigate to="/language" replace />} />
-        <Route path="*" element={<Navigate to="/language" replace />} />
+        <Route path="/login" element={<Navigate to="/auth" replace />} />
+        <Route path="/register" element={<Navigate to="/auth" replace />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     );
   }
