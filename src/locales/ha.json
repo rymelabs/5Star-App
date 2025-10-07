@@ -250,6 +250,26 @@
     "more": "ƙari",
     "noTeamData": "Babu bayanan ƙungiya"
   },
+  "search": {
+    "team": "Ƙungiya",
+    "player": "Dan wasa",
+    "competition": "Gasar",
+    "season": "Lokaci",
+    "match": "Wasa",
+    "news": "Labarai",
+    "unknownTeam": "Ƙungiya da ba a sani ba",
+    "unknownPlayer": "Dan wasa da ba a sani ba",
+    "unknownCompetition": "Gasar da ba a sani ba",
+    "unknownSeason": "Lokaci da ba a sani ba",
+    "tbd": "Ba a tantance ba",
+    "untitled": "Ba sunan",
+    "placeholder": "Nema ƙungiyoyi, 'yan wasa, gasar, wasanni, labarai...",
+    "searching": "Ana nema...",
+    "noResults": "Ba a sami sakamako ba",
+    "trySearching": "Gwada neman ƙungiyoyi, 'yan wasa, ko labarai",
+    "startTyping": "Fara rubutu don nema",
+    "searchAcross": "Nema a cikin ƙungiyoyi, 'yan wasa, gasar, wasanni, da labarai"
+  },
   "player": {
     "loadingPlayer": "Ana loda dan wasa...",
     "age": "Shekaru",

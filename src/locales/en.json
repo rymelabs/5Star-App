@@ -263,6 +263,26 @@
     "more": "more",
     "noTeamData": "No team data available"
   },
+  "search": {
+    "team": "Team",
+    "player": "Player",
+    "competition": "Competition",
+    "season": "Season",
+    "match": "Match",
+    "news": "News",
+    "unknownTeam": "Unknown Team",
+    "unknownPlayer": "Unknown Player",
+    "unknownCompetition": "Unknown Competition",
+    "unknownSeason": "Unknown Season",
+    "tbd": "TBD",
+    "untitled": "Untitled",
+    "placeholder": "Search teams, players, competitions, fixtures, news...",
+    "searching": "Searching...",
+    "noResults": "No results found",
+    "trySearching": "Try searching for teams, players, or news",
+    "startTyping": "Start typing to search",
+    "searchAcross": "Search across teams, players, competitions, fixtures, and news"
+  },
   "player": {
     "loadingPlayer": "Loading player...",
     "age": "Age",
