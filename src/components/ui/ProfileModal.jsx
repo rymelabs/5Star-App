@@ -75,8 +75,8 @@ const ProfileModal = ({ onClose }) => {
               )}
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-white">{user?.name || 'Guest User'}</h3>
-              <p className="text-sm text-gray-400">{user?.email || 'Not logged in'}</p>
+              <h3 className="font-medium text-white">{user?.name || t('profileModal.guestUser')}</h3>
+              <p className="text-sm text-gray-400">{user?.email || t('profileModal.notLoggedIn')}</p>
               {user?.role === 'admin' && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent-600 text-white mt-1">
                   <Shield className="w-3 h-3 mr-1" />

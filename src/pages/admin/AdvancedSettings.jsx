@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { getFirebaseDb } from '../../firebase/config';
 import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { ArrowLeft, AlertTriangle, Trash2, Database } from 'lucide-react';
@@ -8,6 +9,7 @@ import Toast from '../../components/Toast';
 
 const AdvancedSettings = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [modalConfig, setModalConfig] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -24,20 +26,20 @@ const AdvancedSettings = () => {
 
   const handleDeleteData = (dataType) => {
     const dataTypeLabels = {
-      seasons: 'Seasons',
-      leagues: 'Leagues',
-      teams: 'Teams',
-      fixtures: 'Fixtures',
-      tables: 'League Tables',
-      articles: 'News Articles',
-      everything: 'All Data',
+      seasons: t('advancedSettings.seasons'),
+      leagues: t('advancedSettings.leagues'),
+      teams: t('advancedSettings.teams'),
+      fixtures: t('advancedSettings.fixtures'),
+      tables: t('advancedSettings.tables'),
+      articles: t('advancedSettings.articles'),
+      everything: t('advancedSettings.allData'),
     };
 
     const label = dataTypeLabels[dataType];
     
     setModalConfig({
-      title: `Delete ${label}`,
-      message: `You are about to permanently delete all ${label.toLowerCase()}. This action cannot be undone and will remove all data from the database.`,
+      title: t('advancedSettings.deleteTitle').replace('{type}', label),
+      message: t('advancedSettings.deleteMessage').replace('{type}', label.toLowerCase()),
       confirmText: `DELETE ${dataType.toUpperCase()}`,
       onConfirm: async () => {
         try {
@@ -75,7 +77,7 @@ const AdvancedSettings = () => {
           
           setToast({
             type: 'success',
-            message: `Successfully deleted all ${label.toLowerCase()}!`,
+            message: t('advancedSettings.deleteSuccess').replace('{type}', label.toLowerCase()),
           });
           
           // Reload after a short delay
@@ -86,7 +88,7 @@ const AdvancedSettings = () => {
           console.error(`Error deleting ${dataType}:`, error);
           setToast({
             type: 'error',
-            message: `Failed to delete ${label.toLowerCase()}. ${error.message}`,
+            message: t('advancedSettings.deleteFailed').replace('{type}', label.toLowerCase()).replace('{error}', error.message),
           });
           throw error;
         }
@@ -108,8 +110,8 @@ const AdvancedSettings = () => {
           <div className="ml-2 flex items-center gap-2">
             <Database className="w-5 h-5 text-red-500" />
             <div>
-              <h1 className="admin-header">Advanced Settings</h1>
-              <p className="text-sm text-gray-400">Manage system data and danger zone operations</p>
+              <h1 className="admin-header">{t('advancedSettings.title')}</h1>
+              <p className="text-sm text-gray-400">{t('advancedSettings.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -120,10 +122,9 @@ const AdvancedSettings = () => {
         <div className="flex items-start gap-3 mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-yellow-500 font-semibold text-lg mb-2">⚠️ Danger Zone</p>
+            <p className="text-yellow-500 font-semibold text-lg mb-2">⚠️ {t('advancedSettings.dangerZone')}</p>
             <p className="text-gray-400">
-              These actions are <strong className="text-white">irreversible</strong>. All deleted data will be permanently removed from the database.
-              Please proceed with extreme caution.
+              {t('advancedSettings.dangerWarning')}
             </p>
           </div>
         </div>
@@ -131,7 +132,7 @@ const AdvancedSettings = () => {
         {/* Delete Options */}
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">Delete Individual Collections</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">{t('advancedSettings.deleteIndividual')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => handleDeleteData('seasons')}
@@ -140,8 +141,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Seasons</p>
-                    <p className="text-gray-400 text-sm">Remove all season data</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllSeasons')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllSeasonsDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -153,8 +154,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Leagues</p>
-                    <p className="text-gray-400 text-sm">Remove all league data</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllLeagues')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllLeaguesDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -166,8 +167,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Teams</p>
-                    <p className="text-gray-400 text-sm">Remove all team data</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllTeams')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllTeamsDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -179,8 +180,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Fixtures</p>
-                    <p className="text-gray-400 text-sm">Remove all fixture data</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllFixtures')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllFixturesDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -192,8 +193,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Tables</p>
-                    <p className="text-gray-400 text-sm">Remove all league table data</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllTables')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllTablesDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -205,8 +206,8 @@ const AdvancedSettings = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-500" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Delete All Articles</p>
-                    <p className="text-gray-400 text-sm">Remove all news articles</p>
+                    <p className="text-white font-medium">{t('advancedSettings.deleteAllArticles')}</p>
+                    <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllArticlesDesc')}</p>
                   </div>
                 </div>
               </button>
@@ -215,7 +216,7 @@ const AdvancedSettings = () => {
 
           {/* Nuclear Option */}
           <div className="pt-6 border-t border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Nuclear Option</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">{t('advancedSettings.nuclearOption')}</h2>
             <button
               onClick={() => handleDeleteData('everything')}
               className="w-full flex items-center justify-between p-6 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 hover:border-red-600/50 rounded-lg transition-colors"
@@ -223,8 +224,8 @@ const AdvancedSettings = () => {
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 <div className="text-left">
-                  <p className="text-white font-semibold text-lg">Delete All Data</p>
-                  <p className="text-gray-400 text-sm">Remove all data from all collections (seasons, leagues, teams, fixtures, tables, articles, activity logs)</p>
+                  <p className="text-white font-semibold text-lg">{t('advancedSettings.deleteAllData')}</p>
+                  <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllDataDesc')}</p>
                 </div>
               </div>
             </button>
