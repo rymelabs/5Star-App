@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, Newspaper, LayoutDashboard, Settings, User, LogOut, Shield } from 'lucide-react';
+import { Home, Calendar, Users, Newspaper, TrendingUp, LayoutDashboard, Settings, User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Header from './Header';
@@ -17,6 +17,7 @@ const Layout = ({ children }) => {
     { icon: Calendar, label: t('navigation.fixtures'), path: '/fixtures' },
     { icon: Users, label: t('navigation.teams'), path: '/teams' },
     { icon: Newspaper, label: t('navigation.news'), path: '/news' },
+    { icon: TrendingUp, label: t('stats.title'), path: '/stats' },
   ];
 
   const userNavItems = [
