@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -17,6 +18,7 @@ const CreateLeague = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast, showToast, hideToast } = useToast();
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -39,17 +41,17 @@ const CreateLeague = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      showToast('Please enter a league name', 'warning');
+      showToast(t('createLeague.enterName'), 'warning');
       return;
     }
 
     if (formData.qualifiedPosition >= formData.relegationPosition) {
-      showToast('Qualified position must be less than relegation position', 'warning');
+      showToast(t('createLeague.qualifiedLessThanRelegation'), 'warning');
       return;
     }
 
     if (formData.relegationPosition > formData.totalTeams) {
-      showToast('Relegation position cannot exceed total teams', 'warning');
+      showToast(t('createLeague.relegationExceedsTotal'), 'warning');
       return;
     }
 
@@ -59,7 +61,7 @@ const CreateLeague = () => {
       navigate('/admin/leagues');
     } catch (error) {
       console.error('Error creating league:', error);
-      alert('Failed to create league. Please try again.');
+  alert(t('createLeague.createFailed'));
     } finally {
       setSaving(false);
     }
@@ -69,10 +71,10 @@ const CreateLeague = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('createLeague.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('createLeague.accessDeniedMessage')}</p>
           <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Home
+            {t('createLeague.goToHome')}
           </button>
         </div>
       </div>
@@ -90,9 +92,9 @@ const CreateLeague = () => {
           <ArrowLeft className="w-5 h-5 text-gray-400" />
         </button>
         <div>
-          <h1 className="admin-header">Create New League</h1>
+          <h1 className="admin-header">{t('createLeague.title')}</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Set up a new league with custom settings
+            {t('createLeague.subtitle')}
           </p>
         </div>
       </div>
@@ -104,21 +106,20 @@ const CreateLeague = () => {
           <div className="flex items-start mb-4">
             <Trophy className="w-6 h-6 text-primary-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">League Name</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('createLeague.leagueName')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Enter the name of the league (e.g., Premier League, Championship)
+                {t('createLeague.leagueNameDescription')}
               </p>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Name
+                  {t('createLeague.name')}
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="e.g., Premier League"
+                  placeholder={t('createLeague.namePlaceholder')}
                   className="input-field w-full"
                   required
                 />
@@ -132,14 +133,13 @@ const CreateLeague = () => {
           <div className="flex items-start mb-4">
             <TrendingUp className="w-6 h-6 text-primary-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Qualification Zone</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('createLeague.qualificationZone')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in this position or higher qualify for next competition
+                {t('createLeague.qualificationDescription')}
               </p>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Top Position (1-{formData.totalTeams})
+                  {t('createLeague.topPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -152,7 +152,7 @@ const CreateLeague = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Top {formData.qualifiedPosition} teams will be highlighted in blue
+                  {t('createLeague.topTeamsHighlight').replace('{position}', formData.qualifiedPosition)}
                 </p>
               </div>
             </div>
@@ -164,14 +164,13 @@ const CreateLeague = () => {
           <div className="flex items-start mb-4">
             <TrendingDown className="w-6 h-6 text-red-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Relegation Zone</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('createLeague.relegationZone')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in or below this position are relegated
+                {t('createLeague.relegationDescription')}
               </p>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Starting Position (1-{formData.totalTeams})
+                  {t('createLeague.startingPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -184,7 +183,7 @@ const CreateLeague = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Bottom {formData.totalTeams - formData.relegationPosition + 1} teams will be highlighted in red
+                  {t('createLeague.bottomTeamsHighlight').replace('{count}', formData.totalTeams - formData.relegationPosition + 1)}
                 </p>
               </div>
             </div>
@@ -196,14 +195,13 @@ const CreateLeague = () => {
           <div className="flex items-start mb-4">
             <Users className="w-6 h-6 text-accent-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Total Teams</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('createLeague.totalTeams')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                How many teams will compete in this league
+                {t('createLeague.totalTeamsDescription')}
               </p>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Number of Teams
+                  {t('createLeague.numberOfTeams')}
                 </label>
                 <input
                   type="number"
@@ -222,31 +220,31 @@ const CreateLeague = () => {
 
         {/* Preview */}
         <div className="card p-6 bg-dark-800/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Preview</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('createLeague.preview')}</h3>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                <span className="text-gray-300">Qualified</span>
+                <span className="text-gray-300">{t('createLeague.qualified')}</span>
               </div>
-              <span className="text-gray-400">Positions 1 - {formData.qualifiedPosition}</span>
+              <span className="text-gray-400">{t('createLeague.positions')} 1 - {formData.qualifiedPosition}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-gray-600 rounded mr-2"></div>
-                <span className="text-gray-300">Safe</span>
+                <span className="text-gray-300">{t('createLeague.safe')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
+                {t('createLeague.positions')} {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                <span className="text-gray-300">Relegated</span>
+                <span className="text-gray-300">{t('createLeague.relegated')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.relegationPosition} - {formData.totalTeams}
+                {t('createLeague.positions')} {formData.relegationPosition} - {formData.totalTeams}
               </span>
             </div>
           </div>
@@ -259,7 +257,7 @@ const CreateLeague = () => {
             onClick={() => navigate('/admin/leagues')}
             className="flex-1 btn-secondary py-3"
           >
-            Cancel
+            {t('createLeague.cancel')}
           </button>
           <button
             type="submit"
@@ -269,12 +267,12 @@ const CreateLeague = () => {
             {saving ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Creating...
+                {t('createLeague.creating')}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5 mr-2" />
-                Create League
+                {t('createLeague.createLeague')}
               </>
             )}
           </button>

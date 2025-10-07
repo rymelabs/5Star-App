@@ -130,10 +130,10 @@ const NotificationInbox = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('notifications.justNow');
+    if (diffMins < 60) return t('notifications.minutesAgo').replace('{count}', diffMins);
+    if (diffHours < 24) return t('notifications.hoursAgo').replace('{count}', diffHours);
+    if (diffDays < 7) return t('notifications.daysAgo').replace('{count}', diffDays);
     
     return notifDate.toLocaleDateString();
   };
@@ -145,13 +145,13 @@ const NotificationInbox = () => {
           <Bell className="w-16 h-16 mx-auto mb-4 text-gray-500" />
           <h2 className="text-xl font-semibold mb-2">{t('common.signInRequired')}</h2>
           <p className="text-gray-400 mb-4">
-            You need to be signed in to view notifications
+            {t('notifications.signInToView')}
           </p>
           <button
             onClick={() => navigate('/login')}
             className="btn-primary"
           >
-            Sign In
+            {t('notifications.signIn')}
           </button>
         </div>
       </div>
@@ -175,7 +175,7 @@ const NotificationInbox = () => {
                 <h1 className="page-header">{t('notifications.title')}</h1>
                 {unreadCount > 0 && (
                   <p className="text-sm text-gray-400">
-                    {unreadCount} unread
+                    {t('notifications.unreadCount').replace('{count}', unreadCount)}
                   </p>
                 )}
               </div>
@@ -187,7 +187,7 @@ const NotificationInbox = () => {
                 className="flex items-center text-sm text-primary-400 hover:text-primary-300 transition"
               >
                 <CheckCheck className="w-4 h-4 mr-1" />
-                Mark all read
+                {t('notifications.markAllRead')}
               </button>
             )}
           </div>
@@ -230,7 +230,7 @@ const NotificationInbox = () => {
                             </h3>
                             {notification.priority === 'high' && (
                               <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-semibold rounded">
-                                IMPORTANT
+                                {t('notifications.important')}
                               </span>
                             )}
                           </div>
@@ -269,13 +269,13 @@ const NotificationInbox = () => {
               <Bell className="w-16 h-16 mx-auto mb-4 text-gray-600" />
               <h2 className="text-xl font-semibold mb-2">{t('notifications.noNotificationsYet')}</h2>
               <p className="text-gray-400">
-                We'll notify you about your followed teams' matches and news
+                {t('notifications.emptyMessage')}
               </p>
             </div>
           ) : inboxNotifications.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400">
-                No personal notifications
+                {t('notifications.noPersonal')}
               </p>
             </div>
           ) : (

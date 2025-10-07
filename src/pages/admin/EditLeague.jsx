@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   ArrowLeft, 
   Save,
@@ -17,6 +18,7 @@ const EditLeague = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast, showToast, hideToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,12 +49,12 @@ const EditLeague = () => {
           totalTeams: league.totalTeams
         });
       } else {
-        showToast('League not found', 'error');
+        showToast(t('editLeague.notFound'), 'error');
         navigate('/admin/leagues');
       }
     } catch (error) {
       console.error('Error loading league:', error);
-      showToast('Failed to load league', 'error');
+      showToast(t('editLeague.failedLoad'), 'error');
       navigate('/admin/leagues');
     } finally {
       setLoading(false);
@@ -71,17 +73,17 @@ const EditLeague = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      showToast('Please enter a league name', 'warning');
+      showToast(t('editLeague.enterName'), 'warning');
       return;
     }
 
     if (formData.qualifiedPosition >= formData.relegationPosition) {
-      showToast('Qualified position must be less than relegation position', 'warning');
+      showToast(t('editLeague.qualifiedLessThanRelegation'), 'warning');
       return;
     }
 
     if (formData.relegationPosition > formData.totalTeams) {
-      showToast('Relegation position cannot exceed total teams', 'warning');
+      showToast(t('editLeague.relegationExceedsTotal'), 'warning');
       return;
     }
 
@@ -91,7 +93,7 @@ const EditLeague = () => {
       navigate('/admin/leagues');
     } catch (error) {
       console.error('Error updating league:', error);
-      showToast('Failed to update league. Please try again.', 'error');
+      showToast(t('editLeague.updateFailed'), 'error');
     } finally {
       setSaving(false);
     }
@@ -101,10 +103,10 @@ const EditLeague = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('editLeague.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('editLeague.accessDeniedMessage')}</p>
           <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Home
+            {t('editLeague.goToHome')}
           </button>
         </div>
       </div>
@@ -130,9 +132,9 @@ const EditLeague = () => {
           <ArrowLeft className="w-5 h-5 text-gray-400" />
         </button>
         <div>
-          <h1 className="admin-header">Edit League</h1>
+          <h1 className="admin-header">{t('editLeague.title')}</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Update league settings
+            {t('editLeague.subtitle')}
           </p>
         </div>
       </div>
@@ -144,21 +146,21 @@ const EditLeague = () => {
           <div className="flex items-start mb-4">
             <Trophy className="w-6 h-6 text-primary-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">League Name</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('editLeague.leagueName')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Enter the name of the league (e.g., Premier League, Championship)
+                {t('editLeague.leagueNameDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Name
+                  {t('editLeague.name')}
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="e.g., Premier League"
+                  placeholder={t('editLeague.namePlaceholder')}
                   className="input-field w-full"
                   required
                 />
@@ -172,14 +174,14 @@ const EditLeague = () => {
           <div className="flex items-start mb-4">
             <TrendingUp className="w-6 h-6 text-primary-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Qualification Zone</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('editLeague.qualificationZone')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in this position or higher qualify for next competition
+                {t('editLeague.qualificationDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Top Position (1-{formData.totalTeams})
+                  {t('editLeague.topPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -192,7 +194,7 @@ const EditLeague = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Top {formData.qualifiedPosition} teams will be highlighted in blue
+                  {t('editLeague.topTeamsHighlight').replace('{position}', formData.qualifiedPosition)}
                 </p>
               </div>
             </div>
@@ -204,14 +206,14 @@ const EditLeague = () => {
           <div className="flex items-start mb-4">
             <TrendingDown className="w-6 h-6 text-red-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Relegation Zone</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('editLeague.relegationZone')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in or below this position are relegated
+                {t('editLeague.relegationDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Starting Position (1-{formData.totalTeams})
+                  {t('editLeague.startingPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -224,7 +226,7 @@ const EditLeague = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Bottom {formData.totalTeams - formData.relegationPosition + 1} teams will be highlighted in red
+                  {t('editLeague.bottomTeamsHighlight').replace('{count}', formData.totalTeams - formData.relegationPosition + 1)}
                 </p>
               </div>
             </div>
@@ -236,14 +238,14 @@ const EditLeague = () => {
           <div className="flex items-start mb-4">
             <Users className="w-6 h-6 text-accent-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Total Teams</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('editLeague.totalTeams')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                How many teams will compete in this league
+                {t('editLeague.totalTeamsDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Number of Teams
+                  {t('editLeague.numberOfTeams')}
                 </label>
                 <input
                   type="number"
@@ -262,31 +264,31 @@ const EditLeague = () => {
 
         {/* Preview */}
         <div className="card p-6 bg-dark-800/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Preview</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('editLeague.preview')}</h3>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                <span className="text-gray-300">Qualified</span>
+                <span className="text-gray-300">{t('editLeague.qualified')}</span>
               </div>
-              <span className="text-gray-400">Positions 1 - {formData.qualifiedPosition}</span>
+              <span className="text-gray-400">{t('editLeague.positions')} 1 - {formData.qualifiedPosition}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-gray-600 rounded mr-2"></div>
-                <span className="text-gray-300">Safe</span>
+                <span className="text-gray-300">{t('editLeague.safe')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
+                {t('editLeague.positions')} {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                <span className="text-gray-300">Relegated</span>
+                <span className="text-gray-300">{t('editLeague.relegated')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.relegationPosition} - {formData.totalTeams}
+                {t('editLeague.positions')} {formData.relegationPosition} - {formData.totalTeams}
               </span>
             </div>
           </div>
@@ -299,7 +301,7 @@ const EditLeague = () => {
             onClick={() => navigate('/admin/leagues')}
             className="flex-1 btn-secondary py-3"
           >
-            Cancel
+            {t('editLeague.cancel')}
           </button>
           <button
             type="submit"
@@ -309,12 +311,12 @@ const EditLeague = () => {
             {saving ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Saving...
+                {t('editLeague.saving')}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5 mr-2" />
-                Save Changes
+                {t('editLeague.saveChanges')}
               </>
             )}
           </button>

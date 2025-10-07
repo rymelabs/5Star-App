@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Save, Settings, Trophy, TrendingDown } from 'lucide-react';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 const AdminLeagueSettings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { leagueSettings, updateLeagueSettings } = useFootball();
   const [formData, setFormData] = useState({
     qualifiedPosition: 4,
@@ -36,7 +38,7 @@ const AdminLeagueSettings = () => {
     e.preventDefault();
     
     if (!isAdmin) {
-      showToast('Only admins can update league settings', 'error');
+      showToast(t('adminLeagueSettings.adminOnly'), 'error');
       return;
     }
 
@@ -47,23 +49,23 @@ const AdminLeagueSettings = () => {
 
     // Check for valid numbers
     if (isNaN(qualifiedPos) || isNaN(relegationPos) || isNaN(totalTeams)) {
-      showToast('Please fill in all fields with valid numbers', 'error');
+      showToast(t('adminLeagueSettings.fillValidNumbers'), 'error');
       return;
     }
 
     // Validation
     if (qualifiedPos >= relegationPos) {
-      showToast('Qualified position must be less than relegation position', 'error');
+      showToast(t('adminLeagueSettings.qualifiedLessThanRelegation'), 'error');
       return;
     }
 
     if (qualifiedPos < 1 || relegationPos > totalTeams) {
-      showToast('Invalid position values', 'error');
+      showToast(t('adminLeagueSettings.invalidPositions'), 'error');
       return;
     }
 
     if (totalTeams < 2) {
-      showToast('Total teams must be at least 2', 'error');
+      showToast(t('adminLeagueSettings.minTeams'), 'error');
       return;
     }
 
@@ -75,10 +77,10 @@ const AdminLeagueSettings = () => {
         relegationPosition: relegationPos,
         totalTeams: totalTeams
       });
-      showToast('League settings updated successfully!', 'success');
+      showToast(t('adminLeagueSettings.updateSuccess'), 'success');
     } catch (error) {
       console.error('Error updating settings:', error);
-      showToast('Failed to update settings', 'error');
+      showToast(t('adminLeagueSettings.updateFailed'), 'error');
     } finally {
       setSaving(false);
     }
@@ -97,13 +99,13 @@ const AdminLeagueSettings = () => {
     return (
       <div className="p-6">
         <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('adminLeagueSettings.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('adminLeagueSettings.accessDeniedMessage')}</p>
           <button
             onClick={() => navigate('/')}
             className="btn-primary"
           >
-            Go to Home
+            {t('adminLeagueSettings.goToHome')}
           </button>
         </div>
       </div>
@@ -122,8 +124,8 @@ const AdminLeagueSettings = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div>
-            <h1 className="admin-header">League Settings</h1>
-            <p className="text-sm text-gray-400">Configure qualification and relegation positions</p>
+            <h1 className="admin-header">{t('adminLeagueSettings.title')}</h1>
+            <p className="text-sm text-gray-400">{t('adminLeagueSettings.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -135,14 +137,14 @@ const AdminLeagueSettings = () => {
           <div className="flex items-start mb-4">
             <Trophy className="w-6 h-6 text-primary-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Qualified Position</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.qualifiedPosition')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in or above this position are marked as "Qualified"
+                {t('adminLeagueSettings.qualifiedDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Top Position (1-{formData.totalTeams})
+                  {t('adminLeagueSettings.topPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -155,7 +157,7 @@ const AdminLeagueSettings = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Top {formData.qualifiedPosition} teams will be highlighted in blue
+                  {t('adminLeagueSettings.topTeamsHighlight').replace('{position}', formData.qualifiedPosition)}
                 </p>
               </div>
             </div>
@@ -167,14 +169,14 @@ const AdminLeagueSettings = () => {
           <div className="flex items-start mb-4">
             <TrendingDown className="w-6 h-6 text-red-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Relegation Position</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.relegationPosition')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Teams finishing in or below this position are marked as "Eliminated"
+                {t('adminLeagueSettings.relegationDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Starting Position (1-{formData.totalTeams})
+                  {t('adminLeagueSettings.startingPosition').replace('{max}', formData.totalTeams)}
                 </label>
                 <input
                   type="number"
@@ -187,7 +189,7 @@ const AdminLeagueSettings = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Bottom {formData.totalTeams - formData.relegationPosition + 1} teams will be highlighted in red
+                  {t('adminLeagueSettings.bottomTeamsHighlight').replace('{count}', formData.totalTeams - formData.relegationPosition + 1)}
                 </p>
               </div>
             </div>
@@ -199,14 +201,14 @@ const AdminLeagueSettings = () => {
           <div className="flex items-start mb-4">
             <Settings className="w-6 h-6 text-accent-500 mr-3 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">Total Teams</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.totalTeams')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Total number of teams in the league
+                {t('adminLeagueSettings.totalTeamsDescription')}
               </p>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Number of Teams
+                  {t('adminLeagueSettings.numberOfTeams')}
                 </label>
                 <input
                   type="number"
@@ -225,31 +227,31 @@ const AdminLeagueSettings = () => {
 
         {/* Preview */}
         <div className="card p-6 bg-dark-800/50">
-          <h3 className="text-lg font-semibold text-white mb-4">Preview</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('adminLeagueSettings.preview')}</h3>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                <span className="text-gray-300">Qualified</span>
+                <span className="text-gray-300">{t('adminLeagueSettings.qualified')}</span>
               </div>
-              <span className="text-gray-400">Positions 1 - {formData.qualifiedPosition}</span>
+              <span className="text-gray-400">{t('adminLeagueSettings.positions')} 1 - {formData.qualifiedPosition}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-gray-600 rounded mr-2"></div>
-                <span className="text-gray-300">Safe</span>
+                <span className="text-gray-300">{t('adminLeagueSettings.safe')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
+                {t('adminLeagueSettings.positions')} {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                <span className="text-gray-300">Eliminated</span>
+                <span className="text-gray-300">{t('adminLeagueSettings.eliminated')}</span>
               </div>
               <span className="text-gray-400">
-                Positions {formData.relegationPosition} - {formData.totalTeams}
+                {t('adminLeagueSettings.positions')} {formData.relegationPosition} - {formData.totalTeams}
               </span>
             </div>
           </div>
@@ -264,12 +266,12 @@ const AdminLeagueSettings = () => {
           {saving ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Saving...
+              {t('adminLeagueSettings.saving')}
             </>
           ) : (
             <>
               <Save className="w-5 h-5 mr-2" />
-              Save Settings
+              {t('adminLeagueSettings.saveSettings')}
             </>
           )}
         </button>
