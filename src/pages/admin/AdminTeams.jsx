@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
 import BulkTeamUpload from '../../components/BulkTeamUpload';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -10,6 +11,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield
 const AdminTeams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { teams, leagues, addTeam, updateTeam, deleteTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -81,7 +83,7 @@ const AdminTeams = () => {
 
   const handleAddPlayer = () => {
     if (!playerForm.name.trim() || !playerForm.jerseyNumber) {
-      showError('Validation Error', 'Please enter player name and jersey number');
+      showError(t('pages.adminTeams.validationError'), t('pages.adminTeams.playerNameJerseyRequired'));
       return;
     }
 
@@ -90,7 +92,7 @@ const AdminTeams = () => {
       p.jerseyNumber === playerForm.jerseyNumber && p.id !== editingPlayer
     );
     if (jerseyExists) {
-      showError('Duplicate Jersey Number', 'This jersey number is already assigned');
+      showError(t('pages.adminTeams.duplicateJerseyNumber'), t('pages.adminTeams.jerseyNumberAssigned'));
       return;
     }
 
@@ -124,7 +126,7 @@ const AdminTeams = () => {
             : p
         )
       }));
-      showSuccess('Player Updated', `${playerForm.name} has been updated`);
+      showSuccess(t('pages.adminTeams.playerUpdated'), t('pages.adminTeams.playerUpdatedDesc').replace('{name}', playerForm.name));
     } else {
       // Add new player
       const newPlayer = {
@@ -137,7 +139,7 @@ const AdminTeams = () => {
         ...prev,
         players: [...prev.players, newPlayer]
       }));
-      showSuccess('Player Added', `${newPlayer.name} added to squad`);
+      showSuccess(t('pages.adminTeams.playerAdded'), t('pages.adminTeams.playerAddedDesc').replace('{name}', newPlayer.name));
     }
 
     // Reset player form
@@ -164,7 +166,7 @@ const AdminTeams = () => {
       ...prev,
       players: prev.players.filter(p => p.id !== playerId)
     }));
-    showSuccess('Player Removed', 'Player removed from squad');
+    showSuccess(t('pages.adminTeams.playerRemoved'), t('pages.adminTeams.playerRemovedDesc'));
   };
 
   const handleEdit = (team) => {
@@ -185,7 +187,7 @@ const AdminTeams = () => {
           logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
         };
         await updateTeam(editingTeam.id, updatedTeam);
-        showSuccess('Team Updated', `${updatedTeam.name} has been updated successfully`);
+        showSuccess(t('pages.adminTeams.teamUpdated'), t('pages.adminTeams.teamUpdatedDesc').replace('{name}', updatedTeam.name));
       } else {
         // Add new team
         const newTeam = {
@@ -193,7 +195,7 @@ const AdminTeams = () => {
           logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
         };
         await addTeam(newTeam);
-        showSuccess('Team Added', `${newTeam.name} has been added successfully`);
+        showSuccess(t('pages.adminTeams.teamAdded'), t('pages.adminTeams.teamAddedDesc').replace('{name}', newTeam.name));
       }
       
       setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', leagueId: '', players: [] });
@@ -201,7 +203,7 @@ const AdminTeams = () => {
       setEditingTeam(null);
     } catch (error) {
       console.error('Error saving team:', error);
-      showError('Error', 'Failed to save team');
+      showError(t('common.error'), t('pages.adminTeams.failedToSaveTeam'));
     } finally {
       setLoading(false);
     }
@@ -224,7 +226,7 @@ const AdminTeams = () => {
       setLoading(true);
       console.log('🗑️ Attempting to delete team:', team.id, team.name);
       await deleteTeam(team.id);
-      showSuccess('Team Deleted', `${team.name} has been deleted successfully`);
+      showSuccess(t('pages.adminTeams.teamDeleted'), t('pages.adminTeams.teamDeletedDesc').replace('{name}', team.name));
       setConfirmDelete({ isOpen: false, team: null });
     } catch (error) {
       console.error('❌ Error deleting team:', error);
@@ -234,16 +236,16 @@ const AdminTeams = () => {
         stack: error.stack
       });
       
-      let errorMessage = 'Failed to delete team. ';
+      let errorMessage = t('pages.adminTeams.failedToDeleteTeam') + ' ';
       if (error.code === 'permission-denied') {
-        errorMessage += 'You do not have permission to delete teams. Your role: ' + (user?.role || 'unknown');
+        errorMessage += t('pages.adminTeams.noDeletePermission').replace('{role}', user?.role || 'unknown');
       } else if (error.code === 'not-found') {
-        errorMessage += 'Team not found.';
+        errorMessage += t('pages.adminTeams.teamNotFound');
       } else {
-        errorMessage += error.message || 'Please try again.';
+        errorMessage += error.message || t('pages.adminTeams.pleaseTryAgain');
       }
       
-      showError('Delete Failed', errorMessage);
+      showError(t('pages.adminTeams.deleteFailed'), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -270,8 +272,8 @@ const AdminTeams = () => {
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
             <div className="ml-2">
-              <h1 className="admin-header">Teams Management</h1>
-              <p className="text-sm text-gray-400">{teams.length} teams</p>
+              <h1 className="admin-header">{t('pages.adminTeams.teamsManagement')}</h1>
+              <p className="text-sm text-gray-400">{teams.length} {t('pages.adminTeams.teams')}</p>
             </div>
           </div>
           
@@ -281,14 +283,14 @@ const AdminTeams = () => {
               className="group w-full px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
             >
               <Upload className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
-              <span>Bulk Upload</span>
+              <span>{t('pages.adminTeams.bulkUpload')}</span>
             </button>
             <button
               onClick={() => setShowAddForm(true)}
               className="group w-full px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
             >
               <Plus className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
-              <span>Add Team</span>
+              <span>{t('pages.adminTeams.addTeam')}</span>
             </button>
           </div>
         </div>
@@ -299,7 +301,7 @@ const AdminTeams = () => {
         {showAddForm && (
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">{editingTeam ? 'Edit Team' : 'Add New Team'}</h3>
+              <h3 className="text-lg font-semibold text-white">{editingTeam ? t('pages.adminTeams.editTeam') : t('pages.adminTeams.addNewTeam')}</h3>
               <button
                 onClick={handleCancel}
                 className="p-2 rounded-full hover:bg-dark-700 transition-colors"
@@ -312,7 +314,7 @@ const AdminTeams = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Team Name *
+                    {t('pages.adminTeams.teamName')} *
                   </label>
                   <input
                     type="text"
@@ -320,14 +322,14 @@ const AdminTeams = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    placeholder="Enter team name"
+                    placeholder={t('pages.adminTeams.enterTeamName')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    League *
+                    {t('pages.adminTeams.league')} *
                   </label>
                   <select
                     name="leagueId"
@@ -336,7 +338,7 @@ const AdminTeams = () => {
                     className="input-field w-full"
                     required
                   >
-                    <option value="">Select a league</option>
+                    <option value="">{t('pages.adminTeams.selectLeague')}</option>
                     {leagues.map(league => (
                       <option key={league.id} value={league.id}>
                         {league.name}
@@ -347,7 +349,7 @@ const AdminTeams = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Logo URL
+                    {t('pages.adminTeams.logoUrl')}
                   </label>
                   <input
                     type="url"
@@ -361,7 +363,7 @@ const AdminTeams = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Stadium
+                    {t('pages.adminTeams.stadium')}
                   </label>
                   <input
                     type="text"
@@ -369,13 +371,13 @@ const AdminTeams = () => {
                     value={formData.stadium}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    placeholder="Stadium name"
+                    placeholder={t('pages.adminTeams.stadiumName')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Founded Year
+                    {t('pages.adminTeams.foundedYear')}
                   </label>
                   <input
                     type="number"
@@ -392,7 +394,7 @@ const AdminTeams = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Manager
+                  {t('pages.adminTeams.manager')}
                 </label>
                 <input
                   type="text"
@@ -400,7 +402,7 @@ const AdminTeams = () => {
                   value={formData.manager}
                   onChange={handleInputChange}
                   className="input-field w-full"
-                  placeholder="Manager name"
+                  placeholder={t('pages.adminTeams.managerName')}
                 />
               </div>
 
@@ -409,7 +411,7 @@ const AdminTeams = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <Users className="w-5 h-5 text-primary-500 mr-2" />
-                    <h4 className="text-md font-semibold text-white">Squad Players ({formData.players.length})</h4>
+                    <h4 className="text-md font-semibold text-white">{t('pages.adminTeams.squadPlayers').replace('{count}', formData.players.length)}</h4>
                   </div>
                   <button
                     type="button"
@@ -417,18 +419,18 @@ const AdminTeams = () => {
                     className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm transition-colors"
                   >
                     <UserPlus className="w-4 h-4" />
-                    Add Player
+                    {t('pages.adminTeams.addPlayer')}
                   </button>
                 </div>
 
                 {/* Add/Edit Player Form */}
                 {showPlayerForm && (
                   <div className="bg-dark-800 border border-dark-700 rounded-lg p-4 mb-4">
-                    <h5 className="text-sm font-semibold text-white mb-3">{editingPlayer ? 'Edit Player' : 'New Player'}</h5>
+                    <h5 className="text-sm font-semibold text-white mb-3">{editingPlayer ? t('pages.adminTeams.editPlayer') : t('pages.adminTeams.newPlayer')}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Player Name *
+                          {t('pages.adminTeams.playerName')} *
                         </label>
                         <input
                           type="text"
@@ -436,13 +438,13 @@ const AdminTeams = () => {
                           value={playerForm.name}
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
-                          placeholder="Enter player name"
+                          placeholder={t('pages.adminTeams.enterPlayerName')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Jersey Number *
+                          {t('pages.adminTeams.jerseyNumber')} *
                         </label>
                         <input
                           type="number"
@@ -458,7 +460,7 @@ const AdminTeams = () => {
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Position
+                          {t('pages.adminTeams.position')}
                         </label>
                         <select
                           name="position"
@@ -466,16 +468,16 @@ const AdminTeams = () => {
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
                         >
-                          <option value="Goalkeeper">Goalkeeper</option>
-                          <option value="Defender">Defender</option>
-                          <option value="Midfielder">Midfielder</option>
-                          <option value="Forward">Forward</option>
+                          <option value="Goalkeeper">{t('pages.adminTeams.goalkeeper')}</option>
+                          <option value="Defender">{t('pages.adminTeams.defender')}</option>
+                          <option value="Midfielder">{t('pages.adminTeams.midfielder')}</option>
+                          <option value="Forward">{t('pages.adminTeams.forward')}</option>
                         </select>
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Date of Birth
+                          {t('pages.adminTeams.dateOfBirth')}
                         </label>
                         <input
                           type="date"
@@ -488,7 +490,7 @@ const AdminTeams = () => {
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Place of Birth
+                          {t('pages.adminTeams.placeOfBirth')}
                         </label>
                         <input
                           type="text"
@@ -496,13 +498,13 @@ const AdminTeams = () => {
                           value={playerForm.placeOfBirth}
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
-                          placeholder="e.g., London, England"
+                          placeholder={t('pages.adminTeams.placeOfBirthPlaceholder')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Nationality
+                          {t('pages.adminTeams.nationality')}
                         </label>
                         <input
                           type="text"
@@ -510,13 +512,13 @@ const AdminTeams = () => {
                           value={playerForm.nationality}
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
-                          placeholder="e.g., England"
+                          placeholder={t('pages.adminTeams.nationalityPlaceholder')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Height (cm)
+                          {t('pages.adminTeams.height')}
                         </label>
                         <input
                           type="number"
@@ -524,7 +526,7 @@ const AdminTeams = () => {
                           value={playerForm.height}
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
-                          placeholder="e.g., 180"
+                          placeholder={t('pages.adminTeams.heightPlaceholder')}
                           min="150"
                           max="220"
                         />
@@ -532,7 +534,7 @@ const AdminTeams = () => {
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Preferred Foot
+                          {t('pages.adminTeams.preferredFoot')}
                         </label>
                         <select
                           name="preferredFoot"
@@ -540,16 +542,16 @@ const AdminTeams = () => {
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
                         >
-                          <option value="">Select...</option>
-                          <option value="right">Right</option>
-                          <option value="left">Left</option>
-                          <option value="both">Both</option>
+                          <option value="">{t('pages.adminTeams.select')}</option>
+                          <option value="right">{t('pages.adminTeams.right')}</option>
+                          <option value="left">{t('pages.adminTeams.left')}</option>
+                          <option value="both">{t('pages.adminTeams.both')}</option>
                         </select>
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Market Value
+                          {t('pages.adminTeams.marketValue')}
                         </label>
                         <input
                           type="text"
@@ -557,13 +559,13 @@ const AdminTeams = () => {
                           value={playerForm.marketValue}
                           onChange={handlePlayerInputChange}
                           className="input-field w-full text-sm"
-                          placeholder="e.g., €50M"
+                          placeholder={t('pages.adminTeams.marketValuePlaceholder')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Contract Expiry
+                          {t('pages.adminTeams.contractExpiry')}
                         </label>
                         <input
                           type="date"
@@ -585,7 +587,7 @@ const AdminTeams = () => {
                           />
                           <span className="text-xs text-gray-300 flex items-center gap-1">
                             <Shield className="w-3 h-3 text-yellow-500" />
-                            Captain
+                            {t('pages.adminTeams.captain')}
                           </span>
                         </label>
 
@@ -599,7 +601,7 @@ const AdminTeams = () => {
                           />
                           <span className="text-xs text-gray-300 flex items-center gap-1">
                             <Goal className="w-3 h-3 text-blue-500" />
-                            GK
+                            {t('pages.adminTeams.gk')}
                           </span>
                         </label>
                       </div>
@@ -628,14 +630,14 @@ const AdminTeams = () => {
                         }}
                         className="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-white rounded-lg text-sm transition-colors"
                       >
-                        Cancel
+                        {t('common.cancel')}
                       </button>
                       <button
                         type="button"
                         onClick={handleAddPlayer}
                         className="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm transition-colors"
                       >
-                        {editingPlayer ? 'Update Player' : 'Add Player'}
+                        {editingPlayer ? t('pages.adminTeams.updatePlayer') : t('pages.adminTeams.addPlayer')}
                       </button>
                     </div>
                   </div>
@@ -659,10 +661,10 @@ const AdminTeams = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-white font-medium">{player.name}</span>
                                 {player.isCaptain && (
-                                  <Shield className="w-4 h-4 text-yellow-500" title="Captain" />
+                                  <Shield className="w-4 h-4 text-yellow-500" title={t('pages.adminTeams.captain')} />
                                 )}
                                 {player.isGoalkeeper && (
-                                  <Goal className="w-4 h-4 text-blue-500" title="Goalkeeper" />
+                                  <Goal className="w-4 h-4 text-blue-500" title={t('pages.adminTeams.goalkeeper')} />
                                 )}
                               </div>
                               <span className="text-xs text-gray-500">{player.position}</span>
@@ -673,15 +675,15 @@ const AdminTeams = () => {
                               type="button"
                               onClick={() => handleEditPlayer(player)}
                               className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                              title="Edit player"
+                              title={t('pages.adminTeams.editPlayer')}
                             >
                               <Edit className="w-4 h-4" />
-                            </button>
+                </button>
                             <button
                               type="button"
                               onClick={() => handleRemovePlayer(player.id)}
                               className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                              title="Remove player"
+                              title={t('pages.adminTeams.removePlayer')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -692,8 +694,8 @@ const AdminTeams = () => {
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No players added yet</p>
-                    <p className="text-xs">Click "Add Player" to build your squad</p>
+                    <p className="text-sm">{t('pages.adminTeams.noPlayersAdded')}</p>
+                    <p className="text-xs">{t('pages.adminTeams.clickAddPlayer')}</p>
                   </div>
                 )}
               </div>
@@ -704,7 +706,7 @@ const AdminTeams = () => {
                   onClick={handleCancel}
                   className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium tracking-tight transition-all duration-200 transform hover:scale-105"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -712,7 +714,7 @@ const AdminTeams = () => {
                   className="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   <Save className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
-                  <span>{loading ? (editingTeam ? 'Updating...' : 'Adding...') : (editingTeam ? 'Update Team' : 'Add Team')}</span>
+                  <span>{loading ? (editingTeam ? t('pages.adminTeams.updating') : t('pages.adminTeams.adding')) : (editingTeam ? t('pages.adminTeams.updateTeam') : t('pages.adminTeams.addTeam'))}</span>
                   {!loading && (
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
@@ -740,12 +742,12 @@ const AdminTeams = () => {
                     <h3 className="font-semibold text-white">{team.name}</h3>
                     <div className="text-sm text-gray-400 space-y-1">
                       {team.stadium && <p>🏟️ {team.stadium}</p>}
-                      {team.founded && <p>📅 Founded {team.founded}</p>}
+                      {team.founded && <p>📅 {t('pages.adminTeams.founded')} {team.founded}</p>}
                       {team.manager && <p>👨‍💼 {team.manager}</p>}
                       {team.players && team.players.length > 0 && (
                         <p className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
-                          {team.players.length} player{team.players.length !== 1 ? 's' : ''}
+                          {team.players.length} {team.players.length !== 1 ? t('pages.adminTeams.players') : t('pages.adminTeams.player')}
                         </p>
                       )}
                     </div>
@@ -756,7 +758,7 @@ const AdminTeams = () => {
                   <button
                     onClick={() => handleEdit(team)}
                     className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                    title="Edit team"
+                    title={t('pages.adminTeams.editTeam')}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
@@ -764,7 +766,7 @@ const AdminTeams = () => {
                     onClick={() => handleDeleteTeam(team)}
                     disabled={loading}
                     className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Delete team"
+                    title={t('pages.adminTeams.deleteTeam')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -779,8 +781,8 @@ const AdminTeams = () => {
             <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Plus className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No teams yet</h3>
-            <p className="text-gray-400">Get started by adding teams individually or in bulk</p>
+            <h3 className="text-lg font-semibold text-white mb-2">{t('pages.adminTeams.noTeamsYet')}</h3>
+            <p className="text-gray-400">{t('pages.adminTeams.getStartedAddTeams')}</p>
           </div>
         )}
       </div>
@@ -796,10 +798,10 @@ const AdminTeams = () => {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, team: null })}
         onConfirm={confirmDeleteTeam}
-        title="Delete Team"
-        message={`Are you sure you want to delete ${confirmDelete.team?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('pages.adminTeams.deleteTeam')}
+        message={t('pages.adminTeams.deleteTeamConfirmation').replace('{name}', confirmDelete.team?.name)}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         type="danger"
         isLoading={loading}
       />

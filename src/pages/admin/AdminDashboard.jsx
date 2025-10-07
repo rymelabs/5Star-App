@@ -3,6 +3,7 @@ import { useNavigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import { useNews } from '../../context/NewsContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { adminActivityCollection } from '../../firebase/firestore';
 import { 
   ArrowLeft, 
@@ -33,6 +34,7 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const { teams, fixtures, leagueTable } = useFootball();
   const { articles } = useNews();
+  const { t } = useLanguage();
   const [recentActivities, setRecentActivities] = useState([]);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -78,13 +80,13 @@ const AdminDashboard = () => {
     return (
       <div className="p-4 text-center">
         <div className="card p-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You don't have permission to access the admin dashboard.</p>
+          <h2 className="text-lg font-semibold text-white mb-4">{t('pages.admin.accessDenied')}</h2>
+          <p className="text-gray-400 mb-6">{t('pages.admin.accessDeniedDesc')}</p>
           <button
             onClick={() => navigate('/')}
             className="btn-primary"
           >
-            Go Home
+            {t('pages.admin.goHome')}
           </button>
         </div>
       </div>
@@ -93,28 +95,28 @@ const AdminDashboard = () => {
 
   const stats = [
     {
-      title: 'Total Teams',
+      title: t('pages.admin.totalTeams'),
       value: teams.length,
       icon: Users,
       color: 'text-blue-400',
       bgColor: 'bg-blue-600/10',
     },
     {
-      title: 'Active Fixtures',
+      title: t('pages.admin.activeFixtures'),
       value: fixtures.filter(f => f.status !== 'completed').length,
       icon: Calendar,
       color: 'text-accent-400',
       bgColor: 'bg-accent-600/10',
     },
     {
-      title: 'Published News',
+      title: t('pages.admin.publishedNews'),
       value: articles.length,
       icon: Newspaper,
       color: 'text-purple-400',
       bgColor: 'bg-purple-600/10',
     },
     {
-      title: 'League Positions',
+      title: t('pages.admin.leaguePositions'),
       value: leagueTable.length,
       icon: Trophy,
       color: 'text-yellow-400',
@@ -124,29 +126,29 @@ const AdminDashboard = () => {
 
   const quickActions = [
     {
-      title: 'Add New Team',
-      description: 'Create a new team profile',
+      title: t('pages.admin.addNewTeam'),
+      description: t('pages.admin.addNewTeamDesc'),
       icon: Users,
       color: 'text-blue-400',
       onClick: () => navigate('/admin/teams'),
     },
     {
-      title: 'Schedule Fixture',
-      description: 'Add a new match fixture',
+      title: t('pages.admin.scheduleFixture'),
+      description: t('pages.admin.scheduleFixtureDesc'),
       icon: Calendar,
       color: 'text-accent-400',
       onClick: () => navigate('/admin/fixtures'),
     },
     {
-      title: 'Write Article',
-      description: 'Publish a news article',
+      title: t('pages.admin.writeArticle'),
+      description: t('pages.admin.writeArticleDesc'),
       icon: Newspaper,
       color: 'text-purple-400',
       onClick: () => navigate('/admin/news'),
     },
     {
-      title: 'New Season',
-      description: 'Create a tournament season',
+      title: t('pages.admin.newSeason'),
+      description: t('pages.admin.newSeasonDesc'),
       icon: Trophy,
       color: 'text-primary-400',
       onClick: () => navigate('/admin/seasons/create'),
@@ -155,72 +157,72 @@ const AdminDashboard = () => {
 
   const managementSections = [
     {
-      title: 'Seasons Management',
-      description: 'Create and manage tournament seasons',
+      title: t('pages.admin.seasonsManagement'),
+      description: t('pages.admin.seasonsManagementDesc'),
       icon: Trophy,
       path: '/admin/seasons',
       color: 'text-primary-400',
       count: '-',
     },
     {
-      title: 'Leagues Management',
-      description: 'Create and manage multiple leagues',
+      title: t('pages.admin.leaguesManagement'),
+      description: t('pages.admin.leaguesManagementDesc'),
       icon: Trophy,
       path: '/admin/leagues',
       color: 'text-green-400',
       count: '-',
     },
     {
-      title: 'Teams Management',
-      description: 'Manage team profiles, logos, and information',
+      title: t('pages.admin.teamsManagement'),
+      description: t('pages.admin.teamsManagementDesc'),
       icon: Users,
       path: '/admin/teams',
       color: 'text-blue-400',
       count: teams.length,
     },
     {
-      title: 'Fixtures Management',
-      description: 'Schedule matches, update scores, and live events',
+      title: t('pages.admin.fixturesManagement'),
+      description: t('pages.admin.fixturesManagementDesc'),
       icon: Calendar,
       path: '/admin/fixtures',
       color: 'text-accent-400',
       count: fixtures.length,
     },
     {
-      title: 'News Management',
-      description: 'Create, edit, and publish news articles',
+      title: t('pages.admin.newsManagement'),
+      description: t('pages.admin.newsManagementDesc'),
       icon: Newspaper,
       path: '/admin/news',
       color: 'text-purple-400',
       count: articles.length,
     },
     {
-      title: 'Notifications Management',
-      description: 'Send announcements and notifications to users',
+      title: t('pages.admin.notificationsManagement'),
+      description: t('pages.admin.notificationsManagementDesc'),
       icon: Bell,
       path: '/admin/notifications',
       color: 'text-cyan-400',
       count: '-',
     },
     {
-      title: 'League Settings',
-      description: 'Configure qualification and relegation positions',
+      title: t('pages.admin.leagueSettings'),
+      description: t('pages.admin.leagueSettingsDesc'),
       icon: Settings,
       path: '/admin/league-settings',
       color: 'text-yellow-400',
       count: '-',
     },
     {
-      title: 'Instagram Settings',
-      description: 'Configure Instagram feed and social media integration',
+      title: t('pages.admin.instagramSettings'),
+      description: t('pages.admin.instagramSettingsDesc'),
       icon: Instagram,
       path: '/admin/instagram',
       color: 'text-pink-400',
       count: '-',
     },
     {
-      title: 'Advanced Settings',
-      description: 'Manage system data and danger zone operations',
+      title: t('pages.admin.advancedSettings'),
+      description: t('pages.admin.advancedSettingsDesc'),
       icon: Database,
       path: '/admin/advanced-settings',
       color: 'text-red-400',
@@ -242,8 +244,8 @@ const AdminDashboard = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div className="ml-2">
-            <h1 className="admin-header">Admin Dashboard</h1>
-            <p className="text-sm text-gray-400">Manage your sports app content</p>
+            <h1 className="admin-header">{t('navigation.adminDashboard')}</h1>
+            <p className="text-sm text-gray-400">{t('pages.admin.manageContent')}</p>
           </div>
         </div>
       </div>
@@ -257,10 +259,10 @@ const AdminDashboard = () => {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white mb-1">
-                Welcome back, {user.name}!
+                {t('pages.admin.welcomeBack').replace('{name}', user.name)}
               </h2>
               <p className="text-gray-400">
-                Here's what's happening with your sports app today.
+                {t('pages.admin.whatsHappening')}
               </p>
             </div>
           </div>
@@ -286,7 +288,7 @@ const AdminDashboard = () => {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.quickActions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {quickActions.map((action) => {
               const Icon = action.icon;
@@ -311,7 +313,7 @@ const AdminDashboard = () => {
 
         {/* Management Sections */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Content Management</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.contentManagement')}</h3>
           <div className="space-y-4">
             {managementSections.map((section) => {
               const Icon = section.icon;
@@ -331,7 +333,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold text-white">{section.count}</div>
-                      <div className="text-xs text-gray-500">items</div>
+                      <div className="text-xs text-gray-500">{t('pages.admin.items')}</div>
                     </div>
                   </div>
                 </button>
@@ -342,7 +344,7 @@ const AdminDashboard = () => {
 
         {/* Recent Activity */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.recentActivity')}</h3>
           <div className="space-y-3">
             {recentActivities.length > 0 ? (
               <>
@@ -370,21 +372,21 @@ const AdminDashboard = () => {
 
                   // Format action text
                   let actionText = '';
-                  if (activity.action === 'add') actionText = 'Added';
-                  else if (activity.action === 'update') actionText = 'Updated';
-                  else if (activity.action === 'delete') actionText = 'Deleted';
+                  if (activity.action === 'add') actionText = t('pages.admin.added');
+                  else if (activity.action === 'update') actionText = t('pages.admin.updated');
+                  else if (activity.action === 'delete') actionText = t('pages.admin.deleted');
                   else actionText = activity.action;
 
                   // Format time ago
                   const timeAgo = (date) => {
                     const seconds = Math.floor((new Date() - date) / 1000);
-                    if (seconds < 60) return 'just now';
+                    if (seconds < 60) return t('pages.admin.justNow');
                     const minutes = Math.floor(seconds / 60);
-                    if (minutes < 60) return `${minutes}m ago`;
+                    if (minutes < 60) return t('pages.admin.minutesAgo').replace('{minutes}', minutes);
                     const hours = Math.floor(minutes / 60);
-                    if (hours < 24) return `${hours}h ago`;
+                    if (hours < 24) return t('pages.admin.hoursAgo').replace('{hours}', hours);
                     const days = Math.floor(hours / 24);
-                    if (days < 7) return `${days}d ago`;
+                    if (days < 7) return t('pages.admin.daysAgo').replace('{days}', days);
                     return date.toLocaleDateString();
                   };
 
@@ -399,7 +401,7 @@ const AdminDashboard = () => {
                             {actionText} {activity.type}: {activity.itemName}
                           </p>
                           <p className="text-gray-500 text-xs">
-                            {timeAgo(activity.createdAt)} • by {activity.userName}
+                            {timeAgo(activity.createdAt)} • {t('pages.admin.by')} {activity.userName}
                           </p>
                         </div>
                       </div>
@@ -417,17 +419,17 @@ const AdminDashboard = () => {
                     {loadingMore ? (
                       <>
                         <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                        Loading...
+                        {t('common.loading')}
                       </>
                     ) : showAllActivities ? (
                       <>
                         <ChevronUp className="w-4 h-4" />
-                        See Less
+                        {t('pages.admin.seeLess')}
                       </>
                     ) : (
                       <>
                         <ChevronDown className="w-4 h-4" />
-                        See More
+                        {t('pages.admin.seeMore')}
                       </>
                     )}
                   </button>
@@ -436,7 +438,7 @@ const AdminDashboard = () => {
             ) : (
               <div className="card p-8 text-center">
                 <Activity className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No recent activity</p>
+                <p className="text-gray-400 text-sm">{t('pages.admin.noRecentActivity')}</p>
               </div>
             )}
           </div>

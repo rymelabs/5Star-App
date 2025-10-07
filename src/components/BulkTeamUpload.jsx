@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import * as XLSX from 'xlsx';
 
 const BulkTeamUpload = ({ isOpen, onClose }) => {
@@ -15,6 +16,7 @@ const BulkTeamUpload = ({ isOpen, onClose }) => {
   
   const { addBulkTeams } = useFootball();
   const { showNotification } = useNotification();
+  const { t } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -108,15 +110,15 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       const rowErrors = [];
       
       if (!team.name || team.name.trim() === '') {
-        rowErrors.push('Team name is required');
+        rowErrors.push(t('bulkUpload.teamNameRequired'));
       }
       
       if (team.founded && (isNaN(team.founded) || team.founded < 1800 || team.founded > new Date().getFullYear())) {
-        rowErrors.push('Founded year must be between 1800 and current year');
+        rowErrors.push(t('bulkUpload.foundedYearRange'));
       }
       
       if (team.logo && !team.logo.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-        rowErrors.push('Logo must be a valid image URL');
+        rowErrors.push(t('bulkUpload.logoValidUrl'));
       }
 
       // Validate players if provided
@@ -132,25 +134,25 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
 
             playersList.forEach((player, pIndex) => {
               if (!player.name || player.name.trim() === '') {
-                rowErrors.push(`Player ${pIndex + 1}: Name is required`);
+                rowErrors.push(t('bulkUpload.playerNameRequired').replace('{index}', pIndex + 1));
                 return;
               }
 
               const jerseyNum = parseInt(player.jerseyNumber);
               if (!jerseyNum || jerseyNum < 1 || jerseyNum > 99) {
-                rowErrors.push(`Player ${player.name}: Jersey number must be between 1-99`);
+                rowErrors.push(t('bulkUpload.jerseyNumberRange').replace('{name}', player.name));
                 return;
               }
 
               if (jerseyNumbers.has(jerseyNum)) {
-                rowErrors.push(`Player ${player.name}: Jersey number ${jerseyNum} already used`);
+                rowErrors.push(t('bulkUpload.jerseyNumberUsed').replace('{name}', player.name).replace('{number}', jerseyNum));
                 return;
               }
               jerseyNumbers.add(jerseyNum);
 
               if (player.isCaptain) {
                 if (hasCaptain) {
-                  rowErrors.push(`Only one captain allowed per team`);
+                  rowErrors.push(t('bulkUpload.oneCaptainPerTeam'));
                   return;
                 }
                 hasCaptain = true;
@@ -158,7 +160,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
 
               if (player.isGoalkeeper) {
                 if (hasGoalkeeper) {
-                  rowErrors.push(`Only one goalkeeper allowed per team`);
+                  rowErrors.push(t('bulkUpload.oneGoalkeeperPerTeam'));
                   return;
                 }
                 hasGoalkeeper = true;
@@ -175,7 +177,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
             });
           }
         } catch (e) {
-          rowErrors.push('Invalid players data format. Must be valid JSON array');
+          rowErrors.push(t('bulkUpload.invalidPlayersFormat'));
         }
       }
 
@@ -257,15 +259,15 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
         if (data) {
           setJsonData(JSON.stringify(data, null, 2));
           setUploadMethod('xlsx');
-          showNotification('Excel file loaded successfully', 'success');
+          showNotification(t('bulkUpload.excelLoaded'), 'success');
         } else {
-          setErrors([{ row: 1, team: 'Excel', errors: ['Failed to parse Excel file. Please check the file format.'] }]);
-          showNotification('Failed to read Excel file', 'error');
+          setErrors([{ row: 1, team: 'Excel', errors: [t('bulkUpload.excelParseFailed')] }]);
+          showNotification(t('bulkUpload.excelReadFailed'), 'error');
         }
       };
       reader.onerror = () => {
-        setErrors([{ row: 1, team: 'Excel', errors: ['Failed to read file.'] }]);
-        showNotification('Failed to read Excel file', 'error');
+        setErrors([{ row: 1, team: 'Excel', errors: [t('bulkUpload.fileReadFailed')] }]);
+        showNotification(t('bulkUpload.excelReadFailed'), 'error');
       };
       reader.readAsArrayBuffer(selectedFile);
     } else {
@@ -275,11 +277,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
         if (selectedFile.name.endsWith('.csv')) {
           setCsvData(content);
           setUploadMethod('csv');
-          showNotification('CSV file loaded successfully', 'success');
+          showNotification(t('bulkUpload.csvLoaded'), 'success');
         } else if (selectedFile.name.endsWith('.json')) {
           setJsonData(content);
           setUploadMethod('json');
-          showNotification('JSON file loaded successfully', 'success');
+          showNotification(t('bulkUpload.jsonLoaded'), 'success');
         }
       };
       reader.readAsText(selectedFile);
@@ -297,19 +299,19 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     } else if (uploadMethod === 'xlsx') {
       teams = parseJsonData(jsonData);
       if (!teams) {
-        setErrors([{ row: 1, team: 'Excel', errors: ['Invalid Excel data format'] }]);
+        setErrors([{ row: 1, team: 'Excel', errors: [t('bulkUpload.invalidExcelFormat')] }]);
         return;
       }
     } else {
       teams = parseJsonData(jsonData);
       if (!teams) {
-        setErrors([{ row: 1, team: 'JSON', errors: ['Invalid JSON format'] }]);
+        setErrors([{ row: 1, team: 'JSON', errors: [t('bulkUpload.invalidJsonFormat')] }]);
         return;
       }
     }
     
     if (teams.length === 0) {
-      setErrors([{ row: 1, team: 'Data', errors: ['No valid team data found'] }]);
+      setErrors([{ row: 1, team: 'Data', errors: [t('bulkUpload.noValidData')] }]);
       return;
     }
     
@@ -320,7 +322,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
 
   const handleUpload = async () => {
     if (previewData.length === 0) {
-      showNotification('No teams to upload', 'error');
+      showNotification(t('bulkUpload.noTeamsToUpload'), 'error');
       return;
     }
     
@@ -328,10 +330,10 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     
     try {
       await addBulkTeams(previewData);
-      showNotification(`Successfully uploaded ${previewData.length} teams!`, 'success');
+      showNotification(t('bulkUpload.uploadSuccess').replace('{count}', previewData.length), 'success');
       onClose();
     } catch (error) {
-      showNotification('Failed to upload teams', 'error');
+      showNotification(t('bulkUpload.uploadFailed'), 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -344,7 +346,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       <div className="relative w-full max-w-4xl bg-dark-900 border border-dark-700 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">
-          <h2 className="text-lg font-bold text-white tracking-tight">Bulk Upload Teams</h2>
+          <h2 className="text-lg font-bold text-white tracking-tight">{t('bulkUpload.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X className="w-6 h-6" />
           </button>
@@ -355,22 +357,22 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <h3 className="text-blue-400 font-semibold mb-2 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2" />
-              How to Use Bulk Upload
+              {t('bulkUpload.howToUse')}
             </h3>
             <ul className="space-y-1 text-sm text-blue-300">
-              <li>• Download the template file (CSV, Excel, or JSON format)</li>
-              <li>• Fill in team details: name, logo URL, stadium, founded year, manager</li>
-              <li>• Add players with: name, position, jersey number (1-99), captain flag, goalkeeper flag</li>
-              <li>• Each team must have only ONE captain and ONE goalkeeper</li>
-              <li>• Jersey numbers must be unique within each team</li>
-              <li>• Upload the file or paste the data below</li>
-              <li>• Preview and validate before uploading</li>
+              <li>• {t('bulkUpload.instruction1')}</li>
+              <li>• {t('bulkUpload.instruction2')}</li>
+              <li>• {t('bulkUpload.instruction3')}</li>
+              <li>• {t('bulkUpload.instruction4')}</li>
+              <li>• {t('bulkUpload.instruction5')}</li>
+              <li>• {t('bulkUpload.instruction6')}</li>
+              <li>• {t('bulkUpload.instruction7')}</li>
             </ul>
           </div>
 
           {/* Upload Method Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Upload Method</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">{t('bulkUpload.uploadMethod')}</label>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setUploadMethod('csv')}
@@ -380,7 +382,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
                 }`}
               >
-                CSV Format
+                {t('bulkUpload.csvFormat')}
               </button>
               <button
                 onClick={() => setUploadMethod('xlsx')}
@@ -390,7 +392,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
                 }`}
               >
-                Excel Format
+                {t('bulkUpload.excelFormat')}
               </button>
               <button
                 onClick={() => setUploadMethod('json')}
@@ -400,14 +402,14 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
                 }`}
               >
-                JSON Format
+                {t('bulkUpload.jsonFormat')}
               </button>
             </div>
           </div>
 
           {/* File Upload */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Upload File</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">{t('bulkUpload.uploadFile')}</label>
             <input
               type="file"
               accept={uploadMethod === 'csv' ? '.csv' : uploadMethod === 'xlsx' ? '.xlsx,.xls' : '.json'}
@@ -423,7 +425,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
               className="flex items-center text-primary-400 hover:text-primary-300 transition-colors"
             >
               <Download className="w-4 h-4 mr-2" />
-              Download {uploadMethod.toUpperCase()} Template
+              {t('bulkUpload.downloadTemplate').replace('{format}', uploadMethod.toUpperCase())}
             </button>
           </div>
 
@@ -431,12 +433,12 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
           {uploadMethod !== 'xlsx' && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Or paste {uploadMethod.toUpperCase()} data manually:
+                {t('bulkUpload.pasteData').replace('{format}', uploadMethod.toUpperCase())}
               </label>
               <textarea
                 value={uploadMethod === 'csv' ? csvData : jsonData}
                 onChange={(e) => uploadMethod === 'csv' ? setCsvData(e.target.value) : setJsonData(e.target.value)}
-                placeholder={`Paste your ${uploadMethod.toUpperCase()} data here...`}
+                placeholder={t('bulkUpload.pasteDataPlaceholder').replace('{format}', uploadMethod.toUpperCase())}
                 className="w-full h-32 bg-dark-800 border border-dark-700 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-sm"
               />
             </div>
@@ -450,18 +452,18 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
               disabled={(uploadMethod === 'csv' && !csvData) || ((uploadMethod === 'json' || uploadMethod === 'xlsx') && !jsonData) || isProcessing}
             >
               <AlertCircle className="w-4 h-4 mr-2" />
-              Preview & Validate Data
+              {t('bulkUpload.previewValidate')}
             </button>
           </div>
 
           {/* Errors */}
           {errors.length > 0 && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <h3 className="text-red-400 font-semibold mb-2">Validation Errors:</h3>
+              <h3 className="text-red-400 font-semibold mb-2">{t('bulkUpload.validationErrors')}</h3>
               <ul className="space-y-1 text-sm text-red-300">
                 {errors.map((error, index) => (
                   <li key={index}>
-                    Row {error.row} ({error.team}): {error.errors.join(', ')}
+                    {t('bulkUpload.row')} {error.row} ({error.team}): {error.errors.join(', ')}
                   </li>
                 ))}
               </ul>
@@ -473,7 +475,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
             <div className="mb-6">
               <h3 className="text-accent-400 font-semibold mb-3 flex items-center">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Preview ({previewData.length} teams ready to upload)
+                {t('bulkUpload.previewReady').replace('{count}', previewData.length)}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto">
                 {previewData.slice(0, 10).map((team, index) => (
@@ -482,11 +484,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                       <img src={team.logo} alt={team.name} className="w-8 h-8 mr-3 rounded" />
                       <h4 className="font-semibold text-white">{team.name}</h4>
                     </div>
-                    <p className="text-sm text-gray-400">Stadium: {team.stadium || 'Not specified'}</p>
-                    <p className="text-sm text-gray-400">Founded: {team.founded || 'Not specified'}</p>
-                    <p className="text-sm text-gray-400">Manager: {team.manager || 'Not specified'}</p>
+                    <p className="text-sm text-gray-400">{t('bulkUpload.stadium')}: {team.stadium || t('common.notSpecified')}</p>
+                    <p className="text-sm text-gray-400">{t('bulkUpload.founded')}: {team.founded || t('common.notSpecified')}</p>
+                    <p className="text-sm text-gray-400">{t('bulkUpload.manager')}: {team.manager || t('common.notSpecified')}</p>
                     <p className="text-sm text-accent-400 font-medium mt-1">
-                      Players: {team.players?.length || 0}
+                      {t('bulkUpload.players')}: {team.players?.length || 0}
                       {team.players?.length > 0 && (
                         <span className="text-gray-500 ml-1">
                           ({team.players.filter(p => p.isCaptain).length} C, {team.players.filter(p => p.isGoalkeeper).length} GK)
@@ -497,7 +499,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                 ))}
                 {previewData.length > 10 && (
                   <div className="col-span-full text-center text-gray-400 text-sm">
-                    And {previewData.length - 10} more teams...
+                    {t('bulkUpload.moreTeams').replace('{count}', previewData.length - 10)}
                   </div>
                 )}
               </div>
@@ -512,7 +514,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
               className="btn-primary flex items-center w-full justify-center"
             >
               <Upload className="w-4 h-4 mr-2" />
-              {isProcessing ? 'Uploading...' : `Upload ${previewData.length} Teams`}
+              {isProcessing ? t('bulkUpload.uploading') : t('bulkUpload.uploadTeams').replace('{count}', previewData.length)}
             </button>
           )}
         </div>
