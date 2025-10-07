@@ -24,44 +24,17 @@ export const useNotification = () => {
 };
 
 const NotificationIcon = ({ type }) => {
-  const icons = {
-    success: Check,
-    error: X,
-    warning: AlertCircle,
-    info: Info,
-  };
-  
-  const Icon = icons[type] || Info;
-  return <Icon className="w-5 h-5" />;
-};
-
-const Notification = ({ notification, onClose }) => {
-  const colors = {
-    success: 'bg-accent-600 border-accent-500 text-white',
-    error: 'bg-red-600 border-red-500 text-white',
-    warning: 'bg-yellow-600 border-yellow-500 text-white',
-    info: 'bg-blue-600 border-blue-500 text-white',
-  };
-
-  return (
-    <div className={`${colors[notification.type]} rounded-lg border p-4 shadow-lg flex items-center justify-between min-w-80 transform transition-all duration-300 ease-in-out`}>
-      <div className="flex items-center">
-        <NotificationIcon type={notification.type} />
-        <div className="ml-3">
-          <p className="font-medium">{notification.title}</p>
-          {notification.message && (
-            <p className="text-sm opacity-90">{notification.message}</p>
-          )}
-        </div>
-      </div>
-      <button
-        onClick={() => onClose(notification.id)}
-        className="ml-4 opacity-70 hover:opacity-100 transition-opacity"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
+  switch (type) {
+    case 'success':
+      return <Check className="w-5 h-5 text-white" />;
+    case 'error':
+      return <AlertCircle className="w-5 h-5 text-white" />;
+    case 'warning':
+      return <AlertCircle className="w-5 h-5 text-white" />;
+    case 'info':
+    default:
+      return <Info className="w-5 h-5 text-white" />;
+  }
 };
 
 export const NotificationProvider = ({ children }) => {
@@ -263,6 +236,13 @@ export const NotificationProvider = ({ children }) => {
     showError,
     showWarning,
     showInfo,
+    // Backwards-compatible alias
+    showNotification: (title, type = 'info', message) => {
+      if (type === 'success') return showSuccess(title, message);
+      if (type === 'error') return showError(title, message);
+      if (type === 'warning') return showWarning(title, message);
+      return showInfo(title, message);
+    },
     
     // FCM notifications
     inboxNotifications,

@@ -167,7 +167,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
               }
 
               validPlayers.push({
-                id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: player.name.trim(),
                 position: player.position || 'Forward',
                 jerseyNumber: jerseyNum,
@@ -189,7 +189,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
         });
       } else {
         validTeams.push({
-          id: Date.now() + Math.random(),
+          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random(),
           name: team.name.trim(),
           logo: team.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(team.name)}&background=f97316&color=fff`,
           stadium: team.stadium || '',
@@ -478,8 +478,8 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                 {t('bulkUpload.previewReady').replace('{count}', previewData.length)}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto">
-                {previewData.slice(0, 10).map((team, index) => (
-                  <div key={index} className="bg-dark-800 border border-dark-700 rounded-lg p-3">
+                {previewData.slice(0, 10).map((team) => (
+                  <div key={team.id} className="bg-dark-800 border border-dark-700 rounded-lg p-3">
                     <div className="flex items-center mb-2">
                       <img src={team.logo} alt={team.name} className="w-8 h-8 mr-3 rounded" />
                       <h4 className="font-semibold text-white">{team.name}</h4>
