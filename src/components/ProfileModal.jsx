@@ -1,10 +1,12 @@
 import React from 'react';
 import { User, Settings, Shield, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 const ProfileModal = ({ onClose }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -46,7 +48,7 @@ const ProfileModal = ({ onClose }) => {
                 {user?.name?.[0] || 'U'}
               </div>
               <div>
-                <h3 className="font-semibold text-white tracking-tight">{user?.name || 'User'}</h3>
+                <h3 className="font-semibold text-white tracking-tight">{user?.name || t('profileModal.guestUser')}</h3>
                 <p className="text-sm text-gray-400">{user?.email}</p>
               </div>
             </div>
@@ -66,7 +68,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center p-3 text-left text-white hover:bg-gray-800/50 rounded-lg transition-colors"
           >
             <User className="w-5 h-5 mr-3 text-gray-400" />
-            <span className="font-medium tracking-tight">Profile</span>
+            <span className="font-medium tracking-tight">{t('pages.profile.editProfile')}</span>
           </button>
 
           <button
@@ -74,7 +76,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center p-3 text-left text-white hover:bg-gray-800/50 rounded-lg transition-colors"
           >
             <Settings className="w-5 h-5 mr-3 text-gray-400" />
-            <span className="font-medium tracking-tight">Settings</span>
+            <span className="font-medium tracking-tight">{t('navigation.settings')}</span>
           </button>
 
           {user?.role === 'admin' && (
@@ -83,7 +85,7 @@ const ProfileModal = ({ onClose }) => {
               className="w-full flex items-center p-3 text-left text-white hover:bg-gray-800/50 rounded-lg transition-colors"
             >
               <Shield className="w-5 h-5 mr-3 text-primary-500" />
-              <span className="font-medium tracking-tight text-primary-500">Admin Panel</span>
+              <span className="font-medium tracking-tight text-primary-500">{t('navigation.adminPanel')}</span>
             </button>
           )}
 
@@ -94,7 +96,7 @@ const ProfileModal = ({ onClose }) => {
             className="w-full flex items-center p-3 text-left text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5 mr-3" />
-            <span className="font-medium tracking-tight">Logout</span>
+            <span className="font-medium tracking-tight">{t('common.logout')}</span>
           </button>
         </div>
       </div>
