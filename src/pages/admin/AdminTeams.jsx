@@ -352,7 +352,7 @@ const AdminTeams = () => {
                     value={formData.leagueId}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    required
+                    
                   >
                     <option value="">{t('pages.adminTeams.selectLeague')}</option>
                     {leagues.map(league => (

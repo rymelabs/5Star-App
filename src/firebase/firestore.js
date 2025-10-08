@@ -105,16 +105,27 @@ export const teamsCollection = {
       const database = checkFirebaseInit();
       const batch = writeBatch(database);
       const teamsCollection = collection(database, 'teams');
-      
+      // Helper to ensure each player has an id
+      const ensurePlayerIds = (players = []) => {
+        return players.map(p => ({
+          ...p,
+          id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`
+        }));
+      };
+
       teams.forEach((team) => {
         const docRef = doc(teamsCollection);
-        batch.set(docRef, {
+        const teamData = {
           ...team,
+          teamId: docRef.id, // store the generated doc id for backwards compatibility
+          players: ensurePlayerIds(team.players || []),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        });
+        };
+
+        batch.set(docRef, teamData);
       });
-      
+
       await batch.commit();
       return true;
     } catch (error) {
@@ -214,6 +225,48 @@ export const teamsCollection = {
       });
     } catch (error) {
       console.error('Error unfollowing team:', error);
+      throw error;
+    }
+  }
+
+  ,
+
+  // Get team by document ID or fallback to teamId/slug query
+  getById: async (idOrKey) => {
+    try {
+      const database = checkFirebaseInit();
+
+      // First try by document ID
+      try {
+        const teamRef = doc(database, 'teams', String(idOrKey));
+        const teamSnap = await getDoc(teamRef);
+        if (teamSnap.exists()) {
+          return { id: teamSnap.id, ...teamSnap.data() };
+        }
+      } catch (docErr) {
+        // ignore and continue to query fallbacks
+      }
+
+      // Fallback: try to find by teamId field or slug
+      const qByTeamId = query(collection(database, 'teams'), where('teamId', '==', idOrKey));
+      const qBySlug = query(collection(database, 'teams'), where('slug', '==', idOrKey));
+
+      const resByTeamId = await getDocs(qByTeamId);
+      if (!resByTeamId.empty) {
+        const d = resByTeamId.docs[0];
+        return { id: d.id, ...d.data() };
+      }
+
+      const resBySlug = await getDocs(qBySlug);
+      if (!resBySlug.empty) {
+        const d = resBySlug.docs[0];
+        return { id: d.id, ...d.data() };
+      }
+
+      console.warn(`Team not found with ID/teamId/slug: ${idOrKey}`);
+      return null;
+    } catch (error) {
+      console.error('Error fetching team by id:', error);
       throw error;
     }
   }
