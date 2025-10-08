@@ -355,20 +355,20 @@ const Latest = () => {
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">
-                  {/* Home Team */}
-                  <div className="flex items-center flex-1">
-                    <img
-                      src={match.homeTeam?.logo}
-                      alt={match.homeTeam?.name}
-                      className="w-8 h-8 object-contain mr-2 rounded-full"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                    <span className="text-white font-medium truncate">
-                      {match.homeTeam?.name}
+                  {/* Away Team */}
+                  <div className="flex items-center flex-1 justify-end relative">
+                    <span className="text-white font-medium truncate relative z-10">
+                      {match.awayTeam?.name}
                     </span>
+                    {match.awayTeam?.logo && (
+                      <img
+                        src={match.awayTeam?.logo}
+                        alt={match.awayTeam?.name}
+                        className="w-8 h-8 object-contain ml-2 rounded-full absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                    )}
                   </div>
-                  
-                  {/* Score */}
                   <div className="px-4">
                     <div className="text-center">
                       <div className="text-lg font-bold text-white">
