@@ -45,6 +45,7 @@ const AdvancedSettings = React.lazy(() => import('./pages/admin/AdvancedSettings
 const AdminNotifications = React.lazy(() => import('./pages/admin/AdminNotifications').catch(() => ({ default: () => <div>Admin Notifications not available</div> })));
 const BulkTeamUploadPage = React.lazy(() => import('./pages/admin/BulkTeamUploadPage').catch(() => ({ default: () => <div>Bulk Upload page not available</div> })));
 const AdminSubmissions = React.lazy(() => import('./pages/admin/AdminSubmissions').catch(() => ({ default: () => <div>Admin Submissions not available</div> })));
+const AdminStats = React.lazy(() => import('./pages/admin/AdminStats').catch(() => ({ default: () => <div>Admin Stats not available</div> })));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -186,6 +187,7 @@ const AppContent = () => {
               <Route path="/admin/seasons/:seasonId" element={<SeasonDetail />} />
               <Route path="/admin/instagram" element={<InstagramSettings />} />
               <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/stats" element={<AdminStats />} />
               <Route path="/admin/advanced-settings" element={<AdvancedSettings />} />
             </>
           )}
