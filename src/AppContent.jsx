@@ -24,6 +24,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import TermsConditions from './pages/TermsConditions';
 import Licenses from './pages/Licenses';
+import SubmitTeam from './pages/SubmitTeam';
 
 // Admin components with lazy loading to avoid import errors
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
@@ -42,6 +43,8 @@ const SeasonDetail = React.lazy(() => import('./pages/admin/SeasonDetail').catch
 const InstagramSettings = React.lazy(() => import('./pages/admin/InstagramSettings').catch(() => ({ default: () => <div>Instagram Settings not available</div> })));
 const AdvancedSettings = React.lazy(() => import('./pages/admin/AdvancedSettings').catch(() => ({ default: () => <div>Advanced Settings not available</div> })));
 const AdminNotifications = React.lazy(() => import('./pages/admin/AdminNotifications').catch(() => ({ default: () => <div>Admin Notifications not available</div> })));
+const BulkTeamUploadPage = React.lazy(() => import('./pages/admin/BulkTeamUploadPage').catch(() => ({ default: () => <div>Bulk Upload page not available</div> })));
+const AdminSubmissions = React.lazy(() => import('./pages/admin/AdminSubmissions').catch(() => ({ default: () => <div>Admin Submissions not available</div> })));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -99,6 +102,7 @@ const AppContent = () => {
   if (!user) {
     return (
       <Routes>
+        <Route path="/submit-team" element={<SubmitTeam />} />
         <Route path="/auth" element={<AuthLanding />} />
         <Route path="/email-auth" element={<EmailAuth />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
@@ -137,6 +141,7 @@ const AppContent = () => {
           
           {/* About page - accessible to all users */}
           <Route path="/about" element={<About />} />
+          <Route path="/submit-team" element={<SubmitTeam />} />
           
           {/* Legal pages - accessible to all users */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -166,6 +171,8 @@ const AppContent = () => {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/teams" element={<AdminTeams />} />
+              <Route path="/admin/teams/upload" element={<BulkTeamUploadPage />} />
+              <Route path="/admin/submissions" element={<AdminSubmissions />} />
               <Route path="/admin/teams/edit/:teamId" element={<EditTeam />} />
               <Route path="/admin/fixtures" element={<AdminFixtures />} />
               <Route path="/admin/news" element={<AdminNews />} />

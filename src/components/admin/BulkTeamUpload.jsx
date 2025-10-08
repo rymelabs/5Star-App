@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Upload, Download, FileText, X, Check, AlertCircle } from 'lucide-react';
 
-const BulkTeamUpload = ({ onUpload, onClose }) => {
-  const [uploadMethod, setUploadMethod] = useState('csv'); // 'csv' or 'json'
+const BulkTeamUpload = ({ onUpload, onClose, inline = false }) => {
+  const [uploadMethod, setUploadMethod] = useState('csv'); // 'csv' | 'xlsx' | 'json'
   const [csvData, setCsvData] = useState('');
   const [jsonData, setJsonData] = useState('');
   const [file, setFile] = useState(null);
@@ -158,8 +158,8 @@ Liverpool,https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png,
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="max-w-full flex items-center justify-center">
+      <div className=" max-w-full overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">
           <div>
@@ -323,25 +323,27 @@ Liverpool,https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png,
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex justify-end space-x-3">
+          {/* Actions - stacked vertically */}
+          <div className="flex flex-col items-end space-y-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
+
             <button
               onClick={handlePreview}
               disabled={(!csvData && !jsonData && !file)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Preview Data
             </button>
+
             <button
               onClick={handleUpload}
               disabled={preview.length === 0 || processing}
-              className="px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {processing ? 'Uploading...' : `Upload ${preview.length} Teams`}
             </button>
