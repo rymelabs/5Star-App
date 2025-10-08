@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import TeamAvatar from '../components/TeamAvatar';
 import { teamsCollection } from '../firebase/firestore';
 import { addCalendarRemindersForTeam, removeCalendarRemindersForTeam } from '../services/calendarReminderService';
 
@@ -202,19 +203,7 @@ const Teams = () => {
               >
                 <div className="flex items-start gap-3">
                   {/* Team Logo */}
-                  {team.logo ? (
-                    <div className="w-12 h-12 bg-dark-700 rounded-md p-1.5 flex items-center justify-center flex-shrink-0 group-hover:bg-dark-600 transition-colors">
-                      <img
-                        src={team.logo}
-                        alt={team.name}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-12 h-12 bg-dark-700 rounded-md flex items-center justify-center flex-shrink-0">
-                      <Users className="w-6 h-6 text-gray-600" />
-                    </div>
-                  )}
+                  <TeamAvatar name={team.name} logo={team.logo} size={48} className="group-hover:bg-dark-600 transition-colors" />
 
                   {/* Team Info */}
                   <div className="flex-1 min-w-0">

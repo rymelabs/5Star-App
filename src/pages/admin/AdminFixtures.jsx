@@ -100,8 +100,8 @@ const AdminFixtures = () => {
         events: formData.events || []
       };
       
-      console.log('Submitting fixture:', newFixture);
-      await addFixture(newFixture);
+  console.log('Submitting fixture:', fixtureData);
+  await addFixture(fixtureData);
       
       // Reset form
       setFormData({

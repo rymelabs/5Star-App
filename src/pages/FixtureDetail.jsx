@@ -9,6 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { fixturesCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
 import { addFixtureToCalendar } from '../utils/calendar';
+import TeamAvatar from '../components/TeamAvatar';
 
 const FixtureDetail = () => {
   const { id } = useParams();
@@ -52,7 +53,6 @@ const FixtureDetail = () => {
     if (id) {
       // Load comments
       getCommentsForItem('fixture', id);
-      
       // Subscribe to real-time comments
       const unsubscribe = subscribeToComments('fixture', id);
       return () => unsubscribe();
@@ -222,19 +222,7 @@ const FixtureDetail = () => {
             className="text-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
             disabled={!fixture.homeTeam?.id}
           >
-            {fixture.homeTeam?.logo && fixture.homeTeam.logo.trim() ? (
-              <img 
-                src={fixture.homeTeam.logo} 
-                alt={fixture.homeTeam.name}
-                className="w-16 h-16 mx-auto mb-2 object-contain rounded-full"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-dark-700 rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-500">
-                  {fixture.homeTeam?.name?.charAt(0) || 'H'}
-                </span>
-              </div>
-            )}
+            <TeamAvatar name={fixture.homeTeam?.name} logo={fixture.homeTeam?.logo} size={64} className="rounded-full mx-auto mb-2" />
             <h2 className="font-semibold text-white">{fixture.homeTeam?.name || t('pages.fixtureDetail.homeTeam')}</h2>
           </button>
 
@@ -257,19 +245,7 @@ const FixtureDetail = () => {
             className="text-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
             disabled={!fixture.awayTeam?.id}
           >
-            {fixture.awayTeam?.logo && fixture.awayTeam.logo.trim() ? (
-              <img 
-                src={fixture.awayTeam.logo} 
-                alt={fixture.awayTeam.name}
-                className="w-16 h-16 mx-auto mb-2 object-contain rounded-full"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-dark-700 rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-500">
-                  {fixture.awayTeam?.name?.charAt(0) || 'A'}
-                </span>
-              </div>
-            )}
+            <TeamAvatar name={fixture.awayTeam?.name} logo={fixture.awayTeam?.logo} size={64} className="rounded-full mx-auto mb-2" />
             <h2 className="font-semibold text-white">{fixture.awayTeam?.name || t('pages.fixtureDetail.awayTeam')}</h2>
           </button>
         </div>
@@ -332,7 +308,11 @@ const FixtureDetail = () => {
                     if (!player) return null;
                     
                     return (
-                      <div key={player.id} className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0">
+                      <button
+                        key={player.id}
+                        onClick={() => fixture.homeTeam?.id && navigate(`/teams/${fixture.homeTeam.id}/players/${player.id}`)}
+                        className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0 text-left w-full hover:bg-dark-700 transition-colors"
+                      >
                         <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
                           {player.jerseyNumber || '?'}
                         </div>
@@ -345,7 +325,7 @@ const FixtureDetail = () => {
                           </div>
                           <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}  
                 </div>
@@ -367,7 +347,11 @@ const FixtureDetail = () => {
                     if (!player) return null;
                     
                     return (
-                      <div key={player.id} className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0">
+                      <button
+                        key={player.id}
+                        onClick={() => fixture.awayTeam?.id && navigate(`/teams/${fixture.awayTeam.id}/players/${player.id}`)}
+                        className="flex items-center gap-2 p-2 bg-dark-800 rounded-lg min-w-0 text-left w-full hover:bg-dark-700 transition-colors"
+                      >
                         <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
                           {player.jerseyNumber || '?'}
                         </div>
@@ -380,7 +364,7 @@ const FixtureDetail = () => {
                           </div>
                           <div className="text-[10px] sm:text-xs text-gray-400 truncate">{player.position}</div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>

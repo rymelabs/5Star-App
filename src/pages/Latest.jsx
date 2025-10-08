@@ -6,6 +6,7 @@ import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
+import TeamAvatar from '../components/TeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
@@ -434,6 +435,7 @@ const Latest = () => {
                       className="w-6 h-6 object-contain mr-2"
                       onError={(e) => e.target.style.display = 'none'}
                     />
+                      <TeamAvatar name={scorer.team.name} logo={scorer.team.logo} size={24} className="mr-2" />
                     <div>
                       <div className="text-white font-medium">{scorer.team.name}</div>
                       <div className="text-xs text-gray-500">{scorer.matches} matches played</div>
@@ -493,7 +495,8 @@ const Latest = () => {
                             e.target.style.display = 'none';
                           }}
                         />
-                      )}
+                        )}
+                        <TeamAvatar name={fixture.homeTeam?.name} logo={fixture.homeTeam?.logo} size={28} className="rounded-full flex-shrink-0" />
                     </div>
                     
                     {/* VS / Score / Time / Date */}
@@ -648,7 +651,8 @@ const Latest = () => {
                           className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
-                      )}
+                        )}
+                        <TeamAvatar name={fixture.awayTeam?.name} logo={fixture.awayTeam?.logo} size={28} className="rounded-full flex-shrink-0" />
                       <span className="font-medium text-white text-sm truncate max-w-[120px]" title={fixture.awayTeam?.name}>
                         {abbreviateTeamName(fixture.awayTeam?.name || 'Unknown')}
                       </span>
@@ -714,6 +718,7 @@ const Latest = () => {
                         e.target.style.display = 'none';
                       }}
                     />
+                      <TeamAvatar name={team.team.name} logo={team.team.logo} size={20} />
                     <span className="text-sm font-medium text-white truncate">
                       {team.team.name}
                     </span>
