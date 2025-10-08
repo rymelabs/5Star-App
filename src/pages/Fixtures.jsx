@@ -232,9 +232,11 @@ const Fixtures = () => {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-6 flex-1 min-w-0">
                                 <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                                  {/* Initials text on the left */}
                                   <span className="font-medium text-white truncate max-w-[160px]" title={homeName}>
                                     {abbreviateTeamName(homeName)}
                                   </span>
+                                  {/* Logo on the right of the name (only show if logo present) */}
                                   {fixture.homeTeam?.logo && (
                                     <img
                                       src={fixture.homeTeam.logo}
@@ -374,10 +376,14 @@ const Fixtures = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-6 flex-1 min-w-0">
                                   <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                                    {/* Initials text on the left for home team */}
                                     <span className="font-medium text-white truncate max-w-[160px]" title={homeName}>{abbreviateTeamName(homeName)}</span>
-                                    {fixture.homeTeam?.logo && (
-                                      <img src={fixture.homeTeam.logo} alt={homeName} className="w-7 h-7 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                    )}
+                                    {/* Logo/avatar on the right of the name (only show if logo present) */}
+                                    {fixture.homeTeam?.logo ? (
+                                      <div className="flex-shrink-0">
+                                        <TeamAvatar name={homeName} logo={fixture.homeTeam.logo} className="w-7 h-7" />
+                                      </div>
+                                    ) : null}
                                   </div>
                                   <div className="flex flex-col items-center px-4 flex-shrink-0">
                                     {fixture.status === 'completed' ? (
@@ -399,9 +405,16 @@ const Fixtures = () => {
                                     )}
                                   </div>
                                   <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    {/* Logo first for away team */}
                                     {fixture.awayTeam?.logo && (
-                                      <img src={fixture.awayTeam.logo} alt={awayName} className="w-7 h-7 object-contain rounded-full flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                      <img
+                                        src={fixture.awayTeam.logo}
+                                        alt={awayName}
+                                        className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                                      />
                                     )}
+                                    {/* Initials text on the right */}
                                     <span className="font-medium text-white truncate max-w-[160px]" title={awayName}>{abbreviateTeamName(awayName)}</span>
                                   </div>
                                 </div>
