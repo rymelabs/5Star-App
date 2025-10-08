@@ -23,7 +23,8 @@ import {
   ChevronUp,
   AlertTriangle,
   Database,
-  Bell
+  Bell,
+  Inbox
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -147,6 +148,13 @@ const AdminDashboard = () => {
       onClick: () => navigate('/admin/news'),
     },
     {
+      title: t('pages.admin.viewSubmissions'),
+      description: t('pages.admin.viewSubmissionsDesc') || 'Review team submissions',
+      icon: Inbox,
+      color: 'text-green-400',
+      onClick: () => navigate('/admin/submissions'),
+    },
+    {
       title: t('pages.admin.newSeason'),
       description: t('pages.admin.newSeasonDesc'),
       icon: Trophy,
@@ -179,6 +187,14 @@ const AdminDashboard = () => {
       path: '/admin/teams',
       color: 'text-blue-400',
       count: teams.length,
+    },
+    {
+      title: t('pages.admin.submissionsManagement'),
+      description: t('pages.admin.submissionsManagementDesc') || 'Manage incoming team submissions',
+      icon: Inbox,
+      path: '/admin/submissions',
+      color: 'text-green-400',
+      count: '-'
     },
     {
       title: t('pages.admin.fixturesManagement'),

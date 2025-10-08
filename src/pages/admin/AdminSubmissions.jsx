@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { submissionsCollection, teamsCollection, adminActivityCollection } from '../../firebase/firestore';
+import { submissionsCollection, teamsCollection, adminActivityCollection, usersCollection } from '../../firebase/firestore';
 import { useNotification } from '../../context/NotificationContext';
 
 const AdminSubmissions = () => {
@@ -12,7 +12,16 @@ const AdminSubmissions = () => {
     try {
       setLoading(true);
       const pending = await submissionsCollection.getPending();
-      setSubs(pending);
+      // Fetch submitter info in parallel
+      const withUsers = await Promise.all(pending.map(async (p) => {
+        try {
+          const u = p.userId ? await usersCollection.getById(p.userId) : null;
+          return { ...p, submitter: u };
+        } catch (e) {
+          return { ...p, submitter: null };
+        }
+      }));
+      setSubs(withUsers);
     } catch (err) {
       console.error('Error loading submissions:', err);
     } finally {
@@ -67,6 +76,11 @@ const AdminSubmissions = () => {
                 <h3 className="font-semibold text-white">{sub.name}</h3>
                 <p className="text-sm text-gray-400">{sub.stadium} • {sub.manager}</p>
                 <p className="text-xs text-gray-500 mt-2">Submitted: {new Date(sub.createdAt?.toDate?.() || sub.createdAt || Date.now()).toLocaleString()}</p>
+                {sub.submitter ? (
+                  <p className="text-xs text-gray-400 mt-1">Submitted by: {sub.submitter.name || sub.submitter.email || sub.userId} ({sub.submitter.email})</p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">Submitted by: {sub.userId || 'Unknown'}</p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <button onClick={() => approve(sub)} className="px-3 py-1 bg-green-600 rounded text-white">Approve</button>
