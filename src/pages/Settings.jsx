@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { settingsCollection } from '../firebase/settings';
-import { ArrowLeft, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, Check, Inbox } from 'lucide-react';
+import { ArrowLeft, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, Check, Inbox, MoreHorizontal } from 'lucide-react';
 import NotificationPermissionModal from '../components/NotificationPermissionModal';
 
 const Settings = () => {
@@ -30,6 +30,7 @@ const Settings = () => {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [loading, setLoading] = useState(true);
+  const [showAdvancedMenu, setShowAdvancedMenu] = useState(false);
 
   // Determine if user is authenticated (not anonymous/guest)
   const isAuthenticatedUser = user && !user.isAnonymous;
@@ -507,6 +508,8 @@ const Settings = () => {
           </div>
         </div>
 
+          {/* Advanced menu moved into the General section below */}
+
         {/* Settings Sections */}
         <div className="space-y-8">
           {settingSections.map((section) => {
@@ -595,6 +598,8 @@ const Settings = () => {
                               ))}
                             </select>
                           )}
+                                  {/* If this is the language select inside General, render Advanced menu below it */}
+                          
                           
                           {item.type === 'link' && (
                             <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
@@ -604,6 +609,33 @@ const Settings = () => {
                     </div>
                   ))}
                 </div>
+
+                {/* Advanced menu (outside language button) - render only in General section */}
+                {section.title === t('pages.settings.general') && isAuthenticatedUser && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => setShowAdvancedMenu((s) => !s)}
+                      aria-expanded={showAdvancedMenu}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-dark-700 rounded-md text-sm text-primary-400 hover:bg-dark-600 transition-colors"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                      <span>{t('pages.settings.advanced') || 'Advanced'}</span>
+                    </button>
+
+                    {showAdvancedMenu && (
+                      <div className="mt-2 w-full max-w-xs bg-dark-800 border border-dark-700 rounded-lg p-3 shadow-md">
+                        {user?.role !== 'admin' && (
+                          <button
+                            onClick={() => navigate('/submit-team')}
+                            className="w-full text-left px-3 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-500 transition-colors"
+                          >
+                            {t('navigation.submitTeam') || 'Submit a Team'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
