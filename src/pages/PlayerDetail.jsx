@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Clock
 } from 'lucide-react';
+import TeamAvatar from '../components/TeamAvatar';
 import { teamsCollection, fixturesCollection } from '../firebase/firestore';
 import { useFootball } from '../context/FootballContext';
 
@@ -261,9 +262,7 @@ const PlayerDetail = () => {
                 onClick={() => navigate(`/teams/${team.id}`)}
                 className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors w-full md:w-auto"
               >
-                {team.logo && (
-                  <img src={team.logo} alt={team.name} className="w-8 h-8 object-contain rounded-full" />
-                )}
+                <TeamAvatar name={team.name} logo={team.logo} size={32} className="rounded-full" />
                 <div className="text-left">
                   <div className="text-xs text-gray-400">Current Team</div>
                   <div className="font-medium text-white">{team.name}</div>

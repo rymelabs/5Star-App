@@ -21,6 +21,7 @@ import {
   UserMinus,
   Bell
 } from 'lucide-react';
+import TeamAvatar from '../components/TeamAvatar';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -339,15 +340,7 @@ const TeamDetail = () => {
 
           <div className="flex items-start gap-6">
             {/* Team Logo */}
-            {team.logo && (
-              <div className="w-20 h-20 bg-dark-700 rounded-lg p-2.5 flex items-center justify-center flex-shrink-0">
-                <img
-                  src={team.logo}
-                  alt={team.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            <TeamAvatar name={team.name} logo={team.logo} size={80} className="p-2.5" />
 
             {/* Team Info */}
             <div className="flex-1">
