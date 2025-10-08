@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
 import BulkTeamUpload from '../../components/BulkTeamUpload';
+import { teamsCollection } from '../../firebase/firestore';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal } from 'lucide-react';
 
@@ -295,12 +296,13 @@ const AdminTeams = () => {
           
           <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={() => setShowBulkUpload(true)}
+              onClick={() => navigate('/admin/teams/upload')}
               className="group w-full px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
             >
               <Upload className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>{t('pages.adminTeams.bulkUpload')}</span>
             </button>
+            
             <button
               onClick={() => setShowAddForm(true)}
               className="group w-full px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
@@ -308,6 +310,8 @@ const AdminTeams = () => {
               <Plus className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
               <span>{t('pages.adminTeams.addTeam')}</span>
             </button>
+
+            
           </div>
         </div>
       </div>
@@ -803,12 +807,7 @@ const AdminTeams = () => {
         )}
       </div>
 
-      {/* Bulk Upload Modal */}
-      <BulkTeamUpload
-        isOpen={showBulkUpload}
-        onClose={() => setShowBulkUpload(false)}
-        onUpload={handleBulkUpload}
-      />
+      {/* Bulk Upload moved to its own page: /admin/teams/upload */}
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

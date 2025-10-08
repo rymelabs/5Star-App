@@ -34,9 +34,11 @@ export const teamsCollection = {
     try {
       const database = checkFirebaseInit();
       const querySnapshot = await getDocs(collection(database, 'teams'));
+      // Ensure the Firestore document id wins even if the stored document
+      // contains an `id` property (common if CSV/legacy data included an id).
       return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        id: doc.id
       }));
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -67,8 +69,8 @@ export const teamsCollection = {
       
       const querySnapshot = await getDocs(q);
       const teams = querySnapshot.docs.map(doc => ({
-        id: doc.id,
         ...doc.data(),
+        id: doc.id,
         _doc: doc
       }));
       
@@ -138,11 +140,47 @@ export const teamsCollection = {
   update: async (teamId, updates) => {
     try {
       const database = checkFirebaseInit();
-      const teamRef = doc(database, 'teams', teamId);
-      await updateDoc(teamRef, {
-        ...updates,
-        updatedAt: serverTimestamp()
-      });
+
+      // Try updating by provided id first (assume it's the document ID)
+      try {
+        const teamRef = doc(database, 'teams', String(teamId));
+        await updateDoc(teamRef, {
+          ...updates,
+          updatedAt: serverTimestamp()
+        });
+        return;
+      } catch (updateErr) {
+        // If the error indicates the document wasn't found, we'll try fallbacks
+        console.warn('Initial update failed, attempting fallback lookup for team:', teamId, updateErr.message || updateErr);
+      }
+
+      // Fallback: attempt to find the team by teamId field (string or numeric) or slug
+      const q1 = query(collection(database, 'teams'), where('teamId', '==', teamId));
+      const q2 = query(collection(database, 'teams'), where('teamId', '==', Number(teamId)));
+      const q3 = query(collection(database, 'teams'), where('slug', '==', teamId));
+
+      let foundDocs = await getDocs(q1);
+      if (foundDocs.empty) {
+        // try numeric teamId
+        try { foundDocs = await getDocs(q2); } catch (e) { /* ignore */ }
+      }
+      if (foundDocs.empty) {
+        foundDocs = await getDocs(q3);
+      }
+
+      if (!foundDocs.empty) {
+        const docRef = foundDocs.docs[0].ref;
+        await updateDoc(docRef, {
+          ...updates,
+          updatedAt: serverTimestamp()
+        });
+        return;
+      }
+
+      // If we reach here, no document was found to update
+      const err = new Error(`No document to update for team identifier: ${teamId}`);
+      err.code = 'not-found';
+      throw err;
     } catch (error) {
       console.error('Error updating team:', error);
       throw error;
@@ -248,8 +286,16 @@ export const teamsCollection = {
       }
 
       // Fallback: try to find by teamId field or slug
+      // Also try documents that include a stored `id` field (legacy CSV imports)
+      const qByStoredId = query(collection(database, 'teams'), where('id', '==', idOrKey));
       const qByTeamId = query(collection(database, 'teams'), where('teamId', '==', idOrKey));
       const qBySlug = query(collection(database, 'teams'), where('slug', '==', idOrKey));
+
+      const resByStoredId = await getDocs(qByStoredId);
+      if (!resByStoredId.empty) {
+        const d = resByStoredId.docs[0];
+        return { id: d.id, ...d.data() };
+      }
 
       const resByTeamId = await getDocs(qByTeamId);
       if (!resByTeamId.empty) {
@@ -267,6 +313,136 @@ export const teamsCollection = {
       return null;
     } catch (error) {
       console.error('Error fetching team by id:', error);
+      throw error;
+    }
+  }
+
+  // Create a team document from a submission object (ensures teamId and player ids)
+  ,
+  createFromSubmission: async (submission) => {
+    try {
+      const database = checkFirebaseInit();
+      const teamsCol = collection(database, 'teams');
+      const docRef = doc(teamsCol);
+
+      const ensurePlayerIds = (players = []) => players.map(p => ({
+        ...p,
+        id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`
+      }));
+
+      const teamData = {
+        ...submission,
+        teamId: docRef.id,
+        players: ensurePlayerIds(submission.players || []),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(docRef, teamData);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating team from submission:', error);
+      throw error;
+    }
+  }
+};
+
+// Submissions collection for team submissions (public)
+export const submissionsCollection = {
+  add: async (submission, id = null) => {
+    try {
+      const database = checkFirebaseInit();
+      if (id) {
+        const subRef = doc(database, 'teamSubmissions', String(id));
+        // Do not set createdAt/updatedAt here; Firestore rules disallow client-provided admin fields.
+        // Leave timestamps to server-side processes or rely on clients reading missing timestamps.
+        await setDoc(subRef, {
+          ...submission
+        });
+        return String(id);
+      }
+      const docRef = await addDoc(collection(database, 'teamSubmissions'), {
+        ...submission
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding submission:', error);
+      throw error;
+    }
+  },
+
+  // Add submission with an email->uid index atomically to prevent duplicates across different auth UIDs
+  addWithEmailIndex: async (submission, uid, emailKey) => {
+    try {
+      const database = checkFirebaseInit();
+      const batch = writeBatch(database);
+
+      const indexRef = doc(database, 'submissionEmails', String(emailKey));
+      const submissionRef = doc(database, 'teamSubmissions', String(uid));
+
+      // Prepare index doc (prevents another account from using the same email)
+      batch.set(indexRef, {
+        userId: uid
+      });
+
+      // Prepare submission doc
+      batch.set(submissionRef, {
+        ...submission
+      });
+
+      await batch.commit();
+      return uid;
+    } catch (error) {
+      console.error('Error adding submission with email index:', error);
+      throw error;
+    }
+  },
+
+  // Check if a submission exists by document id
+  exists: async (id) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = doc(database, 'teamSubmissions', String(id));
+      const snap = await getDoc(docRef);
+      return snap.exists();
+    } catch (error) {
+      console.error('Error checking submission existence:', error);
+      throw error;
+    }
+  },
+
+  getPending: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(collection(database, 'teamSubmissions'), where('status', '==', 'pending'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.error('Error fetching pending submissions:', error);
+      throw error;
+    }
+  },
+
+  approve: async (submissionId, approvedBy = {}) => {
+    try {
+      const database = checkFirebaseInit();
+      const subRef = doc(database, 'teamSubmissions', String(submissionId));
+      await updateDoc(subRef, { status: 'approved', approvedAt: serverTimestamp(), approvedBy, updatedAt: serverTimestamp() });
+      return true;
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      throw error;
+    }
+  },
+
+  reject: async (submissionId, reason = '') => {
+    try {
+      const database = checkFirebaseInit();
+      const subRef = doc(database, 'teamSubmissions', String(submissionId));
+      await updateDoc(subRef, { status: 'rejected', rejectedAt: serverTimestamp(), rejectReason: reason, updatedAt: serverTimestamp() });
+      return true;
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
       throw error;
     }
   }

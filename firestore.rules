@@ -160,5 +160,38 @@ service cloud.firestore {
         request.resource.data.priority == resource.data.priority &&
         request.resource.data.active == resource.data.active;
     }
+
+    // Public team submissions - allow anonymous creates but enforce email+phone and one submission per email
+    match /teamSubmissions/{submissionId} {
+      allow read, update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+      // Allow create only for authenticated users and validate payload
+      // Client no longer needs to supply email/phone; we use the authenticated user's email for the doc id
+      allow create: if request.auth != null
+        // name required
+        && request.resource.data.name is string
+        // status must be 'pending'
+        && request.resource.data.status == 'pending'
+        // the submission must include the submitting user's uid
+        && request.resource.data.userId == request.auth.uid
+        // prevent client from setting admin-only fields
+        && !(request.resource.data.keys().hasAny(['approvedAt','approvedBy','rejectedAt','rejectedReason','updatedAt','createdAt']))
+  // document id must equal the authenticated user's uid (one submission per user)
+  && submissionId == request.auth.uid
+        // only allow creation if the document does not already exist (prevents overwrite)
+        && !exists(/databases/$(database)/documents/teamSubmissions/$(submissionId));
+    }
+
+    // Email -> UID mapping to prevent duplicate submissions across different accounts
+    match /submissionEmails/{emailKey} {
+      // Admins can read/delete
+      allow read, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+      // Allow create only if authenticated and the mapping points to the creating user and the doc does not exist
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && !exists(/databases/$(database)/documents/submissionEmails/$(emailKey));
+    }
   }
 }

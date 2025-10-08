@@ -216,6 +216,7 @@ const EditTeam = () => {
         updatedAt: new Date().toISOString()
       };
 
+      console.debug('EditTeam: updating team with param teamId=', teamId, 'prepared payload players length=', (updatedTeam.players || []).length, 'sample players=', (updatedTeam.players || []).slice(0,3));
       await updateTeam(teamId, updatedTeam);
       showSuccess('Team Updated', `${updatedTeam.name} has been updated successfully`);
       navigate('/admin/teams');

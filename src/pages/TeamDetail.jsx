@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFootball } from '../context/FootballContext';
+import { teamsCollection } from '../firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
 import { useNotification } from '../context/NotificationContext';
@@ -33,8 +34,8 @@ const TeamDetail = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Find the team with fallbacks (id, teamId, name slug, numeric id)
-  const team = useMemo(() => {
+  // Find the team with fallbacks (id, teamId, name slug, numeric id) in-memory
+  const inMemoryTeam = useMemo(() => {
     if (!teams || teams.length === 0) return undefined;
     // direct id match
     let found = teams.find(t => t.id === id);
@@ -53,10 +54,41 @@ const TeamDetail = () => {
     found = teams.find(t => (t.name || '').toLowerCase().replace(/[-_\s]+/g, ' ').trim() === slug);
     if (found) return found;
 
-    // Not found
-    console.warn('Team not found by id; available team ids:', teams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })).slice(0, 20));
     return undefined;
   }, [teams, id]);
+
+  // If team isn't available in-memory, fetch from Firestore as a fallback
+  const [remoteTeam, setRemoteTeam] = React.useState(null);
+  useEffect(() => {
+    let mounted = true;
+    const fetchTeam = async () => {
+      if (inMemoryTeam) {
+        setRemoteTeam(null);
+        return;
+      }
+
+      try {
+        const fetched = await teamsCollection.getById(id);
+        if (mounted) {
+          if (!fetched) {
+            console.warn('TeamDetail: teamsCollection.getById returned null for id:', id);
+            setRemoteTeam(null);
+          } else {
+            // normalize id to doc id
+            setRemoteTeam({ ...fetched, id: fetched.id });
+          }
+        }
+      } catch (err) {
+        console.error('TeamDetail: error fetching team by id fallback:', err);
+        setRemoteTeam(null);
+      }
+    };
+
+    fetchTeam();
+    return () => { mounted = false; };
+  }, [inMemoryTeam, id]);
+
+  const team = inMemoryTeam || remoteTeam;
 
   // Check if user is following this team
   useEffect(() => {
