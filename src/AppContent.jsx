@@ -32,6 +32,7 @@ const AdminTeams = React.lazy(() => import('./pages/admin/AdminTeams').catch(() 
 const EditTeam = React.lazy(() => import('./pages/admin/EditTeam').catch(() => ({ default: () => <div>Edit Team not available</div> })));
 const AdminFixtures = React.lazy(() => import('./pages/admin/AdminFixtures').catch(() => ({ default: () => <div>Admin Fixtures not available</div> })));
 const AdminNews = React.lazy(() => import('./pages/admin/AdminNews').catch(() => ({ default: () => <div>Admin News not available</div> })));
+const EditNews = React.lazy(() => import('./pages/admin/EditNews').catch(() => ({ default: () => <div>Edit News not available</div> })));
 const AdminLeagueSettings = React.lazy(() => import('./pages/admin/AdminLeagueSettings').catch(() => ({ default: () => <div>Admin League Settings not available</div> })));
 const AdminLeagues = React.lazy(() => import('./pages/admin/AdminLeagues').catch(() => ({ default: () => <div>Admin Leagues not available</div> })));
 const CreateLeague = React.lazy(() => import('./pages/admin/CreateLeague').catch(() => ({ default: () => <div>Create League not available</div> })));
@@ -177,6 +178,7 @@ const AppContent = () => {
               <Route path="/admin/teams/edit/:teamId" element={<EditTeam />} />
               <Route path="/admin/fixtures" element={<AdminFixtures />} />
               <Route path="/admin/news" element={<AdminNews />} />
+              <Route path="/admin/news/edit/:id" element={<EditNews />} />
               <Route path="/admin/league-settings" element={<AdminLeagueSettings />} />
               <Route path="/admin/leagues" element={<AdminLeagues />} />
               <Route path="/admin/leagues/create" element={<CreateLeague />} />

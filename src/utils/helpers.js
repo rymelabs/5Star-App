@@ -32,19 +32,24 @@ export const abbreviateTeamName = (teamName) => {
   
   const words = teamName.trim().split(/\s+/);
   
-  // Single word team name - return first 3 letters
-  if (words.length === 1) {
-    return teamName.substring(0, 3).toUpperCase();
+  // Normalize words: remove empty, filter out small tokens if necessary
+  const cleaned = words.filter(w => w && w.length > 0);
+
+  // Single word: first 3 letters
+  if (cleaned.length === 1) {
+    return cleaned[0].substring(0, 3).toUpperCase();
   }
-  
-  // Multi-word team name - first letter of first word + first letters of other words
-  const firstWord = words[0];
-  const otherWords = words.slice(1);
-  
-  const abbreviation = firstWord.charAt(0).toUpperCase() + 
-    otherWords.map(word => word.charAt(0).toUpperCase()).join('');
-  
-  return abbreviation;
+
+  // Two words: first letter of first word + first two letters of second word
+  if (cleaned.length === 2) {
+    const first = cleaned[0].charAt(0).toUpperCase();
+    const second = (cleaned[1].substring(0, 2).toUpperCase() + '  ').substring(0, 2);
+    return (first + second).toUpperCase();
+  }
+
+  // Three or more words: first letter of first three words
+  const initials = cleaned.slice(0, 3).map(w => w.charAt(0).toUpperCase()).join('');
+  return initials;
 };
 
 // Check if a fixture is currently live
