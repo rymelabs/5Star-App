@@ -379,16 +379,18 @@ const Latest = () => {
                   </div>
                   
                   {/* Away Team */}
-                  <div className="flex items-center flex-1 justify-end">
-                    <span className="text-white font-medium truncate">
+                  <div className="flex items-center flex-1 justify-end relative">
+                    <span className="text-white font-medium truncate relative z-10">
                       {match.awayTeam?.name}
                     </span>
-                    <img
-                      src={match.awayTeam?.logo}
-                      alt={match.awayTeam?.name}
-                      className="w-8 h-8 object-contain ml-2 rounded-full"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
+                    {match.awayTeam?.logo && (
+                      <img
+                        src={match.awayTeam?.logo}
+                        alt={match.awayTeam?.name}
+                        className="w-8 h-8 object-contain ml-2 rounded-full absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                    )}
                   </div>
                 </div>
                 
@@ -530,20 +532,18 @@ const Latest = () => {
                     </div>
                     
                     {/* Away Team */}
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0 relative">
+                      <span className="font-medium text-white text-sm truncate relative z-10">
+                        {abbreviateTeamName(fixture.awayTeam.name)}
+                      </span>
                       {fixture.awayTeam?.logo && (
                         <img
                           src={fixture.awayTeam.logo}
                           alt={fixture.awayTeam.name}
-                          className="w-8 h-8 object-contain rounded-full flex-shrink-0"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
+                          className="w-8 h-8 object-contain rounded-full flex-shrink-0 absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       )}
-                      <span className="font-medium text-white text-sm truncate">
-                        {abbreviateTeamName(fixture.awayTeam.name)}
-                      </span>
                     </div>
                   </div>
                 </div>
