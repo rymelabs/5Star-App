@@ -15,6 +15,7 @@ const SubmitTeam = () => {
     players: []
   });
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [playerForm, setPlayerForm] = useState({
@@ -182,7 +183,44 @@ const SubmitTeam = () => {
       setError('Team name is required for preview');
       return;
     }
-    setPreviewOpen(true);
+    // run a soft duplicate check against pending submissions
+    (async () => {
+      try {
+        const pending = await submissionsCollection.getPending();
+        const nameLower = form.name.trim().toLowerCase();
+        // check for team name match
+        const nameMatch = pending.find(p => (p.name || '').trim().toLowerCase() === nameLower);
+
+        // check core players overlap (by name or jersey)
+        const playerNames = (form.players || []).map(x => (x.name || '').trim().toLowerCase()).filter(Boolean);
+        const playerJerseys = (form.players || []).map(x => String(x.jerseyNumber));
+
+        let playerOverlap = null;
+        if (playerNames.length > 0) {
+          for (const p of pending) {
+            const pendingNames = (p.players || []).map(x => (x.name || '').trim().toLowerCase());
+            const pendingJerseys = (p.players || []).map(x => String(x.jerseyNumber));
+            const nameIntersection = playerNames.filter(n => pendingNames.includes(n));
+            const jerseyIntersection = playerJerseys.filter(j => pendingJerseys.includes(j));
+            if (nameIntersection.length > 0 || jerseyIntersection.length > 0) {
+              playerOverlap = { submission: p, nameIntersection, jerseyIntersection };
+              break;
+            }
+          }
+        }
+
+        if (nameMatch || playerOverlap) {
+          setDuplicateWarning({ nameMatch, playerOverlap });
+        } else {
+          setDuplicateWarning(null);
+        }
+      } catch (err) {
+        console.warn('Duplicate check failed', err);
+        setDuplicateWarning(null);
+      }
+
+      setPreviewOpen(true);
+    })();
   };
 
   const handleConfirm = async () => {
@@ -348,6 +386,25 @@ const SubmitTeam = () => {
                   <div className="text-sm text-gray-400">No players added.</div>
                 )}
               </div>
+
+              {duplicateWarning && (
+                <div className="mb-4 p-3 bg-yellow-900 rounded text-yellow-100">
+                  <div className="font-semibold">Possible duplicate submission detected</div>
+                  {duplicateWarning.nameMatch && (
+                    <div className="text-sm mt-1">A pending submission already uses the team name <strong className="text-white">{duplicateWarning.nameMatch.name}</strong>.</div>
+                  )}
+                  {duplicateWarning.playerOverlap && (
+                    <div className="text-sm mt-1">Core player overlap with submission <strong className="text-white">{duplicateWarning.playerOverlap.submission.name}</strong>:</div>
+                  )}
+                  {duplicateWarning.playerOverlap && duplicateWarning.playerOverlap.nameIntersection && duplicateWarning.playerOverlap.nameIntersection.length > 0 && (
+                    <div className="text-xs mt-1">Matching player names: {duplicateWarning.playerOverlap.nameIntersection.join(', ')}</div>
+                  )}
+                  {duplicateWarning.playerOverlap && duplicateWarning.playerOverlap.jerseyIntersection && duplicateWarning.playerOverlap.jerseyIntersection.length > 0 && (
+                    <div className="text-xs mt-1">Matching jersey numbers: {duplicateWarning.playerOverlap.jerseyIntersection.join(', ')}</div>
+                  )}
+                  <div className="mt-2 text-sm">You can continue to submit, and admins will review possible duplicates.</div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setPreviewOpen(false)} className="px-3 py-1 bg-gray-600 text-white rounded">Cancel</button>

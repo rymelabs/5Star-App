@@ -448,6 +448,22 @@ export const submissionsCollection = {
   }
 };
 
+// Simple users helper
+export const usersCollection = {
+  getById: async (userId) => {
+    try {
+      const database = checkFirebaseInit();
+      const docRef = doc(database, 'users', String(userId));
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) return null;
+      return { id: snap.id, ...snap.data() };
+    } catch (error) {
+      console.error('Error fetching user by id:', error);
+      throw error;
+    }
+  }
+};
+
 // Fixtures collection functions
 export const fixturesCollection = {
   // Get all fixtures

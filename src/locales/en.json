@@ -319,8 +319,14 @@
       "by": "by",
       "seeMore": "See More",
       "seeLess": "See Less",
-      "noRecentActivity": "No recent activity"
+      "noRecentActivity": "No recent activity",
+        "viewSubmissions": "View Submissions",
+  "viewSubmissionsDesc": "Review team submissions",
+  "submissionsManagement": "Submissions Management",
+  "submissionsManagementDesc": "Manage incoming team submissions"
+
     },
+    
     "adminTeams": {
       "teamsManagement": "Teams Management",
       "teams": "teams",
