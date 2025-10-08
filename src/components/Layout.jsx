@@ -70,15 +70,7 @@ const Layout = ({ children }) => {
             })}
           </nav>
 
-          {/* Quick CTA: Submit a Team (visible on desktop sidebar) */}
-          <div className="px-4 mt-4">
-            <button
-              onClick={() => navigate('/submit-team')}
-              className="w-full bg-primary-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-500 transition-colors"
-            >
-              <span className="font-medium">{t('navigation.submitTeam') || 'Submit a Team'}</span>
-            </button>
-          </div>
+          {/* Quick CTA removed: Submit a Team moved to Settings page for regular users only */}
 
           {/* User Section - Dashboard & Settings */}
           <div className="px-3 mt-6 mb-2">

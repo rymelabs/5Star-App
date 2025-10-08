@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { submissionsCollection, teamsCollection, adminActivityCollection, usersCollection } from '../../firebase/firestore';
 import { useNotification } from '../../context/NotificationContext';
 
@@ -66,7 +67,16 @@ const AdminSubmissions = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Team Submissions</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="p-2 rounded-md hover:bg-dark-800 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-300" />
+        </button>
+        <h1 className="text-2xl font-semibold m-0">Team Submissions</h1>
+      </div>
       {subs.length === 0 && <div className="text-gray-400">No pending submissions</div>}
       <div className="space-y-4">
         {subs.map(sub => (

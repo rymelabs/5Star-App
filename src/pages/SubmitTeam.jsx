@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { submissionsCollection } from '../firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -231,7 +232,16 @@ const SubmitTeam = () => {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-[35px] text-primary-500 font-semibold mb-4">Submit a Team</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="p-2 rounded-md hover:bg-dark-800 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-300" />
+        </button>
+        <h1 className="text-[35px] text-primary-500 font-semibold m-0">Submit a Team</h1>
+      </div>
       <p className="text-sm text-gray-400 mb-4">Fill in the details below and submit. An admin will review and approve your submission.</p>
 
       {!authLoading && !user ? (
