@@ -34,8 +34,9 @@
     "dashboard": "Dashibọọdụ",
     "settings": "Ntọala",
     "myAccount": "Akaụntụ m",
-    "adminPanel": "Panel onye nlekọta",
-    "adminDashboard": "Dashibọọdụ onye nlekọta"
+  "adminPanel": "Panel onye nlekọta",
+  "adminDashboard": "Dashibọọdụ onye nlekọta",
+  "submitTeam": "Nyefee Otu"
   },
   "pages": {
     "latest": {

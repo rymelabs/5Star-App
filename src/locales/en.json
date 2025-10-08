@@ -34,8 +34,9 @@
     "dashboard": "Dashboard",
     "settings": "Settings",
     "myAccount": "My Account",
-    "adminPanel": "Admin Panel",
-    "adminDashboard": "Admin Dashboard"
+  "adminPanel": "Admin Panel",
+  "adminDashboard": "Admin Dashboard",
+  "submitTeam": "Submit a Team"
   },
   "pages": {
     "latest": {
