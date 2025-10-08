@@ -33,8 +33,9 @@
     "dashboard": "Dashboard",
     "settings": "Saitunan",
     "myAccount": "Asusuna",
-    "adminPanel": "Rukunin gudanarwa",
-    "adminDashboard": "Dashboard gudanarwa"
+  "adminPanel": "Rukunin gudanarwa",
+  "adminDashboard": "Dashboard gudanarwa",
+  "submitTeam": "Aika Ƙungiya"
   },
   "pages": {
     "latest": {

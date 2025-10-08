@@ -34,8 +34,9 @@
     "dashboard": "Pátákó àkóso",
     "settings": "Àwọn ètò",
     "myAccount": "Àkáǹtì mi",
-    "adminPanel": "Pánẹ́ẹ̀lì alábòójútó",
-    "adminDashboard": "Pátákó àkóso alábòójútó"
+  "adminPanel": "Pánẹ́ẹ̀lì alábòójútó",
+  "adminDashboard": "Pátákó àkóso alábòójútó",
+  "submitTeam": "Firanṣẹ́ Ẹgbẹ́"
   },
   "pages": {
     "latest": {
