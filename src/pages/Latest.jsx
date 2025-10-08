@@ -352,7 +352,7 @@ const Latest = () => {
               <div
                 key={match.id}
                 onClick={() => handleFixtureClick(match)}
-                className="card p-4 cursor-pointer hover:ring-2 hover:ring-accent-500 transition-all"
+                className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">
                   {/* Home Team */}
@@ -360,7 +360,7 @@ const Latest = () => {
                     <img
                       src={match.homeTeam?.logo}
                       alt={match.homeTeam?.name}
-                      className="w-6 h-6 object-contain mr-2"
+                      className="w-8 h-8 object-contain mr-2 rounded-full"
                       onError={(e) => e.target.style.display = 'none'}
                     />
                     <span className="text-white font-medium truncate">
@@ -386,7 +386,7 @@ const Latest = () => {
                     <img
                       src={match.awayTeam?.logo}
                       alt={match.awayTeam?.name}
-                      className="w-6 h-6 object-contain ml-2"
+                      className="w-8 h-8 object-contain ml-2 rounded-full"
                       onError={(e) => e.target.style.display = 'none'}
                     />
                   </div>
@@ -476,7 +476,7 @@ const Latest = () => {
               <div
                 key={fixture.id}
                 onClick={() => handleFixtureClick(fixture)}
-                className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden"
+                className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">
                   {/* Teams */}
@@ -490,13 +490,12 @@ const Latest = () => {
                         <img
                           src={fixture.homeTeam.logo}
                           alt={fixture.homeTeam.name}
-                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                          className="w-8 h-8 object-contain rounded-full flex-shrink-0"
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
                         />
-                        )}
-                        <TeamAvatar name={fixture.homeTeam?.name} logo={fixture.homeTeam?.logo} size={28} className="rounded-full flex-shrink-0" />
+                      )}
                     </div>
                     
                     {/* VS / Score / Time / Date */}
@@ -536,7 +535,7 @@ const Latest = () => {
                         <img
                           src={fixture.awayTeam.logo}
                           alt={fixture.awayTeam.name}
-                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                          className="w-8 h-8 object-contain rounded-full flex-shrink-0"
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
@@ -575,7 +574,7 @@ const Latest = () => {
               <div
                 key={fixture.id}
                 onClick={() => handleFixtureClick(fixture)}
-                className="card p-4 cursor-pointer hover:bg-dark-700 transition-colors duration-200 overflow-hidden border-l-2 border-primary-500"
+                className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5 border-l-2 border-primary-500"
               >
                 {/* Competition/Group badges */}
                 {(fixture.groupId || fixture.stage) && (
@@ -605,7 +604,7 @@ const Latest = () => {
                         <img
                           src={fixture.homeTeam.logo}
                           alt={fixture.homeTeam.name}
-                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                          className="w-8 h-8 object-contain rounded-full flex-shrink-0"
                           onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
                       )}

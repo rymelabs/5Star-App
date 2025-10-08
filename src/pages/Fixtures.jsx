@@ -200,9 +200,7 @@ const Fixtures = () => {
                           <div
                             key={fixture.id}
                             onClick={() => handleFixtureClick(fixture)}
-                            className={`card p-4 cursor-pointer hover:bg-dark-700 hover:scale-[1.01] transition-all duration-200 overflow-hidden ${
-                              isSeasonFixture ? 'border-l-2 border-primary-500' : ''
-                            }`}
+                            className={`rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 ${isSeasonFixture ? 'ring-1 ring-primary-600/30' : ''} hover:shadow-lg hover:translate-y-[-2px]`}
                           >
                             {(fixture.seasonId || fixture.competition) && (
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -237,14 +235,14 @@ const Fixtures = () => {
                                     {abbreviateTeamName(homeName)}
                                   </span>
                                   {/* Logo on the right of the name (only show if logo present) */}
-                                  {fixture.homeTeam?.logo && (
-                                    <img
-                                      src={fixture.homeTeam.logo}
-                                      alt={homeName}
-                                      className="w-7 h-7 object-contain rounded-full flex-shrink-0"
-                                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                                    />
-                                  )}
+                                    {fixture.homeTeam?.logo && (
+                                      <img
+                                        src={fixture.homeTeam.logo}
+                                        alt={homeName}
+                                        className="w-8 h-8 object-contain rounded-full flex-shrink-0"
+                                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                                      />
+                                    )}
                                 </div>
                                 <div className="flex flex-col items-center px-4 flex-shrink-0">
                                   {fixture.status === 'completed' ? (
@@ -410,7 +408,7 @@ const Fixtures = () => {
                                       <img
                                         src={fixture.awayTeam.logo}
                                         alt={awayName}
-                                        className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                                        className="w-8 h-8 object-contain rounded-full flex-shrink-0"
                                         onError={(e) => (e.currentTarget.style.display = 'none')}
                                       />
                                     )}
