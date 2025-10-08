@@ -202,30 +202,38 @@ const Fixtures = () => {
                             onClick={() => handleFixtureClick(fixture)}
                             className={`rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 ${isSeasonFixture ? 'ring-1 ring-primary-600/30' : ''} hover:shadow-lg hover:translate-y-[-2px]`}
                           >
-                            {(fixture.seasonId || fixture.competition) && (
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                {fixture.seasonId && season && (
-                                  <span className="px-2 py-0.5 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded">
-                                    {season.name}
-                                  </span>
-                                )}
-                                {group && (
-                                  <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">
-                                    {group.name}
-                                  </span>
-                                )}
-                                {fixture.stage && (
-                                  <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
-                                    {fixture.stage === 'knockout' ? fixture.round || t('fixtures.knockout') : t('fixtures.groupStage')}
-                                  </span>
-                                )}
-                                {!fixture.seasonId && fixture.competition && (
-                                  <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded">
-                                    {fixture.competition}
-                                  </span>
+                            {/* Top row: badges left, venue right */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {(fixture.seasonId || fixture.competition) && (
+                                  <>
+                                    {fixture.seasonId && season && (
+                                      <span className="px-2 py-0.5 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded">
+                                        {season.name}
+                                      </span>
+                                    )}
+                                    {group && (
+                                      <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">
+                                        {group.name}
+                                      </span>
+                                    )}
+                                    {fixture.stage && (
+                                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
+                                        {fixture.stage === 'knockout' ? fixture.round || t('fixtures.knockout') : t('fixtures.groupStage')}
+                                      </span>
+                                    )}
+                                    {!fixture.seasonId && fixture.competition && (
+                                      <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded">
+                                        {fixture.competition}
+                                      </span>
+                                    )}
+                                  </>
                                 )}
                               </div>
-                            )}
+                              {fixture.venue && (
+                                <div className="text-xs text-gray-500 truncate max-w-[140px] text-right">{fixture.venue}</div>
+                              )}
+                            </div>
 
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-6 flex-1 min-w-0">
@@ -277,11 +285,7 @@ const Fixtures = () => {
                                   </span>
                                 </div>
                               </div>
-                              {fixture.venue && (
-                                <div className="ml-6 text-right flex-shrink-0">
-                                  <div className="text-xs text-gray-500 truncate max-w-[100px]">{fixture.venue}</div>
-                                </div>
-                              )}
+                              {/* venue moved to top-right; removed duplicate middle venue */}
                             </div>
                             {fixture.status === 'live' && (
                               <div className="mt-3 flex items-center justify-between text-sm">
@@ -416,11 +420,7 @@ const Fixtures = () => {
                                     <span className="font-medium text-white truncate max-w-[160px]" title={awayName}>{abbreviateTeamName(awayName)}</span>
                                   </div>
                                 </div>
-                                {fixture.venue && (
-                                  <div className="ml-6 text-right flex-shrink-0">
-                                    <div className="text-xs text-gray-500 truncate max-w-[100px]">{fixture.venue}</div>
-                                  </div>
-                                )}
+                                {/* venue moved to top-right */}
                               </div>
                               {fixture.status === 'live' && (
                                 <div className="mt-3 flex items-center justify-between text-sm">
