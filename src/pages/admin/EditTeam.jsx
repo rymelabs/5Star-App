@@ -276,7 +276,7 @@ const EditTeam = () => {
                   value={formData.leagueId}
                   onChange={handleInputChange}
                   className="input-field w-full"
-                  required
+                  
                 >
                   <option value="">Select a league</option>
                   {leagues.map(league => (
