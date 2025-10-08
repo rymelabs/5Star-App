@@ -12,7 +12,7 @@ const AdminTeams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { teams, leagues, addTeam, updateTeam, deleteTeam } = useFootball();
+  const { teams, leagues, addTeam, updateTeam, deleteTeam, addBulkTeams } = useFootball();
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -211,6 +211,22 @@ const AdminTeams = () => {
 
   const handleDeleteTeam = async (team) => {
     setConfirmDelete({ isOpen: true, team });
+  };
+
+  // Handle bulk upload from BulkTeamUpload component
+  const handleBulkUpload = async (teamsData) => {
+    if (!Array.isArray(teamsData) || teamsData.length === 0) return;
+    try {
+      setLoading(true);
+      await addBulkTeams(teamsData);
+      showSuccess(t('pages.adminTeams.bulkUploadSuccess').replace('{count}', teamsData.length));
+      setShowBulkUpload(false);
+    } catch (error) {
+      console.error('Bulk upload failed:', error);
+      showError(t('pages.adminTeams.bulkUploadFailed'), error.message || t('pages.adminTeams.bulkUploadFailedDesc'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmDeleteTeam = async () => {
@@ -791,6 +807,7 @@ const AdminTeams = () => {
       <BulkTeamUpload
         isOpen={showBulkUpload}
         onClose={() => setShowBulkUpload(false)}
+        onUpload={handleBulkUpload}
       />
 
       {/* Delete Confirmation Modal */}
