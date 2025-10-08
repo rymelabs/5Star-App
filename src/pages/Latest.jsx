@@ -481,69 +481,49 @@ const Latest = () => {
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">
-                  {/* Teams */}
                   <div className="flex items-center space-x-6 flex-1 min-w-0">
-                    {/* Home Team */}
                     <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
-                      <span className="font-medium text-white text-sm truncate">
-                        {abbreviateTeamName(fixture.homeTeam.name)}
-                      </span>
+                      <span className="font-medium text-white truncate max-w-[160px]" title={fixture.homeTeam?.name}>{abbreviateTeamName(fixture.homeTeam?.name || 'Unknown')}</span>
                       {fixture.homeTeam?.logo && (
                         <img
                           src={fixture.homeTeam.logo}
                           alt={fixture.homeTeam.name}
                           className="w-8 h-8 object-contain rounded-full flex-shrink-0"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       )}
                     </div>
-                    
-                    {/* VS / Score / Time / Date */}
+
                     <div className="flex flex-col items-center px-4 flex-shrink-0">
                       {fixture.status === 'completed' ? (
                         <div className="text-center">
-                          <div className="text-lg font-bold text-white">
-                            {fixture.homeScore} - {fixture.awayScore}
-                          </div>
+                          <div className="text-lg font-bold text-white">{fixture.homeScore} - {fixture.awayScore}</div>
                           <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
                         </div>
                       ) : isFixtureLive(fixture) ? (
                         <div className="text-center">
-                          <div className="text-lg font-bold text-white">
-                            {fixture.homeScore || 0} - {fixture.awayScore || 0}
-                          </div>
-                          <div className="text-sm font-bold animate-live-pulse mt-1">
-                            {t('match.live')}
-                          </div>
+                          <div className="text-lg font-bold text-white">{fixture.homeScore || 0} - {fixture.awayScore || 0}</div>
+                          <div className="text-sm font-bold animate-live-pulse mt-1">{t('match.live')}</div>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-primary-500">{t('match.vs').toUpperCase()}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
-                          </div>
+                          <div className="text-sm font-semibold text-primary-500">VS</div>
+                          <div className="text-xs text-gray-400 mt-1">{fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}</div>
                         </div>
                       )}
                     </div>
-                    
-                    {/* Away Team */}
-                    <div className="flex items-center space-x-3 flex-1 min-w-0 relative">
-                      <span className="font-medium text-white text-sm truncate relative z-10">
-                        {abbreviateTeamName(fixture.awayTeam.name)}
-                      </span>
+
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
                       {fixture.awayTeam?.logo && (
                         <img
                           src={fixture.awayTeam.logo}
                           alt={fixture.awayTeam.name}
-                          className="w-8 h-8 object-contain rounded-full flex-shrink-0 absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
-                          onError={(e) => { e.target.style.display = 'none'; }}
+                          className="w-7 h-7 object-contain rounded-full flex-shrink-0"
+                          onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
                       )}
+                      <span className="font-medium text-white truncate max-w-[160px]" title={fixture.awayTeam?.name}>{abbreviateTeamName(fixture.awayTeam?.name || 'Unknown')}</span>
                     </div>
                   </div>
                 </div>
@@ -576,30 +556,10 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(fixture)}
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5 border-l-2 border-primary-500"
               >
-                {/* Competition/Group badges */}
-                {(fixture.groupId || fixture.stage) && (
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {fixture.groupId && activeSeason.groups && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-accent-500/20 text-accent-400 border border-accent-500/30 rounded">
-                        {activeSeason.groups.find(g => g.id === fixture.groupId)?.name || 'Group'}
-                      </span>
-                    )}
-                    {fixture.stage && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded capitalize">
-                        {fixture.stage === 'knockout' ? fixture.round || 'Knockout' : 'Group Stage'}
-                      </span>
-                    )}
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between">
-                  {/* Teams */}
                   <div className="flex items-center space-x-6 flex-1 min-w-0">
-                    {/* Home Team */}
                     <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
-                      <span className="font-medium text-white text-sm truncate max-w-[120px]" title={fixture.homeTeam?.name}>
-                        {abbreviateTeamName(fixture.homeTeam?.name || 'Unknown')}
-                      </span>
+                      <span className="font-medium text-white truncate max-w-[160px]" title={fixture.homeTeam?.name}>{abbreviateTeamName(fixture.homeTeam?.name || 'Unknown')}</span>
                       {fixture.homeTeam?.logo && (
                         <img
                           src={fixture.homeTeam.logo}
@@ -609,39 +569,25 @@ const Latest = () => {
                         />
                       )}
                     </div>
-                    
-                    {/* VS / Score / Time / Date */}
                     <div className="flex flex-col items-center px-4 flex-shrink-0">
                       {fixture.status === 'completed' ? (
                         <div className="text-center">
-                          <div className="text-lg font-bold text-white">
-                            {fixture.homeScore} - {fixture.awayScore}
-                          </div>
+                          <div className="text-lg font-bold text-white">{fixture.homeScore} - {fixture.awayScore}</div>
                           <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
                         </div>
                       ) : isFixtureLive(fixture) ? (
                         <div className="text-center">
-                          <div className="text-lg font-bold text-white">
-                            {fixture.homeScore || 0} - {fixture.awayScore || 0}
-                          </div>
-                          <div className="text-sm font-bold animate-live-pulse mt-1">
-                            {t('match.live')}
-                          </div>
+                          <div className="text-lg font-bold text-white">{fixture.homeScore || 0} - {fixture.awayScore || 0}</div>
+                          <div className="text-sm font-bold animate-live-pulse mt-1">{t('match.live')}</div>
                         </div>
                       ) : (
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-primary-500">{t('match.vs').toUpperCase()}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}
-                          </div>
+                          <div className="text-sm font-semibold text-primary-500">VS</div>
+                          <div className="text-xs text-gray-400 mt-1">{fixture.dateTime ? formatTime(fixture.dateTime) : '--:--'}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{fixture.dateTime ? formatDate(fixture.dateTime) : 'TBD'}</div>
                         </div>
                       )}
                     </div>
-                    
-                    {/* Away Team */}
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
                       {fixture.awayTeam?.logo && (
                         <img
@@ -650,11 +596,8 @@ const Latest = () => {
                           className="w-7 h-7 object-contain rounded-full flex-shrink-0"
                           onError={(e) => (e.currentTarget.style.display = 'none')}
                         />
-                        )}
-                        <TeamAvatar name={fixture.awayTeam?.name} logo={fixture.awayTeam?.logo} size={28} className="rounded-full flex-shrink-0" />
-                      <span className="font-medium text-white text-sm truncate max-w-[120px]" title={fixture.awayTeam?.name}>
-                        {abbreviateTeamName(fixture.awayTeam?.name || 'Unknown')}
-                      </span>
+                      )}
+                      <span className="font-medium text-white truncate max-w-[160px]" title={fixture.awayTeam?.name}>{abbreviateTeamName(fixture.awayTeam?.name || 'Unknown')}</span>
                     </div>
                   </div>
                 </div>
