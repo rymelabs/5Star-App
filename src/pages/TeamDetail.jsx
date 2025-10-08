@@ -33,9 +33,29 @@ const TeamDetail = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Find the team
+  // Find the team with fallbacks (id, teamId, name slug, numeric id)
   const team = useMemo(() => {
-    return teams.find(t => t.id === id);
+    if (!teams || teams.length === 0) return undefined;
+    // direct id match
+    let found = teams.find(t => t.id === id);
+    if (found) return found;
+
+    // teamId field fallback
+    found = teams.find(t => t.teamId === id || String(t.teamId) === id);
+    if (found) return found;
+
+    // numeric id fallback
+    found = teams.find(t => String(t.id) === String(Number(id)));
+    if (found) return found;
+
+    // name slug fallback (name lowercased, spaces -> hyphens)
+    const slug = String(id).toLowerCase().replace(/[-_\s]+/g, ' ').trim();
+    found = teams.find(t => (t.name || '').toLowerCase().replace(/[-_\s]+/g, ' ').trim() === slug);
+    if (found) return found;
+
+    // Not found
+    console.warn('Team not found by id; available team ids:', teams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })).slice(0, 20));
+    return undefined;
   }, [teams, id]);
 
   // Check if user is following this team

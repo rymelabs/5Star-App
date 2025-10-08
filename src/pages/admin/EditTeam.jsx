@@ -40,8 +40,20 @@ const EditTeam = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load team data
-    const team = teams.find(t => t.id === teamId);
+    // Load team data with fallbacks
+    const findTeamByParam = (param) => {
+      let found = teams.find(t => t.id === param);
+      if (found) return found;
+      found = teams.find(t => t.teamId === param || String(t.teamId) === param);
+      if (found) return found;
+      found = teams.find(t => String(t.id) === String(Number(param)));
+      if (found) return found;
+      const slug = String(param).toLowerCase().replace(/[-_\s]+/g, ' ').trim();
+      found = teams.find(t => (t.name || '').toLowerCase().replace(/[-_\s]+/g, ' ').trim() === slug);
+      return found;
+    };
+
+    const team = findTeamByParam(teamId);
     if (team) {
       setFormData({
         name: team.name,
@@ -53,6 +65,7 @@ const EditTeam = () => {
         players: team.players || [],
       });
     } else {
+      console.warn('EditTeam: Team not found for param', teamId, 'Available:', teams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })).slice(0, 20));
       showError('Team Not Found', 'The team you are trying to edit does not exist.');
       navigate('/admin/teams');
     }

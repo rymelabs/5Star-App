@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Check, X, AlertCircle, Info, Bell } from 'lucide-react';
+import Toast from '../components/Toast';
 import { useAuth } from './AuthContext';
 import { 
   requestNotificationPermission, 
@@ -263,10 +264,12 @@ export const NotificationProvider = ({ children }) => {
       {/* Notification Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {notifications.map(notification => (
-          <Notification
+          <Toast
             key={notification.id}
-            notification={notification}
-            onClose={removeNotification}
+            type={notification.type}
+            message={`${notification.title ? notification.title + ': ' : ''}${notification.message || ''}`}
+            onClose={() => removeNotification(notification.id)}
+            duration={5000}
           />
         ))}
       </div>
