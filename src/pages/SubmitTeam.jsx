@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { submissionsCollection } from '../firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import countries from '../data/countries';
 
 const SubmitTeam = () => {
   const navigate = useNavigate();
@@ -26,12 +27,11 @@ const SubmitTeam = () => {
     isCaptain: false,
     isGoalkeeper: false,
     dateOfBirth: '',
-    placeOfBirth: '',
-    nationality: '',
+  placeOfBirth: '',
+  nationality: '',
     height: '',
     preferredFoot: 'right',
-    marketValue: '',
-    contractExpiry: ''
+  // marketValue and contractExpiry removed per requirements
   });
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -69,13 +69,11 @@ const SubmitTeam = () => {
       jerseyNumber: jersey,
       isCaptain: !!playerForm.isCaptain,
       isGoalkeeper: !!playerForm.isGoalkeeper
-      ,dateOfBirth: playerForm.dateOfBirth || '',
-      placeOfBirth: playerForm.placeOfBirth || '',
-      nationality: playerForm.nationality || '',
-      height: playerForm.height || '',
-      preferredFoot: playerForm.preferredFoot || 'right',
-      marketValue: playerForm.marketValue || '',
-      contractExpiry: playerForm.contractExpiry || ''
+  ,dateOfBirth: playerForm.dateOfBirth || '',
+  placeOfBirth: playerForm.placeOfBirth || '',
+  nationality: playerForm.nationality || '',
+  height: playerForm.height || '',
+  preferredFoot: playerForm.preferredFoot || 'right'
     };
 
     // If marking goalkeeper or captain, unset previous
@@ -112,13 +110,11 @@ const SubmitTeam = () => {
         jerseyNumber: typeof p.jerseyNumber === 'number' ? p.jerseyNumber : parseInt(p.jerseyNumber) || 0,
         isCaptain: !!p.isCaptain,
         isGoalkeeper: !!p.isGoalkeeper
-        ,dateOfBirth: p.dateOfBirth || '',
-        placeOfBirth: p.placeOfBirth || '',
-        nationality: p.nationality || '',
-        height: p.height || '',
-        preferredFoot: p.preferredFoot || 'right',
-        marketValue: p.marketValue || '',
-        contractExpiry: p.contractExpiry || ''
+  ,dateOfBirth: p.dateOfBirth || '',
+  placeOfBirth: p.placeOfBirth || '',
+  nationality: p.nationality || '',
+  height: p.height || '',
+  preferredFoot: p.preferredFoot || 'right'
       }));
 
       const payload = {
@@ -314,8 +310,18 @@ const SubmitTeam = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 mb-2">
             <input name="dateOfBirth" type="date" value={playerForm.dateOfBirth} onChange={handlePlayerChange} placeholder="DOB" className="input-field col-span-2" />
-            <input name="placeOfBirth" value={playerForm.placeOfBirth} onChange={handlePlayerChange} placeholder="Place of Birth" className="input-field col-span-2" />
-            <input name="nationality" value={playerForm.nationality} onChange={handlePlayerChange} placeholder="Nationality" className="input-field col-span-2" />
+            <select name="placeOfBirth" value={playerForm.placeOfBirth} onChange={handlePlayerChange} className="input-field col-span-2">
+              <option value="">Place of Birth</option>
+              {countries.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <select name="nationality" value={playerForm.nationality} onChange={handlePlayerChange} className="input-field col-span-2">
+              <option value="">Nationality</option>
+              {countries.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 mb-2">
@@ -325,8 +331,8 @@ const SubmitTeam = () => {
               <option value="left">Left</option>
               <option value="both">Both</option>
             </select>
-            <input name="marketValue" value={playerForm.marketValue} onChange={handlePlayerChange} placeholder="Market Value" className="input-field col-span-2" />
-            <input name="contractExpiry" type="date" value={playerForm.contractExpiry} onChange={handlePlayerChange} placeholder="Contract Expiry" className="input-field col-span-2" />
+            {/* marketValue and contractExpiry removed per requirements */}
+            <div className="col-span-4"></div>
           </div>
           <div className="flex gap-2 mb-4">
             <button type="button" onClick={addPlayer} className="px-3 py-1 bg-primary-600 text-white rounded">Add Player</button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,6 +11,9 @@ const Profile = () => {
   const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [userCommentsCount, setUserCommentsCount] = useState(0);
+  const [articlesReadCount, setArticlesReadCount] = useState(0);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -95,6 +98,47 @@ const Profile = () => {
       avatar: newAvatar
     }));
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const loadUserStats = async () => {
+      setStatsLoading(true);
+      try {
+        // Count comments authored by this user
+        const { commentsCollection } = await import('../firebase/firestore');
+        let commentsCount = 0;
+        try {
+          // Attempt to query comments where userId == user.uid (if comments store userId)
+          commentsCount = await commentsCollection.getCountForUser?.(user.uid) || 0;
+        } catch (e) {
+          // Fallback: fetch recent comments and filter client-side (less efficient)
+          try {
+            const allComments = await commentsCollection.getAll?.() || [];
+            commentsCount = allComments.filter(c => c.userId === user.uid).length;
+          } catch (e2) {
+            console.warn('Could not fetch comments for count fallback', e2);
+            commentsCount = 0;
+          }
+        }
+
+        // Articles read: no per-user view table exists, fallback to stored user.followedTeams or articlesRead in profile
+        const articlesRead = user?.articlesRead || 0;
+
+        if (!mounted) return;
+        setUserCommentsCount(commentsCount);
+        setArticlesReadCount(articlesRead);
+      } catch (err) {
+        console.error('Error loading user stats', err);
+      } finally {
+        if (mounted) setStatsLoading(false);
+      }
+    };
+
+    if (user && !user.isAnonymous) loadUserStats();
+    else setStatsLoading(false);
+
+    return () => { mounted = false; };
+  }, [user]);
 
   return (
     <div className="pb-6">
@@ -324,13 +368,21 @@ const Profile = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="card p-4 text-center">
               <div className="text-lg font-bold text-primary-500 mb-1">
-                {Math.floor(Math.random() * 50) + 10}
+                {statsLoading ? (
+                  <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                ) : (
+                  userCommentsCount
+                )}
               </div>
               <div className="text-sm text-gray-400">{t('pages.profile.comments')}</div>
             </div>
             <div className="card p-4 text-center">
               <div className="text-lg font-bold text-accent-500 mb-1">
-                {Math.floor(Math.random() * 20) + 5}
+                {statsLoading ? (
+                  <div className="w-6 h-6 border-2 border-accent-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                ) : (
+                  articlesReadCount
+                )}
               </div>
               <div className="text-sm text-gray-400">{t('pages.profile.articlesRead')}</div>
             </div>

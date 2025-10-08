@@ -39,6 +39,7 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   // Fetch recent activities
   useEffect(() => {
@@ -160,6 +161,13 @@ const AdminDashboard = () => {
       icon: Trophy,
       color: 'text-primary-400',
       onClick: () => navigate('/admin/seasons/create'),
+    },
+    {
+      title: t('pages.admin.fullStats') || 'Full Stats',
+      description: t('pages.admin.fullStatsDesc') || 'View site engagement and analytics',
+      icon: BarChart3,
+      color: 'text-cyan-400',
+      onClick: () => navigate('/admin/stats'),
     },
   ];
 
@@ -326,6 +334,11 @@ const AdminDashboard = () => {
             })}
           </div>
         </div>
+
+        {/* Stats Modal */}
+        {showStats && (
+          <StatsModal onClose={() => setShowStats(false)} />
+        )}
 
         {/* Management Sections */}
         <div>
