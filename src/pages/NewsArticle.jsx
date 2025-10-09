@@ -222,7 +222,7 @@ const NewsArticle = () => {
 
       {/* Article Header */}
       <div className="mb-8">
-        <h1 className="text-lg font-bold text-white mb-4 leading-tight tracking-tight">
+        <h1 className="news-article-header">
           {article.title}
         </h1>
         
