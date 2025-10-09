@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Chrome, User, AlignJustify } from 'lucide-react';
 import AuthBackground from '../components/AuthBackground';
+import LegalModal from '../components/LegalModal';
+import TermsOfService from './TermsOfService';
+import PrivacyPolicy from './PrivacyPolicy';
 
 const AuthLanding = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showLegal, setShowLegal] = useState({ open: false, type: null });
   const { signInWithGoogle, signInAnonymously } = useAuth();
   const navigate = useNavigate();
 
@@ -123,9 +127,35 @@ const AuthLanding = () => {
 
           <div className="mt-8 text-center">
             <p className="text-gray-500 text-sm">
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              By continuing, you agree to our{' '}
+              <button
+                onClick={() => setShowLegal({ open: true, type: 'terms' })}
+                className="text-primary-500 hover:text-primary-400 underline"
+              >
+                Terms of Service
+              </button>{' '}
+              and{' '}
+              <button
+                onClick={() => setShowLegal({ open: true, type: 'privacy' })}
+                className="text-primary-500 hover:text-primary-400 underline"
+              >
+                Privacy Policy
+              </button>
             </p>
           </div>
+
+          {/* Legal modal */}
+          <LegalModal
+            open={showLegal.open}
+            onClose={() => setShowLegal({ open: false, type: null })}
+            title={showLegal.type === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+          >
+            {showLegal.type === 'terms' ? (
+              <TermsOfService />
+            ) : (
+              <PrivacyPolicy />
+            )}
+          </LegalModal>
         </div>
       </div>
     </div>
