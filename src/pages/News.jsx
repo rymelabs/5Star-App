@@ -196,7 +196,7 @@ const News = () => {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="p-2 pl-0 text-left flex flex-col items-start">
                     <div className="flex items-center space-x-2 mb-3">
                       <span className="px-2 py-1 bg-primary-600 text-white text-xs font-medium rounded">
                         {article.category}
@@ -211,7 +211,7 @@ const News = () => {
                     <p className="text-gray-400 mb-4 line-clamp-3">
                       {article.excerpt || article.summary}
                     </p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <div className="flex items-center">
                           <Eye className="w-4 h-4 mr-1" />
