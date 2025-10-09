@@ -355,16 +355,16 @@ const Latest = () => {
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-between">
-                  {/* Away Team */}
-                  <div className="flex items-center flex-1 justify-end relative">
-                    <span className="text-white font-medium truncate relative z-10">
-                      {match.awayTeam?.name}
+                  {/* Home Team (left) */}
+                  <div className="flex items-center flex-1 justify-start relative">
+                    <span className="text-white font-medium truncate relative z-10 pl-8">
+                      {match.homeTeam?.name}
                     </span>
-                    {match.awayTeam?.logo && (
+                    {match.homeTeam?.logo && (
                       <img
-                        src={match.awayTeam?.logo}
-                        alt={match.awayTeam?.name}
-                        className="w-8 h-8 object-contain ml-2 rounded-full absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
+                        src={match.homeTeam?.logo}
+                        alt={match.homeTeam?.name}
+                        className="w-8 h-8 object-contain mr-2 rounded-full absolute left-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
                         onError={(e) => e.target.style.display = 'none'}
                       />
                     )}
@@ -378,9 +378,9 @@ const Latest = () => {
                     </div>
                   </div>
                   
-                  {/* Away Team */}
+                  {/* Away Team (right) */}
                   <div className="flex items-center flex-1 justify-end relative">
-                    <span className="text-white font-medium truncate relative z-10">
+                    <span className="text-white font-medium truncate relative z-10 pr-8">
                       {match.awayTeam?.name}
                     </span>
                     {match.awayTeam?.logo && (
@@ -431,13 +431,7 @@ const Latest = () => {
                     }`}>
                       {index + 1}
                     </div>
-                    <img
-                      src={scorer.team.logo}
-                      alt={scorer.team.name}
-                      className="w-6 h-6 object-contain mr-2"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                      <TeamAvatar name={scorer.team.name} logo={scorer.team.logo} size={24} className="mr-2" />
+                    <TeamAvatar name={scorer.team.name} logo={scorer.team.logo} size={36} className="mr-3" />
                     <div>
                       <div className="text-white font-medium">{scorer.team.name}</div>
                       <div className="text-xs text-gray-500">{scorer.matches} matches played</div>

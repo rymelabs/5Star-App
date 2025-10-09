@@ -22,6 +22,7 @@ import {
   Bell
 } from 'lucide-react';
 import TeamAvatar from '../components/TeamAvatar';
+import { formatDate } from '../utils/dateUtils';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -818,7 +819,7 @@ const TeamDetail = () => {
                           </p>
                         )}
                         <div className="mt-2 text-xs text-gray-500">
-                          {article.publishedAt}
+                          {article.publishedAt ? formatDate(article.publishedAt?.toDate ? article.publishedAt.toDate() : article.publishedAt) : ''}
                         </div>
                       </div>
                     </div>
