@@ -302,6 +302,16 @@ nav a, nav button {
   font-size: 11px !important;
 }
 
+/* News article header - centralised from NewsArticle.jsx */
+.news-article-header {
+  font-size: 27px !important; /* approximates text-2xl/md:text-4xl scaling in compact sizing */
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin-bottom: 12px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.01em !important;
+}
+
 /* League table specific */
 .league-table th {
   font-size: 11px !important;
