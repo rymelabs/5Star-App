@@ -8,6 +8,7 @@ const AdminSubmissions = () => {
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useNotification();
+  const navigate = useNavigate();
 
   const loadPending = async () => {
     try {
