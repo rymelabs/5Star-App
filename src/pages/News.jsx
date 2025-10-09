@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { Search, Filter, Clock, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
 import { formatDate, getRelativeTime } from '../utils/dateUtils';
 import { truncateText, groupBy } from '../utils/helpers';
-import { newsCollection } from '../firebase/firestore';
+import { newsCollection, commentsCollection } from '../firebase/firestore';
 
 const News = () => {
   const navigate = useNavigate();
@@ -47,7 +47,17 @@ const News = () => {
   const loadInitialArticles = async () => {
     try {
       const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
-      setPaginatedArticles(newArticles);
+      // Attach comment counts for paginated articles (context articles already have counts)
+      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
+        try {
+          const count = await commentsCollection.getCountForItem('article', a.id);
+          return { ...a, commentCount: count };
+        } catch (err) {
+          console.error('Error fetching comment count for article', a.id, err);
+          return { ...a, commentCount: a.commentCount || 0 };
+        }
+      }));
+      setPaginatedArticles(articlesWithCounts);
       setNewsLastDoc(lastDoc);
       setHasMoreNews(hasMore);
       setInitialLoaded(true);
@@ -63,7 +73,16 @@ const News = () => {
     setLoadingMore(true);
     try {
       const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20, newsLastDoc);
-      setPaginatedArticles(prev => [...prev, ...newArticles]);
+      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
+        try {
+          const count = await commentsCollection.getCountForItem('article', a.id);
+          return { ...a, commentCount: count };
+        } catch (err) {
+          console.error('Error fetching comment count for article', a.id, err);
+          return { ...a, commentCount: a.commentCount || 0 };
+        }
+      }));
+      setPaginatedArticles(prev => [...prev, ...articlesWithCounts]);
       setNewsLastDoc(lastDoc);
       setHasMoreNews(hasMore);
     } catch (error) {
