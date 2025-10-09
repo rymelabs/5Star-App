@@ -250,12 +250,12 @@ const Latest = () => {
       {latestNews.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="page-header">Latest</h2>
+            <h2 className="page-header">{t('pages.latest.title') || 'Latest'}</h2>
             <button
               onClick={() => navigate('/news')}
               className="text-primary-500 text-sm font-medium hover:text-primary-400 transition-colors"
             >
-              See all
+              {t('common.viewAll') || 'See all'}
             </button>
           </div>
           
