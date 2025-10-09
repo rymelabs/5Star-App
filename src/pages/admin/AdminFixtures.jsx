@@ -81,12 +81,13 @@ const AdminFixtures = () => {
       const dateTimeString = `${formData.date}T${formData.time}`;
       const dateTime = new Date(dateTimeString);
       
-      const fixtureData = {
+    const fixtureData = {
         homeTeamId: formData.homeTeam,
         awayTeamId: formData.awayTeam,
         dateTime: dateTimeString,
         venue: formData.venue || '',
-  competition: formData.competition || 'Friendly',
+  // competition resolution: explicit competition -> selected season name -> selected league name -> 'Friendly'
+  competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : 'Friendly')),
         round: formData.round || '',
         status: formData.status || 'scheduled',
         homeScore: formData.homeScore || null,
@@ -110,7 +111,7 @@ const AdminFixtures = () => {
         date: '',
         time: '',
         venue: '',
-        competition: 'Friendly',
+        competition: '',
         round: '',
         status: 'scheduled'
       });
@@ -245,7 +246,8 @@ const AdminFixtures = () => {
       date: date,
       time: time,
       venue: fixture.venue || '',
-  competition: fixture.competition || 'Friendly',
+    // When prefilling: prefer fixture.competition, then fixture.season name, then fixture.league name
+    competition: fixture.competition || (fixture.seasonId ? (seasons.find(s => s.id === fixture.seasonId)?.name) : (fixture.leagueId ? (leagues.find(l => l.id === fixture.leagueId)?.name) : '')),
       round: fixture.round || '',
       status: fixture.status || 'scheduled',
       homeScore: fixture.homeScore !== null && fixture.homeScore !== undefined ? fixture.homeScore : '',
@@ -282,7 +284,8 @@ const AdminFixtures = () => {
         awayTeamId: formData.awayTeam,
         dateTime: dateTime,
         venue: formData.venue || '',
-  competition: formData.competition || 'Friendly',
+      // competition resolution on update: explicit competition -> season name -> league name -> null
+      competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : null)),
         round: formData.round || '',
         status: formData.status || 'scheduled',
         homeScore: formData.homeScore !== '' ? parseInt(formData.homeScore) : null,
