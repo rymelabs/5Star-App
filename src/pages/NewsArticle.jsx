@@ -360,88 +360,86 @@ const NewsArticle = () => {
           </div>
         </article>
 
-        <aside className="news-article-comments">
-          <div className="card news-article-comments__panel space-y-6">
-            <h3 className="text-lg font-semibold text-white">
-              Comments ({articleComments.length})
-            </h3>
+        <aside className="news-article-comments card">
+          <h3 className="text-lg font-semibold text-white">
+            Comments ({articleComments.length})
+          </h3>
 
-            {user ? (
-              <form onSubmit={handleAddComment} className="border-t border-dark-700 pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="flex-1 bg-transparent text-white placeholder-gray-500 text-sm outline-none"
-                      disabled={isCommenting}
-                    />
-                    {newComment.trim() && (
-                      <button
-                        type="submit"
-                        disabled={isCommenting}
-                        className="text-primary-500 hover:text-primary-400 font-semibold text-sm transition-colors disabled:opacity-50"
-                      >
-                        {isCommenting ? 'Posting...' : 'Post'}
-                      </button>
-                    )}
-                  </div>
+          {user ? (
+            <form onSubmit={handleAddComment} className="border-t border-dark-700 pt-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-white" />
                 </div>
-              </form>
-            ) : (
-              <div className="border-t border-dark-700 pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-gray-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-sm">
-                      <button
-                        onClick={() => navigate('/login')}
-                        className="text-primary-500 hover:text-primary-400 font-medium"
-                      >
-                        Log in
-                      </button>
-                      {' '}to comment
-                    </p>
-                  </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 bg-transparent text-white placeholder-gray-500 text-sm outline-none"
+                    disabled={isCommenting}
+                  />
+                  {newComment.trim() && (
+                    <button
+                      type="submit"
+                      disabled={isCommenting}
+                      className="text-primary-500 hover:text-primary-400 font-semibold text-sm transition-colors disabled:opacity-50"
+                    >
+                      {isCommenting ? 'Posting...' : 'Post'}
+                    </button>
+                  )}
                 </div>
               </div>
-            )}
+            </form>
+          ) : (
+            <div className="border-t border-dark-700 pt-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-gray-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-500 text-sm">
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="text-primary-500 hover:text-primary-400 font-medium"
+                    >
+                      Log in
+                    </button>
+                    {' '}to comment
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
-            <div className="space-y-4 pt-2">
-              {articleComments.length === 0 ? (
-                <p className="text-gray-500 text-center py-8 text-sm">
-                  No comments yet. Be the first to comment!
-                </p>
-              ) : (
-                articleComments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-300" />
+          <div className="space-y-4 pt-2">
+            {articleComments.length === 0 ? (
+              <p className="text-gray-500 text-center py-8 text-sm">
+                No comments yet. Be the first to comment!
+              </p>
+            ) : (
+              articleComments.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-gray-300" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="font-semibold text-white text-sm">
+                        {comment.userName}
+                      </span>
+                      <span className="text-gray-300 text-sm leading-relaxed">
+                        {comment.content}
+                      </span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-white text-sm">
-                          {comment.userName}
-                        </span>
-                        <span className="text-gray-300 text-sm leading-relaxed">
-                          {comment.content}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
-                      </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
       </div>

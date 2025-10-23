@@ -299,6 +299,8 @@
     .news-article-comments {
       display: flex;
       flex-direction: column;
+      gap: 1.5rem;
+      padding: 1.5rem;
     }
 
     @media (min-width: 1024px) {
@@ -494,12 +496,12 @@
         align-items: start;
       }
 
-      .news-article-comments__panel {
+      .news-article-comments {
         position: sticky;
         top: 110px;
         max-height: calc(100vh - 130px);
         overflow-y: auto;
-        padding-right: 0.5rem;
+        padding-right: 1.75rem;
         overscroll-behavior: contain;
       }
     }
