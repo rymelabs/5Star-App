@@ -303,6 +303,25 @@
       padding: 1.5rem;
     }
 
+    .fixture-detail-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .fixture-detail-main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .fixture-detail-comments {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
     @media (min-width: 1024px) {
       .latest-bento-grid {
         display: grid;
@@ -497,6 +516,22 @@
       }
 
       .news-article-comments {
+        position: sticky;
+        top: 110px;
+        max-height: calc(100vh - 130px);
+        overflow-y: auto;
+        padding-right: 1.75rem;
+        overscroll-behavior: contain;
+      }
+
+      .fixture-detail-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+        gap: 2.5rem;
+        align-items: start;
+      }
+
+      .fixture-detail-comments {
         position: sticky;
         top: 110px;
         max-height: calc(100vh - 130px);
