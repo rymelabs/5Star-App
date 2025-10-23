@@ -245,10 +245,11 @@ const Latest = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-8">
-      {/* News Carousel Section */}
-      {latestNews.length > 0 && (
-        <section>
+    <div className="px-4 py-6">
+      <div className="latest-bento-grid">
+        {/* News Carousel Section */}
+        {latestNews.length > 0 && (
+          <section className="bento-section bento-news">
           <div className="flex items-center justify-between mb-4">
             <h2 className="page-header">{t('pages.latest.title') || 'Latest'}</h2>
             <button
@@ -264,10 +265,10 @@ const Latest = () => {
             {latestNews[0] && (
               <div
                 onClick={() => handleNewsClick(latestNews[0])}
-                className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
+                className="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200 latest-news-featured"
               >
                 {/* News Image */}
-                <div className="aspect-video overflow-hidden">
+                <div className="latest-news-featured__image">
                   <img
                     src={latestNews[0].image}
                     alt={latestNews[0].title}
@@ -276,11 +277,11 @@ const Latest = () => {
                 </div>
                 
                 {/* News Content */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">
+                <div className="p-4 latest-news-featured__content">
+                  <h3 className="font-semibold text-white text-base lg:text-lg mb-2 line-clamp-2">
                     {latestNews[0].title}
                   </h3>
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2 lg:line-clamp-3">
                     {truncateText(latestNews[0].excerpt || latestNews[0].summary || latestNews[0].content, 120)}
                   </p>
                   <div className="flex items-center justify-between">
@@ -330,9 +331,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Recent Results Section */}
-      {recentResults.length > 0 && (
-        <section>
+        {/* Recent Results Section */}
+        {recentResults.length > 0 && (
+          <section className="bento-section bento-results">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <TrendingUp className="w-5 h-5 text-accent-500 mr-2" />
@@ -347,56 +348,56 @@ const Latest = () => {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="results-grid">
             {recentResults.map((match) => (
               <div
                 key={match.id}
                 onClick={() => handleFixtureClick(match)}
-                className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
+                className="result-card cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="flex items-center justify-between">
-                  {/* Home Team (left) */}
-                  <div className="flex items-center flex-1 justify-start relative">
-                    <span className="text-white font-medium truncate relative z-10 pl-8">
-                      {match.homeTeam?.name}
-                    </span>
+                <div className="result-card__inner">
+                  {/* Home Team */}
+                  <div className="result-team result-team--home">
                     {match.homeTeam?.logo && (
                       <img
                         src={match.homeTeam?.logo}
                         alt={match.homeTeam?.name}
-                        className="w-8 h-8 object-contain mr-2 rounded-full absolute left-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
-                        onError={(e) => e.target.style.display = 'none'}
+                        className="result-team__logo"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     )}
+                    <span className="result-team__name">
+                      {match.homeTeam?.name}
+                    </span>
                   </div>
-                  <div className="px-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-white">
-                        {match.homeScore} - {match.awayScore}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">{t('match.ft')}</div>
+
+                  {/* Score */}
+                  <div className="result-score">
+                    <div className="result-score__value">
+                      {match.homeScore} - {match.awayScore}
+                    </div>
+                    <div className="result-score__status">
+                      {t('match.ft')}
+                    </div>
+                    <div className="result-score__date">
+                      {formatDate(match.dateTime)}
                     </div>
                   </div>
-                  
-                  {/* Away Team (right) */}
-                  <div className="flex items-center flex-1 justify-end relative">
-                    <span className="text-white font-medium truncate relative z-10 pr-8">
+
+                  {/* Away Team */}
+                  <div className="result-team result-team--away">
+                    <span className="result-team__name">
                       {match.awayTeam?.name}
                     </span>
                     {match.awayTeam?.logo && (
                       <img
                         src={match.awayTeam?.logo}
                         alt={match.awayTeam?.name}
-                        className="w-8 h-8 object-contain ml-2 rounded-full absolute right-0 top-1/2 transform -translate-y-1/2 opacity-20 z-0 pointer-events-none"
-                        onError={(e) => e.target.style.display = 'none'}
+                        className="result-team__logo"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     )}
                   </div>
-                </div>
-                
-                {/* Date */}
-                <div className="text-xs text-gray-500 mt-2 text-center">
-                  {formatDate(match.dateTime)}
                 </div>
               </div>
             ))}
@@ -404,9 +405,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Top Scorers Section */}
-      {topScorers.length > 0 && (
-        <section>
+        {/* Top Scorers Section */}
+        {topScorers.length > 0 && (
+          <section className="bento-section bento-scorers">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Target className="w-5 h-5 text-primary-500 mr-2" />
@@ -450,9 +451,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Fixtures Section */}
-      {upcomingFixtures.length > 0 && (
-        <section>
+        {/* Fixtures Section */}
+        {upcomingFixtures.length > 0 && (
+          <section className="bento-section bento-upcoming">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Calendar className="w-5 h-5 text-primary-500 mr-2" />
@@ -527,9 +528,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Season Fixtures Section */}
-      {activeSeason && seasonFixtures.length > 0 && (
-        <section>
+        {/* Season Fixtures Section */}
+        {activeSeason && seasonFixtures.length > 0 && (
+          <section className="bento-section bento-season">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Trophy className="w-5 h-5 text-accent-500 mr-2" />
@@ -601,9 +602,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* League Table Section */}
-      {topTeams.length > 0 && (
-        <section>
+        {/* League Table Section */}
+        {topTeams.length > 0 && (
+          <section className="bento-section bento-table">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Trophy className="w-5 h-5 text-accent-500 mr-2" />
@@ -716,9 +717,9 @@ const Latest = () => {
         </section>
       )}
 
-      {/* Instagram Feed Section */}
-      {instagramSettings?.enabled && instagramSettings?.username && (
-        <section>
+        {/* Instagram Feed Section */}
+        {instagramSettings?.enabled && instagramSettings?.username && (
+          <section className="bento-section bento-instagram">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Instagram className="w-5 h-5 text-pink-500 mr-2" />
@@ -806,6 +807,8 @@ const Latest = () => {
           </div>
         </section>
       )}
+
+      </div>
 
       {/* Empty States */}
       {latestNews.length === 0 && upcomingFixtures.length === 0 && topTeams.length === 0 && (
