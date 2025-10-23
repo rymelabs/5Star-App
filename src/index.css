@@ -208,6 +208,69 @@
       text-align: center;
     }
 
+    .news-bento-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .news-featured-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .news-featured-card__media {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .news-featured-card__content {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      gap: 1rem;
+    }
+
+    .news-articles-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .news-article-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .news-article-card__media {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+    }
+
+    .news-article-card__content {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .news-load-more__inner {
+      text-align: center;
+    }
+
+    .stats-bento-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
     @media (min-width: 1024px) {
       .latest-bento-grid {
         display: grid;
@@ -307,6 +370,91 @@
       .result-score__status,
       .result-score__date {
         font-size: 0.7rem;
+      }
+
+      .news-bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-rows: auto;
+        gap: 1.5rem;
+        grid-template-areas:
+          "news-header news-header news-header news-header news-header news-header news-controls news-controls news-controls news-controls news-controls news-controls"
+          "news-featured news-featured news-featured news-featured news-featured news-featured news-list news-list news-list news-list news-list news-list"
+          "news-featured news-featured news-featured news-featured news-featured news-featured news-list news-list news-list news-list news-list news-list"
+          "news-load news-load news-load news-load news-load news-load news-list news-list news-list news-list news-list news-list";
+      }
+
+      .news-header {
+        grid-area: news-header;
+      }
+
+      .news-controls {
+        grid-area: news-controls;
+      }
+
+      .news-featured {
+        grid-area: news-featured;
+      }
+
+      .news-list {
+        grid-area: news-list;
+      }
+
+      .news-load-more {
+        grid-area: news-load;
+      }
+
+      .news-featured-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        height: 100%;
+      }
+
+      .news-featured-card__media {
+        aspect-ratio: auto;
+        min-height: 220px;
+        max-height: 320px;
+      }
+
+      .news-featured-card__content {
+        padding: 1.5rem;
+      }
+
+      .news-articles-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+      }
+
+      .news-article-card__media {
+        aspect-ratio: 16 / 9;
+      }
+
+      .stats-bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-rows: auto;
+        gap: 1.5rem;
+        grid-template-areas:
+          "stats-header stats-header stats-header stats-header stats-filters stats-filters stats-filters stats-filters stats-filters stats-filters stats-filters stats-filters"
+          "stats-tabs stats-tabs stats-tabs stats-tabs stats-content stats-content stats-content stats-content stats-content stats-content stats-content stats-content"
+          "stats-tabs stats-tabs stats-tabs stats-tabs stats-content stats-content stats-content stats-content stats-content stats-content stats-content stats-content";
+      }
+
+      .stats-header {
+        grid-area: stats-header;
+      }
+
+      .stats-filters {
+        grid-area: stats-filters;
+      }
+
+      .stats-tabs {
+        grid-area: stats-tabs;
+      }
+
+      .stats-content {
+        grid-area: stats-content;
       }
     }
 

@@ -466,80 +466,84 @@ const Stats = () => {
   };
 
   return (
-    <div className="p-6 pb-24">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="page-header mb-2 flex items-center gap-2">
-          <Trophy className="w-7 h-7 text-purple-400" />
-          {t('stats.title')}
-        </h1>
-        <p className="text-gray-400">
-          {t('stats.trackPerformance')}
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-dark-900 border border-dark-700 rounded-xl p-4 mb-6">
-        <div className="flex items-center gap-2 mb-3 text-gray-300">
-          <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">{t('stats.filters')}</span>
-        </div>
-        <div className="grid md:grid-cols-2 gap-4">
-          {/* Season Filter */}
+    <div className="px-4 py-6 pb-24 lg:px-6">
+      <div className="stats-bento-grid">
+        <section className="bento-section stats-header">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">{t('stats.season')}</label>
-            <select
-              value={selectedSeason}
-              onChange={(e) => setSelectedSeason(e.target.value)}
-              className="input-field w-full"
-            >
-              <option value="all">{t('stats.allSeasons')}</option>
-              {seasons.map(season => (
-                <option key={season.id} value={season.id}>{season.name}</option>
-              ))}
-            </select>
+            <h1 className="page-header mb-2 flex items-center gap-2">
+              <Trophy className="w-7 h-7 text-purple-400" />
+              {t('stats.title')}
+            </h1>
+            <p className="text-gray-400">
+              {t('stats.trackPerformance')}
+            </p>
           </div>
+        </section>
 
-          {/* Competition Filter */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">{t('stats.competition')}</label>
-            <select
-              value={selectedCompetition}
-              onChange={(e) => setSelectedCompetition(e.target.value)}
-              className="input-field w-full"
-            >
-              <option value="all">{t('stats.allCompetitions')}</option>
-              {availableCompetitions.map(comp => (
-                <option key={comp} value={comp}>{comp}</option>
-              ))}
-            </select>
+        <section className="bento-section stats-filters">
+          <div className="bg-dark-900 border border-dark-700 rounded-xl p-4 h-full">
+            <div className="flex items-center gap-2 mb-3 text-gray-300">
+              <Filter className="w-4 h-4" />
+              <span className="text-sm font-medium">{t('stats.filters')}</span>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Season Filter */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">{t('stats.season')}</label>
+                <select
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className="input-field w-full"
+                >
+                  <option value="all">{t('stats.allSeasons')}</option>
+                  {seasons.map(season => (
+                    <option key={season.id} value={season.id}>{season.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Competition Filter */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">{t('stats.competition')}</label>
+                <select
+                  value={selectedCompetition}
+                  onChange={(e) => setSelectedCompetition(e.target.value)}
+                  className="input-field w-full"
+                >
+                  <option value="all">{t('stats.allCompetitions')}</option>
+                  {availableCompetitions.map(comp => (
+                    <option key={comp} value={comp}>{comp}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-dark-800 text-gray-400 hover:bg-dark-700'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-white' : tab.color}`} />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+        <section className="bento-section stats-tabs">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-dark-800 text-gray-400 hover:bg-dark-700'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-white' : tab.color}`} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-      {/* Stats Content */}
-      <div className="space-y-3">
+        <section className="bento-section stats-content">
+          <div className="space-y-3">
         {/* Top Scorers */}
         {activeTab === 'scorers' && (
           <>
@@ -792,8 +796,10 @@ const Stats = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </section>
     </div>
+  </div>
   );
 };
 
