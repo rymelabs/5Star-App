@@ -259,24 +259,30 @@ const NewsArticle = () => {
           </div>
 
           <div className="news-article-actions">
-            <button
-              onClick={handleLike}
-              disabled={!user || isLiking}
-              className={`flex items-center gap-2 transition-colors ${
-                article.likedBy?.includes(user?.uid)
-                  ? 'text-red-500 hover:text-red-600'
-                  : 'text-gray-400 hover:text-red-400'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Heart
-                className={`w-5 h-5 ${
-                  article.likedBy?.includes(user?.uid) ? 'fill-current' : ''
-                }`}
-              />
-              <span>
-                {article.likes || 0} {article.likedBy?.includes(user?.uid) ? 'Liked' : 'Like'}
-              </span>
-            </button>
+            <div className="flex items-center gap-4 flex-wrap">
+              <button
+                onClick={handleLike}
+                disabled={!user || isLiking}
+                className={`flex items-center gap-2 transition-colors ${
+                  article.likedBy?.includes(user?.uid)
+                    ? 'text-red-500 hover:text-red-600'
+                    : 'text-gray-400 hover:text-red-400'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Heart
+                  className={`w-5 h-5 ${
+                    article.likedBy?.includes(user?.uid) ? 'fill-current' : ''
+                  }`}
+                />
+                <span>
+                  {article.likes || 0} {article.likedBy?.includes(user?.uid) ? 'Liked' : 'Like'}
+                </span>
+              </button>
+              <div className="flex items-center gap-2 text-gray-400">
+                <MessageCircle className="w-5 h-5" />
+                <span>{articleComments.length} Comments</span>
+              </div>
+            </div>
 
             <div className="relative" ref={shareMenuRef}>
               <button
@@ -361,6 +367,31 @@ const NewsArticle = () => {
         </article>
 
         <aside className="news-article-comments card">
+          <div className="flex items-center gap-4 flex-wrap border-b border-dark-700 pb-4">
+            <button
+              onClick={handleLike}
+              disabled={!user || isLiking}
+              className={`flex items-center gap-2 transition-colors ${
+                article.likedBy?.includes(user?.uid)
+                  ? 'text-red-500 hover:text-red-600'
+                  : 'text-gray-400 hover:text-red-400'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  article.likedBy?.includes(user?.uid) ? 'fill-current' : ''
+                }`}
+              />
+              <span>
+                {article.likes || 0} {article.likedBy?.includes(user?.uid) ? 'Liked' : 'Like'}
+              </span>
+            </button>
+            <div className="flex items-center gap-2 text-gray-400">
+              <MessageCircle className="w-5 h-5" />
+              <span>{articleComments.length} Comments</span>
+            </div>
+          </div>
+
           <h3 className="text-lg font-semibold text-white">
             Comments ({articleComments.length})
           </h3>
