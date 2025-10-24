@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { competitionsCollection, adminActivityCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 
@@ -16,6 +16,10 @@ export const CompetitionsProvider = ({ children }) => {
   const { user } = useAuth();
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const ownerId = user?.uid || null;
+  const ownerName = user?.displayName || user?.name || user?.email || 'Unknown Admin';
+  const isSuperAdmin = user?.isSuperAdmin;
+  const isAdmin = user?.isAdmin;
 
   // Load competitions
   useEffect(() => {
@@ -33,8 +37,18 @@ export const CompetitionsProvider = ({ children }) => {
   }, []);
 
   const addCompetition = async (competitionData) => {
+    if (!isAdmin) {
+      throw new Error('Only admins can add competitions');
+    }
+
     try {
-      const competitionId = await competitionsCollection.add(competitionData);
+      const payload = {
+        ...competitionData,
+        ownerId,
+        ownerName
+      };
+
+      const competitionId = await competitionsCollection.add(payload);
       
       // Log activity
       if (user) {
@@ -42,7 +56,7 @@ export const CompetitionsProvider = ({ children }) => {
           action: 'add',
           type: 'competition',
           itemId: competitionId,
-          itemName: competitionData.name,
+          itemName: payload.name,
           userId: user.uid,
           userName: user.displayName || user.email
         });
@@ -99,8 +113,15 @@ export const CompetitionsProvider = ({ children }) => {
     }
   };
 
+  const ownedCompetitions = useMemo(() => {
+    if (isSuperAdmin) return competitions;
+    if (!isAdmin) return [];
+    return competitions.filter(competition => competition.ownerId === ownerId);
+  }, [competitions, isAdmin, isSuperAdmin, ownerId]);
+
   const value = {
     competitions,
+    ownedCompetitions,
     loading,
     addCompetition,
     updateCompetition,

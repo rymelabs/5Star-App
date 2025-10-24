@@ -27,7 +27,7 @@ const CreateLeague = () => {
     totalTeams: 20
   });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +57,13 @@ const CreateLeague = () => {
 
     try {
       setSaving(true);
-      await leaguesCollection.add(formData);
+      const payload = {
+        ...formData,
+        ownerId: user?.uid || null,
+        ownerName: user?.displayName || user?.name || user?.email || 'Unknown Admin'
+      };
+
+      await leaguesCollection.add(payload);
       navigate('/admin/leagues');
     } catch (error) {
       console.error('Error creating league:', error);

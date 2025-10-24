@@ -24,19 +24,23 @@ const AdminLeagues = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, leagueId: null, leagueName: '' });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
+  const isSuperAdmin = user?.isSuperAdmin;
 
   useEffect(() => {
     if (isAdmin) {
       loadLeagues();
     }
-  }, [isAdmin]);
+  }, [isAdmin, isSuperAdmin, user?.uid]);
 
   const loadLeagues = async () => {
     try {
       setLoading(true);
       const data = await leaguesCollection.getAll();
-      setLeagues(data.sort((a, b) => a.name.localeCompare(b.name)));
+      const filtered = isSuperAdmin
+        ? data
+        : data.filter(league => league.ownerId === user?.uid);
+      setLeagues(filtered.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (error) {
       console.error('Error loading leagues:', error);
       showToast(t('adminLeagues.failedLoad'), 'error');

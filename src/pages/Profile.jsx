@@ -218,7 +218,7 @@ const Profile = () => {
             )}
           </div>
           
-          {user?.role === 'admin' && (
+          {user?.isAdmin && (
             <div className="inline-flex items-center px-3 py-1 bg-accent-600 text-white rounded-full text-sm">
               <Shield className="w-4 h-4 mr-1" />
               {t('common.admin')}
@@ -402,7 +402,7 @@ const Profile = () => {
                 <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
               </div>
             </button>
-            {user?.role === 'admin' && (
+            {user?.isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
                 className="w-full card p-4 text-left hover:bg-dark-700 transition-colors"

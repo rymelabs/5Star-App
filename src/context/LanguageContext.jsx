@@ -42,7 +42,7 @@ export const LanguageProvider = ({ children }) => {
     localStorage.setItem('appLanguage', newLanguage);
   };
 
-  const t = (key) => {
+  const t = (key, params = {}) => {
     const keys = key.split('.');
     let value = translations;
     
@@ -52,6 +52,15 @@ export const LanguageProvider = ({ children }) => {
       } else {
         return key; // Return key if translation not found
       }
+    }
+    
+    if (typeof value === 'string') {
+      let result = value;
+      Object.entries(params || {}).forEach(([paramKey, paramValue]) => {
+        const safeValue = paramValue ?? '';
+        result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), safeValue);
+      });
+      return result;
     }
     
     return value || key;

@@ -38,7 +38,7 @@ const EditSeason = () => {
   const [groups, setGroups] = useState([]);
   const [originalSeason, setOriginalSeason] = useState(null);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     loadSeasonAndTeams();
@@ -68,7 +68,9 @@ const EditSeason = () => {
         numberOfGroups: season.numberOfGroups || 4,
         teamsPerGroup: season.teamsPerGroup || 4,
         matchesPerRound: season.knockoutConfig?.matchesPerRound || 2,
-        qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2
+        qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2,
+        ownerId: season.ownerId || null,
+        ownerName: season.ownerName || 'Unknown Admin'
       });
 
       // Populate groups
@@ -159,6 +161,9 @@ const EditSeason = () => {
     try {
       setSaving(true);
 
+      const seasonOwnerId = originalSeason?.ownerId || formData.ownerId || user?.uid || null;
+      const seasonOwnerName = originalSeason?.ownerName || formData.ownerName || user?.displayName || user?.name || user?.email || 'Unknown Admin';
+
       const updateData = {
         name: formData.name,
         year: formData.year,
@@ -169,6 +174,8 @@ const EditSeason = () => {
           matchesPerRound: formData.matchesPerRound,
           qualifiersPerGroup: formData.qualifiersPerGroup
         },
+        ownerId: seasonOwnerId,
+        ownerName: seasonOwnerName,
         updatedAt: new Date()
       };
 

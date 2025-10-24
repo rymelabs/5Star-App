@@ -24,19 +24,23 @@ const AdminSeasons = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, seasonId: null });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
+  const isSuperAdmin = user?.isSuperAdmin;
 
   useEffect(() => {
     if (isAdmin) {
       loadSeasons();
     }
-  }, [isAdmin]);
+  }, [isAdmin, isSuperAdmin, user?.uid]);
 
   const loadSeasons = async () => {
     try {
       setLoading(true);
       const data = await seasonsCollection.getAll();
-      setSeasons(data);
+      const filtered = isSuperAdmin
+        ? data
+        : data.filter(season => season.ownerId === user?.uid);
+      setSeasons(filtered);
     } catch (error) {
       console.error('Error loading seasons:', error);
       showToast('Failed to load seasons', 'error');
