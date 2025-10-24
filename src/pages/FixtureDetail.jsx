@@ -470,32 +470,31 @@ const FixtureDetail = () => {
         </div>
       )}
 
-      {/* Match Actions - Like & Comment Count */}
-      <div className="flex items-center gap-6 py-4 border-t border-b border-dark-700 mb-6">
-        <button 
-          onClick={handleLike}
-          disabled={!user || isLiking}
-          className={`flex items-center gap-2 transition-colors ${
-            isLiked
-              ? 'text-red-500 hover:text-red-600'
-              : 'text-gray-400 hover:text-red-400'
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <Heart 
-            className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} 
-          />
-          <span>{likes} {isLiked ? t('pages.fixtureDetail.liked') : t('pages.fixtureDetail.like')}</span>
-        </button>
-        
-        <div className="flex items-center gap-2 text-gray-400">
-          <MessageCircle className="w-5 h-5" />
-          <span>{fixtureComments.length} {t('pages.fixtureDetail.comments')}</span>
-        </div>
-      </div>
-
         </div>
 
         <aside className="fixture-detail-comments card">
+          <div className="flex items-center gap-4 flex-wrap border-b border-dark-700 pb-4">
+            <button 
+              onClick={handleLike}
+              disabled={!user || isLiking}
+              className={`flex items-center gap-2 transition-colors ${
+                isLiked
+                  ? 'text-red-500 hover:text-red-600'
+                  : 'text-gray-400 hover:text-red-400'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Heart 
+                className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} 
+              />
+              <span>{likes} {isLiked ? t('pages.fixtureDetail.liked') : t('pages.fixtureDetail.like')}</span>
+            </button>
+            
+            <div className="flex items-center gap-2 text-gray-400">
+              <MessageCircle className="w-5 h-5" />
+              <span>{fixtureComments.length} {t('pages.fixtureDetail.comments')}</span>
+            </div>
+          </div>
+
           <h3 className="text-lg font-semibold text-white">
             {t('pages.fixtureDetail.matchDiscussion')} ({fixtureComments.length})
           </h3>
