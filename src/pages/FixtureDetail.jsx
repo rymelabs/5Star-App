@@ -277,6 +277,11 @@ const FixtureDetail = () => {
               {fixture.league}
             </div>
           )}
+          {(fixture.ownerName || true) && (
+            <div className="flex items-center justify-center gap-2">
+              <span>{t('common.managedBy', { admin: fixture.ownerName || t('common.defaultAdminName') })}</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -28,7 +28,7 @@ const SeasonDetail = () => {
   const [activeTab, setActiveTab] = useState('groups'); // groups, knockout, fixtures
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     if (seasonId) {

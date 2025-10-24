@@ -355,6 +355,11 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(match)}
                 className="result-card cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
+                <div className="text-xs text-gray-400 mb-2">
+                  {match.competition
+                    ? t('common.competitionBy', { competition: match.competition, admin: match.ownerName || t('common.defaultAdminName') })
+                    : t('common.managedBy', { admin: match.ownerName || t('common.defaultAdminName') })}
+                </div>
                 <div className="result-card__inner">
                   {/* Home Team */}
                   <div className="result-team result-team--home">
@@ -475,6 +480,11 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(fixture)}
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5"
               >
+                <div className="text-xs text-gray-400 mb-2">
+                  {fixture.competition
+                    ? t('common.competitionBy', { competition: fixture.competition, admin: fixture.ownerName || t('common.defaultAdminName') })
+                    : t('common.managedBy', { admin: fixture.ownerName || t('common.defaultAdminName') })}
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-6 flex-1 min-w-0">
                     <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">
@@ -551,6 +561,11 @@ const Latest = () => {
                 onClick={() => handleFixtureClick(fixture)}
                 className="rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 hover:shadow-lg hover:-translate-y-0.5 border-l-2 border-primary-500"
               >
+                <div className="text-xs text-gray-400 mb-2">
+                  {fixture.competition
+                    ? t('common.competitionBy', { competition: fixture.competition, admin: fixture.ownerName || t('common.defaultAdminName') })
+                    : t('common.managedBy', { admin: fixture.ownerName || t('common.defaultAdminName') })}
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-6 flex-1 min-w-0">
                     <div className="flex items-center space-x-3 flex-1 justify-end min-w-0">

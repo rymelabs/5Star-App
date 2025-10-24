@@ -184,13 +184,22 @@ const Fixtures = () => {
                   const expanded = isSectionExpanded(date);
                   const items = expanded ? dayFixtures : dayFixtures.slice(0, 3);
                   const remaining = Math.max(0, dayFixtures.length - 3);
+                  const defaultCompetition = t('common.defaultCompetitionName');
+                  const defaultAdmin = t('common.defaultAdminName');
+                  const sortedItems = [...items];
                   return (
                   <div key={date}>
                     <h3 className="text-lg font-semibold text-white mb-3 sticky top-16 bg-dark-900 py-2">
                       {getMatchDayLabel(dayFixtures[0].dateTime)}
                     </h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                      {items.map((fixture) => {
+                      {sortedItems.map((fixture) => {
+                        const competitionName = (typeof fixture.competition === 'string' && fixture.competition.trim().length > 0)
+                          ? fixture.competition.trim()
+                          : defaultCompetition;
+                        const adminLabel = (typeof fixture.ownerName === 'string' && fixture.ownerName.trim().length > 0)
+                          ? fixture.ownerName.trim()
+                          : defaultAdmin;
                         const isSeasonFixture = fixture.seasonId && fixture.seasonId === activeSeason?.id;
                         const season = seasons?.find(s => s.id === fixture.seasonId);
                         const group = season?.groups?.find(g => g.id === fixture.groupId);
@@ -202,6 +211,11 @@ const Fixtures = () => {
                             onClick={() => handleFixtureClick(fixture)}
                             className={`rounded-2xl p-3 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-dark-900/60 to-dark-800 border border-dark-700 ${isSeasonFixture ? 'ring-1 ring-primary-600/30' : ''} hover:shadow-lg hover:translate-y-[-2px]`}
                           >
+                            <div className="text-xs text-gray-400 mb-2">
+                              {competitionName !== defaultCompetition
+                                ? t('common.competitionBy', { competition: competitionName, admin: adminLabel })
+                                : t('common.managedBy', { admin: adminLabel })}
+                            </div>
                             {/* Top row: badges left, venue right */}
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2 flex-wrap">

@@ -29,7 +29,7 @@ const EditLeague = () => {
     totalTeams: 20
   });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     if (isAdmin && id) {
@@ -46,7 +46,9 @@ const EditLeague = () => {
           name: league.name,
           qualifiedPosition: league.qualifiedPosition,
           relegationPosition: league.relegationPosition,
-          totalTeams: league.totalTeams
+          totalTeams: league.totalTeams,
+          ownerId: league.ownerId || null,
+          ownerName: league.ownerName || 'Unknown Admin'
         });
       } else {
         showToast(t('editLeague.notFound'), 'error');
@@ -89,7 +91,13 @@ const EditLeague = () => {
 
     try {
       setSaving(true);
-      await leaguesCollection.update(id, formData);
+      const payload = {
+        ...formData,
+        ownerId: formData.ownerId || user?.uid || null,
+        ownerName: formData.ownerName || user?.displayName || user?.name || user?.email || 'Unknown Admin'
+      };
+
+      await leaguesCollection.update(id, payload);
       navigate('/admin/leagues');
     } catch (error) {
       console.error('Error updating league:', error);

@@ -33,9 +33,11 @@ import AdminNews from './AdminNews';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { teams, fixtures, leagueTable } = useFootball();
+  const { ownedTeams, ownedFixtures, leagueTable } = useFootball();
   const { articles } = useNews();
   const { t } = useLanguage();
+  const teams = ownedTeams;
+  const fixtures = ownedFixtures;
   const [recentActivities, setRecentActivities] = useState([]);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -44,11 +46,13 @@ const AdminDashboard = () => {
   // Fetch recent activities
   useEffect(() => {
     // Only fetch activities if user is admin
-    if (!user || user.role !== 'admin') return;
+    if (!user || !user.isAdmin) return;
 
-    // Initial load - get first 4 activities
     const unsubscribe = adminActivityCollection.onSnapshot(4, (activities) => {
-      setRecentActivities(activities);
+      const filtered = user.isSuperAdmin
+        ? activities
+        : activities.filter(activity => activity.userId === user.uid);
+      setRecentActivities(filtered);
     });
 
     return () => unsubscribe();
@@ -62,7 +66,10 @@ const AdminDashboard = () => {
       setLoadingMore(true);
       // Fetch all activities (up to 50)
       const allActivities = await adminActivityCollection.getRecent(50);
-      setRecentActivities(allActivities);
+      const filtered = user?.isSuperAdmin
+        ? allActivities
+        : allActivities.filter(activity => activity.userId === user?.uid);
+      setRecentActivities(filtered);
       setShowAllActivities(true);
     } catch (error) {
       console.error('Error loading more activities:', error);
@@ -78,7 +85,7 @@ const AdminDashboard = () => {
   };
 
   // Redirect if not admin
-  if (user?.role !== 'admin') {
+  if (!user?.isAdmin) {
     return (
       <div className="p-4 text-center">
         <div className="card p-8">
@@ -98,14 +105,14 @@ const AdminDashboard = () => {
   const stats = [
     {
       title: t('pages.admin.totalTeams'),
-      value: teams.length,
+      value: ownedTeams.length,
       icon: Users,
       color: 'text-blue-400',
       bgColor: 'bg-blue-600/10',
     },
     {
       title: t('pages.admin.activeFixtures'),
-      value: fixtures.filter(f => f.status !== 'completed').length,
+      value: ownedFixtures.filter(f => f.status !== 'completed').length,
       icon: Calendar,
       color: 'text-accent-400',
       bgColor: 'bg-accent-600/10',

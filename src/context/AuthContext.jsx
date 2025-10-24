@@ -11,6 +11,22 @@ import {
 
 const AuthContext = createContext();
 
+const normalizeUser = (rawUser) => {
+  if (!rawUser) return null;
+
+  const role = rawUser.role || 'user';
+  const displayName = rawUser.displayName || rawUser.name || rawUser.email || '';
+
+  return {
+    ...rawUser,
+    role,
+    displayName,
+    name: rawUser.name || displayName,
+    isAdmin: role === 'admin' || role === 'super-admin',
+    isSuperAdmin: role === 'super-admin'
+  };
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -38,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const unsubscribe = onAuthStateChange((userData) => {
         console.log('🔄 Auth state changed:', userData ? `User: ${userData.email}` : 'No user');
-        setUser(userData);
+        setUser(normalizeUser(userData));
         setLoading(false);
       });
 
@@ -61,8 +77,9 @@ export const AuthProvider = ({ children }) => {
       
       const newUser = await registerUser(userData.email, userData.password, userData);
       console.log('✅ Registration successful, setting user state:', newUser);
-      setUser(newUser);
-      return newUser;
+      const normalized = normalizeUser(newUser);
+      setUser(normalized);
+      return normalized;
     } catch (error) {
       console.error('❌ Registration failed:', error);
       setError(error.message);
@@ -80,8 +97,9 @@ export const AuthProvider = ({ children }) => {
       
       const userData = await loginUser(email, password);
       console.log('✅ Login successful, setting user state:', userData);
-      setUser(userData);
-      return userData;
+      const normalized = normalizeUser(userData);
+      setUser(normalized);
+      return normalized;
     } catch (error) {
       console.error('❌ Login failed:', error);
       setError(error.message);
@@ -121,8 +139,9 @@ export const AuthProvider = ({ children }) => {
       
       const userData = await signInWithGoogle();
       console.log('✅ Google sign-in successful:', userData);
-      setUser(userData);
-      return userData;
+      const normalized = normalizeUser(userData);
+      setUser(normalized);
+      return normalized;
     } catch (error) {
       console.error('❌ Google sign-in failed:', error);
       setError(error.message);
@@ -142,8 +161,9 @@ export const AuthProvider = ({ children }) => {
       
       const userData = await signInAnonymous();
       console.log('✅ Anonymous sign-in successful:', userData);
-      setUser(userData);
-      return userData;
+      const normalized = normalizeUser(userData);
+      setUser(normalized);
+      return normalized;
     } catch (error) {
       console.error('❌ Anonymous sign-in failed:', error);
       setError(error.message);
@@ -163,8 +183,9 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Profile updated successfully:', updatedUser);
       
       // Update local user state
-      setUser(prev => ({ ...prev, ...updatedUser }));
-      return updatedUser;
+      const normalized = normalizeUser({ ...user, ...updatedUser });
+      setUser(normalized);
+      return normalized;
     } catch (error) {
       console.error('❌ Profile update failed:', error);
       setError(error.message);

@@ -100,7 +100,7 @@ const Layout = ({ children }) => {
           </nav>
 
           {/* Admin Section - if user is admin */}
-          {user?.role === 'admin' && (
+          {user?.isAdmin && (
             <>
               <div className="px-3 mt-6 mb-2">
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4">

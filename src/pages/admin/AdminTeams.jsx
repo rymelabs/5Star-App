@@ -13,7 +13,16 @@ const AdminTeams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { teams, leagues, addTeam, updateTeam, deleteTeam, addBulkTeams } = useFootball();
+  const {
+    ownedTeams,
+    ownedLeagues,
+    addTeam,
+    updateTeam,
+    deleteTeam,
+    addBulkTeams
+  } = useFootball();
+  const teams = ownedTeams;
+  const leagues = ownedLeagues;
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);

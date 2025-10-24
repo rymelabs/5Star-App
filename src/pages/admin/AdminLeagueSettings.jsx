@@ -19,7 +19,7 @@ const AdminLeagueSettings = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // Check if user is admin
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     if (leagueSettings) {

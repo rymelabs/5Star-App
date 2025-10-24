@@ -11,8 +11,23 @@ import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users,
 const AdminFixtures = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { fixtures, teams, leagues, addFixture, updateFixture, seasons, activeSeason } = useFootball();
-  const { competitions } = useCompetitions();
+  const {
+    ownedFixtures,
+    ownedTeams,
+    ownedLeagues,
+    ownedSeasons,
+    addFixture,
+    updateFixture,
+    seasons: allSeasons,
+    activeSeason
+  } = useFootball();
+  const { ownedCompetitions, competitions: allCompetitions } = useCompetitions();
+
+  const fixtures = ownedFixtures;
+  const teams = ownedTeams;
+  const leagues = ownedLeagues;
+  const seasons = ownedSeasons.length ? ownedSeasons : allSeasons;
+  const competitions = ownedCompetitions.length ? ownedCompetitions : allCompetitions;
   const { toast, showToast, hideToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);

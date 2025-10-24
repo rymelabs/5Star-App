@@ -155,12 +155,12 @@ const AppContent = () => {
           <Route path="/profile-setup" element={<ProfileSetup />} />
           
           {/* Profile page - not available for anonymous users */}
-          {!user.isAnonymous && (
+          {user && !user.isAnonymous && (
             <Route path="/profile" element={<Profile />} />
           )}
           
           {/* Settings page - not available for anonymous users */}
-          {!user.isAnonymous && (
+          {user && !user.isAnonymous && (
             <>
               <Route path="/settings" element={<Settings />} />
               <Route path="/notifications" element={<NotificationInbox />} />
@@ -168,7 +168,7 @@ const AppContent = () => {
           )}
           
           {/* Admin Routes - Only accessible to admins */}
-          {user.role === 'admin' && (
+          {user?.isAdmin && (
             <>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />

@@ -91,6 +91,8 @@ export const teamsCollection = {
       const database = checkFirebaseInit();
       const docRef = await addDoc(collection(database, 'teams'), {
         ...teamData,
+        ownerId: teamData.ownerId || null,
+        ownerName: teamData.ownerName || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -119,6 +121,8 @@ export const teamsCollection = {
         const docRef = doc(teamsCollection);
         const teamData = {
           ...team,
+          ownerId: team.ownerId || null,
+          ownerName: team.ownerName || null,
           teamId: docRef.id, // store the generated doc id for backwards compatibility
           players: ensurePlayerIds(team.players || []),
           createdAt: serverTimestamp(),
@@ -595,6 +599,8 @@ export const fixturesCollection = {
       const database = checkFirebaseInit();
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
+        ownerId: fixtureData.ownerId || null,
+        ownerName: fixtureData.ownerName || null,
         dateTime: new Date(fixtureData.dateTime),
         seasonId: fixtureData.seasonId || null,
         groupId: fixtureData.groupId || null,
@@ -1195,6 +1201,8 @@ export const competitionsCollection = {
       const database = checkFirebaseInit();
       const docRef = await addDoc(collection(database, 'competitions'), {
         ...competitionData,
+        ownerId: competitionData.ownerId || null,
+        ownerName: competitionData.ownerName || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -1373,6 +1381,8 @@ export const seasonsCollection = {
         year: seasonData.year || currentYear,
         isActive: seasonData.isActive || false,
         status: 'upcoming', // upcoming, ongoing, completed
+        ownerId: seasonData.ownerId || null,
+        ownerName: seasonData.ownerName || null,
         
         // Group stage configuration
         numberOfGroups: seasonData.numberOfGroups || 4,
@@ -1413,13 +1423,20 @@ export const seasonsCollection = {
   },
 
   // Set a season as active (deactivates all others)
-  setActive: async (seasonId) => {
+  setActive: async (seasonId, ownerId = null) => {
     try {
       const database = checkFirebaseInit();
       const batch = writeBatch(database);
       
       // Get all seasons
-      const seasonsSnapshot = await getDocs(collection(database, 'seasons'));
+      let seasonsSnapshot;
+      if (ownerId) {
+        const seasonsRef = collection(database, 'seasons');
+        const ownerQuery = query(seasonsRef, where('ownerId', '==', ownerId));
+        seasonsSnapshot = await getDocs(ownerQuery);
+      } else {
+        seasonsSnapshot = await getDocs(collection(database, 'seasons'));
+      }
       
       // Deactivate all seasons
       seasonsSnapshot.docs.forEach((seasonDoc) => {
@@ -1867,6 +1884,8 @@ export const leaguesCollection = {
       const database = checkFirebaseInit();
       const docRef = await addDoc(collection(database, 'leagues'), {
         ...leagueData,
+        ownerId: leagueData.ownerId || null,
+        ownerName: leagueData.ownerName || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

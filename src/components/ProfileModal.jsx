@@ -79,7 +79,7 @@ const ProfileModal = ({ onClose }) => {
             <span className="font-medium tracking-tight">{t('navigation.settings')}</span>
           </button>
 
-          {user?.role === 'admin' && (
+          {user?.isAdmin && (
             <button
               onClick={handleAdminAccess}
               className="w-full flex items-center p-3 text-left text-white hover:bg-gray-800/50 rounded-lg transition-colors"

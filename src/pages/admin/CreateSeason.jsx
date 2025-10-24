@@ -37,7 +37,7 @@ const CreateSeason = () => {
 
   const [groups, setGroups] = useState([]);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     loadTeams();
@@ -139,6 +139,8 @@ const CreateSeason = () => {
         year: parseInt(formData.year, 10),
         numberOfGroups: parseInt(formData.numberOfGroups, 10),
         teamsPerGroup: parseInt(formData.teamsPerGroup, 10),
+        ownerId: user?.uid || null,
+        ownerName: user?.displayName || user?.name || user?.email || 'Unknown Admin',
         groups: groups.map(g => ({
           id: g.id,
           name: g.name,

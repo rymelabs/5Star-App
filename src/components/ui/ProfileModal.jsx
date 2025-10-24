@@ -77,7 +77,7 @@ const ProfileModal = ({ onClose }) => {
             <div className="flex-1">
               <h3 className="font-medium text-white">{user?.name || t('profileModal.guestUser')}</h3>
               <p className="text-sm text-gray-400">{user?.email || t('profileModal.notLoggedIn')}</p>
-              {user?.role === 'admin' && (
+              {user?.isAdmin && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent-600 text-white mt-1">
                   <Shield className="w-3 h-3 mr-1" />
                   {t('common.admin')}
@@ -105,7 +105,7 @@ const ProfileModal = ({ onClose }) => {
             <span className="text-white">{t('navigation.settings')}</span>
           </button>
           
-          {user?.role === 'admin' && (
+          {user?.isAdmin && (
             <button
               onClick={() => handleNavigation('/admin')}
               className="w-full flex items-center px-4 py-3 text-left hover:bg-dark-700 transition-colors"

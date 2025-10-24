@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection, leaguesCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 
@@ -27,6 +27,17 @@ export const FootballProvider = ({ children }) => {
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const ownerId = user?.uid || null;
+  const ownerName = user?.displayName || user?.name || user?.email || 'Unknown Admin';
+  const isSuperAdmin = user?.isSuperAdmin;
+  const isAdmin = user?.isAdmin;
+
+  const applyOwnerMetadata = (payload = {}) => ({
+    ...payload,
+    ownerId,
+    ownerName
+  });
 
   // Load initial data
   useEffect(() => {
@@ -132,9 +143,14 @@ export const FootballProvider = ({ children }) => {
   };
 
   const addTeam = async (teamData) => {
+    if (!isAdmin) {
+      throw new Error('Only admins can add teams');
+    }
+
     try {
-      const teamId = await teamsCollection.add(teamData);
-      const newTeam = { id: teamId, ...teamData };
+      const teamPayload = applyOwnerMetadata(teamData);
+      const teamId = await teamsCollection.add(teamPayload);
+      const newTeam = { id: teamId, ...teamPayload };
       setTeams(prev => [...prev, newTeam]);
       
       // Log activity
@@ -143,7 +159,7 @@ export const FootballProvider = ({ children }) => {
           action: 'add',
           type: 'team',
           itemId: teamId,
-          itemName: teamData.name,
+          itemName: teamPayload.name,
           userId: user.uid,
           userName: user.displayName || user.email
         });
@@ -157,8 +173,13 @@ export const FootballProvider = ({ children }) => {
   };
 
   const addBulkTeams = async (teamsData) => {
+    if (!isAdmin) {
+      throw new Error('Only admins can add teams');
+    }
+
     try {
-      await teamsCollection.addBulk(teamsData);
+      const enrichedTeams = teamsData.map(team => applyOwnerMetadata(team));
+      await teamsCollection.addBulk(enrichedTeams);
       // Reload teams to get the updated list with Firebase IDs
       const updatedTeams = await teamsCollection.getAll();
       setTeams(updatedTeams);
@@ -170,9 +191,18 @@ export const FootballProvider = ({ children }) => {
 
   const updateTeam = async (teamId, updates) => {
     try {
-      await teamsCollection.update(teamId, updates);
+      const existingTeam = teams.find(team => team.id === teamId);
+      const updatePayload = (isAdmin && !isSuperAdmin)
+        ? {
+            ...updates,
+            ownerId: existingTeam?.ownerId || ownerId,
+            ownerName: existingTeam?.ownerName || ownerName
+          }
+        : updates;
+
+      await teamsCollection.update(teamId, updatePayload);
       setTeams(prev => prev.map(team => 
-        team.id === teamId ? { ...team, ...updates } : team
+        team.id === teamId ? { ...team, ...updatePayload } : team
       ));
       
       // Log activity
@@ -295,19 +325,24 @@ export const FootballProvider = ({ children }) => {
   };
 
   const addFixture = async (fixtureData) => {
+    if (!isAdmin) {
+      throw new Error('Only admins can add fixtures');
+    }
+
     try {
-      const fixtureId = await fixturesCollection.add(fixtureData);
+      const fixturePayload = applyOwnerMetadata(fixtureData);
+      const fixtureId = await fixturesCollection.add(fixturePayload);
       
       // Find the team data
-      const homeTeam = teams.find(t => t.id === fixtureData.homeTeamId);
-      const awayTeam = teams.find(t => t.id === fixtureData.awayTeamId);
+      const homeTeam = teams.find(t => t.id === fixturePayload.homeTeamId);
+      const awayTeam = teams.find(t => t.id === fixturePayload.awayTeamId);
       
       const newFixture = { 
         id: fixtureId, 
-        ...fixtureData,
-        homeTeam: homeTeam || { id: fixtureData.homeTeamId, name: 'Unknown Team', logo: '' },
-        awayTeam: awayTeam || { id: fixtureData.awayTeamId, name: 'Unknown Team', logo: '' },
-        dateTime: new Date(fixtureData.dateTime)
+        ...fixturePayload,
+        homeTeam: homeTeam || { id: fixturePayload.homeTeamId, name: 'Unknown Team', logo: '' },
+        awayTeam: awayTeam || { id: fixturePayload.awayTeamId, name: 'Unknown Team', logo: '' },
+        dateTime: new Date(fixturePayload.dateTime)
       };
       
       setFixtures(prev => [...prev, newFixture].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)));
@@ -345,9 +380,17 @@ export const FootballProvider = ({ children }) => {
       const isNowCompleted = updates.status === 'completed';
       const statusChangedToLive = fixture?.status !== 'live' && updates.status === 'live';
       
-      await fixturesCollection.update(fixtureId, updates);
+      const updatePayload = (isAdmin && !isSuperAdmin)
+        ? {
+            ...updates,
+            ownerId: fixture?.ownerId || ownerId,
+            ownerName: fixture?.ownerName || ownerName
+          }
+        : updates;
+
+      await fixturesCollection.update(fixtureId, updatePayload);
       setFixtures(prev => prev.map(f => 
-        f.id === fixtureId ? { ...f, ...updates } : f
+        f.id === fixtureId ? { ...f, ...updatePayload } : f
       ));
 
       // ⚡ NOTIFICATION TRIGGER: Match goes live
@@ -576,7 +619,10 @@ export const FootballProvider = ({ children }) => {
   // Season management functions
   const setActiveSeasonById = async (seasonId) => {
     try {
-      await seasonsCollection.setActive(seasonId);
+      const targetSeason = seasons.find(s => s.id === seasonId) || null;
+      const seasonOwnerId = targetSeason?.ownerId || ownerId || null;
+
+      await seasonsCollection.setActive(seasonId, seasonOwnerId);
       const updatedSeason = await seasonsCollection.getById(seasonId);
       setActiveSeason(updatedSeason);
       
@@ -642,8 +688,13 @@ export const FootballProvider = ({ children }) => {
   };
 
   const addLeague = async (leagueData) => {
+    if (!isAdmin) {
+      throw new Error('Only admins can add leagues');
+    }
+
     try {
-      const leagueId = await leaguesCollection.add(leagueData);
+      const leaguePayload = applyOwnerMetadata(leagueData);
+      const leagueId = await leaguesCollection.add(leaguePayload);
       await fetchLeagues(); // Refresh leagues
       return leagueId;
     } catch (error) {
@@ -654,7 +705,16 @@ export const FootballProvider = ({ children }) => {
 
   const updateLeague = async (leagueId, leagueData) => {
     try {
-      await leaguesCollection.update(leagueId, leagueData);
+      const existingLeague = leagues.find(league => league.id === leagueId);
+      const updatePayload = (isAdmin && !isSuperAdmin)
+        ? {
+            ...leagueData,
+            ownerId: existingLeague?.ownerId || ownerId,
+            ownerName: existingLeague?.ownerName || ownerName
+          }
+        : leagueData;
+
+      await leaguesCollection.update(leagueId, updatePayload);
       await fetchLeagues(); // Refresh leagues
     } catch (error) {
       console.error('Error updating league:', error);
@@ -672,16 +732,46 @@ export const FootballProvider = ({ children }) => {
     }
   };
 
+  const ownedTeams = useMemo(() => {
+    if (isSuperAdmin) return teams;
+    if (!isAdmin) return [];
+    return teams.filter(team => team.ownerId === ownerId);
+  }, [teams, isAdmin, isSuperAdmin, ownerId]);
+
+  const ownedFixtures = useMemo(() => {
+    if (isSuperAdmin) return fixtures;
+    if (!isAdmin) return [];
+    return fixtures.filter(fixture => fixture.ownerId === ownerId);
+  }, [fixtures, isAdmin, isSuperAdmin, ownerId]);
+
+  const ownedLeagues = useMemo(() => {
+    if (isSuperAdmin) return leagues;
+    if (!isAdmin) return [];
+    return leagues.filter(league => league.ownerId === ownerId);
+  }, [leagues, isAdmin, isSuperAdmin, ownerId]);
+
+  const ownedSeasons = useMemo(() => {
+    if (isSuperAdmin) return seasons;
+    if (!isAdmin) return [];
+    return seasons.filter(season => season.ownerId === ownerId);
+  }, [seasons, isAdmin, isSuperAdmin, ownerId]);
+
   const value = {
     teams,
+    ownedTeams,
     fixtures,
+    ownedFixtures,
     leagueTable,
     leagueSettings,
     leagues,
+    ownedLeagues,
     activeSeason,
     seasons,
+    ownedSeasons,
     loading,
     error,
+    isAdmin,
+    isSuperAdmin,
     addTeam,
     addBulkTeams,
     updateTeam,
