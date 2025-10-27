@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { newsCollection, commentsCollection } from '../firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { newsCollection, commentsCollection, appSettingsCollection } from '../firebase/firestore';
 
 const NewsContext = createContext();
 
@@ -12,21 +12,33 @@ export const useNews = () => {
 };
 
 export const NewsProvider = ({ children }) => {
-  const [articles, setArticles] = useState([]);
+  const [allArticles, setAllArticles] = useState([]);
   const [comments, setComments] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [newsSettings, setNewsSettings] = useState({ allowAdminNews: false });
 
   useEffect(() => {
     loadArticles();
+  }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await appSettingsCollection.getNewsSettings();
+        setNewsSettings(settings || { allowAdminNews: false });
+      } catch (settingsError) {
+        console.error('Error loading news settings:', settingsError);
+      }
+    };
+
+    loadSettings();
   }, []);
 
   const loadArticles = async () => {
     try {
       setLoading(true);
       const articlesData = await newsCollection.getAll();
-      
-      // Get comment counts for all articles
       const articlesWithCounts = await Promise.all(
         articlesData.map(async (article) => {
           const commentCount = await commentsCollection.getCountForItem('article', article.id);
@@ -36,11 +48,10 @@ export const NewsProvider = ({ children }) => {
           };
         })
       );
-      
-      setArticles(articlesWithCounts);
-    } catch (error) {
-      console.error('Error loading articles:', error);
-      setError(error.message);
+      setAllArticles(articlesWithCounts);
+    } catch (loadError) {
+      console.error('Error loading articles:', loadError);
+      setError(loadError.message);
     } finally {
       setLoading(false);
     }
@@ -49,43 +60,31 @@ export const NewsProvider = ({ children }) => {
   const getArticleById = async (articleId) => {
     try {
       return await newsCollection.getById(articleId);
-    } catch (error) {
-      console.error('Error getting article:', error);
-      throw error;
+    } catch (articleError) {
+      console.error('Error getting article:', articleError);
+      throw articleError;
     }
   };
 
   const getArticleBySlug = async (slug) => {
     try {
       return await newsCollection.getBySlug(slug);
-    } catch (error) {
-      console.error('Error getting article by slug:', error);
-      throw error;
+    } catch (slugError) {
+      console.error('Error getting article by slug:', slugError);
+      throw slugError;
     }
   };
 
   const addArticle = async (articleData) => {
     try {
       const articleId = await newsCollection.add(articleData);
-      const newArticle = { 
-        id: articleId, 
-        ...articleData,
-        publishedAt: new Date()
-      };
-      setArticles(prev => [newArticle, ...prev]);
-      
-      // ⚡ NOTIFICATION TRIGGER: New article published
-      // TODO: Send notifications to users following mentioned teams
-      // - Parse article title and content for team names
-      // - Check if user has 'teamNews' setting enabled
-      // - Send to followers of teams mentioned in the article
-      // - Include: article title, snippet, team badge
-      // Example: "📰 New Article: Manchester United signs new striker"
-      
-      return newArticle;
-    } catch (error) {
-      console.error('Error adding article:', error);
-      throw error;
+      const savedArticle = await newsCollection.getById(articleId);
+      const enrichedArticle = { ...savedArticle, commentCount: 0 };
+      setAllArticles(prev => [enrichedArticle, ...prev]);
+      return enrichedArticle;
+    } catch (addError) {
+      console.error('Error adding article:', addError);
+      throw addError;
     }
   };
 
@@ -97,9 +96,9 @@ export const NewsProvider = ({ children }) => {
         [`${itemType}_${itemId}`]: itemComments
       }));
       return itemComments;
-    } catch (error) {
-      console.error('Error getting comments:', error);
-      throw error;
+    } catch (commentsError) {
+      console.error('Error getting comments:', commentsError);
+      throw commentsError;
     }
   };
 
@@ -110,7 +109,7 @@ export const NewsProvider = ({ children }) => {
         itemType,
         itemId
       });
-      
+
       const newComment = {
         id: commentId,
         ...commentData,
@@ -125,99 +124,164 @@ export const NewsProvider = ({ children }) => {
         [key]: [newComment, ...(prev[key] || [])]
       }));
 
+      if (itemType === 'article') {
+        setAllArticles(prev => prev.map(article =>
+          article.id === itemId
+            ? { ...article, commentCount: (article.commentCount || 0) + 1 }
+            : article
+        ));
+      }
+
       return newComment;
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      throw error;
+    } catch (commentError) {
+      console.error('Error adding comment:', commentError);
+      throw commentError;
     }
   };
 
   const updateArticle = async (articleId, articleData) => {
     try {
       await newsCollection.update(articleId, articleData);
-      setArticles(prev => prev.map(article => 
-        article.id === articleId ? { ...article, ...articleData } : article
-      ));
-      return true;
-    } catch (error) {
-      console.error('Error updating article:', error);
-      throw error;
+      const updatedArticle = await newsCollection.getById(articleId);
+      let commentCount = 0;
+      setAllArticles(prev => prev.map(article => {
+        if (article.id === articleId) {
+          commentCount = article.commentCount ?? 0;
+          return { ...updatedArticle, commentCount };
+        }
+        return article;
+      }));
+      return { ...updatedArticle, commentCount };
+    } catch (updateError) {
+      console.error('Error updating article:', updateError);
+      throw updateError;
     }
   };
 
   const deleteArticle = async (articleId) => {
     try {
-      console.log('NewsContext: Deleting article:', articleId);
-      
-      // Delete from Firestore first
-      await newsCollection.delete(articleId);
-      
-      // Convert both to strings for comparison (handles numeric IDs)
       const articleIdStr = String(articleId);
-      
-      // Update local state - filter out the deleted article
-      setArticles(prev => {
-        const filtered = prev.filter(article => String(article.id) !== articleIdStr);
-        console.log('NewsContext: Filtered articles:', {
-          before: prev.length,
-          after: filtered.length,
-          deletedId: articleIdStr
-        });
-        return filtered;
-      });
-      
-      console.log('NewsContext: Article deleted successfully');
+      await newsCollection.delete(articleIdStr);
+      setAllArticles(prev => prev.filter(article => String(article.id) !== articleIdStr));
       return true;
-    } catch (error) {
-      console.error('NewsContext: Error deleting article:', error);
-      console.error('Error details:', {
-        code: error.code,
-        message: error.message,
-        articleId: articleId
-      });
-      throw error;
+    } catch (deleteError) {
+      console.error('Error deleting article:', deleteError);
+      throw deleteError;
     }
   };
 
   const toggleLike = async (articleId, userId) => {
     try {
       const result = await newsCollection.toggleLike(articleId, userId);
-      // Update local state
-      setArticles(prev => prev.map(article => 
-        article.id === articleId 
-          ? { 
-              ...article, 
+      setAllArticles(prev => prev.map(article =>
+        article.id === articleId
+          ? {
+              ...article,
               likes: result.likes,
-              likedBy: result.liked 
+              likedBy: result.liked
                 ? [...(article.likedBy || []), userId]
                 : (article.likedBy || []).filter(id => id !== userId)
-            } 
+            }
           : article
       ));
       return result;
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      throw error;
+    } catch (likeError) {
+      console.error('Error toggling like:', likeError);
+      throw likeError;
     }
   };
 
   const incrementArticleView = async (articleId) => {
     try {
       const newViewCount = await newsCollection.incrementView(articleId);
-      // Update local state
-      if (newViewCount) {
-        setArticles(prev => prev.map(article => 
-          article.id === articleId 
-            ? { ...article, views: newViewCount } 
+      if (newViewCount !== undefined) {
+        setAllArticles(prev => prev.map(article =>
+          article.id === articleId
+            ? { ...article, views: newViewCount }
             : article
         ));
       }
       return newViewCount;
-    } catch (error) {
-      console.error('Error incrementing view:', error);
-      // Don't throw - view tracking shouldn't break the app
+    } catch (viewError) {
+      console.error('Error incrementing view count:', viewError);
     }
   };
+
+  const approveArticle = async (articleId, { userId, userName }) => {
+    try {
+      await newsCollection.update(articleId, {
+        status: 'published',
+        approvedBy: userId,
+        approvedByName: userName,
+        approvedAt: new Date(),
+        publishedAt: new Date(),
+        rejectedBy: null,
+        rejectedByName: null,
+        rejectedAt: null,
+        rejectionReason: null
+      });
+      const updatedArticle = await newsCollection.getById(articleId);
+      let commentCount = 0;
+      setAllArticles(prev => prev.map(article => {
+        if (article.id === articleId) {
+          commentCount = article.commentCount ?? 0;
+          return { ...updatedArticle, commentCount };
+        }
+        return article;
+      }));
+      return { ...updatedArticle, commentCount };
+    } catch (approveError) {
+      console.error('Error approving article:', approveError);
+      throw approveError;
+    }
+  };
+
+  const rejectArticle = async (articleId, { userId, userName, reason = '' }) => {
+    try {
+      const trimmedReason = typeof reason === 'string' ? reason.trim() : '';
+      await newsCollection.update(articleId, {
+        status: 'rejected',
+        rejectedBy: userId,
+        rejectedByName: userName,
+        rejectedAt: new Date(),
+        rejectionReason: trimmedReason || null,
+        approvedBy: null,
+        approvedByName: null,
+        approvedAt: null,
+        publishedAt: null
+      });
+      const updatedArticle = await newsCollection.getById(articleId);
+      let commentCount = 0;
+      setAllArticles(prev => prev.map(article => {
+        if (article.id === articleId) {
+          commentCount = article.commentCount ?? 0;
+          return { ...updatedArticle, commentCount };
+        }
+        return article;
+      }));
+      return { ...updatedArticle, commentCount };
+    } catch (rejectError) {
+      console.error('Error rejecting article:', rejectError);
+      throw rejectError;
+    }
+  };
+
+  const updateNewsSettings = async (updates) => {
+    try {
+      const newSettings = { ...newsSettings, ...updates };
+      await appSettingsCollection.updateNewsSettings(newSettings);
+      setNewsSettings(newSettings);
+      return newSettings;
+    } catch (settingsError) {
+      console.error('Error updating news settings:', settingsError);
+      throw settingsError;
+    }
+  };
+
+  const publishedArticles = useMemo(
+    () => allArticles.filter(article => (article.status || 'published') === 'published'),
+    [allArticles]
+  );
 
   const subscribeToComments = (itemType, itemId) => {
     return commentsCollection.onSnapshot(itemType, itemId, (updatedComments) => {
@@ -230,10 +294,12 @@ export const NewsProvider = ({ children }) => {
   };
 
   const value = {
-    articles,
+    articles: publishedArticles,
+    allArticles,
     comments,
     loading,
     error,
+    newsSettings,
     getArticleById,
     getArticleBySlug,
     addArticle,
@@ -243,6 +309,9 @@ export const NewsProvider = ({ children }) => {
     incrementArticleView,
     getCommentsForItem,
     addComment,
+    approveArticle,
+    rejectArticle,
+    updateNewsSettings,
     subscribeToComments,
     refreshArticles: loadArticles
   };

@@ -1,4 +1,4 @@
-{
+﻿{
     "common":  {
                    "appName":  "5Star App",
                    "loading":  "Loading...",
@@ -25,7 +25,7 @@
                    "official":  "Official",
                    "version":  "Version",
                    "admin":  "Admin",
-                   "competitionBy":  "{competition} � managed by {admin}",
+                   "competitionBy":  "{competition} - managed by {admin}",
                    "managedBy":  "Managed by {admin}",
                    "defaultAdminName":  "Fivescore Team",
                    "defaultCompetitionName":  "General Competition"
@@ -115,7 +115,7 @@
                                    "loggedOutSuccess":  "Logged out successfully",
                                    "inbox":  "Inbox",
                                    "enableNotifications":  "Enable Notifications",
-                                   "notificationsEnabled":  "Push notifications are enabled ✓",
+                                   "notificationsEnabled":  "Push notifications are enabled (checkmark)",
                                    "enableBrowserNotifications":  "Enable browser notifications",
                                    "enabled":  "Enabled",
                                    "enable":  "Enable",
@@ -257,7 +257,7 @@
                                         "failedToAdd":  "Failed to Add",
                                         "failedToAddDesc":  "Could not add the match to your calendar. Please try again.",
                                         "calendarError":  "An error occurred while adding to calendar.",
-                                        "fixtureNotFound":  "❌ Fixture not found",
+                                        "fixtureNotFound":  "Fixture not found",
                                         "backToFixtures":  "Back to Fixtures",
                                         "addedToCalendarTitle":  "Added to calendar",
                                         "addToCalendarTitle":  "Add to calendar",
@@ -379,7 +379,7 @@
                                      "left":  "Left",
                                      "both":  "Both",
                                      "marketValue":  "Market Value",
-                                     "marketValuePlaceholder":  "e.g., €50M",
+                                     "marketValuePlaceholder":  "e.g., EUR 50M",
                                      "contractExpiry":  "Contract Expiry",
                                      "captain":  "Captain",
                                      "gk":  "GK",
@@ -598,7 +598,34 @@
                       "deleteArticleButton":  "Delete Article",
                       "deleteSuccess":  "Article deleted successfully!",
                       "deleteFailed":  "Failed to delete article. Please try again.",
-                      "permissionDenied":  "Permission denied. Make sure you have admin access and Firestore rules are deployed."
+                      "permissionDenied":  "Permission denied. Make sure you have admin access and Firestore rules are deployed.",
+                      "status":  {
+                                     "published":  "Published",
+                                     "pending":  "Pending approval",
+                                     "rejected":  "Rejected"
+                                 },
+                      "toggleOn":  "Enabled",
+                      "allowAdminSubmissions":  "Allow admin submissions",
+                      "publishedSuccess":  "Article published successfully!",
+                      "rejectSuccess":  "Article rejected.",
+                      "reject":  "Reject",
+                      "adminSubmissionDisabled":  "Admin submissions disabled.",
+                      "submittedOn":  "Submitted on {date}",
+                      "approve":  "Approve",
+                      "adminSubmissionEnabled":  "Admin submissions enabled.",
+                      "addFailed":  "Failed to publish article. Please try again.",
+                      "allowAdminSubmissionsDesc":  "Toggle to allow non-super admins to submit articles for approval.",
+                      "rejectedOn":  "Rejected on {date}",
+                      "submittedForApproval":  "Article submitted for approval.",
+                      "rejectPrompt":  "Provide a reason for rejection (optional):",
+                      "submittedBy":  "Submitted by {name}",
+                      "adminSubmissionDisabledNotice":  "News submissions are restricted. Contact a super admin to enable this feature.",
+                      "approveSuccess":  "Article approved.",
+                      "newsSettingsUpdateFailed":  "Failed to update news settings.",
+                      "addNewArticleDesc":  "Create engaging stories for the community.",
+                      "toggleOff":  "Disabled",
+                      "approveFailed":  "Failed to approve article.",
+                      "rejectFailed":  "Failed to reject article."
                   },
     "createSeason":  {
                          "title":  "Create New Season",

@@ -738,6 +738,27 @@ export const fixturesCollection = {
 };
 
 // News collection functions
+const normalizeDateValue = (value) => {
+  if (!value) {
+    return null;
+  }
+  return typeof value.toDate === 'function' ? value.toDate() : new Date(value);
+};
+
+const mapArticleDoc = (docSnap) => {
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    ...data,
+    publishedAt: normalizeDateValue(data.publishedAt),
+    createdAt: normalizeDateValue(data.createdAt),
+    updatedAt: normalizeDateValue(data.updatedAt),
+    submittedAt: normalizeDateValue(data.submittedAt),
+    approvedAt: normalizeDateValue(data.approvedAt),
+    rejectedAt: normalizeDateValue(data.rejectedAt)
+  };
+};
+
 export const newsCollection = {
   // Get all articles
   getAll: async () => {
@@ -745,11 +766,7 @@ export const newsCollection = {
       const database = checkFirebaseInit();
       const q = query(collection(database, 'articles'), orderBy('publishedAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        publishedAt: doc.data().publishedAt?.toDate?.() || new Date(doc.data().publishedAt)
-      }));
+      return querySnapshot.docs.map(mapArticleDoc);
     } catch (error) {
       console.error('Error fetching articles:', error);
       throw error;
@@ -779,10 +796,8 @@ export const newsCollection = {
       
       const querySnapshot = await getDocs(q);
       const articles = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        publishedAt: doc.data().publishedAt?.toDate?.() || new Date(doc.data().publishedAt),
-        _doc: doc // Store the document snapshot for pagination
+        ...mapArticleDoc(doc),
+        _doc: doc
       }));
       
       return {
@@ -804,11 +819,7 @@ export const newsCollection = {
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        return {
-          id: docSnap.id,
-          ...docSnap.data(),
-          publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
-        };
+        return mapArticleDoc(docSnap);
       }
       
       console.warn(`Article not found with ID: ${articleId}`);
@@ -830,11 +841,7 @@ export const newsCollection = {
       
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
-        return {
-          id: docSnap.id,
-          ...docSnap.data(),
-          publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
-        };
+        return mapArticleDoc(docSnap);
       }
       
       // If not found by slug, try by document ID (for old articles without slugs)
@@ -844,11 +851,7 @@ export const newsCollection = {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          return {
-            id: docSnap.id,
-            ...docSnap.data(),
-            publishedAt: docSnap.data().publishedAt?.toDate?.() || new Date(docSnap.data().publishedAt)
-          };
+          return mapArticleDoc(docSnap);
         }
       } catch (idError) {
         // If it's not a valid document ID, just continue
@@ -867,12 +870,45 @@ export const newsCollection = {
   add: async (articleData) => {
     try {
       const database = checkFirebaseInit();
-      const docRef = await addDoc(collection(database, 'articles'), {
-        ...articleData,
-        publishedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
+      const now = serverTimestamp();
+      const {
+        status = 'published',
+        ownerId = null,
+        ownerName = null,
+        approvedBy = null,
+        approvedByName = null,
+        approvedAt = null,
+        submittedAt = null,
+        publishedAt = null,
+        rejectedBy = null,
+        rejectedByName = null,
+        rejectedAt = null,
+        rejectionReason = null,
+        ...rest
+      } = articleData;
+
+      const isPublished = status === 'published';
+      const isRejected = status === 'rejected';
+
+      const baseData = {
+        ...rest,
+        status,
+        ownerId,
+        ownerName,
+        approvedBy: isPublished ? (approvedBy || ownerId) : (approvedBy || null),
+        approvedByName: isPublished ? (approvedByName || ownerName) : (approvedByName || null),
+        approvedAt: isPublished ? (approvedAt || now) : null,
+        submittedAt: submittedAt || now,
+        publishedAt: isPublished ? (publishedAt || now) : null,
+        rejectedBy: isRejected ? (rejectedBy || null) : null,
+        rejectedByName: isRejected ? (rejectedByName || null) : null,
+        rejectedAt: isRejected ? (rejectedAt || now) : null,
+        rejectionReason: isRejected ? (rejectionReason || null) : null,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      const docRef = await addDoc(collection(database, 'articles'), baseData);
       return docRef.id;
     } catch (error) {
       console.error('Error adding article:', error);
@@ -1116,6 +1152,38 @@ export const leagueTableCollection = {
       });
     } catch (error) {
       console.error('Error updating league table:', error);
+      throw error;
+    }
+  }
+};
+
+// App settings collection
+export const appSettingsCollection = {
+  getNewsSettings: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const settingsRef = doc(database, 'settings', 'news');
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists()) {
+        return settingsSnap.data();
+      }
+      return { allowAdminNews: false };
+    } catch (error) {
+      console.error('Error fetching news settings:', error);
+      return { allowAdminNews: false };
+    }
+  },
+
+  updateNewsSettings: async (settings) => {
+    try {
+      const database = checkFirebaseInit();
+      const settingsRef = doc(database, 'settings', 'news');
+      await setDoc(settingsRef, {
+        ...settings,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error updating news settings:', error);
       throw error;
     }
   }
