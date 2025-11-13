@@ -56,6 +56,12 @@ const AdminNews = () => {
   const authorName = user?.displayName || user?.name || user?.email || 'Admin';
   const canCreateArticle = isSuperAdmin || (isAdmin && allowAdminNews);
 
+  useEffect(() => {
+    if (!canCreateArticle && showAddForm) {
+      setShowAddForm(false);
+    }
+  }, [canCreateArticle, showAddForm]);
+
   const articles = useMemo(() => {
     const statusWeight = {
       pending: 0,
@@ -631,8 +637,3 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
-  useEffect(() => {
-    if (!canCreateArticle && showAddForm) {
-      setShowAddForm(false);
-    }
-  }, [canCreateArticle, showAddForm]);
