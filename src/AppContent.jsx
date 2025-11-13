@@ -27,26 +27,35 @@ import Licenses from './pages/Licenses';
 import SubmitTeam from './pages/SubmitTeam';
 
 // Admin components with lazy loading to avoid import errors
-const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').catch(() => ({ default: () => <div>Admin Dashboard not available</div> })));
-const AdminTeams = React.lazy(() => import('./pages/admin/AdminTeams').catch(() => ({ default: () => <div>Admin Teams not available</div> })));
-const EditTeam = React.lazy(() => import('./pages/admin/EditTeam').catch(() => ({ default: () => <div>Edit Team not available</div> })));
-const AdminFixtures = React.lazy(() => import('./pages/admin/AdminFixtures').catch(() => ({ default: () => <div>Admin Fixtures not available</div> })));
-const AdminNews = React.lazy(() => import('./pages/admin/AdminNews').catch(() => ({ default: () => <div>Admin News not available</div> })));
-const EditNews = React.lazy(() => import('./pages/admin/EditNews').catch(() => ({ default: () => <div>Edit News not available</div> })));
-const AdminLeagueSettings = React.lazy(() => import('./pages/admin/AdminLeagueSettings').catch(() => ({ default: () => <div>Admin League Settings not available</div> })));
-const AdminLeagues = React.lazy(() => import('./pages/admin/AdminLeagues').catch(() => ({ default: () => <div>Admin Leagues not available</div> })));
-const CreateLeague = React.lazy(() => import('./pages/admin/CreateLeague').catch(() => ({ default: () => <div>Create League not available</div> })));
-const EditLeague = React.lazy(() => import('./pages/admin/EditLeague').catch(() => ({ default: () => <div>Edit League not available</div> })));
-const AdminSeasons = React.lazy(() => import('./pages/admin/AdminSeasons').catch(() => ({ default: () => <div>Admin Seasons not available</div> })));
-const CreateSeason = React.lazy(() => import('./pages/admin/CreateSeason').catch(() => ({ default: () => <div>Create Season not available</div> })));
-const EditSeason = React.lazy(() => import('./pages/admin/EditSeason').catch(() => ({ default: () => <div>Edit Season not available</div> })));
-const SeasonDetail = React.lazy(() => import('./pages/admin/SeasonDetail').catch(() => ({ default: () => <div>Season Detail not available</div> })));
-const InstagramSettings = React.lazy(() => import('./pages/admin/InstagramSettings').catch(() => ({ default: () => <div>Instagram Settings not available</div> })));
-const AdvancedSettings = React.lazy(() => import('./pages/admin/AdvancedSettings').catch(() => ({ default: () => <div>Advanced Settings not available</div> })));
-const AdminNotifications = React.lazy(() => import('./pages/admin/AdminNotifications').catch(() => ({ default: () => <div>Admin Notifications not available</div> })));
-const BulkTeamUploadPage = React.lazy(() => import('./pages/admin/BulkTeamUploadPage').catch(() => ({ default: () => <div>Bulk Upload page not available</div> })));
-const AdminSubmissions = React.lazy(() => import('./pages/admin/AdminSubmissions').catch(() => ({ default: () => <div>Admin Submissions not available</div> })));
-const AdminStats = React.lazy(() => import('./pages/admin/AdminStats').catch(() => ({ default: () => <div>Admin Stats not available</div> })));
+const withLazyErrorLogging = (label, importer) => React.lazy(async () => {
+  try {
+    return await importer();
+  } catch (error) {
+    console.error(`❌ Failed to load ${label}:`, error);
+    return { default: () => <div>{`${label} not available`}</div> };
+  }
+});
+
+const AdminDashboard = withLazyErrorLogging('Admin Dashboard', () => import('./pages/admin/AdminDashboard'));
+const AdminTeams = withLazyErrorLogging('Admin Teams', () => import('./pages/admin/AdminTeams'));
+const EditTeam = withLazyErrorLogging('Edit Team', () => import('./pages/admin/EditTeam'));
+const AdminFixtures = withLazyErrorLogging('Admin Fixtures', () => import('./pages/admin/AdminFixtures'));
+const AdminNews = withLazyErrorLogging('Admin News', () => import('./pages/admin/AdminNews'));
+const EditNews = withLazyErrorLogging('Edit News', () => import('./pages/admin/EditNews'));
+const AdminLeagueSettings = withLazyErrorLogging('Admin League Settings', () => import('./pages/admin/AdminLeagueSettings'));
+const AdminLeagues = withLazyErrorLogging('Admin Leagues', () => import('./pages/admin/AdminLeagues'));
+const CreateLeague = withLazyErrorLogging('Create League', () => import('./pages/admin/CreateLeague'));
+const EditLeague = withLazyErrorLogging('Edit League', () => import('./pages/admin/EditLeague'));
+const AdminSeasons = withLazyErrorLogging('Admin Seasons', () => import('./pages/admin/AdminSeasons'));
+const CreateSeason = withLazyErrorLogging('Create Season', () => import('./pages/admin/CreateSeason'));
+const EditSeason = withLazyErrorLogging('Edit Season', () => import('./pages/admin/EditSeason'));
+const SeasonDetail = withLazyErrorLogging('Season Detail', () => import('./pages/admin/SeasonDetail'));
+const InstagramSettings = withLazyErrorLogging('Instagram Settings', () => import('./pages/admin/InstagramSettings'));
+const AdvancedSettings = withLazyErrorLogging('Advanced Settings', () => import('./pages/admin/AdvancedSettings'));
+const AdminNotifications = withLazyErrorLogging('Admin Notifications', () => import('./pages/admin/AdminNotifications'));
+const BulkTeamUploadPage = withLazyErrorLogging('Bulk Upload page', () => import('./pages/admin/BulkTeamUploadPage'));
+const AdminSubmissions = withLazyErrorLogging('Admin Submissions', () => import('./pages/admin/AdminSubmissions'));
+const AdminStats = withLazyErrorLogging('Admin Stats', () => import('./pages/admin/AdminStats'));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
