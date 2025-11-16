@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,7 +7,8 @@ import { useNotification } from '../../context/NotificationContext';
 import BulkTeamUpload from '../../components/BulkTeamUpload';
 import { teamsCollection } from '../../firebase/firestore';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal } from 'lucide-react';
+import { uploadImage, validateImageFile } from '../../services/imageUploadService';
+import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal, Image, Link } from 'lucide-react';
 
 const AdminTeams = () => {
   const navigate = useNavigate();
@@ -54,6 +55,24 @@ const AdminTeams = () => {
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [logoUploadMethod, setLogoUploadMethod] = useState('url'); // 'url' or 'file'
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  useEffect(() => {
+    if (!selectedLogoFile) {
+      setLogoPreviewUrl(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedLogoFile);
+    setLogoPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogoFile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +80,32 @@ const AdminTeams = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleLogoUploadMethodChange = (method) => {
+    setLogoUploadMethod(method);
+    if (method === 'url') {
+      setSelectedLogoFile(null);
+      setLogoPreviewUrl(null);
+    } else {
+      setFormData(prev => ({ ...prev, logo: '' }));
+    }
+  };
+
+  const handleLogoFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (validation.isValid) {
+        setSelectedLogoFile(file);
+        setFormData(prev => ({ ...prev, logo: '' })); // Clear URL when file is selected
+      } else {
+        showError(t('pages.adminTeams.invalidImage'), validation.error);
+        e.target.value = ''; // Clear the file input
+      }
+    } else {
+      setSelectedLogoFile(null);
+    }
   };
 
   const handlePlayerInputChange = (e) => {
@@ -190,11 +235,26 @@ const AdminTeams = () => {
 
     setLoading(true);
     try {
+      let logoUrl = formData.logo;
+
+      // Upload image file if selected
+      if (logoUploadMethod === 'file' && selectedLogoFile) {
+        setUploadingLogo(true);
+        try {
+          logoUrl = await uploadImage(selectedLogoFile, 'teams', `${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}_logo`);
+          setUploadingLogo(false);
+        } catch (uploadError) {
+          setUploadingLogo(false);
+          showError(t('pages.adminTeams.imageUploadFailed'), uploadError.message);
+          return;
+        }
+      }
+
       if (editingTeam) {
         // Update existing team
         const updatedTeam = {
           ...formData,
-          logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+          logo: logoUrl || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
         };
         await updateTeam(editingTeam.id, updatedTeam);
         showSuccess(t('pages.adminTeams.teamUpdated'), t('pages.adminTeams.teamUpdatedDesc').replace('{name}', updatedTeam.name));
@@ -202,13 +262,17 @@ const AdminTeams = () => {
         // Add new team
         const newTeam = {
           ...formData,
-          logo: formData.logo || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+          logo: logoUrl || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
         };
         await addTeam(newTeam);
         showSuccess(t('pages.adminTeams.teamAdded'), t('pages.adminTeams.teamAddedDesc').replace('{name}', newTeam.name));
       }
-      
+
+      // Reset form
       setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', leagueId: '', players: [] });
+      setSelectedLogoFile(null);
+      setLogoPreviewUrl(null);
+      setLogoUploadMethod('url');
       setShowAddForm(false);
       setEditingTeam(null);
     } catch (error) {
@@ -216,6 +280,7 @@ const AdminTeams = () => {
       showError(t('common.error'), t('pages.adminTeams.failedToSaveTeam'));
     } finally {
       setLoading(false);
+      setUploadingLogo(false);
     }
   };
 
@@ -280,6 +345,9 @@ const AdminTeams = () => {
   const handleCancel = () => {
     setFormData({ name: '', logo: '', stadium: '', founded: '', manager: '', players: [] });
     setPlayerForm({ name: '', position: 'Forward', jerseyNumber: '', isCaptain: false, isGoalkeeper: false });
+    setSelectedLogoFile(null);
+    setLogoPreviewUrl(null);
+    setLogoUploadMethod('url');
     setShowAddForm(false);
     setShowPlayerForm(false);
     setEditingTeam(null);
@@ -378,16 +446,91 @@ const AdminTeams = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {t('pages.adminTeams.logoUrl')}
+                    {t('pages.adminTeams.teamLogo')}
                   </label>
-                  <input
-                    type="url"
-                    name="logo"
-                    value={formData.logo}
-                    onChange={handleInputChange}
-                    className="input-field w-full"
-                    placeholder="https://example.com/logo.png"
-                  />
+
+                  {/* Logo Upload Method Toggle */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => handleLogoUploadMethodChange('url')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        logoUploadMethod === 'url'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                      }`}
+                    >
+                      <Link className="w-4 h-4" />
+                      URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoUploadMethodChange('file')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        logoUploadMethod === 'file'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                      }`}
+                    >
+                      <Image className="w-4 h-4" />
+                      Upload File
+                    </button>
+                  </div>
+
+                  {/* URL Input */}
+                  {logoUploadMethod === 'url' && (
+                    <input
+                      type="url"
+                      name="logo"
+                      value={formData.logo}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="https://example.com/logo.png"
+                    />
+                  )}
+
+                  {/* File Upload */}
+                  {logoUploadMethod === 'file' && (
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoFileChange}
+                        className="input-field w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                      />
+                      {selectedLogoFile && (
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                          <Image className="w-4 h-4" />
+                          <span>{selectedLogoFile.name}</span>
+                          <span className="text-gray-500">
+                            ({(selectedLogoFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                      )}
+                      {logoPreviewUrl && (
+                        <div className="flex items-center gap-3 text-sm text-gray-300">
+                          <img
+                            src={logoPreviewUrl}
+                            alt="Selected logo preview"
+                            className="w-16 h-16 object-contain rounded-lg bg-dark-800 border border-dark-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedLogoFile(null);
+                              setLogoPreviewUrl(null);
+                            }}
+                            className="px-2 py-1 text-xs bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors"
+                          >
+                            {t('common.reset')}
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -739,12 +882,19 @@ const AdminTeams = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !formData.name.trim()}
+                  disabled={loading || uploadingLogo || !formData.name.trim()}
                   className="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   <Save className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
-                  <span>{loading ? (editingTeam ? t('pages.adminTeams.updating') : t('pages.adminTeams.adding')) : (editingTeam ? t('pages.adminTeams.updateTeam') : t('pages.adminTeams.addTeam'))}</span>
-                  {!loading && (
+                  <span>
+                    {uploadingLogo
+                      ? t('pages.adminTeams.uploadingImage')
+                      : loading
+                        ? (editingTeam ? t('pages.adminTeams.updating') : t('pages.adminTeams.adding'))
+                        : (editingTeam ? t('pages.adminTeams.updateTeam') : t('pages.adminTeams.addTeam'))
+                    }
+                  </span>
+                  {!loading && !uploadingLogo && (
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
                 </button>

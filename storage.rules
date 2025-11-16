@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Team logo uploads (handled from admin panel)
+    match /teams/{teamAsset=**} {
+      allow read: if true; // Public read access for team logos
+      allow write, delete: if request.auth != null; // Admin UI already restricts access
+    }
+
+    // Allow authenticated users to upload other images (articles, etc.)
+    match /{allPaths=**} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+  }
+}

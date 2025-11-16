@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://starsapp-e27d1.web.app",
+      "https://starsapp-e27d1.firebaseapp.com"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "x-goog-meta-uploadedBy", "x-goog-meta-uploadDate"],
+    "maxAgeSeconds": 3600
+  }
+]

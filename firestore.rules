@@ -21,11 +21,13 @@ service cloud.firestore {
       
       // Admins can create and delete teams
       allow create, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       
       // Admins can update everything
       allow update: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       
       // Authenticated users can update only followers, followerCount, and updatedAt
       allow update: if request.auth != null && 
@@ -41,12 +43,14 @@ service cloud.firestore {
       allow read: if true; // Public read access
       // Admins can create/delete
       allow create, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       // Updates:
       // - Admins can update anything (including lineups and events)
       // - Authenticated users can update only likes/likedBy/updatedAt (for liking fixtures)
       allow update: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin') ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'updatedAt'])
       );
     }
@@ -55,10 +59,12 @@ service cloud.firestore {
     match /articles/{articleId} {
       allow read: if true; // Public read access
       allow create, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       allow update: if request.auth != null && (
         // Admins can update everything
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin') ||
         // Users can only update likes, likedBy, views fields
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'views', 'updatedAt']))
       );
@@ -71,57 +77,66 @@ service cloud.firestore {
         request.auth.uid == request.resource.data.userId;
       allow update, delete: if request.auth != null && 
         (request.auth.uid == resource.data.userId || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin'));
     }
     
     // League table collection
     match /leagueTable/{teamId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // League settings collection
     match /leagueSettings/{settingId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Leagues collection
     match /leagues/{leagueId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Competitions collection
     match /competitions/{competitionId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Admin Activity collection
     match /adminActivity/{activityId} {
       allow read: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Seasons/Tournaments collection
     match /seasons/{seasonId} {
       allow read: if true; // Public read access
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Settings collection (Instagram, etc.)
     match /settings/{settingId} {
       allow read: if true; // Public read access for enabled features
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // FCM Tokens collection - Users can manage their own tokens
@@ -131,7 +146,8 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       // Admins can clean up tokens
       allow delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Notifications collection - Users can manage their own notifications
@@ -141,17 +157,20 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       // Admins can create notifications for any user
       allow create: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
     
     // Admin Notifications collection - Public read, admin write, users can update view/dismiss counts
     match /adminNotifications/{notificationId} {
       allow read: if true; // All users can read admin notifications
       allow create, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       // Allow admins full update access
       allow update: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
       // Allow authenticated users to increment viewCount and dismissCount only
       allow update: if request.auth != null && 
         request.resource.data.title == resource.data.title &&
