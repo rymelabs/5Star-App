@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import { ArrowLeft, Save, X, Users, UserPlus, Shield, Goal, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, Save, X, Users, UserPlus, Shield, Goal, Trash2, Edit, Image, Link } from 'lucide-react';
+import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 
 const EditTeam = () => {
   const { teamId } = useParams();
@@ -38,6 +39,10 @@ const EditTeam = () => {
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [logoUploadMethod, setLogoUploadMethod] = useState('url');
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     // Load team data with fallbacks
@@ -64,6 +69,9 @@ const EditTeam = () => {
         leagueId: team.leagueId || '',
         players: team.players || [],
       });
+      setLogoUploadMethod(team.logo ? 'url' : 'file');
+      setSelectedLogoFile(null);
+      setLogoPreviewUrl(null);
     } else {
       console.warn('EditTeam: Team not found for param', teamId, 'Available:', teams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })).slice(0, 20));
       showError('Team Not Found', 'The team you are trying to edit does not exist.');
@@ -71,12 +79,54 @@ const EditTeam = () => {
     }
   }, [teamId, teams]);
 
+  useEffect(() => {
+    if (!selectedLogoFile) {
+      setLogoPreviewUrl(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedLogoFile);
+    setLogoPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogoFile]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleLogoUploadMethodChange = (method) => {
+    setLogoUploadMethod(method);
+    if (method === 'url') {
+      setSelectedLogoFile(null);
+      setLogoPreviewUrl(null);
+    } else {
+      setFormData(prev => ({ ...prev, logo: '' }));
+    }
+  };
+
+  const handleLogoFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setSelectedLogoFile(null);
+      return;
+    }
+
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      showError('Invalid Image', validation.error);
+      e.target.value = '';
+      return;
+    }
+
+    setSelectedLogoFile(file);
+    setFormData(prev => ({ ...prev, logo: '' }));
   };
 
   const handlePlayerInputChange = (e) => {
@@ -210,8 +260,27 @@ const EditTeam = () => {
 
     try {
       setLoading(true);
+      let logoUrl = formData.logo;
+
+      if (logoUploadMethod === 'file' && selectedLogoFile) {
+        setUploadingLogo(true);
+        try {
+          const safeName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'team_logo';
+          logoUrl = await uploadImage(selectedLogoFile, 'teams', `${safeName}_${Date.now()}`);
+        } catch (uploadError) {
+          console.error('Logo upload failed:', uploadError);
+          showError('Image Upload Failed', uploadError.message || 'Unable to upload logo image. Please try again.');
+          setUploadingLogo(false);
+          setLoading(false);
+          return;
+        } finally {
+          setUploadingLogo(false);
+        }
+      }
+
       const updatedTeam = {
         ...formData,
+        logo: logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=22c55e&color=fff&size=200`,
         name: formData.name.trim(),
         updatedAt: new Date().toISOString()
       };
@@ -219,6 +288,9 @@ const EditTeam = () => {
       console.debug('EditTeam: updating team with param teamId=', teamId, 'prepared payload players length=', (updatedTeam.players || []).length, 'sample players=', (updatedTeam.players || []).slice(0,3));
       await updateTeam(teamId, updatedTeam);
       showSuccess('Team Updated', `${updatedTeam.name} has been updated successfully`);
+      setSelectedLogoFile(null);
+      setLogoUploadMethod('url');
+      setLogoPreviewUrl(null);
       navigate('/admin/teams');
     } catch (error) {
       console.error('Error updating team:', error);
@@ -229,6 +301,9 @@ const EditTeam = () => {
   };
 
   const handleCancel = () => {
+    setSelectedLogoFile(null);
+    setLogoPreviewUrl(null);
+    setLogoUploadMethod('url');
     navigate('/admin/teams');
   };
 
@@ -290,16 +365,103 @@ const EditTeam = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Logo URL
+                  Team Logo
                 </label>
-                <input
-                  type="url"
-                  name="logo"
-                  value={formData.logo}
-                  onChange={handleInputChange}
-                  className="input-field w-full"
-                  placeholder="https://example.com/logo.png"
-                />
+
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => handleLogoUploadMethodChange('url')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      logoUploadMethod === 'url'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                    }`}
+                  >
+                    <Link className="w-4 h-4" />
+                    URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLogoUploadMethodChange('file')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      logoUploadMethod === 'file'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                    }`}
+                  >
+                    <Image className="w-4 h-4" />
+                    Upload File
+                  </button>
+                </div>
+
+                {logoUploadMethod === 'url' && (
+                  <>
+                    <input
+                      type="url"
+                      name="logo"
+                      value={formData.logo}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    {formData.logo && (
+                      <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
+                        <img
+                          src={formData.logo}
+                          alt={formData.name}
+                          className="w-16 h-16 object-contain rounded-lg bg-dark-800 border border-dark-600"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                        <span>Current logo preview</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {logoUploadMethod === 'file' && (
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoFileChange}
+                      className="input-field w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                    />
+                    {selectedLogoFile && (
+                      <div className="flex items-center gap-2 text-sm text-gray-300">
+                        <Image className="w-4 h-4" />
+                        <span>{selectedLogoFile.name}</span>
+                        <span className="text-gray-500">
+                          ({(selectedLogoFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                    )}
+                    {logoPreviewUrl && (
+                      <div className="flex items-center gap-3 text-sm text-gray-300">
+                        <img
+                          src={logoPreviewUrl}
+                          alt="Selected logo preview"
+                          className="w-16 h-16 object-contain rounded-lg bg-dark-800 border border-dark-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedLogoFile(null);
+                            setLogoPreviewUrl(null);
+                          }}
+                          className="px-2 py-1 text-xs bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors"
+                        >
+                          Clear selection
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -654,11 +816,11 @@ const EditTeam = () => {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingLogo}
               className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
-              <span>{loading ? 'Updating...' : 'Update Team'}</span>
+              <span>{uploadingLogo ? 'Uploading Logo...' : loading ? 'Updating...' : 'Update Team'}</span>
             </button>
           </div>
         </form>
