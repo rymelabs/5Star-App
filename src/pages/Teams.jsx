@@ -8,6 +8,54 @@ import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'luc
 import TeamAvatar from '../components/TeamAvatar';
 import { teamsCollection } from '../firebase/firestore';
 import { addCalendarRemindersForTeam, removeCalendarRemindersForTeam } from '../services/calendarReminderService';
+import { getCachedItem, setCachedItem } from '../utils/cache';
+
+const TEAMS_CACHE_KEY = 'cache:teams-page';
+
+const toMillis = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (typeof value === 'object') {
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    if (typeof value.seconds === 'number') {
+      const nanos = typeof value.nanoseconds === 'number' ? value.nanoseconds / 1e6 : 0;
+      return value.seconds * 1000 + nanos;
+    }
+  }
+  return null;
+};
+
+const serializeTimestamp = (value) => {
+  const millis = toMillis(value);
+  return typeof millis === 'number' ? new Date(millis).toISOString() : null;
+};
+
+const sanitizeTeams = (teams = []) => teams.map((team) => {
+  const sanitized = { ...team };
+  delete sanitized._doc;
+  if (sanitized.updatedAt) {
+    sanitized.updatedAt = serializeTimestamp(sanitized.updatedAt) || sanitized.updatedAt;
+  }
+  if (sanitized.createdAt) {
+    sanitized.createdAt = serializeTimestamp(sanitized.createdAt) || sanitized.createdAt;
+  }
+  return sanitized;
+});
+
+const computeLatestTimestamp = (teams = []) => {
+  return teams.reduce((acc, team) => {
+    const timestamp = toMillis(team.updatedAt) || toMillis(team.createdAt);
+    if (typeof timestamp === 'number' && timestamp > acc) {
+      return timestamp;
+    }
+    return acc;
+  }, 0);
+};
 
 const Teams = () => {
   const navigate = useNavigate();
@@ -24,21 +72,114 @@ const Teams = () => {
   const [hasMoreTeams, setHasMoreTeams] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const cachedCursorIdRef = useRef(null);
   
   // Calculate how many items fit on screen (estimate based on viewport height)
   // Each team card is approximately 140px tall with gap
   const itemsPerPage = Math.max(12, Math.ceil(window.innerHeight / 140) * 2);
-  
-  // Intersection observer for infinite scroll
-  const observerRef = useRef(null);
+
+  const persistTeamsCache = useCallback((teamsList, hasMoreValue, lastDocValue) => {
+    const latestUpdatedAt = computeLatestTimestamp(teamsList);
+    setCachedItem(TEAMS_CACHE_KEY, {
+      teams: teamsList,
+      hasMore: hasMoreValue,
+      lastDocId: lastDocValue || null,
+      latestUpdatedAt
+    });
+  }, []);
+
+  const hydrateTeamsFromCache = useCallback((cache) => {
+    setPaginatedTeams(cache.teams || []);
+    setHasMoreTeams(cache.hasMore ?? true);
+    cachedCursorIdRef.current = cache.lastDocId || null;
+    setInitialLoaded(true);
+  }, []);
+
+  const rehydrateCursorFromCache = useCallback(async (cache) => {
+    if (!cache?.lastDocId || teamsLastDoc) return;
+    const snapshot = await teamsCollection.getDocSnapshot(cache.lastDocId);
+    if (snapshot) {
+      setTeamsLastDoc(snapshot);
+    }
+  }, [teamsLastDoc]);
+
+  const loadInitialTeams = useCallback(async () => {
+    try {
+      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage);
+      const sanitizedTeams = sanitizeTeams(newTeams);
+      setPaginatedTeams(sanitizedTeams);
+      setTeamsLastDoc(lastDoc);
+      setHasMoreTeams(hasMore);
+      setInitialLoaded(true);
+      const lastDocId = lastDoc?.id || null;
+      cachedCursorIdRef.current = lastDocId;
+      persistTeamsCache(sanitizedTeams, hasMore, lastDocId);
+    } catch (error) {
+      console.error('Error loading initial teams:', error);
+      setInitialLoaded(true);
+    }
+  }, [itemsPerPage, persistTeamsCache]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const cached = getCachedItem(TEAMS_CACHE_KEY);
+    if (cached?.teams?.length) {
+      hydrateTeamsFromCache(cached);
+      rehydrateCursorFromCache(cached);
+    }
+
+    const checkFreshnessAndLoad = async () => {
+      if (!cached?.teams?.length) {
+        await loadInitialTeams();
+        return;
+      }
+
+      try {
+        const latestRemote = await teamsCollection.getLatestUpdatedAt();
+        if (!isMounted) return;
+        const cachedTimestamp = cached.latestUpdatedAt || 0;
+        if (!latestRemote || latestRemote <= cachedTimestamp) {
+          return;
+        }
+        await loadInitialTeams();
+      } catch (error) {
+        console.error('Error validating teams cache:', error);
+      }
+    };
+
+    checkFreshnessAndLoad();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hydrateTeamsFromCache, loadInitialTeams, rehydrateCursorFromCache]);
 
   const loadMoreTeams = useCallback(async () => {
-    if (!hasMoreTeams || loadingMore || !teamsLastDoc) return;
-    
+    if (!hasMoreTeams || loadingMore) return;
+
     setLoadingMore(true);
     try {
-      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage, teamsLastDoc);
-      setPaginatedTeams(prev => [...prev, ...newTeams]);
+      let cursor = teamsLastDoc;
+      if (!cursor && cachedCursorIdRef.current) {
+        cursor = await teamsCollection.getDocSnapshot(cachedCursorIdRef.current);
+        if (cursor) {
+          setTeamsLastDoc(cursor);
+        }
+      }
+
+      if (!cursor) {
+        return;
+      }
+
+      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage, cursor);
+      const sanitizedTeams = sanitizeTeams(newTeams);
+      const lastDocId = lastDoc?.id || cachedCursorIdRef.current;
+      setPaginatedTeams(prev => {
+        const merged = [...prev, ...sanitizedTeams];
+        cachedCursorIdRef.current = lastDocId || null;
+        persistTeamsCache(merged, hasMore, cachedCursorIdRef.current);
+        return merged;
+      });
       setTeamsLastDoc(lastDoc);
       setHasMoreTeams(hasMore);
     } catch (error) {
@@ -46,7 +187,10 @@ const Teams = () => {
     } finally {
       setLoadingMore(false);
     }
-  }, [hasMoreTeams, loadingMore, teamsLastDoc, itemsPerPage]);
+  }, [hasMoreTeams, loadingMore, teamsLastDoc, itemsPerPage, persistTeamsCache]);
+
+  // Intersection observer for infinite scroll
+  const observerRef = useRef(null);
 
   const loadMoreRef = useCallback(node => {
     if (loadingMore) return;
@@ -60,26 +204,6 @@ const Teams = () => {
     
     if (node) observerRef.current.observe(node);
   }, [loadingMore, hasMoreTeams, searchQuery, loadMoreTeams]);
-  
-  const loadInitialTeams = useCallback(async () => {
-    try {
-      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage);
-      setPaginatedTeams(newTeams);
-      setTeamsLastDoc(lastDoc);
-      setHasMoreTeams(hasMore);
-      setInitialLoaded(true);
-    } catch (error) {
-      console.error('Error loading initial teams:', error);
-      setInitialLoaded(true);
-    }
-  }, [itemsPerPage]);
-
-  // Load initial teams
-  useEffect(() => {
-    if (!initialLoaded) {
-      loadInitialTeams();
-    }
-  }, [initialLoaded, loadInitialTeams]);
 
   const handleFollowToggle = async (e, team) => {
     e.stopPropagation(); // Prevent navigation when clicking follow button

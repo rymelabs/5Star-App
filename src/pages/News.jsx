@@ -6,6 +6,57 @@ import { Search, Filter, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react
 import { getRelativeTime } from '../utils/dateUtils';
 import { truncateText } from '../utils/helpers';
 import { newsCollection, commentsCollection } from '../firebase/firestore';
+import { getCachedItem, setCachedItem } from '../utils/cache';
+
+const NEWS_CACHE_KEY = 'cache:news-page';
+
+const toMillis = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (typeof value === 'object') {
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    if (typeof value.seconds === 'number') {
+      const nanos = typeof value.nanoseconds === 'number' ? value.nanoseconds / 1e6 : 0;
+      return value.seconds * 1000 + nanos;
+    }
+  }
+  return null;
+};
+
+const serializeTimestamp = (value) => {
+  const millis = toMillis(value);
+  return typeof millis === 'number' ? new Date(millis).toISOString() : null;
+};
+
+const sanitizeArticles = (articles = []) => articles.map((article) => {
+  const sanitized = { ...article };
+  delete sanitized._doc;
+  if (sanitized.updatedAt) {
+    sanitized.updatedAt = serializeTimestamp(sanitized.updatedAt) || sanitized.updatedAt;
+  }
+  if (sanitized.publishedAt) {
+    sanitized.publishedAt = serializeTimestamp(sanitized.publishedAt) || sanitized.publishedAt;
+  }
+  if (sanitized.createdAt) {
+    sanitized.createdAt = serializeTimestamp(sanitized.createdAt) || sanitized.createdAt;
+  }
+  return sanitized;
+});
+
+const computeLatestArticleTimestamp = (articles = []) => {
+  return articles.reduce((acc, article) => {
+    const timestamp = toMillis(article.updatedAt) || toMillis(article.publishedAt) || toMillis(article.createdAt);
+    if (typeof timestamp === 'number' && timestamp > acc) {
+      return timestamp;
+    }
+    return acc;
+  }, 0);
+};
 
 const News = () => {
   const navigate = useNavigate();
@@ -21,26 +72,124 @@ const News = () => {
   const [hasMoreNews, setHasMoreNews] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const cachedCursorIdRef = useRef(null);
   
-  // Intersection observer for infinite scroll
-  const observerRef = useRef(null);
+  const persistNewsCache = useCallback((articlesList, hasMoreValue, lastDocValue) => {
+    const latestUpdatedAt = computeLatestArticleTimestamp(articlesList);
+    setCachedItem(NEWS_CACHE_KEY, {
+      articles: articlesList,
+      hasMore: hasMoreValue,
+      lastDocId: lastDocValue || null,
+      latestUpdatedAt
+    });
+  }, []);
+
+  const hydrateNewsFromCache = useCallback((cache) => {
+    setPaginatedArticles(cache.articles || []);
+    setHasMoreNews(cache.hasMore ?? true);
+    cachedCursorIdRef.current = cache.lastDocId || null;
+    setInitialLoaded(true);
+  }, []);
+
+  const rehydrateNewsCursor = useCallback(async (cache) => {
+    if (!cache?.lastDocId || newsLastDoc) return;
+    const snapshot = await newsCollection.getDocSnapshot(cache.lastDocId);
+    if (snapshot) {
+      setNewsLastDoc(snapshot);
+    }
+  }, [newsLastDoc]);
+
+  const enhanceWithCommentCounts = useCallback(async (items) => {
+    return Promise.all(items.map(async (article) => {
+      try {
+        const count = await commentsCollection.getCountForItem('article', article.id);
+        return { ...article, commentCount: count };
+      } catch (err) {
+        console.error('Error fetching comment count for article', article.id, err);
+        return { ...article, commentCount: article.commentCount || 0 };
+      }
+    }));
+  }, []);
+
+  const loadInitialArticles = useCallback(async () => {
+    try {
+      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
+      const articlesWithCounts = await enhanceWithCommentCounts(newArticles);
+      const sanitizedArticles = sanitizeArticles(articlesWithCounts);
+      setPaginatedArticles(sanitizedArticles);
+      setNewsLastDoc(lastDoc);
+      setHasMoreNews(hasMore);
+      setInitialLoaded(true);
+      const lastDocId = lastDoc?.id || null;
+      cachedCursorIdRef.current = lastDocId;
+      persistNewsCache(sanitizedArticles, hasMore, lastDocId);
+    } catch (error) {
+      console.error('Error loading initial articles:', error);
+      setInitialLoaded(true);
+    }
+  }, [enhanceWithCommentCounts, persistNewsCache]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const cached = getCachedItem(NEWS_CACHE_KEY);
+    if (cached?.articles?.length) {
+      hydrateNewsFromCache(cached);
+      rehydrateNewsCursor(cached);
+    }
+
+    const checkFreshnessAndLoad = async () => {
+      if (!cached?.articles?.length) {
+        await loadInitialArticles();
+        return;
+      }
+
+      try {
+        const latestRemote = await newsCollection.getLatestUpdatedAt();
+        if (!isMounted) return;
+        const cachedTimestamp = cached.latestUpdatedAt || 0;
+        if (!latestRemote || latestRemote <= cachedTimestamp) {
+          return;
+        }
+        await loadInitialArticles();
+      } catch (error) {
+        console.error('Error validating news cache:', error);
+      }
+    };
+
+    checkFreshnessAndLoad();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hydrateNewsFromCache, loadInitialArticles, rehydrateNewsCursor]);
 
   const loadMoreArticles = useCallback(async () => {
-    if (!hasMoreNews || loadingMore || !newsLastDoc) return;
-    
+    if (!hasMoreNews || loadingMore) return;
+
     setLoadingMore(true);
     try {
-      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20, newsLastDoc);
-      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
-        try {
-          const count = await commentsCollection.getCountForItem('article', a.id);
-          return { ...a, commentCount: count };
-        } catch (err) {
-          console.error('Error fetching comment count for article', a.id, err);
-          return { ...a, commentCount: a.commentCount || 0 };
+      let cursor = newsLastDoc;
+      if (!cursor && cachedCursorIdRef.current) {
+        cursor = await newsCollection.getDocSnapshot(cachedCursorIdRef.current);
+        if (cursor) {
+          setNewsLastDoc(cursor);
         }
-      }));
-      setPaginatedArticles(prev => [...prev, ...articlesWithCounts]);
+      }
+
+      if (!cursor) {
+        return;
+      }
+
+      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20, cursor);
+      const articlesWithCounts = await enhanceWithCommentCounts(newArticles);
+      const sanitized = sanitizeArticles(articlesWithCounts);
+      const lastDocId = lastDoc?.id || cachedCursorIdRef.current;
+      setPaginatedArticles(prev => {
+        const merged = [...prev, ...sanitized];
+        cachedCursorIdRef.current = lastDocId || null;
+        persistNewsCache(merged, hasMore, cachedCursorIdRef.current);
+        return merged;
+      });
       setNewsLastDoc(lastDoc);
       setHasMoreNews(hasMore);
     } catch (error) {
@@ -48,7 +197,10 @@ const News = () => {
     } finally {
       setLoadingMore(false);
     }
-  }, [hasMoreNews, loadingMore, newsLastDoc]);
+  }, [hasMoreNews, loadingMore, newsLastDoc, enhanceWithCommentCounts, persistNewsCache]);
+
+  // Intersection observer for infinite scroll
+  const observerRef = useRef(null);
 
   const loadMoreRef = useCallback(node => {
     if (loadingMore) return;
@@ -62,36 +214,6 @@ const News = () => {
     
     if (node) observerRef.current.observe(node);
   }, [loadingMore, hasMoreNews, searchQuery, categoryFilter, loadMoreArticles]);
-  
-  const loadInitialArticles = useCallback(async () => {
-    try {
-      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
-      // Attach comment counts for paginated articles (context articles already have counts)
-      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
-        try {
-          const count = await commentsCollection.getCountForItem('article', a.id);
-          return { ...a, commentCount: count };
-        } catch (err) {
-          console.error('Error fetching comment count for article', a.id, err);
-          return { ...a, commentCount: a.commentCount || 0 };
-        }
-      }));
-      setPaginatedArticles(articlesWithCounts);
-      setNewsLastDoc(lastDoc);
-      setHasMoreNews(hasMore);
-      setInitialLoaded(true);
-    } catch (error) {
-      console.error('Error loading initial articles:', error);
-      setInitialLoaded(true);
-    }
-  }, []);
-
-  // Load initial articles
-  useEffect(() => {
-    if (!initialLoaded) {
-      loadInitialArticles();
-    }
-  }, [initialLoaded, loadInitialArticles]);
 
   // Get unique categories - use both context articles and paginated articles
   const categories = useMemo(() => {
