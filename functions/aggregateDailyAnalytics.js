@@ -9,7 +9,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // This scheduled function runs daily and aggregates simple metrics into analytics/daily/{YYYY-MM-DD}
-exports.aggregateDailyAnalytics = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+exports.aggregateDailyAnalytics = functions.pubsub.schedule('every 24 hours').onRun(async (_context) => {
   const today = new Date();
   const yyyy = today.getUTCFullYear();
   const mm = String(today.getUTCMonth() + 1).padStart(2, '0');

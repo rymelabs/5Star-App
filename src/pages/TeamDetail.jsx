@@ -198,6 +198,20 @@ const TeamDetail = () => {
     };
   }, [team, fixtures]);
 
+  const winDrawLoss = useMemo(() => {
+    const source = team?.stats || {};
+    const wins = Number(source.wins ?? source.won ?? teamStats?.won ?? 0) || 0;
+    const draws = Number(source.draws ?? source.drawn ?? teamStats?.drawn ?? 0) || 0;
+    const losses = Number(source.losses ?? source.lost ?? teamStats?.lost ?? 0) || 0;
+
+    return {
+      wins,
+      draws,
+      losses,
+      total: wins + draws + losses
+    };
+  }, [team, teamStats]);
+
   // Get top scorers from this team
   const topScorers = useMemo(() => {
     if (!team || !team.players) return [];
@@ -418,22 +432,41 @@ const TeamDetail = () => {
             </div>
 
             {/* Quick Stats */}
-            {teamStats && (
-              <div className="hidden md:flex gap-3">
-                <div className="bg-dark-700 rounded-md p-2 text-center min-w-[60px]">
-                  <div className="text-lg font-bold text-green-400">{teamStats.won}</div>
-                  <div className="text-[10px] text-gray-400">Wins</div>
-                </div>
-                <div className="bg-dark-700 rounded-md p-2 text-center min-w-[60px]">
-                  <div className="text-lg font-bold text-yellow-400">{teamStats.drawn}</div>
-                                  <div className="text-center">
-                  <div className="text-sm font-semibold text-white">{team.stats?.draws || 0}</div>
-                  <div className="text-xs text-gray-400">{t('pages.teamDetail.draws')}</div>
-                </div>
-                </div>
-                <div className="bg-dark-700 rounded-lg p-3 text-center min-w-[80px]">
-                  <div className="text-2xl font-bold text-red-400">{teamStats.lost}</div>
-                  <div className="text-xs text-gray-400">Losses</div>
+            {team && (
+              <div className="hidden md:flex">
+                <div className="bg-dark-800/80 border border-dark-700 rounded-2xl p-4 min-w-[260px] shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-gray-400">{t('pages.teamDetail.seasonStats')}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {winDrawLoss.total}
+                        <span className="text-sm font-normal text-gray-500 ml-1">{t('pages.teamDetail.played')}</span>
+                      </p>
+                    </div>
+                    <div className="p-2 rounded-full bg-primary-500/10 text-primary-300">
+                      <Target className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[{
+                      label: t('pages.teamDetail.wins'),
+                      value: winDrawLoss.wins,
+                      accent: 'text-green-400'
+                    }, {
+                      label: t('pages.teamDetail.draws'),
+                      value: winDrawLoss.draws,
+                      accent: 'text-yellow-400'
+                    }, {
+                      label: t('pages.teamDetail.losses'),
+                      value: winDrawLoss.losses,
+                      accent: 'text-red-400'
+                    }].map((item) => (
+                      <div key={item.label} className="text-center bg-dark-900/60 rounded-lg p-3 border border-dark-700">
+                        <div className={`text-xl font-bold ${item.accent}`}>{item.value}</div>
+                        <div className="text-[11px] text-gray-400 uppercase tracking-wide">{item.label}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
