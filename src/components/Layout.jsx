@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Calendar, Users, Newspaper, TrendingUp, LayoutDashboard, Settings, User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const scrollContainerRef = useRef(null);
 
   const mainNavItems = [
     { icon: Home, label: t('navigation.latest'), path: '/' },
@@ -40,6 +41,43 @@ const Layout = ({ children }) => {
     }
     return location.pathname.startsWith(path);
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.sessionStorage === 'undefined') {
+      return undefined;
+    }
+
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    const storageKey = `scroll-position:${location.pathname}`;
+
+    const restoreScroll = () => {
+      const stored = window.sessionStorage.getItem(storageKey);
+      if (stored !== null) {
+        const parsed = parseInt(stored, 10);
+        container.scrollTo({ top: Number.isNaN(parsed) ? 0 : parsed, behavior: 'auto' });
+      } else {
+        container.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    };
+
+    const frameId = window.requestAnimationFrame(restoreScroll);
+
+    const handleScroll = () => {
+      window.sessionStorage.setItem(storageKey, container.scrollTop.toString());
+    };
+
+    container.addEventListener('scroll', handleScroll);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.cancelAnimationFrame(frameId);
+      window.sessionStorage.setItem(storageKey, container.scrollTop.toString());
+    };
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -148,7 +186,7 @@ const Layout = ({ children }) => {
       </aside>
       
       {/* Main Content - Add left padding on tablet/desktop to account for sidebar */}
-      <main className="flex-1 overflow-y-auto bg-black pt-16 pb-24 md:pl-64 md:pb-6 hide-scrollbar">
+      <main ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-black pt-16 pb-24 md:pl-64 md:pb-6 hide-scrollbar">
         {children}
       </main>
       

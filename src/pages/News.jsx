@@ -2,9 +2,9 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../context/NewsContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Search, Filter, Clock, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
-import { formatDate, getRelativeTime } from '../utils/dateUtils';
-import { truncateText, groupBy } from '../utils/helpers';
+import { Search, Filter, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
+import { getRelativeTime } from '../utils/dateUtils';
+import { truncateText } from '../utils/helpers';
 import { newsCollection, commentsCollection } from '../firebase/firestore';
 
 const News = () => {
@@ -24,50 +24,8 @@ const News = () => {
   
   // Intersection observer for infinite scroll
   const observerRef = useRef(null);
-  const loadMoreRef = useCallback(node => {
-    if (loadingMore) return;
-    if (observerRef.current) observerRef.current.disconnect();
-    
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreNews && !searchQuery && categoryFilter === 'all') {
-        loadMoreArticles();
-      }
-    });
-    
-    if (node) observerRef.current.observe(node);
-  }, [loadingMore, hasMoreNews, searchQuery, categoryFilter]);
-  
-  // Load initial articles
-  useEffect(() => {
-    if (!initialLoaded) {
-      loadInitialArticles();
-    }
-  }, []);
-  
-  const loadInitialArticles = async () => {
-    try {
-      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
-      // Attach comment counts for paginated articles (context articles already have counts)
-      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
-        try {
-          const count = await commentsCollection.getCountForItem('article', a.id);
-          return { ...a, commentCount: count };
-        } catch (err) {
-          console.error('Error fetching comment count for article', a.id, err);
-          return { ...a, commentCount: a.commentCount || 0 };
-        }
-      }));
-      setPaginatedArticles(articlesWithCounts);
-      setNewsLastDoc(lastDoc);
-      setHasMoreNews(hasMore);
-      setInitialLoaded(true);
-    } catch (error) {
-      console.error('Error loading initial articles:', error);
-      setInitialLoaded(true);
-    }
-  };
-  
-  const loadMoreArticles = async () => {
+
+  const loadMoreArticles = useCallback(async () => {
     if (!hasMoreNews || loadingMore || !newsLastDoc) return;
     
     setLoadingMore(true);
@@ -90,7 +48,50 @@ const News = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [hasMoreNews, loadingMore, newsLastDoc]);
+
+  const loadMoreRef = useCallback(node => {
+    if (loadingMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMoreNews && !searchQuery && categoryFilter === 'all') {
+        loadMoreArticles();
+      }
+    });
+    
+    if (node) observerRef.current.observe(node);
+  }, [loadingMore, hasMoreNews, searchQuery, categoryFilter, loadMoreArticles]);
+  
+  const loadInitialArticles = useCallback(async () => {
+    try {
+      const { articles: newArticles, lastDoc, hasMore } = await newsCollection.getPaginated(20);
+      // Attach comment counts for paginated articles (context articles already have counts)
+      const articlesWithCounts = await Promise.all(newArticles.map(async (a) => {
+        try {
+          const count = await commentsCollection.getCountForItem('article', a.id);
+          return { ...a, commentCount: count };
+        } catch (err) {
+          console.error('Error fetching comment count for article', a.id, err);
+          return { ...a, commentCount: a.commentCount || 0 };
+        }
+      }));
+      setPaginatedArticles(articlesWithCounts);
+      setNewsLastDoc(lastDoc);
+      setHasMoreNews(hasMore);
+      setInitialLoaded(true);
+    } catch (error) {
+      console.error('Error loading initial articles:', error);
+      setInitialLoaded(true);
+    }
+  }, []);
+
+  // Load initial articles
+  useEffect(() => {
+    if (!initialLoaded) {
+      loadInitialArticles();
+    }
+  }, [initialLoaded, loadInitialArticles]);
 
   // Get unique categories - use both context articles and paginated articles
   const categories = useMemo(() => {
@@ -123,6 +124,16 @@ const News = () => {
     // Otherwise, use paginated articles
     return paginatedArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   }, [articles, paginatedArticles, searchQuery, categoryFilter]);
+
+  if (!initialLoaded) {
+    return (
+      <div className="px-4 py-6 min-h-[60vh] flex flex-col items-center justify-center text-center text-gray-400">
+        <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
+        <p className="text-sm font-semibold text-white">Loading news...</p>
+        <p className="text-xs text-gray-500 mt-1">Pulling the latest stories from Firestore.</p>
+      </div>
+    );
+  }
 
   const handleArticleClick = (article) => {
     navigate(`/news/${article.slug}`);

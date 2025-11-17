@@ -31,40 +31,8 @@ const Teams = () => {
   
   // Intersection observer for infinite scroll
   const observerRef = useRef(null);
-  const loadMoreRef = useCallback(node => {
-    if (loadingMore) return;
-    if (observerRef.current) observerRef.current.disconnect();
-    
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreTeams && !searchQuery) {
-        loadMoreTeams();
-      }
-    });
-    
-    if (node) observerRef.current.observe(node);
-  }, [loadingMore, hasMoreTeams, searchQuery]);
-  
-  // Load initial teams
-  useEffect(() => {
-    if (!initialLoaded) {
-      loadInitialTeams();
-    }
-  }, []);
-  
-  const loadInitialTeams = async () => {
-    try {
-      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage);
-      setPaginatedTeams(newTeams);
-      setTeamsLastDoc(lastDoc);
-      setHasMoreTeams(hasMore);
-      setInitialLoaded(true);
-    } catch (error) {
-      console.error('Error loading initial teams:', error);
-      setInitialLoaded(true);
-    }
-  };
-  
-  const loadMoreTeams = async () => {
+
+  const loadMoreTeams = useCallback(async () => {
     if (!hasMoreTeams || loadingMore || !teamsLastDoc) return;
     
     setLoadingMore(true);
@@ -78,7 +46,40 @@ const Teams = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [hasMoreTeams, loadingMore, teamsLastDoc, itemsPerPage]);
+
+  const loadMoreRef = useCallback(node => {
+    if (loadingMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMoreTeams && !searchQuery) {
+        loadMoreTeams();
+      }
+    });
+    
+    if (node) observerRef.current.observe(node);
+  }, [loadingMore, hasMoreTeams, searchQuery, loadMoreTeams]);
+  
+  const loadInitialTeams = useCallback(async () => {
+    try {
+      const { teams: newTeams, lastDoc, hasMore } = await teamsCollection.getPaginated(itemsPerPage);
+      setPaginatedTeams(newTeams);
+      setTeamsLastDoc(lastDoc);
+      setHasMoreTeams(hasMore);
+      setInitialLoaded(true);
+    } catch (error) {
+      console.error('Error loading initial teams:', error);
+      setInitialLoaded(true);
+    }
+  }, [itemsPerPage]);
+
+  // Load initial teams
+  useEffect(() => {
+    if (!initialLoaded) {
+      loadInitialTeams();
+    }
+  }, [initialLoaded, loadInitialTeams]);
 
   const handleFollowToggle = async (e, team) => {
     e.stopPropagation(); // Prevent navigation when clicking follow button
@@ -163,6 +164,16 @@ const Teams = () => {
     // Otherwise, use paginated teams
     return paginatedTeams;
   }, [teams, paginatedTeams, searchQuery]);
+
+  if (!initialLoaded) {
+    return (
+      <div className="p-6 pb-24 min-h-[60vh] flex flex-col items-center justify-center text-center text-gray-400">
+        <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
+        <p className="text-sm font-semibold text-white">Loading teams...</p>
+        <p className="text-xs text-gray-500 mt-1">Fetching the latest clubs from Firestore.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 pb-24">
