@@ -83,11 +83,8 @@ async function getUserEmail(userId) {
  */
 async function getTeamFollowers(teamId) {
   try {
-    const teamDoc = await db.collection("teams").doc(teamId).get();
-    if (teamDoc.exists) {
-      return teamDoc.data().followers || [];
-    }
-    return [];
+    const teamInfo = await getTeamInfo(teamId);
+    return teamInfo.followers;
   } catch (error) {
     logger.error("Error getting team followers:", error);
     return [];
@@ -189,6 +186,92 @@ async function sendEmailNotification(userId, notification) {
   }
 }
 
+function extractTeamId(teamRef) {
+  if (!teamRef) return null;
+  if (typeof teamRef === "string") return teamRef;
+  if (typeof teamRef === "object") {
+    return teamRef.id || teamRef.teamId || teamRef._id || null;
+  }
+  return null;
+}
+
+function buildFallbackTeamName(teamId, fallbackName) {
+  if (fallbackName) return fallbackName;
+  if (!teamId) return "Unknown Team";
+  return `Team ${teamId.substring(0, 6)}`;
+}
+
+async function getTeamInfo(teamRef, fallbackName = "Unknown Team") {
+  const teamId = extractTeamId(teamRef);
+  if (!teamId) {
+    return {
+      id: null,
+      name: fallbackName || "Unknown Team",
+      logo: "/5Star-Logo.png",
+      followers: [],
+    };
+  }
+
+  try {
+    const teamDoc = await db.collection("teams").doc(teamId).get();
+    if (teamDoc.exists) {
+      const data = teamDoc.data();
+      return {
+        id: teamId,
+        name: data.name || fallbackName || buildFallbackTeamName(teamId),
+        logo: data.logo || "/5Star-Logo.png",
+        followers: data.followers || [],
+      };
+    }
+  } catch (error) {
+    logger.error("Error getting team info:", error);
+  }
+
+  return {
+    id: teamId,
+    name: buildFallbackTeamName(teamId, fallbackName),
+    logo: "/5Star-Logo.png",
+    followers: [],
+  };
+}
+
+async function resolveFixtureTeams(fixture) {
+  const homeTeamSource = fixture.homeTeam || fixture.homeTeamId;
+  const awayTeamSource = fixture.awayTeam || fixture.awayTeamId;
+
+  const [homeTeam, awayTeam] = await Promise.all([
+    getTeamInfo(homeTeamSource, fixture.homeTeam?.name),
+    getTeamInfo(awayTeamSource, fixture.awayTeam?.name),
+  ]);
+
+  return {homeTeam, awayTeam};
+}
+
+function getDateFromField(value) {
+  if (!value) return null;
+  if (value.toDate && typeof value.toDate === "function") {
+    try {
+      return value.toDate();
+    } catch (error) {
+      logger.error("Error converting Timestamp to Date:", error);
+    }
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatFixtureDateLabel(fixture) {
+  const kickoff = getDateFromField(fixture.dateTime || fixture.date);
+  if (!kickoff) return "Soon";
+  return kickoff.toLocaleString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /**
  * Create notification record and send notifications
  */
@@ -251,20 +334,23 @@ exports.onFixtureCreated = onDocumentCreated("fixtures/{fixtureId}", async (even
   logger.info(`New fixture created: ${fixtureId}`);
 
   try {
-    // Get followers of both teams
-    const homeFollowers = await getTeamFollowers(fixture.homeTeam.id);
-    const awayFollowers = await getTeamFollowers(fixture.awayTeam.id);
-    const allFollowers = [...new Set([...homeFollowers, ...awayFollowers])];
+    const {homeTeam, awayTeam} = await resolveFixtureTeams(fixture);
+    const allFollowers = [...new Set([
+      ...(homeTeam.followers || []),
+      ...(awayTeam.followers || []),
+    ])];
 
     logger.info(`Notifying ${allFollowers.length} followers about new fixture`);
+
+    const kickoffLabel = formatFixtureDateLabel(fixture);
 
     // Send notification to each follower
     const notificationPromises = allFollowers.map((userId) => {
       const notification = {
         type: "fixture_created",
         title: "⚽ New Match Scheduled",
-        body: `${fixture.homeTeam.name} vs ${fixture.awayTeam.name} - ${new Date(fixture.date).toLocaleDateString()}`,
-        icon: fixture.homeTeam.logo || "/5Star-Logo.png",
+        body: `${homeTeam.name} vs ${awayTeam.name} - ${kickoffLabel}`,
+        icon: homeTeam.logo || "/5Star-Logo.png",
         data: {
           fixtureId,
           type: "fixture",
@@ -295,10 +381,12 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
   logger.info(`Fixture updated: ${fixtureId}`);
 
   try {
-    // Get followers
-    const homeFollowers = await getTeamFollowers(afterData.homeTeam.id);
-    const awayFollowers = await getTeamFollowers(afterData.awayTeam.id);
-    const allFollowers = [...new Set([...homeFollowers, ...awayFollowers])];
+    const {homeTeam, awayTeam} = await resolveFixtureTeams(afterData);
+    const allFollowers = [...new Set([
+      ...(homeTeam.followers || []),
+      ...(awayTeam.followers || []),
+    ])];
+    const scoreline = `${homeTeam.name} ${afterData.homeScore ?? 0} - ${afterData.awayScore ?? 0} ${awayTeam.name}`;
 
     // Check if match went live
     if (beforeData.status !== "live" && afterData.status === "live") {
@@ -308,8 +396,8 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
         const notification = {
           type: "match_live",
           title: "🔴 LIVE NOW!",
-          body: `${afterData.homeTeam.name} vs ${afterData.awayTeam.name} - Match is live!`,
-          icon: afterData.homeTeam.logo || "/5Star-Logo.png",
+          body: `${homeTeam.name} vs ${awayTeam.name} - Match is live!`,
+          icon: homeTeam.logo || "/5Star-Logo.png",
           data: {
             fixtureId,
             type: "match_live",
@@ -334,8 +422,8 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
         const notification = {
           type: "score_update",
           title: "⚽ GOAL!",
-          body: `${afterData.homeTeam.name} ${afterData.homeScore} - ${afterData.awayScore} ${afterData.awayTeam.name}`,
-          icon: afterData.homeTeam.logo || "/5Star-Logo.png",
+          body: scoreline,
+          icon: homeTeam.logo || "/5Star-Logo.png",
           data: {
             fixtureId,
             type: "score_update",
@@ -351,15 +439,15 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
     }
 
     // Check if match finished
-    if (beforeData.status === "live" && afterData.status === "finished") {
+    if (beforeData.status !== "completed" && afterData.status === "completed") {
       logger.info("Match finished - sending final result notifications");
 
       const notificationPromises = allFollowers.map((userId) => {
         const notification = {
           type: "match_finished",
           title: "⚽ Full Time",
-          body: `${afterData.homeTeam.name} ${afterData.homeScore} - ${afterData.awayScore} ${afterData.awayTeam.name}`,
-          icon: afterData.homeTeam.logo || "/5Star-Logo.png",
+          body: scoreline,
+          icon: homeTeam.logo || "/5Star-Logo.png",
           data: {
             fixtureId,
             type: "match_result",
@@ -441,7 +529,7 @@ exports.onArticleCreated = onDocumentCreated("articles/{articleId}", async (even
  * Scheduled function to notify about upcoming matches (24 hours before)
  * Runs every hour
  */
-exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (event) => {
+exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (_event) => {
   logger.info("Running scheduled notification check for upcoming matches");
 
   try {
@@ -451,8 +539,8 @@ exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (event) => {
 
     // Get fixtures scheduled between 24-25 hours from now
     const fixturesSnapshot = await db.collection("fixtures")
-        .where("date", ">=", in24Hours.toISOString())
-        .where("date", "<", in25Hours.toISOString())
+      .where("dateTime", ">=", admin.firestore.Timestamp.fromDate(in24Hours))
+      .where("dateTime", "<", admin.firestore.Timestamp.fromDate(in25Hours))
         .where("status", "==", "scheduled")
         .get();
 
@@ -462,19 +550,19 @@ exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (event) => {
       const fixture = fixtureDoc.data();
       const fixtureId = fixtureDoc.id;
 
-      // Get followers
-      const homeFollowers = await getTeamFollowers(fixture.homeTeam.id);
-      const awayFollowers = await getTeamFollowers(fixture.awayTeam.id);
-      const allFollowers = [...new Set([...homeFollowers, ...awayFollowers])];
+      const {homeTeam, awayTeam} = await resolveFixtureTeams(fixture);
+      const allFollowers = [...new Set([
+        ...(homeTeam.followers || []),
+        ...(awayTeam.followers || []),
+      ])];
 
       // Send notifications
       const notificationPromises = allFollowers.map((userId) => {
-        const matchDate = new Date(fixture.date);
         const notification = {
           type: "upcoming_match_reminder",
           title: "⏰ Match Tomorrow",
-          body: `${fixture.homeTeam.name} vs ${fixture.awayTeam.name} - ${matchDate.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`,
-          icon: fixture.homeTeam.logo || "/5Star-Logo.png",
+          body: `${homeTeam.name} vs ${awayTeam.name} - ${formatFixtureDateLabel(fixture)}`,
+          icon: homeTeam.logo || "/5Star-Logo.png",
           data: {
             fixtureId,
             type: "upcoming_match",
