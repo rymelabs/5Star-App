@@ -27,6 +27,28 @@ const checkFirebaseInit = () => {
   return db;
 };
 
+const toMillis = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (typeof value === 'object') {
+    if (typeof value.toMillis === 'function') {
+      return value.toMillis();
+    }
+    if (typeof value.toDate === 'function') {
+      return value.toDate().getTime();
+    }
+    if (typeof value.seconds === 'number') {
+      const nanos = typeof value.nanoseconds === 'number' ? value.nanoseconds / 1e6 : 0;
+      return value.seconds * 1000 + nanos;
+    }
+  }
+  return null;
+};
+
 // Teams collection functions
 export const teamsCollection = {
   // Get all teams
@@ -82,6 +104,38 @@ export const teamsCollection = {
     } catch (error) {
       console.error('Error fetching paginated teams:', error);
       throw error;
+    }
+  },
+
+  getLatestUpdatedAt: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'teams'),
+        orderBy('updatedAt', 'desc'),
+        limit(1)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      const docData = snapshot.docs[0].data();
+      const latest = toMillis(docData.updatedAt) || toMillis(docData.createdAt);
+      return latest || null;
+    } catch (error) {
+      console.error('Error fetching latest team timestamp:', error);
+      return null;
+    }
+  },
+
+  getDocSnapshot: async (teamId) => {
+    if (!teamId) return null;
+    try {
+      const database = checkFirebaseInit();
+      const teamRef = doc(database, 'teams', String(teamId));
+      const snapshot = await getDoc(teamRef);
+      return snapshot.exists() ? snapshot : null;
+    } catch (error) {
+      console.error('Error fetching team snapshot:', error);
+      return null;
     }
   },
 
@@ -166,7 +220,7 @@ export const teamsCollection = {
       let foundDocs = await getDocs(q1);
       if (foundDocs.empty) {
         // try numeric teamId
-        try { foundDocs = await getDocs(q2); } catch (e) { /* ignore */ }
+        try { foundDocs = await getDocs(q2); } catch { /* ignore */ }
       }
       if (foundDocs.empty) {
         foundDocs = await getDocs(q3);
@@ -285,7 +339,7 @@ export const teamsCollection = {
         if (teamSnap.exists()) {
           return { id: teamSnap.id, ...teamSnap.data() };
         }
-      } catch (docErr) {
+      } catch {
         // ignore and continue to query fallbacks
       }
 
@@ -773,6 +827,38 @@ export const newsCollection = {
     }
   },
 
+  getLatestUpdatedAt: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'articles'),
+        orderBy('updatedAt', 'desc'),
+        limit(1)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      const data = snapshot.docs[0].data();
+      const latest = toMillis(data.updatedAt) || toMillis(data.publishedAt) || toMillis(data.createdAt);
+      return latest || null;
+    } catch (error) {
+      console.error('Error fetching latest article timestamp:', error);
+      return null;
+    }
+  },
+
+  getDocSnapshot: async (articleId) => {
+    if (!articleId) return null;
+    try {
+      const database = checkFirebaseInit();
+      const articleRef = doc(database, 'articles', String(articleId));
+      const snapshot = await getDoc(articleRef);
+      return snapshot.exists() ? snapshot : null;
+    } catch (error) {
+      console.error('Error fetching article snapshot:', error);
+      return null;
+    }
+  },
+
   // Get paginated articles
   getPaginated: async (pageSize = 10, lastDoc = null) => {
     try {
@@ -853,7 +939,7 @@ export const newsCollection = {
         if (docSnap.exists()) {
           return mapArticleDoc(docSnap);
         }
-      } catch (idError) {
+      } catch {
         // If it's not a valid document ID, just continue
         console.log('Not a valid document ID either');
       }
