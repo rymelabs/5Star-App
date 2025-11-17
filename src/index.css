@@ -94,12 +94,117 @@
   }
   
   .nav-item {
-    @apply flex flex-col items-center justify-center px-2 py-2 text-gray-400 hover:text-white transition-colors duration-200 min-w-0 flex-1 max-w-[80px];
+      @apply relative flex flex-col items-center justify-center px-3 py-2 text-gray-400 min-w-0 flex-1 max-w-[90px] rounded-2xl overflow-hidden transition-all duration-300 ease-out focus-visible:outline-none;
   }
   
     .nav-item.active {
       @apply text-primary-500;
     }
+  
+  .nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 0.35rem;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.25), transparent 65%);
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    filter: blur(0px);
+  }
+  
+  .nav-item::after {
+    content: "";
+    position: absolute;
+    bottom: 0.35rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #ffffff;
+    opacity: 0;
+    transform: translateY(4px) scale(0.5);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+  }
+  
+  .nav-item:hover::before,
+  .nav-item:focus-visible::before {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  
+  .nav-item:hover,
+  .nav-item:focus-visible {
+    @apply text-white;
+  }
+  
+  .nav-item.active::before {
+    opacity: 0.22;
+    transform: scale(1);
+    filter: blur(1px);
+  }
+  
+  .nav-item.active::after {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: nav-pulse 1.8s ease-in-out infinite;
+  }
+  
+  .nav-icon,
+  .nav-label {
+    @apply relative z-10 transition-transform duration-300 ease-out;
+  }
+  
+  .nav-icon {
+    transition-property: transform, filter;
+    color: inherit;
+  }
+  
+  .nav-label {
+    @apply text-xs font-medium tracking-tight truncate max-w-full block;
+    transition-property: transform, color;
+  }
+  
+  .nav-item:hover .nav-icon,
+  .nav-item:focus-visible .nav-icon {
+    transform: translateY(-1px) scale(1.05);
+  }
+  
+  .nav-item.active .nav-icon {
+    color: theme('colors.primary.500');
+    transform: translateY(-2px) scale(1.1);
+    filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.45));
+  }
+  
+  .nav-item:hover .nav-label,
+  .nav-item:focus-visible .nav-label {
+    @apply text-white;
+    transform: translateY(-1px);
+  }
+  
+  .nav-item.active .nav-label {
+    @apply text-primary-500 font-semibold;
+    transform: translateY(-1px);
+  }
+  
+  @keyframes nav-pulse {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    50% { transform: translateY(-2px) scale(1.25); opacity: 0.4; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .nav-item,
+    .nav-icon,
+    .nav-label {
+      transition: none;
+    }
+    .nav-item::before,
+    .nav-item::after {
+      transition: none;
+      animation: none;
+    }
+  }
 
     .latest-bento-grid {
       display: flex;
