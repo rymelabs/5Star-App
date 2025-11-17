@@ -15,11 +15,13 @@ const BottomNavigation = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `nav-item ${isActive ? 'active' : ''}`
+                `nav-item group ${isActive ? 'active' : ''}`
               }
             >
-              <item.icon className="w-5 h-5 mb-1 flex-shrink-0" />
-              <span className="text-xs font-medium tracking-tight truncate max-w-full block">{t(item.labelKey)}</span>
+              <item.icon className="nav-icon w-5 h-5 mb-1 flex-shrink-0" />
+              <span className="nav-label text-xs font-medium tracking-tight truncate max-w-full block">
+                {t(item.labelKey)}
+              </span>
             </NavLink>
           ))}
         </div>
