@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { formatDate, getMatchDayLabel, isToday } from '../utils/dateUtils';
 import { groupBy, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import SeasonStandings from '../components/SeasonStandings';
+import TeamAvatar from '../components/TeamAvatar';
 
 const Fixtures = () => {
   const navigate = useNavigate();
