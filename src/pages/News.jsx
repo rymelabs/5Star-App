@@ -249,10 +249,88 @@ const News = () => {
 
   if (!initialLoaded) {
     return (
-      <div className="px-4 py-6 min-h-[60vh] flex flex-col items-center justify-center text-center text-gray-400">
-        <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
-        <p className="text-sm font-semibold text-white">Loading news...</p>
-        <p className="text-xs text-gray-500 mt-1">Pulling the latest stories from Firestore.</p>
+      <div className="px-4 py-6">
+        <div className="news-bento-grid">
+          <section className="bento-section news-header">
+            <div className="flex items-center justify-between">
+              <div className="h-6 w-32 bg-white/10 rounded-full animate-pulse" />
+              <div className="h-10 w-10 rounded-full bg-white/5 animate-pulse" />
+            </div>
+          </section>
+
+          <section className="bento-section news-controls">
+            <div className="h-11 w-full rounded-xl bg-white/5 animate-pulse" />
+            <div className="card p-4">
+              <div className="h-4 w-32 bg-white/10 rounded-full animate-pulse mb-4" />
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={idx} className="h-8 w-20 rounded-lg bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="bento-section news-featured">
+            <div className="card news-featured-card overflow-hidden">
+              <div className="news-featured-card__media bg-white/5 animate-pulse" />
+              <div className="news-featured-card__content space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-16 rounded-full bg-white/10 animate-pulse" />
+                  <div className="h-4 w-24 rounded-full bg-white/5 animate-pulse" />
+                </div>
+                <div className="space-y-3">
+                  <div className="h-5 w-3/4 bg-white/10 rounded animate-pulse" />
+                  <div className="h-5 w-2/3 bg-white/10 rounded animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, idx) => (
+                    <div key={idx} className="h-4 w-full bg-white/5 rounded animate-pulse" />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={idx} className="h-4 w-16 bg-white/5 rounded animate-pulse" />
+                    ))}
+                  </div>
+                  <div className="h-4 w-24 bg-white/5 rounded animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="bento-section news-list">
+            <div className="news-articles-grid">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div key={idx} className="card news-article-card overflow-hidden">
+                  <div className="news-article-card__media bg-white/5 animate-pulse" />
+                  <div className="news-article-card__content space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-20 rounded-full bg-white/10 animate-pulse" />
+                      <div className="h-4 w-16 rounded-full bg-white/5 animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-3/4 bg-white/10 rounded animate-pulse" />
+                      <div className="h-4 w-2/3 bg-white/10 rounded animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      {Array.from({ length: 2 }).map((__, lineIdx) => (
+                        <div key={lineIdx} className="h-4 w-full bg-white/5 rounded animate-pulse" />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+                        <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+                      </div>
+                      <div className="h-4 w-20 bg-white/5 rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
     );
   }

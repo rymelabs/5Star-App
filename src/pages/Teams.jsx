@@ -291,10 +291,34 @@ const Teams = () => {
 
   if (!initialLoaded) {
     return (
-      <div className="p-6 pb-24 min-h-[60vh] flex flex-col items-center justify-center text-center text-gray-400">
-        <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
-        <p className="text-sm font-semibold text-white">Loading teams...</p>
-        <p className="text-xs text-gray-500 mt-1">Fetching the latest clubs from Firestore.</p>
+      <div className="p-6 pb-24">
+        <div className="mb-6">
+          <div className="h-4 w-40 bg-white/10 rounded-full animate-pulse mb-2" />
+          <div className="h-3 w-64 bg-white/5 rounded-full animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div key={idx} className="bg-dark-800 border border-dark-700 rounded-lg p-3">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/5 animate-pulse" />
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <div className="h-4 w-32 bg-white/10 rounded animate-pulse mb-1" />
+                    <div className="h-3 w-24 bg-white/5 rounded animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-40 bg-white/5 rounded animate-pulse" />
+                    <div className="h-3 w-28 bg-white/5 rounded animate-pulse" />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="h-6 w-20 bg-white/5 rounded-full animate-pulse" />
+                    <div className="h-6 w-16 bg-white/10 rounded-full animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
