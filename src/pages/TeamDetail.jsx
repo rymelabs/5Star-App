@@ -22,6 +22,8 @@ import {
   Bell
 } from 'lucide-react';
 import TeamAvatar from '../components/TeamAvatar';
+import AuthPromptModal from '../components/AuthPromptModal';
+import useAuthGate from '../hooks/useAuthGate';
 import { formatDate } from '../utils/dateUtils';
 
 const TeamDetail = () => {
@@ -35,6 +37,12 @@ const TeamDetail = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const { requireAuth, authPromptProps } = useAuthGate({
+    title: 'Sign in to follow teams',
+    message: 'Follow this club to get match reminders, breaking news, and synced preferences across your devices.',
+    confirmText: 'Sign in to follow',
+    cancelText: 'Maybe later'
+  });
 
   // Find the team with fallbacks (id, teamId, name slug, numeric id) in-memory
   const inMemoryTeam = useMemo(() => {
@@ -102,9 +110,12 @@ const TeamDetail = () => {
 
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
+    if (!requireAuth()) {
+      return;
+    }
+
     if (!user) {
-      showError('Sign In Required', 'Please sign in to follow teams');
-      navigate('/auth');
+      showError('Please try again', 'Your account is still loading. Please retry in a moment.');
       return;
     }
 
@@ -135,8 +146,6 @@ const TeamDetail = () => {
       fixture.homeTeam?.id === team.id || fixture.awayTeam?.id === team.id
     );
 
-    const now = new Date();
-    
     const recent = allTeamFixtures
       .filter(f => f.status === 'completed')
       .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -868,6 +877,14 @@ const TeamDetail = () => {
           </div>
         )}
       </div>
+      <AuthPromptModal
+          {...authPromptProps}
+          benefits={[
+            'Receive alerts before this team kicks off',
+            'Unlock calendar reminders and news notifications',
+            'Sync followed clubs anywhere you sign in'
+          ]}
+        />
     </div>
   );
 };
