@@ -61,12 +61,22 @@ service cloud.firestore {
       allow create, delete: if request.auth != null && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
-      allow update: if request.auth != null && (
-        // Admins can update everything
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin') ||
-        // Users can only update likes, likedBy, views fields
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'views', 'updatedAt']))
+      allow update: if (
+        request.auth != null && (
+          // Admins can update everything
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin') ||
+          // Authenticated users can update likes/likedBy/views (e.g., likes)
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'views', 'updatedAt'])
+        )
+      ) || (
+        // Allow unauthenticated guests to increment the views field only
+        request.auth == null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+        (
+          (resource.data.views == null && request.resource.data.views == 1) ||
+          (resource.data.views != null && request.resource.data.views == resource.data.views + 1)
+        )
       );
     }
     
