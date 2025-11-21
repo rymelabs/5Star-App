@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFootball } from '../context/FootballContext';
-import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../context/NotificationContext';
-import { useLanguage } from '../context/LanguageContext';
 import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import TeamAvatar from '../components/TeamAvatar';
+import AuthPromptModal from '../components/AuthPromptModal';
+import { useAuth } from '../context/AuthContext';
+import { useFootball } from '../context/FootballContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useNotification } from '../context/NotificationContext';
+import useAuthGate from '../hooks/useAuthGate';
 import { teamsCollection } from '../firebase/firestore';
 import { addCalendarRemindersForTeam, removeCalendarRemindersForTeam } from '../services/calendarReminderService';
 import { getCachedItem, setCachedItem } from '../utils/cache';
@@ -65,6 +67,12 @@ const Teams = () => {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [followingLoading, setFollowingLoading] = useState({});
+  const { requireAuth, authPromptProps } = useAuthGate({
+    title: 'Sign in to follow teams',
+    message: 'Follow clubs to unlock match alerts, personalized notifications, and synced favorites across every device.',
+    confirmText: 'Sign in to follow',
+    cancelText: 'Maybe later'
+  });
   
   // Pagination state
   const [paginatedTeams, setPaginatedTeams] = useState([]);
@@ -208,9 +216,12 @@ const Teams = () => {
   const handleFollowToggle = async (e, team) => {
     e.stopPropagation(); // Prevent navigation when clicking follow button
     
+    if (!requireAuth()) {
+      return;
+    }
+
     if (!user) {
-      showError('Sign In Required', 'Please sign in to follow teams');
-      navigate('/auth');
+      showError('Please try again', 'Your account is still loading. Please retry in a moment.');
       return;
     }
 
@@ -324,7 +335,8 @@ const Teams = () => {
   }
 
   return (
-    <div className="p-6 pb-24">
+    <>
+      <div className="p-6 pb-24">
       {/* Header */}
       <div className="mb-6">
         <h1 className="page-header mb-2 flex items-center gap-2">
@@ -458,7 +470,16 @@ const Teams = () => {
           </p>
         </div>
       )}
-    </div>
+      </div>
+      <AuthPromptModal
+        {...authPromptProps}
+        benefits={[
+          'Get notified before your teams kick off',
+          'Add upcoming matches to your calendar automatically',
+          'Sync followed clubs anywhere you sign in'
+        ]}
+      />
+    </>
   );
 };
 

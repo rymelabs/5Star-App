@@ -11,6 +11,11 @@ import {
 
 const AuthContext = createContext();
 
+const deriveAuthState = (rawUser) => {
+  if (!rawUser) return 'guest';
+  return rawUser.isAnonymous ? 'anonymous' : 'authenticated';
+};
+
 const normalizeUser = (rawUser) => {
   if (!rawUser) return null;
 
@@ -22,6 +27,7 @@ const normalizeUser = (rawUser) => {
     role,
     displayName,
     name: rawUser.name || displayName,
+     isAnonymous: Boolean(rawUser.isAnonymous),
     isAdmin: role === 'admin' || role === 'super-admin',
     isSuperAdmin: role === 'super-admin'
   };
@@ -39,6 +45,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authState, setAuthState] = useState('guest');
 
   useEffect(() => {
     console.log('🔄 Setting up auth state listener...');
@@ -55,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       const unsubscribe = onAuthStateChange((userData) => {
         console.log('🔄 Auth state changed:', userData ? `User: ${userData.email}` : 'No user');
         setUser(normalizeUser(userData));
+        setAuthState(deriveAuthState(userData));
         setLoading(false);
       });
 
@@ -79,6 +87,7 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Registration successful, setting user state:', newUser);
       const normalized = normalizeUser(newUser);
       setUser(normalized);
+      setAuthState('authenticated');
       return normalized;
     } catch (error) {
       console.error('❌ Registration failed:', error);
@@ -99,6 +108,7 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Login successful, setting user state:', userData);
       const normalized = normalizeUser(userData);
       setUser(normalized);
+      setAuthState('authenticated');
       return normalized;
     } catch (error) {
       console.error('❌ Login failed:', error);
@@ -116,6 +126,7 @@ export const AuthProvider = ({ children }) => {
       
       await logoutUser();
       setUser(null);
+      setAuthState('guest');
       console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout failed:', error);
@@ -141,6 +152,7 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Google sign-in successful:', userData);
       const normalized = normalizeUser(userData);
       setUser(normalized);
+      setAuthState('authenticated');
       return normalized;
     } catch (error) {
       console.error('❌ Google sign-in failed:', error);
@@ -163,6 +175,7 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Anonymous sign-in successful:', userData);
       const normalized = normalizeUser(userData);
       setUser(normalized);
+      setAuthState('anonymous');
       return normalized;
     } catch (error) {
       console.error('❌ Anonymous sign-in failed:', error);
@@ -195,10 +208,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const isGuest = authState === 'guest';
+  const isAnonymous = authState === 'anonymous';
+  const isAuthenticated = authState === 'authenticated';
+
   const value = {
     user,
     loading,
     error,
+    authState,
+    isGuest,
+    isAnonymous,
+    isAuthenticated,
     register,
     login,
     logout,

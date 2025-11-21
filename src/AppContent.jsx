@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Latest from './pages/Latest';
@@ -57,24 +57,14 @@ const BulkTeamUploadPage = withLazyErrorLogging('Bulk Upload page', () => import
 const AdminSubmissions = withLazyErrorLogging('Admin Submissions', () => import('./pages/admin/AdminSubmissions'));
 const AdminStats = withLazyErrorLogging('Admin Stats', () => import('./pages/admin/AdminStats'));
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/auth/login" replace />;
-};
-
-// Auth Route Component (redirect if already authenticated)
-const AuthRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return !isAuthenticated ? children : <Navigate to="/" replace />;
-};
-
 const AppContent = () => {
   // Add error handling for context
-  let user, loading;
+  let user, loading, isAuthenticated;
   try {
     const auth = useAuth();
     user = auth.user;
     loading = auth.loading;
+    isAuthenticated = auth.isAuthenticated;
   } catch (error) {
     console.error('❌ Error accessing AuthContext:', error);
     return (
@@ -109,28 +99,20 @@ const AppContent = () => {
 
   console.log('🔍 AppContent - Current user state:', user ? `Logged in as ${user.email}` : 'Not logged in');
 
-  // If not authenticated, show auth pages
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/submit-team" element={<SubmitTeam />} />
-        <Route path="/auth" element={<AuthLanding />} />
-        <Route path="/email-auth" element={<EmailAuth />} />
-        <Route path="/profile-setup" element={<ProfileSetup />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="/terms-and-conditions" element={<TermsConditions />} />
-        <Route path="/licenses" element={<Licenses />} />
-        {/* Legacy routes for backward compatibility */}
-        <Route path="/login" element={<Navigate to="/auth" replace />} />
-        <Route path="/register" element={<Navigate to="/auth" replace />} />
-        <Route path="*" element={<Navigate to="/auth" replace />} />
-      </Routes>
-    );
-  }
+  const location = useLocation();
 
-  // If authenticated, show main app
+  const requireAuthElement = (element) => (
+    isAuthenticated
+      ? element
+      : <Navigate to="/auth" replace state={{ from: location.pathname + location.search }} />
+  );
+
+  const requireAdminElement = (element) => (
+    user?.isAdmin
+      ? element
+      : <Navigate to="/" replace />
+  );
+
   return (
     <Layout>
       <React.Suspense fallback={
@@ -160,63 +142,41 @@ const AppContent = () => {
           <Route path="/terms-and-conditions" element={<TermsConditions />} />
           <Route path="/licenses" element={<Licenses />} />
           
-          {/* Profile setup for new users */}
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-          
-          {/* Profile page - not available for anonymous users */}
-          {user && !user.isAnonymous && (
-            <Route path="/profile" element={<Profile />} />
-          )}
-          
-          {/* Settings page - not available for anonymous users */}
-          {user && !user.isAnonymous && (
-            <>
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/notifications" element={<NotificationInbox />} />
-            </>
-          )}
+          {/* Profile + settings flows require authentication */}
+          <Route path="/profile-setup" element={requireAuthElement(<ProfileSetup />)} />
+          <Route path="/profile" element={requireAuthElement(<Profile />)} />
+          <Route path="/settings" element={requireAuthElement(<Settings />)} />
+          <Route path="/notifications" element={requireAuthElement(<NotificationInbox />)} />
           
           {/* Admin Routes - Only accessible to admins */}
-          {user?.isAdmin && (
-            <>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/teams" element={<AdminTeams />} />
-              <Route path="/admin/teams/upload" element={<BulkTeamUploadPage />} />
-              <Route path="/admin/submissions" element={<AdminSubmissions />} />
-              <Route path="/admin/teams/edit/:teamId" element={<EditTeam />} />
-              <Route path="/admin/fixtures" element={<AdminFixtures />} />
-              <Route path="/admin/news" element={<AdminNews />} />
-              <Route path="/admin/news/edit/:id" element={<EditNews />} />
-              <Route path="/admin/league-settings" element={<AdminLeagueSettings />} />
-              <Route path="/admin/leagues" element={<AdminLeagues />} />
-              <Route path="/admin/leagues/create" element={<CreateLeague />} />
-              <Route path="/admin/leagues/edit/:id" element={<EditLeague />} />
-              <Route path="/admin/seasons" element={<AdminSeasons />} />
-              <Route path="/admin/seasons/create" element={<CreateSeason />} />
-              <Route path="/admin/seasons/:seasonId/edit" element={<EditSeason />} />
-              <Route path="/admin/seasons/:seasonId" element={<SeasonDetail />} />
-              <Route path="/admin/instagram" element={<InstagramSettings />} />
-              <Route path="/admin/notifications" element={<AdminNotifications />} />
-              <Route path="/admin/stats" element={<AdminStats />} />
-              <Route path="/admin/advanced-settings" element={<AdvancedSettings />} />
-            </>
-          )}
+          <Route path="/admin" element={requireAdminElement(<AdminDashboard />)} />
+          <Route path="/admin/dashboard" element={requireAdminElement(<AdminDashboard />)} />
+          <Route path="/admin/teams" element={requireAdminElement(<AdminTeams />)} />
+          <Route path="/admin/teams/upload" element={requireAdminElement(<BulkTeamUploadPage />)} />
+          <Route path="/admin/submissions" element={requireAdminElement(<AdminSubmissions />)} />
+          <Route path="/admin/teams/edit/:teamId" element={requireAdminElement(<EditTeam />)} />
+          <Route path="/admin/fixtures" element={requireAdminElement(<AdminFixtures />)} />
+          <Route path="/admin/news" element={requireAdminElement(<AdminNews />)} />
+          <Route path="/admin/news/edit/:id" element={requireAdminElement(<EditNews />)} />
+          <Route path="/admin/league-settings" element={requireAdminElement(<AdminLeagueSettings />)} />
+          <Route path="/admin/leagues" element={requireAdminElement(<AdminLeagues />)} />
+          <Route path="/admin/leagues/create" element={requireAdminElement(<CreateLeague />)} />
+          <Route path="/admin/leagues/edit/:id" element={requireAdminElement(<EditLeague />)} />
+          <Route path="/admin/seasons" element={requireAdminElement(<AdminSeasons />)} />
+          <Route path="/admin/seasons/create" element={requireAdminElement(<CreateSeason />)} />
+          <Route path="/admin/seasons/:seasonId/edit" element={requireAdminElement(<EditSeason />)} />
+          <Route path="/admin/seasons/:seasonId" element={requireAdminElement(<SeasonDetail />)} />
+          <Route path="/admin/instagram" element={requireAdminElement(<InstagramSettings />)} />
+          <Route path="/admin/notifications" element={requireAdminElement(<AdminNotifications />)} />
+          <Route path="/admin/stats" element={requireAdminElement(<AdminStats />)} />
+          <Route path="/admin/advanced-settings" element={requireAdminElement(<AdvancedSettings />)} />
           
-          {/* Redirect auth pages if already logged in */}
-          <Route path="/auth" element={<Navigate to="/" replace />} />
-          <Route path="/email-auth" element={<Navigate to="/" replace />} />
-          <Route path="/phone-auth" element={<Navigate to="/" replace />} />
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/register" element={<Navigate to="/" replace />} />
-          
-          {/* Anonymous users trying to access restricted pages */}
-          {user.isAnonymous && (
-            <>
-              <Route path="/profile" element={<Navigate to="/auth" replace />} />
-              <Route path="/settings" element={<Navigate to="/auth" replace />} />
-            </>
-          )}
+          {/* Auth surfaces */}
+          <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthLanding />} />
+          <Route path="/email-auth" element={isAuthenticated ? <Navigate to="/" replace /> : <EmailAuth />} />
+          <Route path="/phone-auth" element={<Navigate to="/auth" replace />} />
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <Route path="/register" element={<Navigate to="/auth" replace />} />
           
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
