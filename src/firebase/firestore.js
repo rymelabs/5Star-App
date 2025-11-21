@@ -14,7 +14,8 @@ import {
   startAfter,
   onSnapshot,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  increment
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 
@@ -1115,10 +1116,9 @@ export const newsCollection = {
       
       const currentViews = articleSnap.data().views || 0;
       
-      // Increment view count
+      // Increment view count atomically
       await updateDoc(articleRef, {
-        views: currentViews + 1,
-        updatedAt: serverTimestamp()
+        views: increment(1)
       });
       
       return currentViews + 1;
