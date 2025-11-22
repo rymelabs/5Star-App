@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Chrome, User, AlignJustify } from 'lucide-react';
+import { Mail, Chrome, User, Sparkles, Trophy, Zap, Shield } from 'lucide-react';
 import AuthBackground from '../components/AuthBackground';
 import LegalModal from '../components/LegalModal';
 import TermsOfService from './TermsOfService';
@@ -54,110 +55,188 @@ const AuthLanding = () => {
       id: 'email',
       icon: Mail,
       title: 'Continue with Email',
-      description: '',
+      description: 'Sign in with your email address',
       onClick: () => navigate('/email-auth'),
-      borderColor: 'border-blue-300',
-      textColor: 'text-white',
-      hoverBorderColor: 'hover:border-blue-400',
-      hoverTextColor: 'hover:text-blue-400'
+      gradient: 'from-blue-500 to-cyan-500',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-400',
+      borderGlow: 'hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]'
     },
     {
       id: 'google',
       icon: Chrome,
       title: 'Continue with Google',
-      description: '',
+      description: 'Fast and secure authentication',
       onClick: handleGoogleSignIn,
-      borderColor: 'border-red-300',
-      textColor: 'text-white',
-      hoverBorderColor: 'hover:border-red-400',
-      hoverTextColor: 'hover:text-red-400'
+      gradient: 'from-red-500 to-pink-500',
+      iconBg: 'bg-red-500/10',
+      iconColor: 'text-red-400',
+      borderGlow: 'hover:shadow-[0_0_30px_rgba(239,68,68,0.3)]'
     },
     {
       id: 'anonymous',
       icon: User,
       title: 'Browse as Guest',
-      description: 'Limited access',
+      description: 'Limited features, no account needed',
       onClick: handleAnonymousSignIn,
-      borderColor: 'border-gray-500',
-      textColor: 'text-gray-500',
-      hoverBorderColor: 'hover:border-gray-400',
-      hoverTextColor: 'hover:text-gray-400'
+      gradient: 'from-gray-500 to-gray-600',
+      iconBg: 'bg-gray-500/10',
+      iconColor: 'text-gray-400',
+      borderGlow: 'hover:shadow-[0_0_30px_rgba(107,114,128,0.2)]'
     }
   ];
 
+  const features = [
+    { icon: Trophy, text: 'Live Match Updates' },
+    { icon: Zap, text: 'Real-time Scores' },
+    { icon: Shield, text: 'Secure & Private' }
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <AuthBackground />
-      <div className="w-full max-w-md relative z-50 animate-[fadeInUp_0.6s_ease-out]">
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2 shadow-2xl hover:shadow-primary-500/20 transition-shadow duration-300">
-          <div className="text-center mb-8">
-            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-30 h-30 mx-auto mb-6 animate-[fadeIn_0.8s_ease-out]" />
-            <h1 className="text-lg font-bold text-left text-white tracking-tight mb-2"></h1>
-            <p className="text-gray-400 text-center"></p>
-          </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6 animate-[slideInDown_0.3s_ease-out]">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {authOptions.map((option, index) => {
-              const IconComponent = option.icon;
-              return (
-                <button
-                  key={option.id}
-                  onClick={option.onClick}
-                  disabled={loading}
-                  className={`w-full group bg-transparent border-2 ${option.borderColor} ${option.hoverBorderColor} rounded-[9px] p-3 transition-all duration-300 flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] hover:shadow-lg hover:bg-white/5 active:scale-[0.98]`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className={`flex-shrink-0 p-1.5 border ${option.borderColor} ${option.hoverBorderColor} rounded-md group-hover:rotate-12 transition-all duration-300`}>
-                    <IconComponent className={`w-4 h-4 ${option.textColor} ${option.hoverTextColor} group-hover:scale-125 transition-transform duration-300`} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <h3 className={`font-medium tracking-tight ${option.textColor} ${option.hoverTextColor}`}>{option.title}</h3>
-                    <p className="text-sm text-gray-400 mt-0.5">{option.description}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-gray-500 text-sm">
-              By continuing, you agree to our{' '}
-              <button
-                onClick={() => setShowLegal({ open: true, type: 'terms' })}
-                className="text-primary-500 hover:text-primary-400 underline"
-              >
-                Terms of Service
-              </button>{' '}
-              and{' '}
-              <button
-                onClick={() => setShowLegal({ open: true, type: 'privacy' })}
-                className="text-primary-500 hover:text-primary-400 underline"
-              >
-                Privacy Policy
-              </button>
-            </p>
-          </div>
-
-          {/* Legal modal */}
-          <LegalModal
-            open={showLegal.open}
-            onClose={() => setShowLegal({ open: false, type: null })}
-            title={showLegal.type === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
-          >
-            {showLegal.type === 'terms' ? (
-              <TermsOfService />
-            ) : (
-              <PrivacyPolicy />
-            )}
-          </LegalModal>
-        </div>
+    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden bg-app px-4 py-8">
+      {/* Enhanced Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-purple/15 rounded-full blur-[150px] animate-pulse" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[100px]" />
       </div>
+
+      {/* Logo & Heading */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-center mb-10 relative z-10"
+      >
+        <div className="relative inline-flex items-center justify-center mb-6">
+          <div className="absolute inset-0 bg-brand-purple/20 blur-3xl rounded-full" />
+          <div className="relative">
+            <img 
+              src="/5StarLogo.svg" 
+              alt="Fivescores" 
+              className="w-20 h-20 relative z-10" 
+            />
+          </div>
+        </div>
+        
+        <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
+          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-blue-500">Fivescores</span>
+        </h1>
+        <p className="text-white/60 text-sm md:text-base font-medium">
+          Your premium sports experience starts here
+        </p>
+      </motion.div>
+
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 relative z-10"
+        >
+          <p className="text-red-400 text-sm font-medium">{error}</p>
+        </motion.div>
+      )}
+
+      {/* Auth Options */}
+      <div className="space-y-3 mb-8 relative z-10">
+        {authOptions.map((option, index) => {
+          const IconComponent = option.icon;
+          return (
+            <motion.button
+              key={option.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+              onClick={option.onClick}
+              disabled={loading}
+              className={`w-full group relative border border-white/10 hover:border-white/20 rounded-2xl p-4 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${option.borderGlow}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`flex-shrink-0 w-12 h-12 ${option.iconBg} rounded-xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-300`}>
+                  <IconComponent className={`w-5 h-5 ${option.iconColor}`} />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="font-bold text-white text-base mb-0.5 tracking-tight">
+                    {option.title}
+                  </h3>
+                  <p className="text-xs text-white/50 font-medium">
+                    {option.description}
+                  </p>
+                </div>
+                {loading && (
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                )}
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Features */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        className="flex items-center justify-center gap-6 mb-8 pb-8 border-b border-white/5 relative z-10"
+      >
+        {features.map((feature, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <feature.icon className="w-4 h-4 text-brand-purple" />
+            <span className="text-xs font-medium text-white/60">{feature.text}</span>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Legal Links */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 0.5 }}
+        className="text-center mb-6 relative z-10"
+      >
+        <p className="text-xs text-white/40 leading-relaxed">
+          By continuing, you agree to our{' '}
+          <button
+            onClick={() => setShowLegal({ open: true, type: 'terms' })}
+            className="text-brand-purple hover:text-brand-purple/80 font-semibold transition-colors underline underline-offset-2"
+          >
+            Terms
+          </button>{' '}
+          and{' '}
+          <button
+            onClick={() => setShowLegal({ open: true, type: 'privacy' })}
+            className="text-brand-purple hover:text-brand-purple/80 font-semibold transition-colors underline underline-offset-2"
+          >
+            Privacy Policy
+          </button>
+        </p>
+      </motion.div>
+
+      {/* Floating Badge */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
+        className="text-center relative z-10"
+      >
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10">
+          <Sparkles className="w-3 h-3 text-brand-purple" />
+          <span className="text-xs font-semibold text-white/70">Trusted by thousands of sports fans</span>
+        </div>
+      </motion.div>
+
+      {/* Legal Modal */}
+      <LegalModal
+        open={showLegal.open}
+        onClose={() => setShowLegal({ open: false, type: null })}
+        title={showLegal.type === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+      >
+        {showLegal.type === 'terms' ? (
+          <TermsOfService />
+        ) : (
+          <PrivacyPolicy />
+        )}
+      </LegalModal>
     </div>
   );
 };

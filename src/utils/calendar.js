@@ -26,7 +26,7 @@ const formatICalDate = (date) => {
  * @returns {string} - Unique event ID
  */
 const generateEventId = () => {
-  return `fixture-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@5starpl.com`;
+  return `fixture-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@fivescores.com`;
 };
 
 /**
@@ -55,10 +55,10 @@ export const createFixtureCalendarEvent = (fixture) => {
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//5Star Premier League//Fixture Calendar//EN',
+    'PRODID:-//Fivescores//Fixture Calendar//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:5Star Premier League',
+    'X-WR-CALNAME:Fivescores',
     'X-WR-TIMEZONE:UTC',
     'BEGIN:VEVENT',
     `UID:${generateEventId()}`,
@@ -66,7 +66,7 @@ export const createFixtureCalendarEvent = (fixture) => {
     `DTSTART:${formatICalDate(startDate)}`,
     `DTEND:${formatICalDate(endDate)}`,
     `SUMMARY:${homeTeam} vs ${awayTeam}`,
-    `DESCRIPTION:${round}\\n${homeTeam} vs ${awayTeam}\\nVenue: ${venue}\\n\\nAdded via 5Star Premier League App`,
+    `DESCRIPTION:${round}\\n${homeTeam} vs ${awayTeam}\\nVenue: ${venue}\\n\\nAdded via Fivescores App`,
     `LOCATION:${venue}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
@@ -196,7 +196,7 @@ export const formatFixtureDescription = (fixture) => {
   if (fixture.venue) parts.push(`Venue: ${fixture.venue}`);
   if (fixture.seasonName) parts.push(`Season: ${fixture.seasonName}`);
   
-  parts.push('\\nAdded via 5Star Premier League App');
+  parts.push('\\nAdded via Fivescores App');
   
   return parts.join('\\n');
 };

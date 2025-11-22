@@ -187,7 +187,7 @@ const PlayerDetail = () => {
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-purple via-transparent to-transparent" />
         
-        <div className="relative px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="relative px-4 sm:px-6 w-full mx-auto">
           {/* Navigation */}
           <div className="flex items-center justify-between mb-8 pt-4">
             <BackButton />
@@ -285,7 +285,7 @@ const PlayerDetail = () => {
       </div>
 
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-0 sm:px-6 space-y-6">
+      <div className="w-full mx-auto px-0 sm:px-6 space-y-6">
         
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (

@@ -262,7 +262,7 @@ const News = () => {
             <div className="h-12 w-full bg-white/5 rounded-xl animate-pulse" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+        <div className="w-full mx-auto px-4 sm:px-6 space-y-6">
           {/* Featured Article Skeleton */}
           <div className="aspect-[16/10] sm:aspect-[21/9] rounded-3xl bg-white/5 animate-pulse border border-white/5" />
 

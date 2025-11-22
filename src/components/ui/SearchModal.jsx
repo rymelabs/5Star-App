@@ -276,7 +276,7 @@ const SearchModal = ({ isOpen = true, onClose }) => {
 
           {/* Modal Container */}
           <motion.div 
-            className="relative w-full max-w-2xl bg-elevated/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/5"
+            className="relative w-full bg-elevated/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/5"
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, y: 40, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

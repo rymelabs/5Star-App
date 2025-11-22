@@ -26,11 +26,11 @@ const About = () => {
           <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden shadow-xl bg-white p-2">
             <img 
               src="/5Star.jpg" 
-              alt="5Star Premier League" 
+              alt="Fivescores" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">5Star Premier League</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Fivescores</h2>
           <p className="text-gray-400 text-sm">Official App</p>
           <p className="text-gray-500 text-xs mt-1">Version 1.0.0</p>
         </div>
@@ -42,7 +42,7 @@ const About = () => {
             About the App
           </h3>
           <p className="text-gray-300 text-sm leading-relaxed mb-4">
-            Welcome to the official 5Star Premier League app! Your go-to platform for all things related to the 5Star Premier League.
+            Welcome to Fivescores! Your go-to platform for all things football.
           </p>
           <p className="text-gray-300 text-sm leading-relaxed">
             Stay up to date with live scores, fixtures, team standings, player statistics, and the latest news from your favorite teams. Follow teams, get personalized notifications, and never miss a moment of the action.
@@ -116,7 +116,7 @@ const About = () => {
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">
             RymeLabs is committed to building innovative digital solutions that bring communities together. 
-            This app was specially crafted for the 5Star Premier League to enhance the fan experience and 
+            This app was specially crafted for Fivescores to enhance the fan experience and 
             keep the community connected.
           </p>
         </div>
@@ -202,7 +202,7 @@ const About = () => {
             © {new Date().getFullYear()} RymeLabs. All rights reserved.
           </p>
           <p className="text-xs text-gray-600 mt-2">
-            Made with <Heart className="w-3 h-3 inline text-red-500" /> for the 5Star Premier League
+            Made with <Heart className="w-3 h-3 inline text-red-500" /> for Fivescores
           </p>
         </div>
       </div>

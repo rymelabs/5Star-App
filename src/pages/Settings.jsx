@@ -436,14 +436,14 @@ const Settings = () => {
           description: t('pages.settings.helpCenterDesc'),
           type: 'link',
           onClick: () =>
-            window.open('mailto:RymeLabs@gmail.com?subject=5Star Premier League - Help Request', '_blank'),
+            window.open('mailto:RymeLabs@gmail.com?subject=Fivescores - Help Request', '_blank'),
         },
         {
           label: t('pages.settings.contactUs'),
           description: t('pages.settings.contactUsDesc'),
           type: 'link',
           onClick: () =>
-            window.open('mailto:RymeLabs@gmail.com?subject=5Star Premier League - Feedback', '_blank'),
+            window.open('mailto:RymeLabs@gmail.com?subject=Fivescores - Feedback', '_blank'),
         },
         {
           label: t('pages.settings.about'),
@@ -700,7 +700,7 @@ const Settings = () => {
           </button>
 
           <div className="mt-8 text-center">
-            <p className="text-[10px] font-bold tracking-[0.2em] text-white/20 uppercase">5Star Sports App</p>
+            <p className="text-[10px] font-bold tracking-[0.2em] text-white/20 uppercase">Fivescores.com</p>
             <p className="text-[10px] text-white/10 mt-1">v1.0.0 • Build 2025.11</p>
           </div>
         </div>

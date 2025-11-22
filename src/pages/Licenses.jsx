@@ -104,7 +104,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
         <div className="card p-6">
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              The 5Star Premier League app is built using various open source software libraries and frameworks. 
+              The Fivescores app is built using various open source software libraries and frameworks. 
               We are grateful to the open source community for their contributions.
             </p>
             <p>
@@ -187,11 +187,11 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
           <h2 className="text-lg font-bold text-white mb-4">Additional Attributions</h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              <strong className="text-white">5Star Premier League:</strong> League data, logos, team information, 
-              and fixture details are property of the 5Star Premier League organization.
+              <strong className="text-white">Fivescores:</strong> League data, logos, team information, 
+              and fixture details are property of Fivescores.
             </p>
             <p>
-              <strong className="text-white">RymeLabs:</strong> The 5Star Premier League mobile application is 
+              <strong className="text-white">RymeLabs:</strong> The Fivescores mobile application is 
               developed and maintained by RymeLabs.
             </p>
             <p>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import AuthBackground from '../components/AuthBackground';
 
 const EmailAuth = () => {
@@ -13,6 +14,8 @@ const EmailAuth = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -91,116 +94,200 @@ const EmailAuth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <AuthBackground />
-      <div className="w-full max-w-md relative z-50 animate-[fadeInUp_0.6s_ease-out]">
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 border-primary-600 border-2 shadow-2xl hover:shadow-primary-500/20 transition-shadow duration-300">
-          <div className="flex items-center mb-6">
+    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden px-4 py-8">
+      {/* Enhanced Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-purple/15 rounded-full blur-[150px] animate-pulse" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      {/* Back Button & Logo */}
+      <div className="flex items-center mb-8 relative z-10">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          onClick={() => navigate('/auth')}
+          className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-all duration-300 group"
+        >
+          <ArrowLeft className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
+        </motion.button>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex-1 flex justify-center"
+        >
+          <img src="/5StarLogo.svg" alt="Fivescores" className="w-16 h-16" />
+        </motion.div>
+        <div className="w-9" /> {/* Spacer for centering */}
+      </div>
+
+      {/* Heading */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="text-center mb-8 relative z-10"
+      >
+        <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h1>
+        <p className="text-white/60 text-sm font-medium">
+          {isSignUp ? 'Join thousands of sports fans' : 'Sign in to continue'}
+        </p>
+      </motion.div>
+
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 relative z-10"
+        >
+          <p className="text-red-400 text-sm font-medium">{error}</p>
+        </motion.div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+        {/* Email Input */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <label className="block text-sm font-semibold text-white/80 mb-2">
+            Email Address
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full border border-white/10 hover:border-white/20 focus:border-brand-purple rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-white/40 focus:outline-none transition-all duration-300 focus:shadow-[0_0_20px_rgba(109,40,217,0.2)]"
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </div>
+        </motion.div>
+
+        {/* Password Input */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <label className="block text-sm font-semibold text-white/80 mb-2">
+            Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full border border-white/10 hover:border-white/20 focus:border-brand-purple rounded-xl pl-12 pr-12 py-3.5 text-white placeholder-white/40 focus:outline-none transition-all duration-300 focus:shadow-[0_0_20px_rgba(109,40,217,0.2)]"
+              placeholder="••••••••"
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              minLength={6}
+            />
             <button
-              onClick={() => navigate('/auth')}
-              className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-110 active:scale-95"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
-            <div className="flex-1 text-center">
-              <img src="/5StarLogo.svg" alt="5Star Logo" className="w-36 h-36 mx-auto animate-[fadeIn_0.8s_ease-out]" />
-            </div>
           </div>
+        </motion.div>
 
-          <div className="text-center mb-1 animate-[fadeInUp_0.7s_ease-out]">
-            <h1 className="text-[30px] font-bold text-primary-600 tracking-tight mb-1 animate-[slideInRight_0.6s_ease-out]">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h1>
-            <p className="text-gray-400 text-[15px] animate-[fadeIn_0.9s_ease-out]">
-              {isSignUp ? 'Sign up with your email address' : 'Sign in to your account'}
-            </p>
-          </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6 animate-[slideInDown_0.3s_ease-out]">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="animate-[fadeInUp_0.8s_ease-out]" style={{ animationDelay: '0.1s' }}>
+        {/* Confirm Password Input */}
+        {isSignUp && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <label className="block text-sm font-semibold text-white/80 mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full bg-transparent border-2 border-gray-600 hover:border-gray-500 focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 hover:bg-white/5 focus:scale-[1.01]"
-                placeholder="Enter your email"
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="animate-[fadeInUp_0.8s_ease-out]" style={{ animationDelay: '0.2s' }}>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full bg-transparent border-2 border-gray-600 hover:border-gray-500 focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 hover:bg-white/5 focus:scale-[1.01]"
-                placeholder="Enter your password"
-                autoComplete={isSignUp ? "new-password" : "current-password"}
+                className="w-full border border-white/10 hover:border-white/20 focus:border-brand-purple rounded-xl pl-12 pr-12 py-3.5 text-white placeholder-white/40 focus:outline-none transition-all duration-300 focus:shadow-[0_0_20px_rgba(109,40,217,0.2)]"
+                placeholder="••••••••"
+                autoComplete="new-password"
                 minLength={6}
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
+          </motion.div>
+        )}
 
-            {isSignUp && (
-              <div className="animate-[fadeInUp_0.8s_ease-out]" style={{ animationDelay: '0.3s' }}>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full bg-transparent border-2 border-gray-600 hover:border-gray-500 focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 hover:bg-white/5 focus:scale-[1.01]"
-                  placeholder="Confirm your password"
-                  autoComplete="new-password"
-                  minLength={6}
-                />
-              </div>
-            )}
+        {/* Submit Button */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          type="submit"
+          disabled={loading}
+          className="w-full mt-6 bg-gradient-to-r from-brand-purple to-blue-600 hover:from-brand-purple/90 hover:to-blue-600/90 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(109,40,217,0.3)] hover:shadow-[0_0_40px_rgba(109,40,217,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <span>{isSignUp ? 'Creating Account...' : 'Signing In...'}</span>
+            </>
+          ) : (
+            <>
+              <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
+              <CheckCircle2 className="w-5 h-5" />
+            </>
+          )}
+        </motion.button>
+      </form>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 shadow-lg hover:shadow-xl disabled:hover:scale-100 group"
-            >
-              <span className="inline-flex items-center justify-center">
-                {loading && (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-                {loading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
-              </span>
-            </button>
-          </form>
-
-          <div className="mt-6 text-center animate-[fadeIn_1s_ease-out]">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError('');
-                setFormData({
-                  email: formData.email,
-                  password: '',
-                  confirmPassword: ''
-                });
-              }}
-              className="text-primary-400 hover:text-primary-300 text-sm transition-all duration-300 hover:scale-105 inline-block"
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Toggle Sign In/Up */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="mt-6 text-center relative z-10"
+      >
+        <button
+          onClick={() => {
+            setIsSignUp(!isSignUp);
+            setError('');
+            setFormData({
+              email: formData.email,
+              password: '',
+              confirmPassword: ''
+            });
+          }}
+          className="text-white/60 hover:text-white text-sm font-medium transition-colors"
+        >
+          {isSignUp ? (
+            <>Already have an account? <span className="text-brand-purple font-bold">Sign in</span></>
+          ) : (
+            <>Don't have an account? <span className="text-brand-purple font-bold">Sign up</span></>
+          )}
+        </button>
+      </motion.div>
     </div>
   );
 };
