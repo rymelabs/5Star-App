@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileCode, ExternalLink } from 'lucide-react';
+import BackButton from '../components/ui/BackButton';
 
 const Licenses = () => {
   const navigate = useNavigate();
@@ -93,12 +94,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
       {/* Header */}
       <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
         <div className="flex items-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
+          <BackButton className="-ml-2" />
           <h1 className="page-header ml-3">Open Source Licenses</h1>
         </div>
       </div>

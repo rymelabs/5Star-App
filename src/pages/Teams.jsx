@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2, ChevronRight } from 'lucide-react';
 import TeamAvatar from '../components/TeamAvatar';
 import AuthPromptModal from '../components/AuthPromptModal';
+import SurfaceCard from '../components/ui/SurfaceCard';
 import { useAuth } from '../context/AuthContext';
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -302,174 +304,204 @@ const Teams = () => {
 
   if (!initialLoaded) {
     return (
-      <div className="p-6 pb-24">
-        <div className="mb-6">
-          <div className="h-4 w-40 bg-white/10 rounded-full animate-pulse mb-2" />
-          <div className="h-3 w-64 bg-white/5 rounded-full animate-pulse" />
+      <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="relative px-4 sm:px-6 pt-12 pb-8 text-center z-10 flex flex-col items-center">
+          <div className="h-12 w-64 bg-white/10 rounded-full animate-pulse mb-6" />
+          <div className="h-4 w-96 max-w-full bg-white/5 rounded-full animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, idx) => (
-            <div key={idx} className="bg-dark-800 border border-dark-700 rounded-lg p-3">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-full bg-white/5 animate-pulse" />
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <div className="h-4 w-32 bg-white/10 rounded animate-pulse mb-1" />
-                    <div className="h-3 w-24 bg-white/5 rounded animate-pulse" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 w-40 bg-white/5 rounded animate-pulse" />
-                    <div className="h-3 w-28 bg-white/5 rounded animate-pulse" />
-                  </div>
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="h-6 w-20 bg-white/5 rounded-full animate-pulse" />
-                    <div className="h-6 w-16 bg-white/10 rounded-full animate-pulse" />
-                  </div>
+
+        {/* Search Skeleton */}
+        <div className="px-4 sm:px-6 mb-12">
+          <div className="max-w-2xl mx-auto h-16 bg-white/5 rounded-2xl animate-pulse" />
+        </div>
+
+        {/* List Skeleton */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-white/5 animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-32 bg-white/10 rounded animate-pulse" />
+                  <div className="h-4 w-24 bg-white/5 rounded animate-pulse" />
                 </div>
+                <div className="hidden sm:flex gap-8 mr-4">
+                   <div className="h-8 w-16 bg-white/5 rounded animate-pulse" />
+                   <div className="h-8 w-24 bg-white/5 rounded animate-pulse" />
+                </div>
+                <div className="w-24 h-10 bg-white/5 rounded-xl animate-pulse" />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="p-6 pb-24">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="page-header mb-2 flex items-center gap-2">
-          <Users className="w-7 h-7 text-primary-400" />
-          {t('pages.teams.title')}
-        </h1>
-        <p className="text-gray-400">
-          Browse all teams in the competition
-        </p>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="min-h-screen pb-24 relative overflow-hidden">
+        {/* Background Ambient Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-96 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('pages.teams.searchTeams')}
-            className="w-full pl-10 pr-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
-          />
+        {/* Header */}
+        <div className="relative px-4 sm:px-6 pt-6 pb-4 z-10">
+          <h1 className="page-header mb-2 flex items-center gap-3">
+            <Users className="w-8 h-8 text-brand-purple" />
+            {t('pages.teams.title')}
+          </h1>
+          <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+            Discover and follow your favorite clubs. Get instant match alerts and personalized updates.
+          </p>
         </div>
-      </div>
 
-      {/* Teams Grid */}
-      {filteredTeams.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredTeams.map((team, idx) => (
-              <div
-                key={team.id || team.teamId || `${team.name || 'team'}_${idx}`}
-                onClick={() => navigate(`/teams/${team.id}`)}
-                className="bg-dark-800 border border-dark-700 rounded-lg p-3 hover:border-primary-600 hover:scale-[1.02] transition-all cursor-pointer group"
-              >
-                <div className="flex items-start gap-3">
-                  {/* Team Logo */}
-                  <TeamAvatar name={team.name} logo={team.logo} size={48} className="group-hover:bg-dark-600 transition-colors" />
-
-                  {/* Team Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-white mb-1.5 group-hover:text-primary-400 transition-colors">
-                      {team.name}
-                    </h3>
-
-                    <div className="space-y-0.5 text-xs text-gray-400">
-                      {team.city && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{team.city}</span>
-                        </div>
-                      )}
-                      {team.stadium && (
-                        <div className="flex items-center gap-1">
-                          <Trophy className="w-3 h-3" />
-                          <span>{team.stadium}</span>
-                        </div>
-                      )}
-                      {team.manager && (
-                        <div className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          <span>Manager: {team.manager}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Followers and Follow Button */}
-                    <div className="mt-3 flex items-center gap-3">
-                      {/* Follower count */}
-                      <div className="inline-flex items-center gap-1 px-2 py-1 bg-dark-700 rounded text-xs text-gray-400">
-                        <Users className="w-3 h-3" />
-                        <span>{team.followerCount || 0} follower{(team.followerCount || 0) !== 1 ? 's' : ''}</span>
-                      </div>
-
-                      {/* Follow button */}
-                      <button
-                        onClick={(e) => handleFollowToggle(e, team)}
-                        disabled={followingLoading[team.id]}
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-all ${
-                          (team.followers || []).includes(user?.uid)
-                            ? 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                            : 'bg-primary-600 text-white hover:bg-primary-700'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {followingLoading[team.id] ? (
-                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (team.followers || []).includes(user?.uid) ? (
-                          <>
-                            <UserMinus className="w-3 h-3" />
-                            <span>Following</span>
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="w-3 h-3" />
-                            <span>Follow</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Infinite Scroll Trigger - Only show when not searching */}
-          {!searchQuery && hasMoreTeams && (
-            <div ref={loadMoreRef} className="py-8 text-center">
-              {loadingMore ? (
-                <div className="flex items-center justify-center gap-2 text-primary-400">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">{t('common.loadingMore')} {t('navigation.teams').toLowerCase()}...</span>
-                </div>
-              ) : (
-                <button
-                  onClick={loadMoreTeams}
-                  className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+        {/* Search */}
+        <div className="px-4 sm:px-6 sticky top-[20px] z-30 mb-8">
+          <div className="relative group max-w-2xl mx-auto">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-purple/50 to-blue-600/50 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
+            <div className="relative flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl min-h-[52px]">
+              <Search className="ml-4 w-4 h-4 text-gray-400 group-focus-within:text-white transition-colors" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('pages.teams.searchTeams')}
+                className="w-full px-3 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none text-base font-medium"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="mr-3 p-1 hover:bg-white/10 rounded-full transition-colors"
                 >
-                  Load More Teams
+                  <Users className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               )}
             </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-20">
-          <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">{t('pages.teams.noTeamsFound')}</h3>
-          <p className="text-gray-400">
-            {searchQuery ? `No teams match "${searchQuery}"` : 'No teams available yet'}
-          </p>
+          </div>
         </div>
-      )}
+
+        <div className="max-w-7xl mx-auto px-0 sm:px-6 space-y-0 sm:space-y-6 relative z-10">
+          {/* Teams List */}
+          {filteredTeams.length > 0 ? (
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-col gap-3">
+                {filteredTeams.map((team, idx) => (
+                  <div
+                    key={team.id || team.teamId || `${team.name || 'team'}_${idx}`}
+                    onClick={() => navigate(`/teams/${team.id}`)}
+                    className="group relative hover:bg-white/[0.06] border-b border-white/5 p-3 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3 sm:gap-4"
+                  >
+                    {/* Hover Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    {/* Logo */}
+                    <div className="relative flex-shrink-0 transform group-hover:scale-105 transition-transform duration-500">
+                      <TeamAvatar name={team.name} logo={team.logo} size={48} className="relative z-10 drop-shadow-lg" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 relative z-10">
+                      <h3 className="text-base sm:text-lg font-semibold text-white group-hover:text-brand-purple transition-colors truncate">
+                        {team.name}
+                      </h3>
+                      
+                      <div className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-400">
+                        {team.city && (
+                          <div className="flex items-center gap-1 min-w-0">
+                            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="truncate">{team.city}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 flex-shrink-0 md:hidden text-gray-500">
+                          <Users className="w-3 h-3" />
+                          <span>{team.followerCount || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats - Desktop */}
+                    <div className="hidden md:flex items-center gap-6 relative z-10 text-sm">
+                      <div className="text-center min-w-[70px]">
+                        <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">Followers</div>
+                        <div className="text-white font-semibold">{team.followerCount || 0}</div>
+                      </div>
+                      <div className="text-center min-w-[90px]">
+                        <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">Stadium</div>
+                        <div className="text-white font-bold truncate max-w-[120px]">{team.stadium || '-'}</div>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <button
+                      onClick={(e) => handleFollowToggle(e, team)}
+                      disabled={followingLoading[team.id]}
+                      className={`
+                        relative z-10 px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-1.5 flex-shrink-0
+                        ${(team.followers || []).includes(user?.uid)
+                          ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                          : 'bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/5'
+                        } 
+                      `}
+                    >
+                      {followingLoading[team.id] ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (team.followers || []).includes(user?.uid) ? (
+                        <>
+                          <UserMinus className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Following</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Follow</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            
+            {/* Infinite Scroll Trigger - Only show when not searching */}
+            {!searchQuery && hasMoreTeams && (
+              <div ref={loadMoreRef} className="py-12 text-center">
+                {loadingMore ? (
+                  <div className="flex items-center justify-center gap-3 text-white/50">
+                    <div className="w-2 h-2 bg-brand-purple rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                    <div className="w-2 h-2 bg-brand-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-brand-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                ) : (
+                  <button
+                    onClick={loadMoreTeams}
+                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-full text-xs font-semibold tracking-wide transition-all border border-white/10 hover:border-white/20 hover:scale-105 active:scale-95"
+                  >
+                    Load More Teams
+                  </button>
+                )}
+              </div>
+            )}
+            </div>
+        ) : (
+          <div className="text-center py-32 px-4">
+            <div className="relative w-24 h-24 mx-auto mb-6 group">
+              <div className="absolute inset-0 bg-brand-purple/20 blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative w-full h-full bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                <Users className="w-10 h-10 text-gray-500" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">{t('pages.teams.noTeamsFound')}</h3>
+            <p className="text-gray-400 max-w-md mx-auto text-lg">
+              {searchQuery ? `We couldn't find any teams matching "${searchQuery}".` : 'No teams available yet.'}
+            </p>
+          </div>
+        )}
+      </div>
       </div>
       <AuthPromptModal
         {...authPromptProps}
@@ -479,7 +511,7 @@ const Teams = () => {
           'Sync followed clubs anywhere you sign in'
         ]}
       />
-    </>
+    </motion.div>
   );
 };
 

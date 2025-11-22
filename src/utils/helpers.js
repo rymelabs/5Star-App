@@ -86,11 +86,16 @@ export const formatNumber = (num) => {
 };
 
 // Array utilities
-export const groupBy = (array, key) => {
+export const groupBy = (array, iteratee) => {
+  if (!Array.isArray(array)) return {};
   return array.reduce((groups, item) => {
-    const group = item[key];
-    groups[group] = groups[group] || [];
-    groups[group].push(item);
+    const rawKey = typeof iteratee === 'function' ? iteratee(item) : item?.[iteratee];
+    const key = rawKey ?? '__undefined__';
+    const normalizedKey = typeof key === 'string' || typeof key === 'number' ? key : String(key);
+    if (!groups[normalizedKey]) {
+      groups[normalizedKey] = [];
+    }
+    groups[normalizedKey].push(item);
     return groups;
   }, {});
 };

@@ -42,7 +42,36 @@ module.exports = {
           700: '#374151', // Dark cards/surfaces
           800: '#000000', // Darker surfaces
           900: '#000000', // Main black background
+        },
+        // New Design System Colors
+        app: '#050816',
+        elevated: '#0B1020',
+        'elevated-soft': '#111827',
+        'brand-purple': {
+          DEFAULT: '#6D28D9',
+          soft: 'rgba(109,40,217,0.15)',
+          dark: '#4C1D95',
+        },
+        'brand-red': '#ef4444',
+        'accent-green': '#22C55E',
+      },
+      backgroundImage: {
+        'purple-gradient': 'linear-gradient(135deg, #6D28D9, #4C1D95)',
+        'hero-gradient': 'linear-gradient(to top right, rgba(109, 40, 217, 0.4), transparent)',
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'live-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
         }
+      },
+      animation: {
+        'fade-in': 'fade-in 0.5s ease-out forwards',
+        'live-pulse': 'live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     },
   },

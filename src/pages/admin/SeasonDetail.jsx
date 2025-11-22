@@ -389,60 +389,60 @@ const SeasonDetail = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
         <button
           onClick={handleGenerateFixtures}
-          className="card p-4 hover:bg-dark-800/50 transition-colors text-left"
+          className="card p-3 hover:bg-dark-800/50 transition-colors text-left"
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-accent-500/10 rounded-lg flex-shrink-0">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-accent-400" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-green-500/10 rounded-lg flex-shrink-0">
+              <Calendar className="w-4 h-4 text-green-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-white text-sm sm:text-base truncate">Generate Group Fixtures</h3>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">Create all group stage matches</p>
+              <h3 className="font-semibold text-green-400 text-sm truncate">Generate Fixtures</h3>
+              <p className="text-xs text-gray-400 truncate">Create all group stage matches</p>
             </div>
           </div>
         </button>
 
         <button
           onClick={handleRegenerateFixtures}
-          className="card p-4 hover:bg-dark-800/50 transition-colors text-left border border-orange-500/30"
+          className="card p-3 hover:bg-dark-800/50 transition-colors text-left border border-orange-500/30"
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-orange-500/10 rounded-lg flex-shrink-0">
+              <Calendar className="w-4 h-4 text-orange-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-orange-400 text-sm sm:text-base truncate">🔄 Regenerate Fixtures</h3>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">Delete & recreate all fixtures</p>
+              <h3 className="font-semibold text-orange-400 text-sm truncate">🔄 Regenerate Fixtures</h3>
+              <p className="text-xs text-gray-400 truncate">Delete & recreate all fixtures</p>
             </div>
           </div>
         </button>
 
         <button
           onClick={handleSeedKnockout}
-          className="card p-4 hover:bg-dark-800/50 transition-colors text-left"
+          className="card p-3 hover:bg-dark-800/50 transition-colors text-left"
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary-500/10 rounded-lg flex-shrink-0">
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary-400" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-primary-500/10 rounded-lg flex-shrink-0">
+              <Trophy className="w-4 h-4 text-primary-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-white text-sm sm:text-base truncate">Seed Knockout Stage</h3>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">Generate knockout brackets</p>
+              <h3 className="font-semibold text-white text-sm truncate">Seed Knockout Stage</h3>
+              <p className="text-xs text-gray-400 truncate">Generate knockout brackets</p>
             </div>
           </div>
         </button>
 
         <button
           onClick={handleCleanupBrokenFixtures}
-          className="card p-4 hover:bg-dark-800/50 transition-colors text-left border border-red-500/30"
+          className="card p-3 hover:bg-dark-800/50 transition-colors text-left border border-red-500/30"
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-red-500/10 rounded-lg flex-shrink-0">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-red-500/10 rounded-lg flex-shrink-0">
+              <Target className="w-4 h-4 text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-red-400 text-sm sm:text-base truncate">🧹 Cleanup Broken Fixtures</h3>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">Remove fixtures with missing teams</p>
+              <h3 className="font-semibold text-red-400 text-sm truncate">🧹 Cleanup Broken Fixtures</h3>
+              <p className="text-xs text-gray-400 truncate">Remove fixtures with missing teams</p>
             </div>
           </div>
         </button>
@@ -474,8 +474,8 @@ const SeasonDetail = () => {
       {activeTab === 'groups' && (
         <div className="space-y-4">
           {season.groups?.map((group) => (
-            <div key={group.id} className="card p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-4 truncate">{group.name}</h3>
+            <div key={group.id} className="card p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-semibold text-white mb-3 truncate">{group.name}</h3>
               
               {/* Group Standings */}
               {group.standings && group.standings.length > 0 ? (
@@ -543,13 +543,13 @@ const SeasonDetail = () => {
       )}
 
       {activeTab === 'knockout' && (
-        <div className="card p-4 sm:p-6">
+        <div className="card p-3 sm:p-4">
           {season.knockoutConfig?.rounds && season.knockoutConfig.rounds.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {season.knockoutConfig.rounds.map((round) => (
                 <div key={round.roundNumber}>
-                  <h3 className="text-base sm:text-lg font-semibold text-white mb-4">{round.name}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-white mb-3">{round.name}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                     {round.matches.map((match) => (
                       <div key={match.matchNumber} className="p-3 sm:p-4 bg-dark-800 rounded-lg">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -600,11 +600,11 @@ const SeasonDetail = () => {
       {activeTab === 'fixtures' && (
         <div className="space-y-4">
           {seasonFixtures.length === 0 ? (
-            <div className="card p-4 sm:p-6">
-              <div className="text-center py-8 sm:py-12">
-                <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-2">No Fixtures Yet</h3>
-                <p className="text-sm text-gray-400 px-4">
+            <div className="card p-3 sm:p-4">
+              <div className="text-center py-6 sm:py-8">
+                <Calendar className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-gray-600" />
+                <h3 className="text-sm sm:text-base font-semibold text-white mb-2">No Fixtures Yet</h3>
+                <p className="text-xs sm:text-sm text-gray-400 px-4">
                   Generate fixtures to see them here
                 </p>
               </div>
@@ -627,16 +627,16 @@ const SeasonDetail = () => {
                 }, {});
 
                 return Object.entries(groupedFixtures).map(([key, data]) => (
-                  <div key={key} className="card p-4 sm:p-6">
-                    <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
+                  <div key={key} className="card p-3 sm:p-4">
+                    <h3 className="text-sm sm:text-base font-semibold text-white mb-3">
                       {data.name} ({data.fixtures.length} fixtures)
                     </h3>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {data.fixtures.map((fixture) => (
                         <div 
                           key={fixture.id}
-                          className="p-3 sm:p-4 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors"
+                          className="p-2 sm:p-3 bg-dark-800 rounded-lg hover:bg-dark-700 transition-colors"
                         >
                           <div className="flex items-center justify-between gap-3">
                             {/* Teams */}

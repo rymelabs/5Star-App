@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
-import BulkTeamUpload from '../../components/BulkTeamUpload';
-import { teamsCollection } from '../../firebase/firestore';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import TeamAvatar from '../../components/TeamAvatar';
 import { uploadImage, validateImageFile } from '../../services/imageUploadService';
-import { ArrowLeft, Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal, Image, Link } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal, Image, Link } from 'lucide-react';
 
 const AdminTeams = () => {
   const navigate = useNavigate();
@@ -19,14 +19,12 @@ const AdminTeams = () => {
     ownedLeagues,
     addTeam,
     updateTeam,
-    deleteTeam,
-    addBulkTeams
+    deleteTeam
   } = useFootball();
   const teams = ownedTeams;
   const leagues = ownedLeagues;
   const { showSuccess, showError } = useNotification();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingTeam, setEditingTeam] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, team: null });
   const [formData, setFormData] = useState({
@@ -59,6 +57,7 @@ const AdminTeams = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const totalPlayers = teams.reduce((sum, team) => sum + (team.players?.length || 0), 0);
 
   useEffect(() => {
     if (!selectedLogoFile) {
@@ -288,22 +287,6 @@ const AdminTeams = () => {
     setConfirmDelete({ isOpen: true, team });
   };
 
-  // Handle bulk upload from BulkTeamUpload component
-  const handleBulkUpload = async (teamsData) => {
-    if (!Array.isArray(teamsData) || teamsData.length === 0) return;
-    try {
-      setLoading(true);
-      await addBulkTeams(teamsData);
-      showSuccess(t('pages.adminTeams.bulkUploadSuccess').replace('{count}', teamsData.length));
-      setShowBulkUpload(false);
-    } catch (error) {
-      console.error('Bulk upload failed:', error);
-      showError(t('pages.adminTeams.bulkUploadFailed'), error.message || t('pages.adminTeams.bulkUploadFailedDesc'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const confirmDeleteTeam = async () => {
     const team = confirmDelete.team;
     if (!team) return;
@@ -354,49 +337,37 @@ const AdminTeams = () => {
   };
 
   return (
-    <div className="pb-6">
-      {/* Header */}
-      <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="mb-4">
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
-            </button>
-            <div className="ml-2">
-              <h1 className="admin-header">{t('pages.adminTeams.teamsManagement')}</h1>
-              <p className="text-sm text-gray-400">{teams.length} {t('pages.adminTeams.teams')}</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => navigate('/admin/teams/upload')}
-              className="group w-full px-4 py-2 border-2 border-green-500 hover:border-green-400 bg-transparent text-green-500 hover:text-green-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
-            >
-              <Upload className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
-              <span>{t('pages.adminTeams.bulkUpload')}</span>
-            </button>
-            
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="group w-full px-4 py-2 border-2 border-orange-500 hover:border-orange-400 bg-transparent text-orange-500 hover:text-orange-400 rounded-[9px] font-medium tracking-tight transition-all duration-200 flex items-center justify-center text-sm"
-            >
-              <Plus className="w-4 h-4 mr-2 group-hover:scale-105 transition-transform duration-200" />
-              <span>{t('pages.adminTeams.addTeam')}</span>
-            </button>
-
-            
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-6">
+    <AdminPageLayout
+      title={t('pages.adminTeams.teamsManagement')}
+      subtitle="TEAM OPS"
+      description={t('pages.adminTeams.getStartedAddTeams')}
+      onBack={() => navigate(-1)}
+      actions={[
+        {
+          label: t('pages.adminTeams.bulkUpload'),
+          icon: Upload,
+          onClick: () => navigate('/admin/teams/upload'),
+          variant: 'secondary',
+        },
+        {
+          label: t('pages.adminTeams.addTeam'),
+          icon: Plus,
+          onClick: () => setShowAddForm(true),
+          variant: 'primary',
+        },
+      ]}
+      stats={[
+        { label: t('pages.adminTeams.teams'), value: teams.length, icon: Users },
+        { label: t('pages.adminTeams.league'), value: leagues.length, icon: Shield },
+        { label: t('pages.adminTeams.players'), value: totalPlayers, icon: Goal },
+      ]}
+    >
+      <div className="space-y-6">
         {/* Add Team Form */}
         {showAddForm && (
-          <div className="card p-6 mb-6">
+          <div className="card relative overflow-hidden p-4 sm:p-5">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-purple/10 via-transparent to-blue-500/10 opacity-80" />
+            <div className="relative">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">{editingTeam ? t('pages.adminTeams.editTeam') : t('pages.adminTeams.addNewTeam')}</h3>
               <button
@@ -454,7 +425,7 @@ const AdminTeams = () => {
                     <button
                       type="button"
                       onClick={() => handleLogoUploadMethodChange('url')}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
                         logoUploadMethod === 'url'
                           ? 'bg-blue-600 text-white'
                           : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
@@ -466,7 +437,7 @@ const AdminTeams = () => {
                     <button
                       type="button"
                       onClick={() => handleLogoUploadMethodChange('file')}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
                         logoUploadMethod === 'file'
                           ? 'bg-blue-600 text-white'
                           : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
@@ -580,15 +551,15 @@ const AdminTeams = () => {
 
               {/* Players Section */}
               <div className="border-t border-dark-700 pt-4 mt-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div className="flex items-center">
-                    <Users className="w-5 h-5 text-primary-500 mr-2" />
-                    <h4 className="text-md font-semibold text-white">{t('pages.adminTeams.squadPlayers').replace('{count}', formData.players.length)}</h4>
+                    <Users className="w-4 h-4 text-primary-500 mr-2" />
+                    <h4 className="text-sm font-semibold text-white uppercase tracking-[0.2em]">{t('pages.adminTeams.squadPlayers').replace('{count}', formData.players.length)}</h4>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowPlayerForm(!showPlayerForm)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
                   >
                     <UserPlus className="w-4 h-4" />
                     {t('pages.adminTeams.addPlayer')}
@@ -748,7 +719,7 @@ const AdminTeams = () => {
                         />
                       </div>
 
-                      <div className="flex items-center gap-4 md:col-span-2">
+                      <div className="flex flex-wrap items-center gap-4 md:col-span-2">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -800,14 +771,14 @@ const AdminTeams = () => {
                             contractExpiry: '',
                           });
                         }}
-                        className="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-white rounded-lg text-sm transition-colors"
+                        className="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
                       >
                         {t('common.cancel')}
                       </button>
                       <button
                         type="button"
                         onClick={handleAddPlayer}
-                        className="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm transition-colors"
+                        className="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
                       >
                         {editingPlayer ? t('pages.adminTeams.updatePlayer') : t('pages.adminTeams.addPlayer')}
                       </button>
@@ -872,20 +843,20 @@ const AdminTeams = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium tracking-tight transition-all duration-200 transform hover:scale-105"
+                  className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.25em] transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={loading || uploadingLogo || !formData.name.trim()}
-                  className="group relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold tracking-tight transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="group relative px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.25em] transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" />
+                  <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
                   <span>
                     {uploadingLogo
                       ? t('pages.adminTeams.uploadingImage')
@@ -895,31 +866,30 @@ const AdminTeams = () => {
                     }
                   </span>
                   {!loading && !uploadingLogo && (
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-400/20 to-green-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 
         {/* Teams List */}
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 xl:gap-4">
           {teams.map((team) => (
-            <div key={team.id} className="card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={team.logo}
-                    alt={team.name}
-                    className="w-12 h-12 object-contain rounded-lg bg-dark-700"
-                    onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${team.name}&background=22c55e&color=fff&size=48`;
-                    }}
+            <div key={team.id} className="card group relative overflow-hidden p-3">
+              <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-brand-purple/10 via-transparent to-blue-500/10" />
+              <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <TeamAvatar 
+                    team={team} 
+                    size={40} 
+                    className="rounded-lg bg-black/30 border border-white/5"
                   />
                   <div>
-                    <h3 className="font-semibold text-white">{team.name}</h3>
-                    <div className="text-sm text-gray-400 space-y-1">
+                    <h3 className="font-semibold text-white text-base">{team.name}</h3>
+                    <div className="text-[11px] text-white/60 space-y-0.5">
                       {team.stadium && <p>🏟️ {team.stadium}</p>}
                       {team.founded && <p>📅 {t('pages.adminTeams.founded')} {team.founded}</p>}
                       {team.manager && <p>👨‍💼 {team.manager}</p>}
@@ -933,21 +903,23 @@ const AdminTeams = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-1.5 self-start md:self-auto">
                   <button
                     onClick={() => handleEdit(team)}
-                    className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
                     title={t('pages.adminTeams.editTeam')}
                   >
                     <Edit className="w-4 h-4" />
+                    {t('common.edit')}
                   </button>
                   <button
                     onClick={() => handleDeleteTeam(team)}
                     disabled={loading}
-                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 hover:bg-red-500/20 transition-colors flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
                     title={t('pages.adminTeams.deleteTeam')}
                   >
                     <Trash2 className="w-4 h-4" />
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -956,17 +928,15 @@ const AdminTeams = () => {
         </div>
 
         {teams.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-gray-400" />
+          <div className="card text-center py-10">
+            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Plus className="w-8 h-8 text-white/60" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">{t('pages.adminTeams.noTeamsYet')}</h3>
-            <p className="text-gray-400">{t('pages.adminTeams.getStartedAddTeams')}</p>
+            <h3 className="text-base font-semibold text-white mb-1">{t('pages.adminTeams.noTeamsYet')}</h3>
+            <p className="text-sm text-white/60">{t('pages.adminTeams.getStartedAddTeams')}</p>
           </div>
         )}
       </div>
-
-      {/* Bulk Upload moved to its own page: /admin/teams/upload */}
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
@@ -980,7 +950,7 @@ const AdminTeams = () => {
         type="danger"
         isLoading={loading}
       />
-    </div>
+    </AdminPageLayout>
   );
 };
 

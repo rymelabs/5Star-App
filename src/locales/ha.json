@@ -19,6 +19,8 @@
         "continue": "Ci gaba",
         "notSpecified": "Ba a bayyana ba",
         "loadingMore": "Ana loda ƙarin...",
+        "loadMore": "Nuna ƙari",
+        "showLess": "Nuna kaɗan",
         "noDataAvailable": "Babu bayanan da ake samu",
         "tryAdjustingFilters": "Gwada daidaita tacewa",
         "signInRequired": "Ana buƙatar shiga",
@@ -71,7 +73,8 @@
             "filterByStatus": "Tace ta hanyar matsayi",
             "noFixturesFound": "Ba a sami wasan ba",
             "selectSeasonMessage": "Zaɓi lokaci don ganin wasanni ta rukuni.",
-            "team": "ƘUNGIYA"
+            "team": "ƘUNGIYA",
+            "groupTeamCount": "{count} ƙungiyoyi"
         },
         "teams": {
             "title": "Ƙungiyoyi",
@@ -306,6 +309,7 @@
             "welcomeBack": "Barka da dawowa, {name}!",
             "whatsHappening": "Ga abin da ke faruwa a manhajarka ta wasanni a yau.",
             "quickActions": "Ayyuka Masu Sauri",
+            "management": "Gudanarwa",
             "contentManagement": "Gudanar da Abun ciki",
             "items": "abubuwa",
             "viewSubmissions": "Duba Masu Aika",
@@ -878,7 +882,6 @@
         "otherFixtures": "Sauran Wasanni",
         "group": "Rukunin",
         "knockout": "Ƙarshe",
-        "groupStage": "Matakin Rukuni",
         "viewStandings": "Duba Matsayi",
         "qualification": "Canƙanta",
         "relegation": "Saukewa"

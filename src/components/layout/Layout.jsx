@@ -65,11 +65,11 @@ const Layout = () => {
       
       {/* Modals */}
       {showSearchModal && (
-        <SearchModal onClose={handleSearchClose} />
+        <SearchModal isOpen={showSearchModal} onClose={handleSearchClose} />
       )}
       
       {showProfileModal && (
-        <ProfileModal onClose={handleProfileClose} />
+        <ProfileModal isOpen={showProfileModal} onClose={handleProfileClose} />
       )}
     </div>
   );

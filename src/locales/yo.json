@@ -19,6 +19,8 @@
         "continue": "Tẹsíwájú",
         "notSpecified": "Kò sọ",
         "loadingMore": "Ń gbé síi...",
+        "loadMore": "Fi míì hàn",
+        "showLess": "Fi díẹ hàn",
         "noDataAvailable": "Kò sí ìfitóniléti tó wà",
         "tryAdjustingFilters": "Gbìyànjú àtúnṣe àwọn àṣẹmíìdí rẹ",
         "signInRequired": "Wiwọlé Nílò",
@@ -71,7 +73,8 @@
             "filterByStatus": "Ṣẹmíìdí nípa ipò",
             "noFixturesFound": "Kò rí eré kankan",
             "selectSeasonMessage": "Yan àsìkò kan láti wo àwọn eré nípa ẹgbẹ́.",
-            "team": "ẸGBẸ́"
+            "team": "ẸGBẸ́",
+            "groupTeamCount": "Ẹgbẹ́ {count}"
         },
         "teams": {
             "title": "Àwọn ẹgbẹ́",
@@ -167,7 +170,8 @@
             "activity": "Iṣẹ́",
             "comments": "Àwọn àsọyé",
             "articlesRead": "Àwọn àròkọ tí a kà",
-            "quickActions": "Àwọn ìṣe kíákíá",
+                                "quickActions": "Àwọn ìṣe kíákíá",
+                                "management": "Ìṣàkóso",
             "enterFullName": "Tẹ orúkọ kíkún sí",
             "enterEmail": "Tẹ ímeèlì sí",
             "tellAboutYourself": "Sọ fún wa nípa ara rẹ...",

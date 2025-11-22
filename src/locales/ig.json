@@ -19,6 +19,8 @@
         "continue": "Gaa n'ihu",
         "notSpecified": "Akọwaghị",
         "loadingMore": "Na-ebu ọzọ...",
+        "loadMore": "Gosi ndị ọzọ",
+        "showLess": "Gosi obere",
         "noDataAvailable": "Enweghị data dị",
         "tryAdjustingFilters": "Gbalịa ịhazi ihe nzacha gị",
         "signInRequired": "Achọrọ Ịbanye",
@@ -71,7 +73,8 @@
             "filterByStatus": "Nzacha site na ọnọdụ",
             "noFixturesFound": "Achọtaghị egwuregwu ọ bụla",
             "selectSeasonMessage": "Họrọ oge iji lelee egwuregwu site n'otu.",
-            "team": "OTU"
+            "team": "OTU",
+            "groupTeamCount": "{count} ndị otu"
         },
         "teams": {
             "title": "Ndị otu",
@@ -306,6 +309,7 @@
             "welcomeBack": "Nnọọ, {name}!",
             "whatsHappening": "Nke a bụ ihe na-eme na ngwa egwuregwu gị taa.",
             "quickActions": "Omume Ngwa Ngwa",
+            "management": "Nlekọta",
             "contentManagement": "Nlekọta Ọdịnaya",
             "items": "ihe",
             "viewSubmissions": "Lee Ntinye Ndị Otu",
