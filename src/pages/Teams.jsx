@@ -386,7 +386,7 @@ const Teams = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-0 sm:px-6 space-y-0 sm:space-y-6 relative z-10">
+        <div className="w-full mx-auto px-0 sm:px-6 space-y-0 sm:space-y-6 relative z-10">
           {/* Teams List */}
           {filteredTeams.length > 0 ? (
             <div className="max-w-4xl mx-auto">

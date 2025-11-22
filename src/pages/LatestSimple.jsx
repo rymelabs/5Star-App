@@ -31,7 +31,7 @@ const LatestSimple = () => {
     <div className="px-4 py-6 space-y-8">
       <div className="text-center mb-8">
         <h1 className="page-header mb-2">Latest Updates</h1>
-        <p className="text-gray-400">Welcome to the 5Star Sports App!</p>
+        <p className="text-gray-400">Welcome to Fivescores!</p>
       </div>
       
       {/* Debug Info */}

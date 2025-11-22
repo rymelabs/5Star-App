@@ -22,7 +22,7 @@ const Header = () => {
       <div className="flex items-center justify-between px-4 py-3">
         <img 
           src="/5StarLogo.svg" 
-          alt="5Star" 
+          alt="Fivescores" 
           className="h-8 w-auto drop-shadow-[0_0_10px_rgba(109,40,217,0.5)]"
         />
         

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import LoadingScreen from './components/ui/LoadingScreen';
 import Latest from './pages/Latest';
 import Fixtures from './pages/Fixtures';
 import FixtureDetail from './pages/FixtureDetail';
@@ -88,14 +89,7 @@ const AppContent = () => {
 
   // Show loading spinner while checking auth state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading" />;
   }
 
   console.log('🔍 AppContent - Current user state:', user ? `Logged in as ${user.email}` : 'Not logged in');

@@ -547,7 +547,7 @@ const Stats = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-0 sm:px-6 relative z-10">
+      <div className="w-full mx-auto px-0 sm:px-6 relative z-10">
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-4 sm:px-0">
           {tabs.map(tab => {
