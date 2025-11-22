@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Plus, 
-  Trophy, 
+import {
+  Plus,
+  Trophy,
   Calendar,
   Users,
-  Settings,
   Edit,
   Trash2,
   Play,
-  Eye
+  Eye,
+  Layers,
+  RefreshCw
 } from 'lucide-react';
 import { seasonsCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import AdminPageLayout from '../../components/AdminPageLayout';
 
 const AdminSeasons = () => {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ const AdminSeasons = () => {
   useEffect(() => {
     if (isAdmin) {
       loadSeasons();
+    } else {
+      setLoading(false);
     }
   }, [isAdmin, isSuperAdmin, user?.uid]);
 
@@ -37,9 +40,7 @@ const AdminSeasons = () => {
     try {
       setLoading(true);
       const data = await seasonsCollection.getAll();
-      const filtered = isSuperAdmin
-        ? data
-        : data.filter(season => season.ownerId === user?.uid);
+      const filtered = isSuperAdmin ? data : data.filter(season => season.ownerId === user?.uid);
       setSeasons(filtered);
     } catch (error) {
       console.error('Error loading seasons:', error);
@@ -67,7 +68,7 @@ const AdminSeasons = () => {
     }
   };
 
-  const handleDelete = async (seasonId) => {
+  const handleDelete = (seasonId) => {
     setConfirmDelete({ isOpen: true, seasonId });
   };
 
@@ -95,186 +96,187 @@ const AdminSeasons = () => {
     return badges[status] || badges.upcoming;
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="p-6">
-        <div className="card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You need admin privileges to access this page.</p>
-          <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const totalSeasons = seasons.length;
+  const activeSeasons = useMemo(() => seasons.filter(season => season.isActive).length, [seasons]);
+  const upcomingSeasons = useMemo(() => seasons.filter(season => season.status === 'upcoming').length, [seasons]);
+  const totalGroups = useMemo(() => seasons.reduce((sum, season) => sum + (season.numberOfGroups || season.groups?.length || 0), 0), [seasons]);
 
-  return (
-    <div className="px-4 py-6 pb-24">
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } text-white`}>
-          {toast.message}
-        </div>
-      )}
+  const renderContent = () => {
+    if (loading) {
+      return <div className="card p-4 text-sm text-white/70">Loading seasons...</div>;
+    }
 
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center mb-4">
-          <button
-            onClick={() => navigate('/admin')}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
-          <div>
-            <h1 className="admin-header">Season Management</h1>
-            <p className="text-sm text-gray-400">Manage tournament seasons and competitions</p>
+    if (seasons.length === 0) {
+      return (
+        <div className="card text-center py-8">
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center">
+            <Trophy className="w-7 h-7 text-white/60" />
           </div>
-        </div>
-        <button
-          onClick={() => navigate('/admin/seasons/create')}
-          className="btn-primary w-full flex items-center justify-center text-sm py-2"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          <span>New Season</span>
-        </button>
-      </div>
-
-      {/* Seasons List */}
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-        </div>
-      ) : seasons.length === 0 ? (
-        <div className="card p-12 text-center">
-          <Trophy className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-          <h3 className="text-lg font-semibold text-white mb-2">No Seasons Yet</h3>
-          <p className="text-gray-400 mb-6">Create your first tournament season to get started</p>
+          <h3 className="text-sm font-semibold text-white mb-1">No seasons yet</h3>
+          <p className="text-xs text-white/60 mb-3">Create your first tournament season to get started.</p>
           <button
             onClick={() => navigate('/admin/seasons/create')}
-            className="btn-primary inline-flex items-center space-x-2"
+            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-[11px] font-semibold uppercase tracking-[0.25em]"
           >
-            <Plus className="w-4 h-4" />
-            <span>Create Season</span>
+            Create Season
           </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {seasons.map((season) => (
-            <div
-              key={season.id}
-              className={`card p-4 sm:p-6 ${season.isActive ? 'border-2 border-primary-500' : ''}`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="text-base sm:text-lg font-semibold text-white truncate">{season.name}</h3>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {seasons.map((season) => (
+          <div
+            key={season.id}
+            className={`card relative overflow-hidden p-2.5 sm:p-3 ${season.isActive ? 'border border-primary-500/60' : ''}`}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-purple/5 via-transparent to-blue-500/10" />
+            <div className="relative space-y-2.5">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Season {season.year || '—'}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h3 className="text-[13px] font-semibold text-white">{season.name}</h3>
                     {season.isActive && (
-                      <span className="px-2 py-1 text-xs font-medium bg-primary-500/20 text-primary-400 border border-primary-500/30 rounded whitespace-nowrap">
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] text-primary-200 bg-primary-500/20 border border-primary-500/30">
                         Active
                       </span>
                     )}
-                    <span className={`px-2 py-1 text-xs font-medium border rounded whitespace-nowrap ${getStatusBadge(season.status)}`}>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] ${getStatusBadge(season.status)}`}>
                       {season.status}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-400">Season {season.year}</p>
+                  <p className="text-[11px] text-white/60 mt-1">Owner: {season.ownerName || 'Unknown'}</p>
                 </div>
-                
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 self-start">
                   {!season.isActive && (
                     <button
                       onClick={() => handleSetActive(season.id)}
-                      className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
-                      title="Set as active season"
+                      className="p-1.5 sm:p-1.5 rounded-md border border-green-400/40 text-green-100 hover:bg-green-500/15"
+                      title="Set active"
                     >
-                      <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Play className="w-3.5 h-3.5" />
                     </button>
                   )}
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}`)}
-                    className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                    title="View details"
+                    className="p-1.5 rounded-md border border-blue-400/40 text-blue-100 hover:bg-blue-500/15"
+                    title="View"
                   >
-                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Eye className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}/edit`)}
-                    className="p-2 text-accent-400 hover:bg-accent-500/10 rounded-lg transition-colors"
-                    title="Edit season"
+                    className="p-1.5 rounded-md border border-accent-400/40 text-accent-100 hover:bg-accent-500/15"
+                    title="Edit"
                   >
-                    <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Edit className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(season.id)}
-                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    title="Delete season"
+                    className="p-1.5 rounded-md border border-red-400/40 text-red-100 hover:bg-red-500/15"
+                    title="Delete"
                   >
-                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* Season Stats */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-gray-700">
-                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                  <div className="p-2 bg-blue-500/10 rounded-lg flex-shrink-0">
-                    <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-400 truncate">Groups</p>
-                    <p className="text-sm font-semibold text-white">{season.numberOfGroups || 0}</p>
-                  </div>
+              <div className="grid grid-cols-3 gap-1.5 text-[10px] text-white/60">
+                <div className="px-1.5 py-1 rounded-lg border border-white/10 bg-white/5">
+                  <p className="uppercase tracking-[0.25em]">Groups</p>
+                  <p className="text-[13px] text-white">{season.numberOfGroups || season.groups?.length || 0}</p>
                 </div>
-                
-                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                  <div className="p-2 bg-accent-500/10 rounded-lg flex-shrink-0">
-                    <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-accent-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-400 truncate">Teams/Grp</p>
-                    <p className="text-sm font-semibold text-white">{season.teamsPerGroup || 0}</p>
-                  </div>
+                <div className="px-1.5 py-1 rounded-lg border border-white/10 bg-white/5">
+                  <p className="uppercase tracking-[0.25em]">Teams/Grp</p>
+                  <p className="text-[13px] text-white">{season.teamsPerGroup || 0}</p>
                 </div>
-                
-                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                  <div className="p-2 bg-primary-500/10 rounded-lg flex-shrink-0">
-                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-primary-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-400 truncate">KO Legs</p>
-                    <p className="text-sm font-semibold text-white">
-                      {season.knockoutConfig?.matchesPerRound || 2}
-                    </p>
-                  </div>
+                <div className="px-1.5 py-1 rounded-lg border border-white/10 bg-white/5">
+                  <p className="uppercase tracking-[0.25em]">KO Legs</p>
+                  <p className="text-[13px] text-white">{season.knockoutConfig?.matchesPerRound || 2}</p>
                 </div>
               </div>
 
-              {/* Quick Info */}
-              {season.groups && season.groups.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-700">
-                  <p className="text-xs text-gray-400 mb-2">Groups configured:</p>
-                  <div className="flex flex-wrap gap-2">
+              {season.groups?.length > 0 && (
+                <div className="border-t border-white/5 pt-1.5">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mb-1">Groups configured</p>
+                  <div className="flex flex-wrap gap-1">
                     {season.groups.map((group) => (
                       <span
                         key={group.id}
-                        className="px-2 py-1 text-xs bg-dark-800 text-gray-300 rounded border border-gray-700"
+                        className="px-1.5 py-0.5 text-[10px] rounded border border-white/10 bg-white/5 text-white/70"
                       >
-                        {group.name} ({group.teams?.length || 0} teams)
+                        {group.name} ({group.teams?.length || 0})
                       </span>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const layoutProps = {
+    title: 'Season Management',
+    subtitle: 'COMPETITION OPS',
+    description: 'Control tournament seasons, knockout formats, and group allocations.',
+    onBack: () => navigate('/admin'),
+    actions: isAdmin
+      ? [
+          {
+            label: 'New Season',
+            icon: Plus,
+            onClick: () => navigate('/admin/seasons/create'),
+            variant: 'primary',
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: loadSeasons,
+            disabled: loading,
+          },
+        ]
+      : [],
+    stats: isAdmin
+      ? [
+          { label: 'Total', value: totalSeasons, icon: Layers },
+          { label: 'Active', value: activeSeasons, icon: Trophy },
+          { label: 'Upcoming', value: upcomingSeasons, icon: Calendar },
+          { label: 'Groups', value: totalGroups, icon: Users },
+        ]
+      : [],
+  };
+
+  return (
+    <AdminPageLayout {...layoutProps}>
+      {toast.show && (
+        <div
+          className={`mb-3 px-3 py-1.5 rounded-lg border ${
+            toast.type === 'success' ? 'border-green-500/40 text-green-200' : 'border-red-500/40 text-red-200'
+          } bg-white/5 text-sm`}
+        >
+          {toast.message}
+        </div>
+      )}
+      {isAdmin ? (
+        renderContent()
+      ) : (
+        <div className="card text-center py-8">
+          <h2 className="text-sm font-semibold text-white mb-1.5">Access denied</h2>
+          <p className="text-xs text-white/60 mb-3">You need admin privileges to access this page.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-[11px] uppercase tracking-[0.25em]"
+          >
+            Go Home
+          </button>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, seasonId: null })}
@@ -285,7 +287,7 @@ const AdminSeasons = () => {
         cancelText="Cancel"
         type="danger"
       />
-    </div>
+    </AdminPageLayout>
   );
 };
 

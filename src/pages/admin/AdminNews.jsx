@@ -5,10 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import { slugify } from '../../utils/helpers';
 import {
-  ArrowLeft,
   Plus,
   Edit,
   Trash2,
@@ -338,70 +338,72 @@ const AdminNews = () => {
     }
   };
 
-  return (
-    <div className="pb-6">
-      {/* Header */}
-      <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/admin')}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
-            </button>
-            <div>
-              <h1 className="admin-header">{t('adminNews.title')}</h1>
-              <p className="text-sm text-gray-400">{articles.length} {t('adminNews.articles')}</p>
-            </div>
-          </div>
-          {canCreateArticle && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              {t('adminNews.addArticle')}
-            </button>
-          )}
-        </div>
-      </div>
+  const totalArticles = articles.length;
+  const pendingArticles = articles.filter(article => article.status === 'pending').length;
+  const publishedArticles = articles.filter(article => article.status === 'published').length;
+  const featuredArticles = articles.filter(article => article.featured).length;
 
-      <div className="px-4 py-6 space-y-6">
+  return (
+    <AdminPageLayout
+      title={t('adminNews.title')}
+      subtitle="NEWS OPS"
+      description={t('adminNews.getStarted')}
+      onBack={() => navigate('/admin')}
+      actions={canCreateArticle ? [
+        {
+          label: t('adminNews.addArticle'),
+          icon: Plus,
+          onClick: () => setShowAddForm(true),
+          variant: 'primary',
+        },
+      ] : []}
+      stats={[
+        { label: t('adminNews.articles'), value: totalArticles, icon: FileText },
+        { label: t('adminNews.status.pending'), value: pendingArticles, icon: Calendar },
+        { label: t('adminNews.status.published'), value: publishedArticles, icon: Eye },
+        { label: t('adminNews.featured'), value: featuredArticles, icon: Image },
+      ]}
+    >
+      <div className="space-y-6">
         {isSuperAdmin && (
-          <div className="card p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-semibold text-sm">{t('adminNews.allowAdminSubmissions')}</h3>
-              <p className="text-xs text-gray-400">{t('adminNews.allowAdminSubmissionsDesc')}</p>
+          <div className="card relative overflow-hidden p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-purple/15 via-transparent to-blue-500/15" />
+            <div className="relative">
+              <h3 className="text-white font-semibold text-sm uppercase tracking-[0.3em]">{t('adminNews.allowAdminSubmissions')}</h3>
+              <p className="text-xs text-white/60 mt-1 max-w-xl">{t('adminNews.allowAdminSubmissionsDesc')}</p>
             </div>
-            <button
-              onClick={handleToggleNewsSettings}
-              disabled={settingsSaving}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                allowAdminNews
-                  ? 'bg-green-600 text-white hover:bg-green-500'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-              } ${settingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {allowAdminNews ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-              {allowAdminNews ? t('adminNews.toggleOn') : t('adminNews.toggleOff')}
-            </button>
+            <div className="relative flex items-center justify-end">
+              <button
+                onClick={handleToggleNewsSettings}
+                disabled={settingsSaving}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-[0.3em] transition-colors ${
+                  allowAdminNews
+                    ? 'bg-green-500/20 border border-green-400/40 text-green-200 hover:bg-green-500/30'
+                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                } ${settingsSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {allowAdminNews ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                {allowAdminNews ? t('adminNews.toggleOn') : t('adminNews.toggleOff')}
+              </button>
+            </div>
           </div>
         )}
 
         {!isSuperAdmin && !allowAdminNews && (
-          <div className="card border border-yellow-500/30 bg-yellow-500/10 text-yellow-200 p-4 text-sm">
+          <div className="card border border-yellow-500/30 bg-yellow-500/10 text-yellow-100 p-3 text-[11px] uppercase tracking-[0.25em]">
             {t('adminNews.adminSubmissionDisabledNotice')}
           </div>
         )}
 
         {/* Add Article Form */}
         {showAddForm && (
-          <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="card relative overflow-hidden p-3 sm:p-4">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-purple/10 via-transparent to-blue-500/10" />
+            <div className="relative">
+            <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-lg font-semibold text-white">{t('adminNews.addNewArticle')}</h3>
-              <p className="text-sm text-gray-400">{t('adminNews.addNewArticleDesc')}</p>
+              <h3 className="text-base font-semibold text-white uppercase tracking-[0.3em]">{t('adminNews.addNewArticle')}</h3>
+              <p className="text-xs text-white/60 mt-1">{t('adminNews.addNewArticleDesc')}</p>
             </div>
             <button
               onClick={handleCancel}
@@ -411,9 +413,9 @@ const AdminNews = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
                   {t('adminNews.titleLabel')} *
                 </label>
                 <input
@@ -428,7 +430,7 @@ const AdminNews = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
                   {t('adminNews.summary')}
                 </label>
                 <textarea
@@ -440,7 +442,7 @@ const AdminNews = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
                   {t('adminNews.content')} *
                 </label>
                 <textarea
@@ -453,7 +455,7 @@ const AdminNews = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-300">
@@ -488,7 +490,7 @@ const AdminNews = () => {
                   </div>
 
                   {imageUploadMethod === 'url' && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <input
                         type="url"
                         name="image"
@@ -511,7 +513,7 @@ const AdminNews = () => {
                   )}
 
                   {imageUploadMethod === 'file' && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <input
                         type="file"
                         accept="image/*"
@@ -559,7 +561,7 @@ const AdminNews = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">
                     {t('adminNews.category')}
                   </label>
                   <select
@@ -578,7 +580,7 @@ const AdminNews = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
                   {t('adminNews.tags')}
                 </label>
                 <input
@@ -606,17 +608,18 @@ const AdminNews = () => {
               <button
                 type="submit"
                 disabled={loading || !formData.title.trim() || !formData.content.trim() || !canCreateArticle}
-                className="btn-primary w-full flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.3em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
-                {loading && <Save className="w-4 h-4 mr-2 animate-spin" />}
+                {loading && <Save className="w-4 h-4 animate-spin" />}
                 {loading ? t('adminNews.publishing') : t('adminNews.publishArticle')}
               </button>
             </form>
+            </div>
           </div>
         )}
 
         {/* Articles List */}
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2.5">
           {articles.map((article) => {
             const statusKey = article.status || 'published';
             const canEdit = canManageArticle(article, 'edit');
@@ -624,56 +627,54 @@ const AdminNews = () => {
             const showApproveActions = isSuperAdmin && statusKey === 'pending';
 
             return (
-              <div key={article.id} className="card p-4 hover:bg-dark-800/70 transition-colors">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <div key={article.id} className="card group relative overflow-hidden p-2.5">
+                <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-brand-purple/10 via-transparent to-blue-500/10" />
+                <div className="relative flex gap-2.5">
                   {/* Thumbnail */}
-                  <div className="w-full sm:w-48 h-36 flex-shrink-0 relative">
-                    <div className="absolute inset-0 rounded-lg overflow-hidden bg-dark-700">
-                      {article.image ? (
-                        <img
-                          src={article.image}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=160&fit=crop';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 bg-dark-800">
-                          <Image className="w-8 h-8" />
-                        </div>
-                      )}
-                    </div>
+                  <div className="w-24 h-20 flex-shrink-0 rounded-md overflow-hidden border border-white/10 bg-black/30">
+                    {article.image ? (
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=160&fit=crop';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white/40">
+                        <Image className="w-5 h-5" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Article Info */}
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getCategoryColor(article.category)}`}>
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-start justify-between gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.3em] ${getCategoryColor(article.category)}`}>
                           {article.category ? article.category.charAt(0).toUpperCase() + article.category.slice(1) : t('adminNews.general')}
                         </span>
                         {article.featured && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-500 bg-yellow-500/20 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.3em] text-yellow-400 bg-yellow-500/20">
                             {t('adminNews.featured')}
                           </span>
                         )}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusStyles[statusKey] || 'text-gray-300 bg-gray-600/20 border border-gray-600/30'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.3em] ${statusStyles[statusKey] || 'text-gray-300 bg-gray-600/20 border border-gray-600/30'}`}>
                           {t(`adminNews.status.${statusKey}`)}
                         </span>
                       </div>
-
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => navigate(`/news/${article.slug || article.id}`)}
-                          className="p-1.5 text-accent-400 hover:text-accent-300 hover:bg-accent-500/10 rounded transition-colors"
+                          className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10"
                           title={t('adminNews.viewArticle')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => canEdit && navigate(`/admin/news/edit/${article.id}`)}
-                          className={`p-1.5 rounded transition-colors ${canEdit ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'text-gray-600 cursor-not-allowed'}`}
+                          className={`p-1.5 rounded-lg border ${canEdit ? 'border-white/10 text-white hover:bg-white/10' : 'border-white/5 text-white/30 cursor-not-allowed'}`}
                           title={t('adminNews.editArticle')}
                           disabled={!canEdit}
                         >
@@ -681,7 +682,7 @@ const AdminNews = () => {
                         </button>
                         <button
                           onClick={() => canDelete && setConfirmDelete({ isOpen: true, articleId: article.id, articleTitle: article.title })}
-                          className={`p-1.5 rounded transition-colors ${canDelete ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-gray-600 cursor-not-allowed'}`}
+                          className={`p-1.5 rounded-lg border ${canDelete ? 'border-red-500/30 text-red-200 hover:bg-red-500/20' : 'border-white/5 text-white/30 cursor-not-allowed'}`}
                           title={t('adminNews.deleteArticle')}
                           disabled={!canDelete}
                         >
@@ -690,45 +691,36 @@ const AdminNews = () => {
                       </div>
                     </div>
 
-                    <h3 className="font-semibold text-white mb-2 line-clamp-2 break-words">
-                      {article.title}
-                    </h3>
+                    <h3 className="text-white font-semibold text-[13px] leading-tight line-clamp-2">{article.title}</h3>
+                    <p className="text-white/60 text-xs line-clamp-2">{article.excerpt || article.summary}</p>
 
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2 break-words">
-                      {article.excerpt || article.summary}
-                    </p>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-                      <div className="flex flex-wrap items-center gap-4">
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{formatDate(article.publishedAt || article.createdAt)}</span>
-                        </span>
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <FileText className="w-3 h-3 flex-shrink-0" />
-                          <span>{article.readTime || 0} {t('adminNews.min')}</span>
-                        </span>
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Eye className="w-3 h-3 flex-shrink-0" />
-                          <span>{article.views || 0}</span>
-                        </span>
-                      </div>
-
-                      {article.tags && article.tags.length > 0 && (
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {article.tags.slice(0, 3).map((tag, index) => (
-                            <span key={index} className="px-1.5 py-0.5 bg-dark-700 text-gray-400 rounded text-xs whitespace-nowrap">
-                              #{tag}
-                            </span>
-                          ))}
-                          {article.tags.length > 3 && (
-                            <span className="text-gray-500 whitespace-nowrap">+{article.tags.length - 3}</span>
-                          )}
-                        </div>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/50">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(article.publishedAt || article.createdAt)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        {article.readTime || 0} {t('adminNews.min')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {article.views || 0}
+                      </span>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500 border-t border-dark-700 pt-3">
+                    {article.tags && article.tags.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1 text-[10px] text-white/50">
+                        {article.tags.slice(0, 2).map((tag, index) => (
+                          <span key={index} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10">#{tag}</span>
+                        ))}
+                        {article.tags.length > 2 && (
+                          <span>+{article.tags.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-white/50 border-t border-white/5 pt-1.5 flex flex-wrap gap-1.5">
                       {article.ownerName && (
                         <span>{t('adminNews.submittedBy').replace('{name}', article.ownerName)}</span>
                       )}
@@ -744,16 +736,16 @@ const AdminNews = () => {
                     </div>
 
                     {showApproveActions && (
-                      <div className="mt-3 flex gap-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(article)}
-                          className="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors"
+                          className="px-3 py-1 rounded-lg bg-green-500/20 border border-green-400/40 text-green-200 text-[11px] font-semibold uppercase tracking-[0.3em]"
                         >
                           {t('adminNews.approve')}
                         </button>
                         <button
                           onClick={() => handleReject(article)}
-                          className="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-500 text-white rounded-md transition-colors"
+                          className="px-3 py-1 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-[11px] font-semibold uppercase tracking-[0.3em]"
                         >
                           {t('adminNews.reject')}
                         </button>
@@ -766,16 +758,16 @@ const AdminNews = () => {
           })}
 
           {articles.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-gray-400" />
+            <div className="card text-center py-8">
+              <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7 text-white/60" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('adminNews.noArticles')}</h3>
-              <p className="text-gray-400 mb-4">{t('adminNews.getStarted')}</p>
+              <h3 className="text-base font-semibold text-white mb-1">{t('adminNews.noArticles')}</h3>
+              <p className="text-sm text-white/60 mb-4">{t('adminNews.getStarted')}</p>
               {canCreateArticle && (
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="btn-primary"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.3em]"
                 >
                   {t('adminNews.publishFirst')}
                 </button>
@@ -802,7 +794,7 @@ const AdminNews = () => {
           onClose={hideToast}
         />
       )}
-    </div>
+    </AdminPageLayout>
   );
 };
 

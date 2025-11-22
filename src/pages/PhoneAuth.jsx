@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
+import BackButton from '../components/ui/BackButton';
 
 // Error Boundary Component
 class PhoneAuthErrorBoundary extends React.Component {
@@ -403,12 +404,10 @@ const PhoneAuth = () => {
       <div className="w-full max-w-md">
         <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
           <div className="flex items-center mb-6">
-            <button
+            <BackButton 
               onClick={() => step === 'verification' ? setStep('phone') : navigate('/auth')}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
-            </button>
+              className="-ml-2"
+            />
             <div className="flex-1 text-center">
               <img src="/5StarLogo.svg" alt="5Star Logo" className="w-12 h-12 mx-auto" />
             </div>

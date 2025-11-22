@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Save, Settings, Trophy, TrendingDown } from 'lucide-react';
 import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
+import AdminPageLayout from '../../components/AdminPageLayout';
 
 const AdminLeagueSettings = () => {
   const navigate = useNavigate();
@@ -101,10 +102,7 @@ const AdminLeagueSettings = () => {
         <div className="card p-8 text-center">
           <h2 className="text-lg font-semibold text-white mb-4">{t('adminLeagueSettings.accessDenied')}</h2>
           <p className="text-gray-400 mb-6">{t('adminLeagueSettings.accessDeniedMessage')}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
-          >
+          <button onClick={() => navigate('/')} className="btn-primary">
             {t('adminLeagueSettings.goToHome')}
           </button>
         </div>
@@ -113,181 +111,128 @@ const AdminLeagueSettings = () => {
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors mr-2"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
-          <div>
-            <h1 className="admin-header">{t('adminLeagueSettings.title')}</h1>
-            <p className="text-sm text-gray-400">{t('adminLeagueSettings.subtitle')}</p>
-          </div>
+    <AdminPageLayout
+      title={t('adminLeagueSettings.title')}
+      subtitle="CONFIGURATION"
+      description={t('adminLeagueSettings.description')}
+      onBack={() => navigate('/admin/leagues')}
+      actions={[
+        {
+          label: saving ? t('common.saving') : t('common.save'),
+          icon: Save,
+          onClick: handleSubmit,
+          primary: true,
+          disabled: saving
+        }
+      ]}
+    >
+      {/* Toast */}
+      {toast.show && (
+        <div
+          className={`mb-4 px-4 py-2 rounded-lg border ${
+            toast.type === 'success' ? 'border-green-500/40 text-green-200' : 'border-red-500/40 text-red-200'
+          } bg-white/5 text-sm`}
+        >
+          {toast.message}
         </div>
-      </div>
+      )}
 
-      {/* Settings Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Qualified Position */}
-        <div className="card p-6">
-          <div className="flex items-start mb-4">
-            <Trophy className="w-6 h-6 text-primary-500 mr-3 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.qualifiedPosition')}</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                {t('adminLeagueSettings.qualifiedDescription')}
-              </p>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('adminLeagueSettings.topPosition').replace('{max}', formData.totalTeams)}
-                </label>
-                <input
-                  type="number"
-                  name="qualifiedPosition"
-                  value={formData.qualifiedPosition}
-                  onChange={handleChange}
-                  min="1"
-                  max={formData.totalTeams}
-                  className="input-field w-full"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  {t('adminLeagueSettings.topTeamsHighlight').replace('{position}', formData.qualifiedPosition)}
-                </p>
-              </div>
+      <div className="max-w-2xl mx-auto">
+        <div className="card p-4 space-y-5">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-1.5 rounded-lg bg-brand-purple/10 border border-brand-purple/20">
+              <Settings className="w-4 h-4 text-brand-purple" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white">League Configuration</h3>
+              <p className="text-xs text-white/60">Configure global league rules and thresholds</p>
             </div>
           </div>
-        </div>
 
-        {/* Relegation Position */}
-        <div className="card p-6">
-          <div className="flex items-start mb-4">
-            <TrendingDown className="w-6 h-6 text-red-500 mr-3 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.relegationPosition')}</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                {t('adminLeagueSettings.relegationDescription')}
-              </p>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('adminLeagueSettings.startingPosition').replace('{max}', formData.totalTeams)}
-                </label>
-                <input
-                  type="number"
-                  name="relegationPosition"
-                  value={formData.relegationPosition}
-                  onChange={handleChange}
-                  min="1"
-                  max={formData.totalTeams}
-                  className="input-field w-full"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  {t('adminLeagueSettings.bottomTeamsHighlight').replace('{count}', formData.totalTeams - formData.relegationPosition + 1)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Total Teams */}
-        <div className="card p-6">
-          <div className="flex items-start mb-4">
-            <Settings className="w-6 h-6 text-accent-500 mr-3 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">{t('adminLeagueSettings.totalTeams')}</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                {t('adminLeagueSettings.totalTeamsDescription')}
-              </p>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('adminLeagueSettings.numberOfTeams')}
-                </label>
+          <div className="grid gap-5">
+            {/* Total Teams */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-white/80">
+                {t('adminLeagueSettings.totalTeams')}
+              </label>
+              <div className="relative">
                 <input
                   type="number"
                   name="totalTeams"
                   value={formData.totalTeams}
                   onChange={handleChange}
                   min="2"
-                  max="30"
-                  className="input-field w-full"
-                  required
+                  className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-colors"
                 />
+                <div className="absolute right-3 top-2 text-white/20 pointer-events-none">
+                  <Trophy className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[10px] text-white/40">
+                Total number of teams in the league table
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Qualified Position */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/80">
+                  {t('adminLeagueSettings.qualifiedPosition')}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="qualifiedPosition"
+                    value={formData.qualifiedPosition}
+                    onChange={handleChange}
+                    min="1"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-colors"
+                  />
+                  <div className="absolute right-3 top-2 text-white/20 pointer-events-none">
+                    <Trophy className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/40">
+                  Top positions that qualify for promotion/cups
+                </p>
+              </div>
+
+              {/* Relegation Position */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/80">
+                  {t('adminLeagueSettings.relegationPosition')}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="relegationPosition"
+                    value={formData.relegationPosition}
+                    onChange={handleChange}
+                    min="1"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-colors"
+                  />
+                  <div className="absolute right-3 top-2 text-white/20 pointer-events-none">
+                    <TrendingDown className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/40">
+                  Position where relegation zone starts
+                </p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Preview */}
-        <div className="card p-6 bg-dark-800/50">
-          <h3 className="text-lg font-semibold text-white mb-4">{t('adminLeagueSettings.preview')}</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-primary-600 rounded mr-2"></div>
-                <span className="text-gray-300">{t('adminLeagueSettings.qualified')}</span>
-              </div>
-              <span className="text-gray-400">{t('adminLeagueSettings.positions')} 1 - {formData.qualifiedPosition}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-gray-600 rounded mr-2"></div>
-                <span className="text-gray-300">{t('adminLeagueSettings.safe')}</span>
-              </div>
-              <span className="text-gray-400">
-                {t('adminLeagueSettings.positions')} {formData.qualifiedPosition + 1} - {formData.relegationPosition - 1}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                <span className="text-gray-300">{t('adminLeagueSettings.eliminated')}</span>
-              </div>
-              <span className="text-gray-400">
-                {t('adminLeagueSettings.positions')} {formData.relegationPosition} - {formData.totalTeams}
-              </span>
+          <div className="pt-3 border-t border-white/5">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <h4 className="text-xs font-medium text-blue-200 mb-0.5">Note</h4>
+              <p className="text-[10px] text-blue-200/60">
+                Changes to these settings will affect how the league table is displayed and how team statuses are calculated across the platform.
+              </p>
             </div>
           </div>
         </div>
-
-        {/* Save Button */}
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full btn-primary py-3 flex items-center justify-center"
-        >
-          {saving ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              {t('adminLeagueSettings.saving')}
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5 mr-2" />
-              {t('adminLeagueSettings.saveSettings')}
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-[slideInUp_0.3s_ease-out]">
-          <div className={`rounded-lg px-6 py-3 shadow-lg ${
-            toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-          }`}>
-            <span className="font-medium">{toast.message}</span>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+    </AdminPageLayout>
   );
 };
 

@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
-import ConfirmationModal from '../../components/ConfirmationModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
+import TeamAvatar from '../../components/TeamAvatar';
+import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {
   const { t } = useLanguage();
@@ -61,6 +62,16 @@ const AdminFixtures = () => {
     assistBy: ''
   });
   const [loading, setLoading] = useState(false);
+  const totalFixtures = fixtures.length;
+  const upcomingFixtures = fixtures.filter(f => ['scheduled', 'playing', 'live'].includes(f.status)).length;
+  const completedFixtures = fixtures.filter(f => ['finished', 'completed'].includes(f.status)).length;
+  const uniqueTeams = new Set(fixtures.flatMap(f => [f.homeTeamId, f.awayTeamId].filter(Boolean))).size;
+
+  const handleCreateClick = () => {
+    setEditingId(null);
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -351,39 +362,34 @@ const AdminFixtures = () => {
   };
 
   return (
-    <div className="pb-6">
-      {/* Header */}
-      <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="mb-4">
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
-            </button>
-            <div className="ml-2">
-              <h1 className="admin-header">{t('adminFixtures.title')}</h1>
-              <p className="text-sm text-gray-400">{fixtures.length} {t('adminFixtures.fixtures')}</p>
-            </div>
-          </div>
-          
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary w-full flex items-center justify-center text-sm py-2"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t('adminFixtures.addFixture')}
-          </button>
-        </div>
-      </div>
-
-      <div className="px-4 py-6">
+    <AdminPageLayout
+      title={t('adminFixtures.title')}
+      subtitle="FIXTURE OPS"
+      description={t('adminFixtures.getStarted')}
+      onBack={() => navigate(-1)}
+      actions={[
+        {
+          label: editingId ? t('adminFixtures.editFixture') : t('adminFixtures.addFixture'),
+          icon: Plus,
+          onClick: handleCreateClick,
+          variant: 'primary',
+        },
+      ]}
+      stats={[
+        { label: t('adminFixtures.fixtures'), value: totalFixtures, icon: Calendar },
+        { label: t('adminFixtures.scheduled'), value: upcomingFixtures, icon: Clock },
+        { label: t('adminFixtures.completed'), value: completedFixtures, icon: Check },
+        { label: t('pages.adminTeams.teams'), value: uniqueTeams || teams.length, icon: Users },
+      ]}
+    >
+      <div className="space-y-6">
         {/* Add/Edit Fixture Form */}
         {(showAddForm || editingId) && (
-          <div className="card p-6 mb-6">
+          <div className="card relative overflow-hidden p-4 sm:p-5">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-purple/10 via-transparent to-blue-500/10 opacity-80" />
+            <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-base font-semibold text-white uppercase tracking-[0.3em]">
                 {editingId ? t('adminFixtures.editFixture') : t('adminFixtures.addNewFixture')}
               </h3>
               <button
@@ -673,7 +679,7 @@ const AdminFixtures = () => {
                       <button
                         type="button"
                         onClick={() => setShowLineupModal('home')}
-                        className="btn-secondary w-full justify-center"
+                        className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
                       >
                         <Users className="w-4 h-4 mr-2" />
                         {t('adminFixtures.selectHomeLineup')}
@@ -698,7 +704,7 @@ const AdminFixtures = () => {
                       <button
                         type="button"
                         onClick={() => setShowLineupModal('away')}
-                        className="btn-secondary w-full justify-center"
+                        className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
                       >
                         <Users className="w-4 h-4 mr-2" />
                         {t('adminFixtures.selectAwayLineup')}
@@ -724,7 +730,7 @@ const AdminFixtures = () => {
                     <button
                       type="button"
                       onClick={() => setShowEventModal(true)}
-                      className="btn-secondary text-sm"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
                     >
                       <Zap className="w-4 h-4 mr-2" />
                       {t('adminFixtures.addEvent')}
@@ -783,24 +789,25 @@ const AdminFixtures = () => {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
                 >
                   {t('adminFixtures.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !formData.homeTeam || !formData.awayTeam}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative px-5 py-2 bg-gradient-to-r from-brand-purple to-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-[0.25em] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4" />
                   {loading ? (editingId ? t('adminFixtures.updating') : t('adminFixtures.adding')) : (editingId ? t('adminFixtures.updateFixture') : t('adminFixtures.addFixtureButton'))}
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 
@@ -906,7 +913,7 @@ const AdminFixtures = () => {
               <div className="sticky bottom-0 bg-gray-800 p-6 border-t border-gray-700">
                 <button
                   onClick={() => setShowLineupModal(null)}
-                  className="btn-primary w-full justify-center"
+                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.25em] flex items-center justify-center"
                 >
                   {t('adminFixtures.done')}
                 </button>
@@ -1064,7 +1071,7 @@ const AdminFixtures = () => {
                 <button
                   onClick={handleAddEvent}
                   disabled={!eventForm.team || !eventForm.player || !eventForm.minute}
-                  className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+                  className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.25em] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('adminFixtures.addEventButton')}
@@ -1075,7 +1082,8 @@ const AdminFixtures = () => {
         )}
 
         {/* Fixtures List */}
-        <div className="space-y-4">
+        {fixtures.length > 0 ? (
+          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
           {fixtures.map((fixture) => {
             // Handle both old (date/time) and new (dateTime) formats
             let dateTime;
@@ -1094,91 +1102,86 @@ const AdminFixtures = () => {
             const awayTeam = fixture.awayTeam || teams.find(t => t.id === fixture.awayTeamId) || { name: 'Unknown', logo: '' };
             
             return (
-              <div key={fixture.id} className="card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(fixture.status)}`}>
-                      {fixture.status.charAt(0).toUpperCase() + fixture.status.slice(1)}
-                    </span>
-                    <span className="text-sm text-gray-400">{fixture.competition}</span>
-                    {fixture.round && (
-                      <span className="text-sm text-gray-500">• {fixture.round}</span>
-                    )}
+              <div key={fixture.id} className="card group relative overflow-hidden p-3">
+                <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-brand-purple/10 via-transparent to-blue-500/10" />
+                <div className="relative space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-wrap gap-2 text-[11px] uppercase tracking-[0.3em] text-white/60">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold tracking-[0.25em] ${getStatusColor(fixture.status)}`}>
+                        {fixture.status.charAt(0).toUpperCase() + fixture.status.slice(1)}
+                      </span>
+                      {fixture.competition && <span>{fixture.competition}</span>}
+                      {fixture.round && <span>• {fixture.round}</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(fixture)}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-[0.2em] flex items-center gap-2"
+                        title="Edit fixture"
+                      >
+                        <Edit className="w-4 h-4" />
+                        {t('common.edit')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(t('adminFixtures.deleteConfirm'))) {
+                            console.log('Delete fixture:', fixture.id);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-xs font-semibold uppercase tracking-[0.2em]"
+                        title={t('adminFixtures.deleteFixture')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {t('common.delete')}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(fixture)}
-                      className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                      title="Edit fixture"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(t('adminFixtures.deleteConfirm'))) {
-                          console.log('Delete fixture:', fixture.id);
-                        }
-                      }}
-                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                      title={t('adminFixtures.deleteFixture')}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between">
-                  {/* Teams */}
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="flex items-center space-x-2">
-                      {homeTeam.logo && (
-                        <img
-                          src={homeTeam.logo}
-                          alt={homeTeam.name}
-                          className="w-8 h-8 object-contain"
-                        />
-                      )}
-                      <span className="font-medium text-white">{homeTeam.name}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <TeamAvatar 
+                        team={homeTeam} 
+                        size={40} 
+                        className="rounded-lg bg-black/30 border border-white/5"
+                      />
+                      <div>
+                        <p className="text-sm text-white/60 uppercase tracking-[0.25em]">{t('adminFixtures.home')}</p>
+                        <p className="text-lg font-semibold text-white">{homeTeam.name}</p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 px-4">
-                      {fixture.status === 'finished' ? (
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-white">
-                            {fixture.homeScore} - {fixture.awayScore}
-                          </div>
-                        </div>
+                    <div className="text-center px-4">
+                      {fixture.status === 'finished' || fixture.status === 'completed' ? (
+                        <div className="text-2xl font-bold text-white">{fixture.homeScore} - {fixture.awayScore}</div>
                       ) : (
-                        <div className="text-center">
-                          <div className="text-sm text-gray-400">VS</div>
-                        </div>
+                        <div className="text-xs uppercase tracking-[0.4em] text-white/50">VS</div>
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      {awayTeam.logo && (
-                        <img
-                          src={awayTeam.logo}
-                          alt={awayTeam.name}
-                          className="w-8 h-8 object-contain"
-                        />
-                      )}
-                      <span className="font-medium text-white">{awayTeam.name}</span>
+                    <div className="flex items-center gap-3 flex-1 justify-end">
+                      <div className="text-right">
+                        <p className="text-sm text-white/60 uppercase tracking-[0.25em]">{t('adminFixtures.away')}</p>
+                        <p className="text-lg font-semibold text-white">{awayTeam.name}</p>
+                      </div>
+                      <TeamAvatar 
+                        team={awayTeam} 
+                        size={40} 
+                        className="rounded-lg bg-black/30 border border-white/5"
+                      />
                     </div>
                   </div>
 
-                  {/* Date & Time */}
-                  <div className="text-right text-sm text-gray-400 ml-4">
-                    <div className="flex items-center space-x-1">
+                  <div className="flex items-center flex-wrap gap-4 text-xs text-white/60">
+                    <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>{dateTime.date}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       <span>{dateTime.time}</span>
                     </div>
                     {fixture.venue && (
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
                         <span>{fixture.venue}</span>
                       </div>
@@ -1188,18 +1191,17 @@ const AdminFixtures = () => {
               </div>
             );
           })}
-        </div>
-
-        {fixtures.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-gray-400" />
+          </div>
+        ) : (
+          <div className="card text-center py-10">
+            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-white/60" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">{t('adminFixtures.noFixtures')}</h3>
-            <p className="text-gray-400 mb-4">{t('adminFixtures.getStarted')}</p>
+            <h3 className="text-base font-semibold text-white mb-1">{t('adminFixtures.noFixtures')}</h3>
+            <p className="text-sm text-white/60 mb-4">{t('adminFixtures.getStarted')}</p>
             <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary"
+              onClick={handleCreateClick}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.25em]"
             >
               {t('adminFixtures.addFirstFixture')}
             </button>
@@ -1214,7 +1216,7 @@ const AdminFixtures = () => {
           onClose={hideToast}
         />
       )}
-    </div>
+    </AdminPageLayout>
   );
 };
 

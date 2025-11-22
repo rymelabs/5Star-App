@@ -19,6 +19,8 @@
                    "continue":  "Continue",
                    "notSpecified":  "Not specified",
                    "loadingMore":  "Loading more...",
+                   "loadMore":  "Load more",
+                   "showLess":  "Show less",
                    "noDataAvailable":  "No data available",
                    "tryAdjustingFilters":  "Try adjusting your filters",
                    "signInRequired":  "Sign In Required",
@@ -79,6 +81,7 @@
                                    "knockoutStage":  "Knockout Stage",
                                    "otherFixtures":  "Other Fixtures",
                                    "group":  "Group",
+                                   "groupTeamCount":  "{count} teams",
                                    "knockout":  "Knockout",
                                    "groupStage":  "Group Stage",
                                    "viewStandings":  "View Standings",
@@ -272,7 +275,9 @@
                                         "posting":  "Posting...",
                                         "post":  "Post",
                                         "logIn":  "Log in",
-                                        "toComment":  "to comment"
+                                        "toComment":  "to comment",
+                                        "noEvents": "No events available",
+                                        "noStats": "No statistics available"
                                     },
                   "admin":  {
                                 "accessDenied":  "Access Denied",
@@ -318,6 +323,7 @@
                                 "welcomeBack":  "Welcome back, {name}!",
                                 "whatsHappening":  "Here\u0027s what\u0027s happening with your sports app today.",
                                 "quickActions":  "Quick Actions",
+                                "management":  "Management",
                                 "contentManagement":  "Content Management",
                                 "items":  "items",
                                 "recentActivity":  "Recent Activity",
@@ -887,7 +893,11 @@
                   "cancelled":  "Cancelled",
                   "kickoff":  "Kickoff",
                   "venue":  "Venue",
-                  "referee":  "Referee"
+                  "referee":  "Referee",
+                  "date": "Date",
+                  "time": "Time",
+                  "whoWillWin": "Who will win?",
+                  "draw": "Draw"
               },
     "fixtures":  {
                      "active":  "Active",
@@ -984,6 +994,8 @@
                    "untitled":  "Untitled",
                    "placeholder":  "Search teams, players, competitions, fixtures, news...",
                    "searching":  "Searching...",
+                   "results":  "Results",
+                   "trending":  "Trending",
                    "noResults":  "No results found",
                    "trySearching":  "Try searching for teams, players, or news",
                    "startTyping":  "Start typing to search",

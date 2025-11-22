@@ -1,4 +1,4 @@
-import { getDocs, getDoc, collection, doc } from 'firebase/firestore';
+import { getDocs, getDoc, collection, doc, query, orderBy, limit } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 
 const checkDb = () => {
@@ -18,19 +18,28 @@ export const analyticsService = {
       if (!snap.exists()) return null;
       return { id: snap.id, ...snap.data() };
     } catch (error) {
+      if (error?.code === 'permission-denied') {
+        console.warn('analyticsService.getDailyByDate permission denied');
+        return null;
+      }
       console.error('analyticsService.getDailyByDate error', error);
       throw error;
     }
   },
 
   // List recent daily documents (simple implementation)
-  listRecentDaily: async (limit = 14) => {
+  listRecentDaily: async (limitCount = 14) => {
     try {
       const db = checkDb();
       const collectionRef = collection(db, 'analytics', 'daily', 'byDate');
-      const snaps = await getDocs(collectionRef);
-      return snaps.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=> b.date.localeCompare(a.date)).slice(0, limit);
+      const q = query(collectionRef, orderBy('date', 'desc'), limit(limitCount));
+      const snaps = await getDocs(q);
+      return snaps.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (error) {
+      if (error?.code === 'permission-denied') {
+        console.warn('analyticsService.listRecentDaily permission denied');
+        return [];
+      }
       console.error('analyticsService.listRecentDaily error', error);
       throw error;
     }

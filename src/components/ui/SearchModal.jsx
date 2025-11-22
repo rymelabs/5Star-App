@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search, Trophy, Users, Newspaper, Calendar, Shield } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { X, Search, Trophy, Users, Newspaper, Calendar, Shield, ArrowRight } from 'lucide-react';
 import { useNews } from '../../context/NewsContext';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
-const SearchModal = ({ onClose }) => {
+const SearchModal = ({ isOpen = true, onClose }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -254,69 +255,110 @@ const SearchModal = ({ onClose }) => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-opacity-75 flex items-start justify-center pt-20"
-      onClick={onClose}
-    >
-      <div 
-        className=" bg-black/50 backdrop-blur-sm border border-dark-700 rounded-lg w-full max-w-2xl mx-4 max-h-[600px] overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center p-4 border-b border-dark-700">
-          <Search className="w-5 h-5 text-gray-400 mr-3" />
-          <input
-            type="text"
-            placeholder={t('search.placeholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
-            autoFocus
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
+          onClick={onClose}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* Backdrop with heavy blur */}
+          <motion.div
+            className="absolute inset-0 bg-app/60 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           />
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-dark-700 transition-colors"
+
+          {/* Modal Container */}
+          <motion.div 
+            className="relative w-full max-w-2xl bg-elevated/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/5"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: 40, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
           >
-            <X className="w-5 h-5 text-gray-400 hover:text-white" />
-          </button>
+        {/* Search Input Area */}
+        <div className="relative border-b border-white/5 bg-white/5">
+          <div className="flex items-center px-6 py-5">
+            <Search className="w-6 h-6 text-brand-purple mr-4" />
+            <input
+              type="text"
+              placeholder={t('search.placeholder')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent text-xl text-white placeholder-white/30 outline-none font-light tracking-wide"
+              autoFocus
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="p-1 rounded-full hover:bg-white/10 transition-colors mr-2"
+              >
+                <X className="w-5 h-5 text-white/40" />
+              </button>
+            )}
+          </div>
         </div>
         
-        {/* Results */}
-        <div className="max-h-[500px] overflow-y-auto">
+        {/* Content Area */}
+        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="p-8 text-center text-gray-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              {t('search.searching')}
+            <div className="p-12 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-purple border-t-transparent mx-auto mb-4"></div>
+              <p className="text-white/40 font-light">{t('search.searching')}</p>
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
+              <div className="px-4 py-2 text-xs font-medium text-white/30 uppercase tracking-wider">
+                {t('search.results')}
+              </div>
               {results.map((result, index) => {
                 const IconComponent = result.icon;
                 return (
                   <button
                     key={`${result.type}-${result.id}-${index}`}
                     onClick={() => handleResultClick(result)}
-                    className="w-full px-4 py-3 text-left hover:bg-dark-700 transition-colors border-b border-dark-700 last:border-b-0"
+                    className="w-full px-6 py-4 text-left hover:bg-white/5 transition-all group border-b border-white/5 last:border-0"
                   >
-                    <div className="flex items-center gap-3">
-                      {/* Icon */}
-                      <div className="flex-shrink-0">
-                        <IconComponent className={`w-5 h-5 ${getCategoryColor(result.category)}`} />
+                    <div className="flex items-center gap-4">
+                      {/* Icon/Image Container */}
+                      <div className="relative flex-shrink-0">
+                        {result.image ? (
+                          <img
+                            src={result.image}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover shadow-lg ring-1 ring-white/10"
+                          />
+                        ) : (
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br ${
+                            result.category === 'Team' ? 'from-blue-500/20 to-brand-purple/20' :
+                            result.category === 'Competition' ? 'from-orange-500/20 to-red-500/20' :
+                            'from-gray-700 to-gray-800'
+                          }`}>
+                            <IconComponent className={`w-5 h-5 ${getCategoryColor(result.category)}`} />
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Content */}
+                      {/* Text Content */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-white truncate">
+                        <h3 className="text-lg font-medium text-white/90 group-hover:text-white transition-colors truncate">
                           {result.title}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs font-medium ${getCategoryColor(result.category)}`}>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white/5 ${getCategoryColor(result.category)}`}>
                             {result.category}
                           </span>
                           {result.subtitle && (
                             <>
-                              <span className="text-gray-600">•</span>
-                              <span className="text-xs text-gray-400 truncate">
+                              <span className="text-white/20">•</span>
+                              <span className="text-sm text-white/40 truncate">
                                 {result.subtitle}
                               </span>
                             </>
@@ -324,35 +366,53 @@ const SearchModal = ({ onClose }) => {
                         </div>
                       </div>
                       
-                      {/* Image */}
-                      {result.image && (
-                        <img
-                          src={result.image}
-                          alt=""
-                          className="w-12 h-12 rounded object-cover flex-shrink-0"
-                        />
-                      )}
+                      {/* Arrow Hint */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-200">
+                        <ArrowRight className="w-5 h-5 text-brand-purple" />
+                      </div>
                     </div>
                   </button>
                 );
               })}
             </div>
-          ) : query.trim().length >= 2 ? (
-            <div className="p-8 text-center text-gray-400">
-              <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">{t('search.noResults')}</p>
-              <p className="text-sm mt-1">{t('search.trySearching')}</p>
+          ) : query.trim().length === 0 ? (
+            <div className="p-8">
+              <div className="mb-8">
+                <h4 className="text-xs font-medium text-white/30 uppercase tracking-wider mb-4 px-2">
+                  {t('search.trending')}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Live Matches', 'News', 'Transfers', 'Tables', 'Competitions'].map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => setQuery(term)}
+                      className="px-4 py-2 rounded-full bg-white/5 hover:bg-brand-purple/20 border border-white/5 text-sm text-white/70 hover:text-brand-purple transition-all hover:scale-105 active:scale-95 hover:border-brand-purple/30"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-400">
-              <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">{t('search.startTyping')}</p>
-              <p className="text-sm mt-1">{t('search.searchAcross')}</p>
+            <div className="p-16 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                <Search className="w-8 h-8 text-white/20" />
+              </div>
+              <p className="text-lg font-medium text-white/60">{t('search.noResults')}</p>
+              <p className="text-sm text-white/30 mt-2">{t('search.trySearching')}</p>
             </div>
           )}
         </div>
-      </div>
-    </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 bg-white/5 border-t border-white/5 flex items-center justify-center text-xs text-white/30">
+          <span className="text-brand-purple/50">Fivescores</span>
+        </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

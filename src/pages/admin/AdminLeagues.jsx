@@ -5,15 +5,17 @@ import {
   ArrowLeft, 
   Plus, 
   Trophy, 
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Edit,
-  Trash2
+  TrendingUp, 
+  TrendingDown, 
+  Users, 
+  Edit, 
+  Trash2,
+  Settings
 } from 'lucide-react';
 import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import AdminPageLayout from '../../components/AdminPageLayout';
 
 const AdminLeagues = () => {
   const navigate = useNavigate();
@@ -89,120 +91,129 @@ const AdminLeagues = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center mb-4">
-          <button
-            onClick={() => navigate('/admin')}
-            className="mr-4 p-2 hover:bg-dark-700 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </button>
-          <div>
-            <h1 className="admin-header">{t('adminLeagues.title')}</h1>
-            <p className="text-sm text-gray-400 mt-1">
-              {t('adminLeagues.subtitle')}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate('/admin/leagues/create')}
-          className="btn-primary w-full flex items-center justify-center text-sm py-2"
+    <AdminPageLayout
+      title={t('adminLeagues.title')}
+      subtitle="MANAGEMENT"
+      description={t('adminLeagues.description')}
+      onBack={() => navigate('/admin')}
+      actions={[
+        {
+          label: t('adminLeagues.createLeague'),
+          icon: Plus,
+          onClick: () => navigate('/admin/leagues/create'),
+          primary: true
+        }
+      ]}
+      stats={[
+        { label: 'Total Leagues', value: leagues.length, icon: Trophy },
+        { label: 'Active', value: leagues.filter(l => l.isActive).length, icon: TrendingUp },
+      ]}
+    >
+      {/* Toast */}
+      {toast.show && (
+        <div
+          className={`mb-4 px-4 py-2 rounded-lg border ${
+            toast.type === 'success' ? 'border-green-500/40 text-green-200' : 'border-red-500/40 text-red-200'
+          } bg-white/5 text-sm`}
         >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('adminLeagues.createLeague')}
-        </button>
-      </div>
+          {toast.message}
+        </div>
+      )}
 
-      {/* Loading State */}
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex justify-center py-12">
+          <div className="w-8 h-8 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
         </div>
       ) : leagues.length === 0 ? (
-        /* Empty State */
-        <div className="card p-12 text-center">
-          <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">{t('adminLeagues.noLeagues')}</h2>
-          <p className="text-gray-400 mb-6">
-            {t('adminLeagues.noLeaguesMessage')}
-          </p>
+        <div className="card text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center">
+            <Trophy className="w-8 h-8 text-white/60" />
+          </div>
+          <h3 className="text-base font-semibold text-white mb-2">{t('adminLeagues.noLeagues')}</h3>
+          <p className="text-sm text-white/60 mb-6">{t('adminLeagues.createFirst')}</p>
           <button
             onClick={() => navigate('/admin/leagues/create')}
-            className="btn-primary inline-flex items-center"
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-purple to-blue-500 text-white text-xs font-semibold uppercase tracking-[0.3em]"
           >
-            <Plus className="w-5 h-5 mr-2" />
             {t('adminLeagues.createLeague')}
           </button>
         </div>
       ) : (
-        /* Leagues Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {leagues.map((league) => (
-            <div key={league.id} className="card p-6 hover:shadow-xl transition-shadow">
-              {/* League Name */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
-                  <Trophy className="w-6 h-6 text-primary-500 mr-3" />
-                  <h3 className="text-lg font-semibold text-white">
-                    {league.name}
-                  </h3>
+            <div
+              key={league.id}
+              className="card relative overflow-hidden p-3 group hover:border-brand-purple/30 transition-colors"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-purple/5 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="relative">
+                <div className="flex items-start justify-between mb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    {league.logo ? (
+                      <img src={league.logo} alt={league.name} className="w-9 h-9 rounded-lg object-cover bg-white/5" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+                        <Trophy className="w-4 h-4 text-white/40" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-[13px] font-semibold text-white">{league.name}</h3>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider">{league.season || 'Current Season'}</p>
+                    </div>
+                  </div>
+                  <div className={`px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider border ${
+                    league.isActive 
+                      ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                      : 'bg-white/5 text-white/40 border-white/10'
+                  }`}>
+                    {league.isActive ? 'Active' : 'Inactive'}
+                  </div>
                 </div>
-              </div>
 
-              {/* League Stats */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center text-sm">
-                  <Users className="w-4 h-4 text-gray-400 mr-2" />
-                  <span className="text-gray-300">
-                    {league.totalTeams} {t('adminLeagues.teams')}
-                  </span>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="p-1.5 rounded-lg bg-white/5 border border-white/5">
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5">Teams</p>
+                    <p className="text-xs font-medium text-white">{league.teamsCount || 0}</p>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-white/5 border border-white/5">
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5">Matches</p>
+                    <p className="text-xs font-medium text-white">{league.matchesCount || 0}</p>
+                  </div>
                 </div>
-                <div className="flex items-center text-sm">
-                  <TrendingUp className="w-4 h-4 text-primary-400 mr-2" />
-                  <span className="text-gray-300">
-                    {t('adminLeagues.topQualify').replace('{position}', league.qualifiedPosition)}
-                  </span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <TrendingDown className="w-4 h-4 text-red-400 mr-2" />
-                  <span className="text-gray-300">
-                    {t('adminLeagues.relegated').replace('{position}', league.relegationPosition)}
-                  </span>
-                </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-dark-600">
-                <button
-                  onClick={() => navigate(`/admin/leagues/edit/${league.id}`)}
-                  className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
-                  title={t('adminLeagues.editLeague')}
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(league.id, league.name)}
-                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                  title={t('adminLeagues.deleteLeague')}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => navigate(`/admin/leagues/${league.id}`)}
+                    className="flex-1 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-medium text-white transition-colors"
+                  >
+                    Manage
+                  </button>
+                  <button
+                    onClick={() => navigate(`/admin/leagues/${league.id}/edit`)}
+                    className="p-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/admin/leagues/${league.id}/settings`)}
+                    className="p-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors"
+                    title="Settings"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(league.id, league.name)}
+                    className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-[slideInUp_0.3s_ease-out]">
-          <div className={`rounded-lg px-6 py-3 shadow-lg ${
-            toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-          }`}>
-            <span className="font-medium">{toast.message}</span>
-          </div>
         </div>
       )}
 
@@ -210,12 +221,13 @@ const AdminLeagues = () => {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' })}
         onConfirm={confirmDeleteLeague}
-        title={t('adminLeagues.deleteLeague')}
-        message={t('adminLeagues.confirmDelete').replace('{name}', confirmDelete.leagueName)}
-        confirmText={t('adminLeagues.deleteLeague')}
+        title={t('adminLeagues.deleteTitle')}
+        message={t('adminLeagues.deleteMessage', { name: confirmDelete.leagueName })}
+        confirmText={t('adminLeagues.deleteConfirm')}
+        cancelText={t('common.cancel')}
         type="danger"
       />
-    </div>
+    </AdminPageLayout>
   );
 };
 

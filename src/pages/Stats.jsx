@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChart3 } from 'lucide-react';
+import TeamAvatar from '../components/TeamAvatar';
+import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChart3, ChevronRight } from 'lucide-react';
 
 const Stats = () => {
   const { fixtures, teams, activeSeason, seasons } = useFootball();
@@ -18,13 +20,23 @@ const Stats = () => {
     mostConceded: false
   });
 
-  // Filter fixtures based on selected filters
+  // Filter fixtures based on selected filters (for player stats - requires events)
   const filteredFixtures = useMemo(() => {
     return fixtures.filter(fixture => {
       const isCompleted = fixture.status === 'completed';
       const matchesSeason = selectedSeason === 'all' || fixture.season === selectedSeason;
       const matchesCompetition = selectedCompetition === 'all' || fixture.competition === selectedCompetition;
       return isCompleted && matchesSeason && matchesCompetition && fixture.events;
+    });
+  }, [fixtures, selectedSeason, selectedCompetition]);
+
+  // Filter fixtures for team stats (requires completed status and scores)
+  const filteredFixturesForTeams = useMemo(() => {
+    return fixtures.filter(fixture => {
+      const isCompleted = fixture.status === 'completed';
+      const matchesSeason = selectedSeason === 'all' || fixture.season === selectedSeason;
+      const matchesCompetition = selectedCompetition === 'all' || fixture.competition === selectedCompetition;
+      return isCompleted && matchesSeason && matchesCompetition;
     });
   }, [fixtures, selectedSeason, selectedCompetition]);
 
@@ -322,7 +334,7 @@ const Stats = () => {
       ...team,
       goalDifference: team.goalsFor - team.goalsAgainst
     }));
-  }, [filteredFixtures]);
+  }, [filteredFixturesForTeams]);
 
   // Top scoring teams
   const topScoringTeams = useMemo(() => {
@@ -364,100 +376,99 @@ const Stats = () => {
     { id: 'teams', label: t('stats.teamStats'), icon: BarChart3, color: 'text-orange-400' }
   ];
 
-  const renderPlayerCard = (player, index, stat) => {
-    const statValue = player[stat];
-    const isTopThree = index < 3;
-    const medals = ['🥇', '🥈', '🥉'];
-
+  const renderPlayerCard = (player, index, statKey) => {
+    const isTop3 = index < 3;
+    const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500';
+    
     return (
-      <div
-        key={`${player.playerId}_${player.teamName}`}
-        className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
-          isTopThree ? 'bg-gradient-to-r from-purple-900/30 to-purple-800/20 border-2 border-purple-500/30' : 'bg-dark-800'
-        }`}
-      >
+      <div key={`${player.playerId}_${player.teamName}`} className="group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3">
         {/* Rank */}
-        <div className="w-8 text-center flex-shrink-0">
-          {isTopThree ? (
-            <span className="text-lg">{medals[index]}</span>
-          ) : (
-            <span className="text-gray-400 font-semibold">{index + 1}</span>
-          )}
-        </div>
-
-        {/* Jersey Number */}
-        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-          {player.jerseyNumber || '?'}
+        <div className={`text-xl sm:text-2xl font-black ${rankColor} w-7 text-center flex-shrink-0`}>
+          {index + 1}
         </div>
 
         {/* Player Info */}
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-white truncate">{player.playerName}</div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            {player.teamLogo && player.teamLogo.trim() && (
-              <img src={player.teamLogo} alt="" className="w-4 h-4 object-contain" />
+        <div className="flex-1 min-w-0 flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden">
+              <Users className="w-5 h-5 text-gray-400" />
+            </div>
+            {player.teamLogo && (
+              <img 
+                src={player.teamLogo} 
+                alt={player.teamName}
+                className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#121212] bg-white object-contain p-0.5"
+              />
             )}
-            <span className="truncate">{player.teamName}</span>
+          </div>
+          
+          <div className="min-w-0">
+            <h3 className="text-white font-semibold truncate text-sm sm:text-base group-hover:text-brand-purple transition-colors">
+              {player.playerName}
+            </h3>
+            <p className="text-gray-400 text-[11px] truncate">{player.teamName}</p>
           </div>
         </div>
 
         {/* Stat Value */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-lg font-bold text-white">{statValue}</div>
-          {stat === 'cleanSheets' && player.appearances && (
-            <div className="text-xs text-gray-400">{player.appearances} apps</div>
-          )}
+        <div className="text-right">
+          <div className="text-xl sm:text-2xl font-black text-white group-hover:scale-110 transition-transform duration-300">
+            {player[statKey]}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">
+            {statKey === 'goals' ? 'Goals' : statKey === 'assists' ? 'Assists' : 'Clean Sheets'}
+          </div>
         </div>
       </div>
     );
   };
 
   const renderDisciplineCard = (player, index) => {
-    const totalPoints = player.redCards * 2 + player.yellowCards;
-    const isTopThree = index < 3;
+    const isTop3 = index < 3;
+    const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500';
 
     return (
-      <div
-        key={`${player.playerId}_${player.teamName}`}
-        className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
-          isTopThree ? 'bg-gradient-to-r from-red-900/20 to-yellow-900/20 border-2 border-red-500/30' : 'bg-dark-800'
-        }`}
-      >
+      <div key={`${player.playerId}_${player.teamName}`} className="group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3">
         {/* Rank */}
-        <div className="w-8 text-center flex-shrink-0">
-          <span className={`${isTopThree ? 'text-red-400' : 'text-gray-400'} font-semibold`}>
-            {index + 1}
-          </span>
-        </div>
-
-        {/* Jersey Number */}
-        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-          {player.jerseyNumber || '?'}
+        <div className={`text-xl sm:text-2xl font-black ${rankColor} w-7 text-center flex-shrink-0`}>
+          {index + 1}
         </div>
 
         {/* Player Info */}
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-white truncate">{player.playerName}</div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            {player.teamLogo && player.teamLogo.trim() && (
-              <img src={player.teamLogo} alt="" className="w-4 h-4 object-contain" />
+        <div className="flex-1 min-w-0 flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden">
+              <Users className="w-5 h-5 text-gray-400" />
+            </div>
+            {player.teamLogo && (
+              <img 
+                src={player.teamLogo} 
+                alt={player.teamName}
+                className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#121212] bg-white object-contain p-0.5"
+              />
             )}
-            <span className="truncate">{player.teamName}</span>
+          </div>
+          
+          <div className="min-w-0">
+            <h3 className="text-white font-semibold truncate text-sm sm:text-base group-hover:text-brand-purple transition-colors">
+              {player.playerName}
+            </h3>
+            <p className="text-gray-400 text-[11px] truncate">{player.teamName}</p>
           </div>
         </div>
 
         {/* Cards */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {player.yellowCards > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-4 bg-yellow-400 rounded-sm"></div>
-              <span className="text-white font-semibold">{player.yellowCards}</span>
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-4 bg-yellow-400 rounded-sm shadow-lg shadow-yellow-400/20 mb-1"></div>
+              <span className="text-white font-bold text-xs">{player.yellowCards}</span>
             </div>
           )}
           {player.redCards > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-4 bg-red-500 rounded-sm"></div>
-              <span className="text-white font-semibold">{player.redCards}</span>
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-4 bg-red-500 rounded-sm shadow-lg shadow-red-500/20 mb-1"></div>
+              <span className="text-white font-bold text-xs">{player.redCards}</span>
             </div>
           )}
         </div>
@@ -466,340 +477,386 @@ const Stats = () => {
   };
 
   return (
-    <div className="px-4 py-6 pb-24 lg:px-6">
-      <div className="stats-bento-grid">
-        <section className="bento-section stats-header">
-          <div>
-            <h1 className="page-header mb-2 flex items-center gap-2">
-              <Trophy className="w-7 h-7 text-purple-400" />
-              {t('stats.title')}
-            </h1>
-            <p className="text-gray-400">
-              {t('stats.trackPerformance')}
-            </p>
-          </div>
-        </section>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen pb-24 relative overflow-hidden"
+    >
+      {/* Background Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-96 blur-[120px] rounded-full pointer-events-none" />
 
-        <section className="bento-section stats-filters">
-          <div className="bg-dark-900 border border-dark-700 rounded-xl p-4 h-full">
-            <div className="flex items-center gap-2 mb-3 text-gray-300">
-              <Filter className="w-4 h-4" />
-              <span className="text-sm font-medium">{t('stats.filters')}</span>
+      {/* Header */}
+      <div className="relative w-full z-10">
+        <div className="px-4 sm:px-10 pt-6 pb-4">
+          <h1 className="page-header mb-2 flex items-center gap-3">
+            <BarChart3 className="w-8 h-8 text-brand-purple" />
+            {t('stats.title')}
+          </h1>
+          <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+            {t('stats.trackPerformance')}
+          </p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="relative w-full z-10 mb-8">
+        <div className="px-4 sm:px-10">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4 text-white/80">
+              <Filter className="w-4 h-4 text-brand-purple" />
+              <span className="text-sm font-bold uppercase tracking-wider">{t('stats.filters')}</span>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Season Filter */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">{t('stats.season')}</label>
+              <div className="relative">
                 <select
                   value={selectedSeason}
                   onChange={(e) => setSelectedSeason(e.target.value)}
-                  className="input-field w-full"
+                  className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple/50 transition-colors"
                 >
-                  <option value="all">{t('stats.allSeasons')}</option>
+                  <option value="all" className="bg-dark-900">{t('stats.allSeasons')}</option>
                   {seasons.map(season => (
-                    <option key={season.id} value={season.id}>{season.name}</option>
+                    <option key={season.id} value={season.id} className="bg-dark-900">{season.name}</option>
                   ))}
                 </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
+                </div>
               </div>
 
               {/* Competition Filter */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">{t('stats.competition')}</label>
+              <div className="relative">
                 <select
                   value={selectedCompetition}
                   onChange={(e) => setSelectedCompetition(e.target.value)}
-                  className="input-field w-full"
+                  className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple/50 transition-colors"
                 >
-                  <option value="all">{t('stats.allCompetitions')}</option>
+                  <option value="all" className="bg-dark-900">{t('stats.allCompetitions')}</option>
                   {availableCompetitions.map(comp => (
-                    <option key={comp} value={comp}>{comp}</option>
+                    <option key={comp} value={comp} className="bg-dark-900">{comp}</option>
                   ))}
                 </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
+                </div>
               </div>
             </div>
           </div>
-        </section>
-
-        <section className="bento-section stats-tabs">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-dark-800 text-gray-400 hover:bg-dark-700'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-white' : tab.color}`} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="bento-section stats-content">
-          <div className="space-y-3">
-        {/* Top Scorers */}
-        {activeTab === 'scorers' && (
-          <>
-            {topScorers.length > 0 ? (
-              topScorers.map((player, index) => renderPlayerCard(player, index, 'goals'))
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>{t('stats.noGoalScorers')}</p>
-                <p className="text-sm mt-1">{t('stats.goalsMessage')}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Top Assists */}
-        {activeTab === 'assists' && (
-          <>
-            {topAssisters.length > 0 ? (
-              topAssisters.map((player, index) => renderPlayerCard(player, index, 'assists'))
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>{t('stats.noAssists')}</p>
-                <p className="text-sm mt-1">{t('stats.assistsMessage')}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Clean Sheets */}
-        {activeTab === 'cleansheets' && (
-          <>
-            {cleanSheets.length > 0 ? (
-              cleanSheets.map((player, index) => renderPlayerCard(player, index, 'cleanSheets'))
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>{t('stats.noCleanSheets')}</p>
-                <p className="text-sm mt-1">{t('stats.cleanSheetsMessage')}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Discipline */}
-        {activeTab === 'discipline' && (
-          <>
-            {disciplinaryRecords.length > 0 ? (
-              disciplinaryRecords.map((player, index) => renderDisciplineCard(player, index))
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>{t('stats.noCards')}</p>
-                <p className="text-sm mt-1">{t('stats.cardsMessage')}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Team Stats */}
-        {activeTab === 'teams' && (
-          <div className="space-y-6">
-            {/* Top Scoring Teams */}
-            <div>
-              <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-                <Target className="w-5 h-5 text-green-400" />
-                {t('stats.topScoringTeams')}
-              </h3>
-              {topScoringTeams.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    {topScoringTeams.slice(0, expandedTeamStats.topScoring ? 10 : 3).map((team, index) => (
-                      <div
-                        key={team.teamId}
-                        className={`flex items-center gap-4 p-4 rounded-lg ${
-                          index < 3 ? 'bg-gradient-to-r from-green-900/30 to-green-800/20 border-2 border-green-500/30' : 'bg-dark-800'
-                        }`}
-                      >
-                        <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
-                        {team.teamLogo && team.teamLogo.trim() && (
-                          <img src={team.teamLogo} alt={team.teamName} className="w-8 h-8 object-contain" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.played} {t('stats.matches')}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-400">{team.goalsFor}</div>
-                          <div className="text-xs text-gray-400">{t('pages.latest.goals')}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {topScoringTeams.length > 3 && (
-                    <button
-                      onClick={() => setExpandedTeamStats(prev => ({ ...prev, topScoring: !prev.topScoring }))}
-                      className="w-full mt-3 py-2 text-sm text-green-400 hover:text-green-300 font-medium transition-colors"
-                    >
-                      {expandedTeamStats.topScoring ? t('stats.showLess') : `${t('stats.seeMore')} (${topScoringTeams.length - 3} ${t('stats.more')})`}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">{t('stats.noTeamData')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Best Defense */}
-            <div>
-              <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-blue-400" />
-                {t('stats.bestDefense')}
-              </h3>
-              {bestDefense.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    {bestDefense.slice(0, expandedTeamStats.bestDefense ? 10 : 3).map((team, index) => (
-                      <div
-                        key={team.teamId}
-                        className={`flex items-center gap-4 p-4 rounded-lg ${
-                          index < 3 ? 'bg-gradient-to-r from-blue-900/30 to-blue-800/20 border-2 border-blue-500/30' : 'bg-dark-800'
-                        }`}
-                      >
-                        <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
-                        {team.teamLogo && team.teamLogo.trim() && (
-                          <img src={team.teamLogo} alt={team.teamName} className="w-8 h-8 object-contain" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.cleanSheets} {t('stats.cleanSheets').toLowerCase()}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-blue-400">{team.goalsAgainst}</div>
-                          <div className="text-xs text-gray-400">{t('stats.conceded')}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {bestDefense.length > 3 && (
-                    <button
-                      onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestDefense: !prev.bestDefense }))}
-                      className="w-full mt-3 py-2 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
-                    >
-                      {expandedTeamStats.bestDefense ? t('stats.showLess') : `${t('stats.seeMore')} (${bestDefense.length - 3} ${t('stats.more')})`}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">{t('stats.noTeamData')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Best Goal Difference */}
-            <div>
-              <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-purple-400" />
-                {t('stats.bestGoalDiff')}
-              </h3>
-              {bestGoalDifference.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    {bestGoalDifference.slice(0, expandedTeamStats.bestGD ? 10 : 3).map((team, index) => (
-                      <div
-                        key={team.teamId}
-                        className={`flex items-center gap-4 p-4 rounded-lg ${
-                          index < 3 ? 'bg-gradient-to-r from-purple-900/30 to-purple-800/20 border-2 border-purple-500/30' : 'bg-dark-800'
-                        }`}
-                      >
-                        <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
-                        {team.teamLogo && team.teamLogo.trim() && (
-                          <img src={team.teamLogo} alt={team.teamName} className="w-8 h-8 object-contain" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.goalsFor} {t('stats.scored')}, {team.goalsAgainst} {t('stats.conceded')}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className={`text-lg font-bold ${team.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {team.goalDifference >= 0 ? '+' : ''}{team.goalDifference}
-                          </div>
-                          <div className="text-xs text-gray-400">GD</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {bestGoalDifference.length > 3 && (
-                    <button
-                      onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestGD: !prev.bestGD }))}
-                      className="w-full mt-3 py-2 text-sm text-purple-400 hover:text-purple-300 font-medium transition-colors"
-                    >
-                      {expandedTeamStats.bestGD ? t('stats.showLess') : `${t('stats.seeMore')} (${bestGoalDifference.length - 3} ${t('stats.more')})`}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">{t('stats.noTeamData')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Worst Defense */}
-            <div>
-              <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-400" />
-                {t('stats.mostConceded')}
-              </h3>
-              {mostGoalsConceded.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    {mostGoalsConceded.slice(0, expandedTeamStats.mostConceded ? 10 : 3).map((team, index) => (
-                      <div
-                        key={team.teamId}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-dark-800"
-                      >
-                        <span className="text-lg font-bold text-gray-400 w-8">{index + 1}</span>
-                        {team.teamLogo && team.teamLogo.trim() && (
-                          <img src={team.teamLogo} alt={team.teamName} className="w-8 h-8 object-contain" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{team.teamName}</p>
-                          <p className="text-xs text-gray-400">{team.played} {t('stats.matches')}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-red-400">{team.goalsAgainst}</div>
-                          <div className="text-xs text-gray-400">{t('stats.conceded')}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {mostGoalsConceded.length > 3 && (
-                    <button
-                      onClick={() => setExpandedTeamStats(prev => ({ ...prev, mostConceded: !prev.mostConceded }))}
-                      className="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
-                    >
-                      {expandedTeamStats.mostConceded ? t('stats.showLess') : `${t('stats.seeMore')} (${mostGoalsConceded.length - 3} ${t('stats.more')})`}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">{t('stats.noTeamData')}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
         </div>
-      </section>
-    </div>
-  </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-0 sm:px-6 relative z-10">
+        {/* Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-4 sm:px-0">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex items-center gap-2 px-5 py-2.5 rounded-full font-bold whitespace-nowrap transition-all duration-300 border
+                  ${isActive
+                    ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20'
+                    : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
+                  }
+                `}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : ''}`} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
+        <div className="border-y sm:border border-white/5 sm:rounded-3xl overflow-hidden min-h-[400px]">
+          <div className="flex flex-col">
+            {/* Top Scorers */}
+            {activeTab === 'scorers' && (
+              <>
+                {topScorers.length > 0 ? (
+                  topScorers.map((player, index) => renderPlayerCard(player, index, 'goals'))
+                ) : (
+                  <div className="text-center py-20 px-4 rounded-2xl">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-400 font-medium">{t('stats.noGoalScorers')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('stats.goalsMessage')}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Top Assists */}
+            {activeTab === 'assists' && (
+              <>
+                {topAssisters.length > 0 ? (
+                  topAssisters.map((player, index) => renderPlayerCard(player, index, 'assists'))
+                ) : (
+                  <div className="text-center py-20 px-4 rounded-2xl">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-400 font-medium">{t('stats.noAssists')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('stats.assistsMessage')}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Clean Sheets */}
+            {activeTab === 'cleansheets' && (
+              <>
+                {cleanSheets.length > 0 ? (
+                  cleanSheets.map((player, index) => renderPlayerCard(player, index, 'cleanSheets'))
+                ) : (
+                  <div className="text-center py-20 px-4 rounded-2xl">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Shield className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-400 font-medium">{t('stats.noCleanSheets')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('stats.cleanSheetsMessage')}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Discipline */}
+            {activeTab === 'discipline' && (
+              <>
+                {disciplinaryRecords.length > 0 ? (
+                  disciplinaryRecords.map((player, index) => renderDisciplineCard(player, index))
+                ) : (
+                  <div className="text-center py-20 px-4 rounded-2xl">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-400 font-medium">{t('stats.noCards')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('stats.cardsMessage')}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Team Stats */}
+            {activeTab === 'teams' && (
+              <div className="p-4 space-y-8">
+                {/* Top Scoring Teams */}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-green-400" />
+                    {t('stats.topScoringTeams')}
+                  </h3>
+                  {topScoringTeams.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        {topScoringTeams.slice(0, expandedTeamStats.topScoring ? 10 : 3).map((team, index) => (
+                          <div
+                            key={team.teamId}
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
+                              index < 3 
+                                ? 'bg-green-500/10 border-green-500/20' 
+                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-green-400' : 'text-gray-500'}`}>{index + 1}</span>
+                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <div className="flex-1">
+                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
+                              <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg sm:text-xl font-black text-green-400">{team.goalsFor}</div>
+                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('pages.latest.goals')}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {topScoringTeams.length > 3 && (
+                        <button
+                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, topScoring: !prev.topScoring }))}
+                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-green-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
+                        >
+                          {expandedTeamStats.topScoring ? t('stats.showLess') : (
+                            <>
+                              {t('stats.seeMore')} <span className="bg-green-500/20 px-2 py-0.5 rounded text-xs">+{topScoringTeams.length - 3}</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                      <p className="text-sm">{t('stats.noTeamData')}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Worst Defense */}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                    {t('stats.mostConceded')}
+                  </h3>
+                  {mostGoalsConceded.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        {mostGoalsConceded.slice(0, expandedTeamStats.mostConceded ? 10 : 3).map((team, index) => (
+                          <div
+                            key={team.teamId}
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
+                              index < 3 
+                                ? 'bg-red-500/10 border-red-500/20' 
+                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-red-400' : 'text-gray-500'}`}>{index + 1}</span>
+                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <div className="flex-1">
+                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
+                              <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg sm:text-xl font-black text-red-400">{team.goalsAgainst}</div>
+                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('stats.conceded')}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {mostGoalsConceded.length > 3 && (
+                        <button
+                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, mostConceded: !prev.mostConceded }))}
+                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-red-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
+                        >
+                          {expandedTeamStats.mostConceded ? t('stats.showLess') : (
+                            <>
+                              {t('stats.seeMore')} <span className="bg-red-500/20 px-2 py-0.5 rounded text-xs">+{mostGoalsConceded.length - 3}</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                      <p className="text-sm">{t('stats.noTeamData')}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Best Defense */}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-blue-400" />
+                    {t('stats.bestDefense')}
+                  </h3>
+                  {bestDefense.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        {bestDefense.slice(0, expandedTeamStats.bestDefense ? 10 : 3).map((team, index) => (
+                          <div
+                            key={team.teamId}
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
+                              index < 3 
+                                ? 'bg-blue-500/10 border-blue-500/20' 
+                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-blue-400' : 'text-gray-500'}`}>{index + 1}</span>
+                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <div className="flex-1">
+                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
+                              <p className="text-[11px] text-gray-400">{team.cleanSheets} {t('stats.cleanSheets').toLowerCase()}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg sm:text-xl font-black text-blue-400">{team.goalsAgainst}</div>
+                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('stats.conceded')}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {bestDefense.length > 3 && (
+                        <button
+                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestDefense: !prev.bestDefense }))}
+                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-blue-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
+                        >
+                          {expandedTeamStats.bestDefense ? t('stats.showLess') : (
+                            <>
+                              {t('stats.seeMore')} <span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">+{bestDefense.length - 3}</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                      <p className="text-sm">{t('stats.noTeamData')}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Best Goal Difference */}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-purple-400" />
+                    {t('stats.bestGoalDiff')}
+                  </h3>
+                  {bestGoalDifference.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        {bestGoalDifference.slice(0, expandedTeamStats.bestGD ? 10 : 3).map((team, index) => (
+                          <div
+                            key={team.teamId}
+                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
+                              index < 3 
+                                ? 'bg-purple-500/10 border-purple-500/20' 
+                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-purple-400' : 'text-gray-500'}`}>{index + 1}</span>
+                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <div className="flex-1">
+                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
+                              <p className="text-[11px] text-gray-400">{team.goalsFor} {t('stats.scored')}, {team.goalsAgainst} {t('stats.conceded')}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-lg sm:text-xl font-black ${team.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {team.goalDifference >= 0 ? '+' : ''}{team.goalDifference}
+                              </div>
+                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">GD</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {bestGoalDifference.length > 3 && (
+                        <button
+                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestGD: !prev.bestGD }))}
+                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-purple-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
+                        >
+                          {expandedTeamStats.bestGD ? t('stats.showLess') : (
+                            <>
+                              {t('stats.seeMore')} <span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">+{bestGoalDifference.length - 3}</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                      <p className="text-sm">{t('stats.noTeamData')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

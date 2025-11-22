@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
@@ -42,6 +43,12 @@ const AdminDashboard = () => {
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const pageMotionProps = {
+    initial: { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -24 },
+    transition: { duration: 0.3, ease: 'easeOut' },
+  };
 
   // Fetch recent activities
   useEffect(() => {
@@ -87,7 +94,7 @@ const AdminDashboard = () => {
   // Redirect if not admin
   if (!user?.isAdmin) {
     return (
-      <div className="p-4 text-center">
+      <motion.div {...pageMotionProps} className="p-4 text-center">
         <div className="card p-8">
           <h2 className="text-lg font-semibold text-white mb-4">{t('pages.admin.accessDenied')}</h2>
           <p className="text-gray-400 mb-6">{t('pages.admin.accessDeniedDesc')}</p>
@@ -98,7 +105,7 @@ const AdminDashboard = () => {
             {t('pages.admin.goHome')}
           </button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -264,124 +271,133 @@ const AdminDashboard = () => {
 
 
   return (
-    <div className="pb-6">
+    <motion.div {...pageMotionProps} className="relative min-h-screen">
+      {/* Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-brand-purple/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-20%] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px]" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 bg-dark-900 z-10 px-4 py-3 border-b border-dark-700">
-        <div className="flex items-center">
+      <div className="sticky top-0 z-50 bg-black/30 backdrop-blur-2xl supports-[backdrop-filter]:bg-black/20 border-b border-white/5">
+        <div className="flex items-center px-4 h-14">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-dark-800 transition-colors"
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors -ml-2"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
           <div className="ml-2">
-            <h1 className="admin-header">{t('navigation.adminDashboard')}</h1>
-            <p className="text-sm text-gray-400">{t('pages.admin.manageContent')}</p>
+            <h1 className="text-lg font-bold tracking-tight text-white">{t('navigation.adminDashboard')}</h1>
           </div>
         </div>
       </div>
 
-      <div className="px-4 py-6">
+      <div className="relative z-10 pt-6 space-y-8">
         {/* Welcome Section */}
-        <div className="card p-6 mb-8 bg-gradient-to-r from-primary-600/10 to-accent-600/10 border-primary-600/20">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center mr-4">
-              <BarChart3 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-1">
-                {t('pages.admin.welcomeBack').replace('{name}', user.name)}
-              </h2>
-              <p className="text-gray-400">
-                {t('pages.admin.whatsHappening')}
-              </p>
+        <div className="px-4">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-purple/20 to-blue-600/20 border border-white/10 p-1">
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
+            <div className="relative p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-brand-purple flex items-center justify-center shadow-lg shadow-brand-purple/30">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1">
+                  {t('pages.admin.welcomeBack').replace('{name}', user.name)}
+                </h2>
+                <p className="text-sm text-white/60">
+                  {t('pages.admin.whatsHappening')}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <div key={stat.title} className="card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
-                    <Icon className={`w-5 h-5 ${stat.color}`} />
-                  </div>
+        <div className="px-4">
+          <div className="grid grid-cols-2 gap-3">
+            {stats.map((stat, index) => (
+              <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                <div className={`w-8 h-8 rounded-full ${stat.bgColor} flex items-center justify-center mb-3`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
-                <div className="text-lg font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-400">{stat.title}</div>
+                <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-xs font-medium text-white/40 uppercase tracking-wider">{stat.title}</div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.quickActions')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.title}
-                  onClick={action.onClick}
-                  className="card p-4 text-left hover:bg-dark-700 transition-colors"
-                >
-                  <div className="flex items-start">
-                    <Icon className={`w-6 h-6 ${action.color} mr-3 mt-1`} />
-                    <div>
-                      <h4 className="font-medium text-white mb-1">{action.title}</h4>
-                      <p className="text-sm text-gray-400">{action.description}</p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+            ))}
           </div>
         </div>
 
-        {/* Stats Modal */}
-        {showStats && (
-          <StatsModal onClose={() => setShowStats(false)} />
-        )}
+        {/* Quick Actions */}
+        <div className="space-y-3 px-4">
+          <div className="flex items-center gap-2 text-brand-purple px-2">
+            <Activity className="w-4 h-4" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.quickActions')}</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-4 text-left hover:bg-white/10 transition-all group"
+              >
+                <div className={`w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                  <action.icon className={`w-4 h-4 ${action.color}`} />
+                </div>
+                <h3 className="text-sm font-bold text-white mb-1">{action.title}</h3>
+                <p className="text-[10px] text-white/40 leading-relaxed line-clamp-2">{action.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Management Sections */}
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.contentManagement')}</h3>
-          <div className="space-y-4">
-            {managementSections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.title}
-                  onClick={() => navigate(section.path)}
-                  className="w-full card p-4 text-left hover:bg-dark-700 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start">
-                      <Icon className={`w-6 h-6 ${section.color} mr-3 mt-1`} />
-                      <div>
-                        <h4 className="font-medium text-white mb-1">{section.title}</h4>
-                        <p className="text-sm text-gray-400">{section.description}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-white">{section.count}</div>
-                      <div className="text-xs text-gray-500">{t('pages.admin.items')}</div>
-                    </div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-brand-purple px-6">
+            <Settings className="w-4 h-4" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.management')}</h2>
+          </div>
+          
+          <div className="bg-white/5 backdrop-blur-sm border border-white/5 divide-y divide-white/5 rounded-2xl overflow-hidden">
+            {managementSections.map((section, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(section.path)}
+                className="w-full px-6 py-4 flex items-center justify-between group hover:bg-white/5 transition-colors text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <section.icon className={`w-4 h-4 ${section.color}`} />
                   </div>
-                </button>
-              );
-            })}
+                  <div>
+                    <h3 className="text-sm font-bold text-white group-hover:text-white/90 transition-colors">{section.title}</h3>
+                    <p className="text-xs text-white/40 mt-0.5">{section.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {section.count !== '-' && (
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white/60">
+                      {section.count}
+                    </span>
+                  )}
+                  <ChevronDown className="w-4 h-4 text-white/20 -rotate-90 group-hover:text-white/60 transition-colors" />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-white mb-4">{t('pages.admin.recentActivity')}</h3>
-          <div className="space-y-3">
+        <div className="space-y-3 pb-8">
+          <div className="flex items-center justify-between px-6">
+            <div className="flex items-center gap-2 text-brand-purple">
+              <Eye className="w-4 h-4" />
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.recentActivity')}</h2>
+            </div>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-sm border border-white/5 divide-y divide-white/5 rounded-2xl overflow-hidden">
             {recentActivities.length > 0 ? (
               <>
                 {recentActivities.map((activity) => {
@@ -415,6 +431,7 @@ const AdminDashboard = () => {
 
                   // Format time ago
                   const timeAgo = (date) => {
+                    if (!date) return '';
                     const seconds = Math.floor((new Date() - date) / 1000);
                     if (seconds < 60) return t('pages.admin.justNow');
                     const minutes = Math.floor(seconds / 60);
@@ -427,60 +444,61 @@ const AdminDashboard = () => {
                   };
 
                   return (
-                    <div key={activity.id} className="card p-4">
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center mr-3 flex-shrink-0`}>
-                          <Icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm truncate">
-                            {actionText} {activity.type}: {activity.itemName}
-                          </p>
-                          <p className="text-gray-500 text-xs">
-                            {timeAgo(activity.createdAt)} • {t('pages.admin.by')} {activity.userName}
-                          </p>
+                    <div key={activity.id} className="px-6 py-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                              <Icon className="w-4 h-4 text-white" />
+                           </div>
+                           <div>
+                              <p className="text-sm font-medium text-white">
+                                {actionText} {activity.type}: {activity.itemName}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-white/40">
+                                  {timeAgo(activity.createdAt?.toDate ? activity.createdAt.toDate() : new Date(activity.createdAt))} • {t('pages.admin.by')} {activity.userName}
+                                </span>
+                              </div>
+                           </div>
                         </div>
                       </div>
                     </div>
                   );
                 })}
                 
-                {/* See More / See Less Button */}
                 {recentActivities.length >= 4 && (
                   <button
                     onClick={showAllActivities ? handleShowLess : handleLoadMore}
                     disabled={loadingMore}
-                    className="w-full card p-3 flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white hover:bg-dark-700 transition-colors"
+                    className="w-full py-3 text-xs font-bold text-brand-purple hover:text-brand-purple-light hover:bg-white/5 transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
                   >
                     {loadingMore ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                        {t('common.loading')}
-                      </>
-                    ) : showAllActivities ? (
-                      <>
-                        <ChevronUp className="w-4 h-4" />
-                        {t('pages.admin.seeLess')}
-                      </>
+                      <div className="w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <ChevronDown className="w-4 h-4" />
-                        {t('pages.admin.seeMore')}
+                        {showAllActivities ? (
+                          <>
+                            {t('common.showLess')} <ChevronUp className="w-3 h-3" />
+                          </>
+                        ) : (
+                          <>
+                            {t('common.loadMore')} <ChevronDown className="w-3 h-3" />
+                          </>
+                        )}
                       </>
                     )}
                   </button>
                 )}
               </>
             ) : (
-              <div className="card p-8 text-center">
-                <Activity className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">{t('pages.admin.noRecentActivity')}</p>
+              <div className="p-8 text-center">
+                <p className="text-sm text-white/40">{t('pages.admin.noRecentActivity')}</p>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

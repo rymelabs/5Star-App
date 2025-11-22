@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useNews } from '../context/NewsContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Search, Filter, Eye, MessageCircle, Heart, Loader2 } from 'lucide-react';
+import { Search, Filter, Eye, MessageCircle, Heart, Loader2, ChevronRight, Clock, User, Newspaper } from 'lucide-react';
+import SurfaceCard from '../components/ui/SurfaceCard';
 import { getRelativeTime } from '../utils/dateUtils';
 import { truncateText } from '../utils/helpers';
 import { newsCollection, commentsCollection } from '../firebase/firestore';
@@ -249,87 +251,41 @@ const News = () => {
 
   if (!initialLoaded) {
     return (
-      <div className="px-4 py-6">
-        <div className="news-bento-grid">
-          <section className="bento-section news-header">
-            <div className="flex items-center justify-between">
-              <div className="h-6 w-32 bg-white/10 rounded-full animate-pulse" />
-              <div className="h-10 w-10 rounded-full bg-white/5 animate-pulse" />
-            </div>
-          </section>
+      <div className="min-h-screen bg-background pb-24">
+        {/* Header Skeleton */}
+        <div className="px-4 sm:px-6 pt-6 pb-4">
+          <div className="h-10 w-32 bg-white/10 rounded-lg animate-pulse" />
+        </div>
+        
+        {/* Search Skeleton */}
+        <div className="px-4 sm:px-6 mb-6">
+            <div className="h-12 w-full bg-white/5 rounded-xl animate-pulse" />
+        </div>
 
-          <section className="bento-section news-controls">
-            <div className="h-11 w-full rounded-xl bg-white/5 animate-pulse" />
-            <div className="card p-4">
-              <div className="h-4 w-32 bg-white/10 rounded-full animate-pulse mb-4" />
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <div key={idx} className="h-8 w-20 rounded-lg bg-white/5 animate-pulse" />
-                ))}
-              </div>
-            </div>
-          </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+          {/* Featured Article Skeleton */}
+          <div className="aspect-[16/10] sm:aspect-[21/9] rounded-3xl bg-white/5 animate-pulse border border-white/5" />
 
-          <section className="bento-section news-featured">
-            <div className="card news-featured-card overflow-hidden">
-              <div className="news-featured-card__media bg-white/5 animate-pulse" />
-              <div className="news-featured-card__content space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-16 rounded-full bg-white/10 animate-pulse" />
-                  <div className="h-4 w-24 rounded-full bg-white/5 animate-pulse" />
-                </div>
-                <div className="space-y-3">
-                  <div className="h-5 w-3/4 bg-white/10 rounded animate-pulse" />
-                  <div className="h-5 w-2/3 bg-white/10 rounded animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                  {Array.from({ length: 3 }).map((_, idx) => (
-                    <div key={idx} className="h-4 w-full bg-white/5 rounded animate-pulse" />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-4">
-                    {Array.from({ length: 3 }).map((_, idx) => (
-                      <div key={idx} className="h-4 w-16 bg-white/5 rounded animate-pulse" />
-                    ))}
-                  </div>
+          {/* Article List Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="rounded-2xl bg-white/5 border border-white/5 overflow-hidden h-full flex flex-col">
+                <div className="aspect-video bg-white/5 animate-pulse" />
+                <div className="p-5 space-y-4 flex-1">
                   <div className="h-4 w-24 bg-white/5 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bento-section news-list">
-            <div className="news-articles-grid">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="card news-article-card overflow-hidden">
-                  <div className="news-article-card__media bg-white/5 animate-pulse" />
-                  <div className="news-article-card__content space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-5 w-20 rounded-full bg-white/10 animate-pulse" />
-                      <div className="h-4 w-16 rounded-full bg-white/5 animate-pulse" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-3/4 bg-white/10 rounded animate-pulse" />
-                      <div className="h-4 w-2/3 bg-white/10 rounded animate-pulse" />
-                    </div>
-                    <div className="space-y-2">
-                      {Array.from({ length: 2 }).map((__, lineIdx) => (
-                        <div key={lineIdx} className="h-4 w-full bg-white/5 rounded animate-pulse" />
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
-                        <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
-                      </div>
-                      <div className="h-4 w-20 bg-white/5 rounded animate-pulse" />
-                    </div>
+                  <div className="space-y-2">
+                    <div className="h-6 w-3/4 bg-white/5 rounded animate-pulse" />
+                    <div className="h-6 w-1/2 bg-white/5 rounded animate-pulse" />
+                  </div>
+                  <div className="h-4 w-full bg-white/5 rounded animate-pulse" />
+                  <div className="pt-4 border-t border-white/5 flex justify-between">
+                    <div className="h-4 w-20 bg-white/5 rounded animate-pulse" />
+                    <div className="h-4 w-16 bg-white/5 rounded animate-pulse" />
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -343,188 +299,213 @@ const News = () => {
   const remainingArticles = filteredArticles.slice(1);
 
   return (
-    <div className="px-4 py-6">
-      <div className="news-bento-grid">
-        <section className="bento-section news-header">
-          <div className="flex items-center justify-between">
-            <h1 className="page-header">{t('pages.news.title')}</h1>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors"
-            >
-              <Filter className="w-5 h-5 text-gray-400" />
-            </button>
-          </div>
-        </section>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-background pb-24"
+    >
+      {/* Header */}
+      <div className="px-4 sm:px-6 pt-6 pb-4">
+        <h1 className="page-header flex items-center gap-3">
+          <Newspaper className="w-8 h-8 text-brand-purple" />
+          {t('pages.news.title')}
+        </h1>
+      </div>
 
-        <section className="bento-section news-controls">
-          <div className="relative">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field pl-10 w-full"
+      {/* Search & Filter */}
+      <div className="px-4 sm:px-6 sticky top-[60px] z-20 mb-6">
+        <div className="flex gap-2.5">
+          <div className="relative group flex-1">
+            <div className="absolute inset-0 bg-brand-purple/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-purple transition-colors" />
+              <input
+                type="text"
+                placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-2.5 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-3 py-2.5 rounded-lg text-sm font-medium border transition-all flex items-center justify-center ${
+              showFilters 
+                ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
+                : 'bg-elevated/80 backdrop-blur-xl text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+          <div className="flex flex-wrap gap-2 p-1">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setCategoryFilter(category)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize border ${
+                  categoryFilter === category
+                    ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20'
+                    : 'bg-elevated/50 text-white/60 border-white/5 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+        {/* Featured Article */}
+        {featuredArticle && !searchQuery && categoryFilter === 'all' && (
+          <div 
+            onClick={() => handleArticleClick(featuredArticle)}
+            className="group relative aspect-[16/10] sm:aspect-[21/9] rounded-3xl overflow-hidden cursor-pointer border border-white/5 shadow-2xl"
+          >
+            <img
+              src={featuredArticle.image}
+              alt={featuredArticle.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="px-3 py-1 bg-brand-purple text-white text-xs font-bold rounded-lg shadow-lg shadow-brand-purple/20 uppercase tracking-wider">
+                  {featuredArticle.category}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                  <Clock className="w-3.5 h-3.5" />
+                  {getRelativeTime(featuredArticle.publishedAt)}
+                </span>
+              </div>
+              
+              <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 leading-tight group-hover:text-brand-purple-light transition-colors">
+                {featuredArticle.title}
+              </h2>
+              
+              <p className="text-white/70 text-sm sm:text-base line-clamp-2 mb-4 max-w-2xl">
+                {featuredArticle.excerpt || featuredArticle.summary}
+              </p>
 
-          {showFilters && (
-            <div className="card p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">{t('pages.news.filterByCategory')}</h3>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setCategoryFilter(category)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                      categoryFilter === category
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
+              <div className="flex items-center gap-4 text-xs sm:text-sm font-medium text-white/60">
+                <div className="flex items-center gap-1.5">
+                  <User className="w-4 h-4" />
+                  {featuredArticle.author}
+                </div>
+                <div className="w-1 h-1 rounded-full bg-white/20" />
+                <div className="flex items-center gap-1.5">
+                  <MessageCircle className="w-4 h-4" />
+                  {featuredArticle.commentCount || 0}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Heart className="w-4 h-4" />
+                  {featuredArticle.likes || 0}
+                </div>
               </div>
             </div>
-          )}
-        </section>
-
-        {featuredArticle && (
-          <section className="bento-section news-featured">
-            <article
-              onClick={() => handleArticleClick(featuredArticle)}
-              className="card news-featured-card overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
-            >
-              <div className="news-featured-card__media">
-                <img
-                  src={featuredArticle.image}
-                  alt={featuredArticle.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="news-featured-card__content">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-1 bg-primary-600 text-white text-xs font-medium rounded">
-                    {featuredArticle.category}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {getRelativeTime(featuredArticle.publishedAt)}
-                  </span>
-                </div>
-                <h2 className="text-lg font-semibold text-white mb-3 line-clamp-2">
-                  {featuredArticle.title}
-                </h2>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-3">
-                  {featuredArticle.excerpt || featuredArticle.summary}
-                </p>
-                <div className="flex items-center justify-between gap-4 flex-wrap text-sm text-gray-500">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center">
-                      <Eye className="w-4 h-4 mr-1" />
-                      <span>Read more</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MessageCircle className="w-4 h-4 mr-1" />
-                      <span>{featuredArticle.commentCount || 0}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Heart className="w-4 h-4 mr-1" />
-                      <span>{featuredArticle.likes || 0}</span>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-gray-400">
-                    By {featuredArticle.author}
-                  </span>
-                </div>
-              </div>
-            </article>
-          </section>
+          </div>
         )}
 
-        <section className="bento-section news-list">
-          {remainingArticles.length > 0 ? (
-            <div className="news-articles-grid">
-              {remainingArticles.map((article) => (
-                <article
-                  key={article.id}
-                  onClick={() => handleArticleClick(article)}
-                  className="card news-article-card overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all duration-200"
-                >
-                  <div className="news-article-card__media">
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="news-article-card__content">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-dark-700 text-gray-300 text-xs font-medium rounded">
-                        {article.category}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {getRelativeTime(article.publishedAt)}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-white mb-2 line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                      {truncateText(article.excerpt || article.summary, 100)}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center">
-                          <MessageCircle className="w-3 h-3 mr-1" />
-                          <span>{article.commentCount || 0}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Heart className="w-3 h-3 mr-1" />
-                          <span>{article.likes || 0}</span>
-                        </div>
-                      </div>
-                      <span>{article.author}</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            !featuredArticle && (
-              <div className="text-center py-12">
-                <Search className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400 mb-2">{t('pages.news.noArticlesFound')}</p>
-                <p className="text-sm text-gray-500">
-                  {searchQuery ? `No results for "${searchQuery}"` : 'Try adjusting your filters'}
-                </p>
-              </div>
-            )
-          )}
-        </section>
-
-        {!searchQuery && categoryFilter === 'all' && hasMoreNews && (
-          <section className="bento-section news-load-more">
-            <div ref={loadMoreRef} className="news-load-more__inner">
-              {loadingMore ? (
-                <div className="flex items-center justify-center gap-2 text-primary-400">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">{t('pages.news.loadingMoreArticles')}</span>
+        {/* Article List */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {remainingArticles.map((article) => (
+            <SurfaceCard
+              key={article.id}
+              className="group p-0 overflow-hidden h-full flex flex-col"
+              interactive
+              onClick={() => handleArticleClick(article)}
+            >
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute top-2 left-2">
+                  <span className="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 text-white text-[9px] font-bold rounded-lg uppercase tracking-wider">
+                    {article.category}
+                  </span>
                 </div>
-              ) : (
-                <button 
-                  onClick={loadMoreArticles}
-                  className="btn-primary"
-                >
-                  Load More Articles
-                </button>
-              )}
+              </div>
+              
+              <div className="p-4 sm:p-5 flex flex-col flex-1">
+                <div className="flex items-center gap-2 text-[11px] text-white/50 mb-2">
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span>{getRelativeTime(article.publishedAt)}</span>
+                </div>
+                
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-brand-purple transition-colors">
+                  {article.title}
+                </h3>
+                
+                <p className="text-white/50 text-xs sm:text-sm line-clamp-2 mb-3 flex-1">
+                  {truncateText(article.excerpt || article.summary, 100)}
+                </p>
+                
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-2 text-[11px] font-medium text-white/60">
+                    <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span className="truncate max-w-[90px]">{article.author}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 text-[11px] text-white/40">
+                    <div className="flex items-center gap-1">
+                      <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <span>{article.commentCount || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <span>{article.likes || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SurfaceCard>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {remainingArticles.length === 0 && !featuredArticle && (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-white/20" />
             </div>
-          </section>
+            <h3 className="text-lg font-bold text-white mb-2">{t('pages.news.noArticlesFound')}</h3>
+            <p className="text-white/40">
+              {searchQuery ? `No results for "${searchQuery}"` : 'Try adjusting your filters'}
+            </p>
+          </div>
+        )}
+
+        {/* Load More */}
+        {!searchQuery && categoryFilter === 'all' && hasMoreNews && (
+          <div ref={loadMoreRef} className="py-8 flex justify-center">
+            {loadingMore ? (
+              <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                <Loader2 className="w-5 h-5 text-brand-purple animate-spin" />
+                <span className="text-sm font-medium text-white/60">{t('pages.news.loadingMoreArticles')}</span>
+              </div>
+            ) : (
+              <button 
+                onClick={loadMoreArticles}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-white transition-all"
+              >
+                Load More Articles
+              </button>
+            )}
+          </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
