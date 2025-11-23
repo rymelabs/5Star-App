@@ -209,60 +209,46 @@ const FixtureDetail = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      {/* Sticky Glass Header */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-app/80 backdrop-blur-xl border-b border-white/5 shadow-lg' : 'bg-transparent'
-      }`}>
-        <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          
-          <div className={`transition-opacity duration-300 ${scrolled ? 'opacity-100' : 'opacity-0'} text-white font-semibold`}>
-            {fixture.homeTeam?.name} vs {fixture.awayTeam?.name}
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleAddToCalendar}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
-                hasCalendarReminder
-                  ? 'bg-brand-purple text-white shadow-[0_0_18px_rgba(109,40,217,0.45)]'
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {hasCalendarReminder ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
-            </button>
-            <button
-              onClick={handleLike}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
-                isLiked
-                  ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section */}
-      <div className="relative pt-24 pb-8 overflow-hidden rounded-t-3xl">
+      <div className="relative pt-8 pb-8 overflow-hidden rounded-t-3xl">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-purple/15 via-app/60 to-app pointer-events-none rounded-t-3xl" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-64 bg-brand-purple/15 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="relative w-full px-4 sm:px-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-300 hover:text-white transition-colors border border-white/10 bg-white/5 backdrop-blur-sm px-3 py-1.5 rounded-full absolute -top-20 sm:-top-24 left-4 sm:left-8"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('common.back')}
-          </button>
+          {/* Back Button and Actions */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-300 hover:text-white transition-colors border border-white/10 bg-white/5 backdrop-blur-sm px-3 py-1.5 rounded-full"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('common.back')}
+            </button>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddToCalendar}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
+                  hasCalendarReminder
+                    ? 'bg-brand-purple text-white shadow-[0_0_18px_rgba(109,40,217,0.45)]'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {hasCalendarReminder ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={handleLike}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
+                  isLiked
+                    ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+              </button>
+            </div>
+          </div>
+
           {/* Status Badge */}
           <div className="flex justify-center mb-8">
             <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase backdrop-blur-md border ${
