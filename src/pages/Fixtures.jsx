@@ -11,7 +11,7 @@ import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
 import FixtureCard from '../components/FixtureCard';
 
-const RECENT_WINDOW_HOURS = 24;
+const RECENT_RESULTS_LIMIT = 6;
 
 const Fixtures = () => {
   const navigate = useNavigate();
@@ -96,10 +96,7 @@ const Fixtures = () => {
     }
 
     const now = new Date();
-    const cutoff = new Date(now.getTime() - RECENT_WINDOW_HOURS * 60 * 60 * 1000);
-
-    const recent = [];
-    const pastGroupsMap = {};
+    const pastFixtures = [];
     const upcomingGroupsMap = {};
 
     filteredFixtures.forEach((fixture) => {
@@ -121,23 +118,27 @@ const Fixtures = () => {
         return;
       }
 
-      if (date >= cutoff) {
-        recent.push(fixture);
-        return;
-      }
+      pastFixtures.push(fixture);
+    });
 
-      const key = date.toISOString().split('T')[0];
-      if (!pastGroupsMap[key]) {
-        pastGroupsMap[key] = {
+    const pastGroupsMap = pastFixtures.reduce((acc, fixture) => {
+      const key = new Date(fixture.dateTime).toISOString().split('T')[0];
+      if (!acc[key]) {
+        acc[key] = {
           key,
           label: formatDate(fixture.dateTime),
           fixtures: [],
         };
       }
-      pastGroupsMap[key].fixtures.push(fixture);
-    });
+      acc[key].fixtures.push(fixture);
+      return acc;
+    }, {});
 
-    recent.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+    const completedPastFixtures = pastFixtures
+      .filter((fixture) => fixture.status === 'completed')
+      .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+    const recent = completedPastFixtures.slice(0, RECENT_RESULTS_LIMIT);
 
     const pastDateGroups = Object.values(pastGroupsMap)
       .map((group) => ({
@@ -177,6 +178,12 @@ const Fixtures = () => {
       : new Date(a.dateTime) - new Date(b.dateTime));
     return items;
   }, [selectedPastGroup, recentSortOrder]);
+
+  const nextUpcomingFixture = useMemo(() => {
+    if (!upcomingGroups.length) return null;
+    const firstGroup = upcomingGroups[0];
+    return firstGroup?.fixtures?.[0] || null;
+  }, [upcomingGroups]);
 
   const maxPastDateKey = useMemo(() => new Date().toISOString().split('T')[0], []);
   const minPastDateKey = useMemo(() => pastDateGroups.length ? pastDateGroups[pastDateGroups.length - 1].key : '', [pastDateGroups]);
@@ -354,13 +361,29 @@ const Fixtures = () => {
         <div className="space-y-6">
           {viewMode === 'date' && (
             <>
-              {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0) && (
+              {nextUpcomingFixture && sortedRecentFixtures.length === 0 && (
+                <section className="space-y-3 px-4 sm:px-2">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Up Next</p>
+                    <h3 className="text-base font-semibold text-white">Upcoming Fixture</h3>
+                    <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
+                  </div>
+                  <FixtureCard
+                    key={nextUpcomingFixture.id}
+                    fixture={nextUpcomingFixture}
+                    onClick={handleFixtureClick}
+                    compact={true}
+                  />
+                </section>
+              )}
+
+              {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0 || nextUpcomingFixture) && (
                 <section className="space-y-3 px-4 sm:px-2">
                   <div className="flex flex-col items-start gap-3">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Just Finished</p>
                       <h3 className="text-base font-semibold text-white">Recent Results</h3>
-                      <span className="text-[11px] text-white/40">Last {RECENT_WINDOW_HOURS}h</span>
+                      <span className="text-[11px] text-white/40">Latest completed fixtures</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {pastDateGroups.length > 0 && (
@@ -400,7 +423,7 @@ const Fixtures = () => {
                     renderCarouselItems(sortedRecentFixtures)
                   ) : (
                     <SurfaceCard className="text-center text-xs text-white/50">
-                      No fixtures have finished in the last {RECENT_WINDOW_HOURS} hours.
+                      No fixtures have finished yet. Check back after the next match.
                     </SurfaceCard>
                   )}
 

@@ -6,7 +6,7 @@ import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
-import TeamAvatar from '../../components/TeamAvatar';
+import NewTeamAvatar from '../../components/NewTeamAvatar';
 import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
 
 const AdminFixtures = () => {
@@ -1139,7 +1139,7 @@ const AdminFixtures = () => {
 
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3 flex-1">
-                      <TeamAvatar 
+                      <NewTeamAvatar 
                         team={homeTeam} 
                         size={40} 
                         className="rounded-lg bg-black/30 border border-white/5"
@@ -1163,7 +1163,7 @@ const AdminFixtures = () => {
                         <p className="text-sm text-white/60 uppercase tracking-[0.25em]">{t('adminFixtures.away')}</p>
                         <p className="text-lg font-semibold text-white">{awayTeam.name}</p>
                       </div>
-                      <TeamAvatar 
+                      <NewTeamAvatar 
                         team={awayTeam} 
                         size={40} 
                         className="rounded-lg bg-black/30 border border-white/5"

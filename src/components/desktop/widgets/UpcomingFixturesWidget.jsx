@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import { useFootball } from '../../../context/FootballContext';
-import TeamAvatar from '../../../components/TeamAvatar';
+import NewTeamAvatar from '../../NewTeamAvatar';
 import { formatDate, formatTime } from '../../../utils/dateUtils';
 
 const UpcomingFixturesWidget = () => {
@@ -51,14 +51,14 @@ const UpcomingFixturesWidget = () => {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TeamAvatar team={fixture.homeTeam} size={20} />
+                <NewTeamAvatar team={fixture.homeTeam} size={20} />
                 <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">
                   {fixture.homeTeam.name}
                 </span>
               </div>
               <span className="text-[10px] font-bold text-gray-600">VS</span>
               <div className="flex items-center gap-2 flex-row-reverse">
-                <TeamAvatar team={fixture.awayTeam} size={20} />
+                <NewTeamAvatar team={fixture.awayTeam} size={20} />
                 <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">
                   {fixture.awayTeam.name}
                 </span>

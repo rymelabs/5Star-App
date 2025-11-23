@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
-import TeamAvatar from './TeamAvatar';
+import NewTeamAvatar from './NewTeamAvatar';
 import { useFootball } from '../context/FootballContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -192,7 +192,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
         validTeams.push({
           id: Date.now() + Math.random(),
           name: team.name.trim(),
-          logo: team.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(team.name)}&background=f97316&color=fff`,
+          logo: (team.logo || '').trim(),
           stadium: team.stadium || '',
           founded: team.founded || '',
           manager: team.manager || '',
@@ -482,7 +482,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
                 {previewData.slice(0, 10).map((team, index) => (
                   <div key={index} className="bg-dark-800 border border-dark-700 rounded-lg p-3">
                     <div className="flex items-center mb-2">
-                      <TeamAvatar name={team.name} logo={team.logo} size={32} className="mr-3 rounded" />
+                      <NewTeamAvatar team={team} size={32} className="mr-3 rounded" />
                       <h4 className="font-semibold text-white">{team.name}</h4>
                     </div>
                     <p className="text-sm text-gray-400">{t('bulkUpload.stadium')}: {team.stadium || t('common.notSpecified')}</p>

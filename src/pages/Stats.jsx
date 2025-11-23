@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useLanguage } from '../context/LanguageContext';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChart3, ChevronRight } from 'lucide-react';
 
 const Stats = () => {
@@ -665,7 +665,7 @@ const Stats = () => {
                             }`}
                           >
                             <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-green-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
                             <div className="flex-1">
                               <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
                               <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
@@ -716,7 +716,7 @@ const Stats = () => {
                             }`}
                           >
                             <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-red-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
                             <div className="flex-1">
                               <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
                               <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
@@ -767,7 +767,7 @@ const Stats = () => {
                             }`}
                           >
                             <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-blue-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
                             <div className="flex-1">
                               <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
                               <p className="text-[11px] text-gray-400">{team.cleanSheets} {t('stats.cleanSheets').toLowerCase()}</p>
@@ -818,7 +818,7 @@ const Stats = () => {
                             }`}
                           >
                             <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-purple-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <TeamAvatar logo={team.teamLogo} name={team.teamName} size={32} />
+                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
                             <div className="flex-1">
                               <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
                               <p className="text-[11px] text-gray-400">{team.goalsFor} {t('stats.scored')}, {team.goalsAgainst} {t('stats.conceded')}</p>

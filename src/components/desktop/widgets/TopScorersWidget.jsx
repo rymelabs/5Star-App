@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Trophy } from 'lucide-react';
 import { useFootball } from '../../../context/FootballContext';
-import TeamAvatar from '../../../components/TeamAvatar';
+import NewTeamAvatar from '../../NewTeamAvatar';
 
 const TopScorersWidget = () => {
   const { fixtures } = useFootball();
@@ -71,7 +71,7 @@ const TopScorersWidget = () => {
               `}>
                 {index + 1}
               </div>
-              <TeamAvatar team={scorer.team} size={24} />
+              <NewTeamAvatar team={scorer.team} size={24} />
               <div>
                 <div className="text-sm font-medium text-white group-hover:text-brand-purple transition-colors">
                   {scorer.name}

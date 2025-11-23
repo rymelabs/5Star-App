@@ -21,7 +21,7 @@ import {
   UserMinus,
   Bell
 } from 'lucide-react';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 import AuthPromptModal from '../components/AuthPromptModal';
 import useAuthGate from '../hooks/useAuthGate';
 import { formatDate, formatTime } from '../utils/dateUtils';
@@ -365,7 +365,7 @@ const TeamDetail = () => {
             {/* Team Logo */}
             <div className="relative">
               <div className="absolute inset-0 bg-brand-purple/20 blur-2xl rounded-full" />
-              <TeamAvatar name={team.name} logo={team.logo} size={80} className="relative z-10 ring-4 ring-dark-900 shadow-2xl" />
+              <NewTeamAvatar team={team} size={80} className="relative z-10 ring-4 ring-dark-900 shadow-2xl" />
             </div>
 
             {/* Team Info */}

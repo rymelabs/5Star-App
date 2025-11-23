@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Bell, Share2, ChevronRight } from 'lucide-react';
-import TeamAvatar from '../TeamAvatar';
+import NewTeamAvatar from '../NewTeamAvatar';
 import { isFixtureLive } from '../../utils/helpers';
 import { formatDateTime, formatTime } from '../../utils/dateUtils';
 
@@ -61,7 +61,7 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
           {/* Home Team */}
           <div className="flex items-center justify-end gap-4">
             <span className="text-lg font-bold text-white text-right">{home?.name || 'Home'}</span>
-            <TeamAvatar name={home?.name} logo={home?.logo} size={40} />
+            <NewTeamAvatar team={home} size={40} />
           </div>
 
           {/* Score */}
@@ -85,7 +85,7 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
 
           {/* Away Team */}
           <div className="flex items-center justify-start gap-4">
-            <TeamAvatar name={away?.name} logo={away?.logo} size={40} />
+            <NewTeamAvatar team={away} size={40} />
             <span className="text-lg font-bold text-white text-left">{away?.name || 'Away'}</span>
           </div>
         </div>

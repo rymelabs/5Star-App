@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useFootball } from '../../../context/FootballContext';
-import TeamAvatar from '../../../components/TeamAvatar';
+import NewTeamAvatar from '../../../components/NewTeamAvatar';
 import { formatDate } from '../../../utils/dateUtils';
 
 const RecentResultsWidget = () => {
@@ -49,7 +49,7 @@ const RecentResultsWidget = () => {
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TeamAvatar team={fixture.homeTeam} size={20} />
+                  <NewTeamAvatar team={fixture.homeTeam} size={20} />
                   <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">
                     {fixture.homeTeam.name}
                   </span>
@@ -59,7 +59,7 @@ const RecentResultsWidget = () => {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TeamAvatar team={fixture.awayTeam} size={20} />
+                  <NewTeamAvatar team={fixture.awayTeam} size={20} />
                   <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">
                     {fixture.awayTeam.name}
                   </span>

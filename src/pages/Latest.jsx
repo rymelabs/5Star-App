@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { useNews } from '../context/NewsContext';
+import { useOptionalNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
@@ -90,9 +90,15 @@ const Latest = () => {
   }, [user]);
   
   // Use hooks at the top level (hooks cannot be in try-catch)
-  const newsContext = useNews();
+  const newsContext = useOptionalNews();
   const footballContext = useFootball();
   const instagramContext = useInstagram();
+
+  useEffect(() => {
+    if (!newsContext) {
+      console.warn('Latest page: Rendering without NewsProvider context');
+    }
+  }, [newsContext]);
   
   // Safely extract values with fallbacks
   const articles = newsContext?.articles || [];
@@ -429,7 +435,7 @@ const Latest = () => {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <TeamAvatar team={fixture.homeTeam} size={28} />
+                      <NewTeamAvatar team={fixture.homeTeam} size={28} />
                       <span className="text-xs font-medium">{abbreviateTeamName(fixture.homeTeam?.name)}</span>
                     </div>
                     <span className="font-semibold text-base">{fixture.homeScore}</span>
@@ -437,7 +443,7 @@ const Latest = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <TeamAvatar team={fixture.awayTeam} size={28} />
+                      <NewTeamAvatar team={fixture.awayTeam} size={28} />
                       <span className="text-xs font-medium">{abbreviateTeamName(fixture.awayTeam?.name)}</span>
                     </div>
                     <span className="font-semibold text-base">{fixture.awayScore}</span>
@@ -511,7 +517,7 @@ const Latest = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <TeamAvatar team={fixture.homeTeam} size="sm" />
+                    <NewTeamAvatar team={fixture.homeTeam} size="sm" />
                     <span className="text-[11px] font-medium text-center line-clamp-1">
                       {abbreviateTeamName(fixture.homeTeam?.name)}
                     </span>
@@ -524,7 +530,7 @@ const Latest = () => {
                   </div>
                   
                   <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <TeamAvatar team={fixture.awayTeam} size="sm" />
+                    <NewTeamAvatar team={fixture.awayTeam} size="sm" />
                     <span className="text-[11px] font-medium text-center line-clamp-1">
                       {abbreviateTeamName(fixture.awayTeam?.name)}
                     </span>
@@ -558,7 +564,7 @@ const Latest = () => {
                 <SurfaceCard className="flex items-center justify-between p-3 rounded-[22px] bg-[#0c0c0f]">
                   <div className="flex items-center gap-3">
                     <div className="font-bold text-gray-400 w-5 text-center">{index + 1}</div>
-                    <TeamAvatar team={{ id: stat.id, name: stat.name, logo: stat.logo }} size={32} />
+                    <NewTeamAvatar team={{ id: stat.id, name: stat.name, logo: stat.logo }} size={32} />
                     <div>
                       <div className="font-semibold text-sm text-white">{stat.name}</div>
                       <div className="text-xs text-gray-400">
@@ -606,7 +612,7 @@ const Latest = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <TeamAvatar team={fixture.homeTeam} size="sm" />
+                    <NewTeamAvatar team={fixture.homeTeam} size="sm" />
                     <span className="text-[11px] font-medium text-center line-clamp-1">
                       {abbreviateTeamName(fixture.homeTeam?.name)}
                     </span>
@@ -619,7 +625,7 @@ const Latest = () => {
                   </div>
                   
                   <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <TeamAvatar team={fixture.awayTeam} size="sm" />
+                    <NewTeamAvatar team={fixture.awayTeam} size="sm" />
                     <span className="text-[11px] font-medium text-center line-clamp-1">
                       {abbreviateTeamName(fixture.awayTeam?.name)}
                     </span>

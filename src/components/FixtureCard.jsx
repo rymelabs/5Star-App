@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
-import TeamAvatar from './TeamAvatar';
+import NewTeamAvatar from './NewTeamAvatar';
 import { isFixtureLive } from '../utils/helpers';
 import { formatDateTime } from '../utils/dateUtils';
 import { useMediaQuery } from '../hooks/useMediaQuery';
@@ -70,9 +70,8 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false }) => {
             <span className={`font-bold text-white truncate w-full order-2 sm:order-1 ${
               compact ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
             }`}>{home?.name || 'Home'}</span>
-            <TeamAvatar 
-              name={home?.name} 
-              logo={home?.logo} 
+            <NewTeamAvatar 
+              team={home}
               size={compact ? 32 : 48} 
               className={`flex-shrink-0 order-1 sm:order-2 ${
                 compact ? 'h-8 w-8 sm:h-9 sm:w-9' : 'h-10 w-10 sm:h-12 sm:w-12'
@@ -102,9 +101,8 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false }) => {
 
           {/* Away Team */}
           <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-start sm:text-left">
-            <TeamAvatar 
-              name={away?.name} 
-              logo={away?.logo} 
+            <NewTeamAvatar 
+              team={away}
               size={compact ? 32 : 48} 
               className={`flex-shrink-0 ${
                 compact ? 'h-8 w-8 sm:h-9 sm:w-9' : 'h-10 w-10 sm:h-12 sm:w-12'

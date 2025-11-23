@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Users, MapPin, Trophy, UserPlus, UserMinus, Loader2, ChevronRight } from 'lucide-react';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 import AuthPromptModal from '../components/AuthPromptModal';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import { useAuth } from '../context/AuthContext';
@@ -402,7 +402,7 @@ const Teams = () => {
 
                     {/* Logo */}
                     <div className="relative flex-shrink-0 transform group-hover:scale-105 transition-transform duration-500">
-                      <TeamAvatar name={team.name} logo={team.logo} size={48} className="relative z-10 drop-shadow-lg" />
+                      <NewTeamAvatar team={team} size={48} className="relative z-10 drop-shadow-lg" />
                     </div>
 
                     {/* Info */}

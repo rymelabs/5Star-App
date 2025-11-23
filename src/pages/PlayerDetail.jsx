@@ -14,7 +14,7 @@ import {
   MapPin,
   ChevronRight
 } from 'lucide-react';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 import { teamsCollection } from '../firebase/firestore';
 import { useFootball } from '../context/FootballContext';
 import SurfaceCard from '../components/ui/SurfaceCard';
@@ -237,7 +237,7 @@ const PlayerDetail = () => {
                 <>
                   <span className="w-1 h-1 rounded-full bg-white/20" />
                   <div className="flex items-center gap-1">
-                    <TeamAvatar logo={team.logo} name={team.name} size={14} />
+                    <NewTeamAvatar team={team} size={14} />
                     <span className="text-xs sm:text-sm">{team.name}</span>
                   </div>
                 </>
@@ -346,7 +346,7 @@ const PlayerDetail = () => {
                 >
                   <div className="p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <TeamAvatar logo={team.logo} name={team.name} size={40} className="rounded-xl" />
+                      <NewTeamAvatar team={team} size={40} className="rounded-xl" />
                       <div>
                         <div className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5">Current Team</div>
                         <div className="text-sm font-semibold text-white group-hover:text-brand-purple transition-colors">

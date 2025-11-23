@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { newsCollection, commentsCollection, appSettingsCollection } from '../firebase/firestore';
 
-const NewsContext = createContext();
+export const NewsContext = createContext(null);
 
 export const useNews = () => {
   const context = useContext(NewsContext);
@@ -10,6 +10,8 @@ export const useNews = () => {
   }
   return context;
 };
+
+export const useOptionalNews = () => useContext(NewsContext);
 
 export const NewsProvider = ({ children }) => {
   const [allArticles, setAllArticles] = useState([]);

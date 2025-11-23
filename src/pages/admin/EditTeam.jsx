@@ -280,7 +280,7 @@ const EditTeam = () => {
 
       const updatedTeam = {
         ...formData,
-        logo: logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=22c55e&color=fff&size=200`,
+        logo: (logoUrl || '').trim(),
         name: formData.name.trim(),
         updatedAt: new Date().toISOString()
       };

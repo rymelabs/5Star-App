@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Trophy, Users, TrendingUp, Award, ChevronRight } from 'lucide-react';
-import TeamAvatar from './TeamAvatar';
+import NewTeamAvatar from './NewTeamAvatar';
 import SurfaceCard from './ui/SurfaceCard';
 
 const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
@@ -248,7 +248,7 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
                     </td>
                     <td className="py-1.5 px-4 sticky left-12 bg-inherit z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
                       <div className="flex items-center gap-2.5">
-                        <TeamAvatar 
+                        <NewTeamAvatar 
                           team={team || standing.team} 
                           size={30} 
                           className="ring-1 ring-black/20"
