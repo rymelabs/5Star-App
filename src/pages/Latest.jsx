@@ -459,7 +459,7 @@ const Latest = () => {
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      <header className="px-4 sm:px-6 pt-4 space-y-1">
+      <header className="px-4 space-y-1">
         <h1 className="page-header flex items-center gap-3">
           <TrendingUp className="w-8 h-8 text-brand-purple" />
           {t('pages.latest.title') || 'Latest'}

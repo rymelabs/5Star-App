@@ -351,7 +351,7 @@ const Teams = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-96 blur-[120px] rounded-full pointer-events-none" />
 
         {/* Header */}
-        <div className="relative px-4 sm:px-6 pt-6 pb-4 z-10">
+        <div className="relative px-4 pb-4 z-10">
           <h1 className="page-header mb-2 flex items-center gap-3">
             <Users className="w-8 h-8 text-brand-purple" />
             {t('pages.teams.title')}
@@ -362,7 +362,7 @@ const Teams = () => {
         </div>
 
         {/* Search */}
-        <div className="px-4 sm:px-6 sticky top-[20px] z-30 mb-8">
+        <div className="px-4 sticky top-[20px] z-30 mb-8">
           <div className="relative group max-w-2xl mx-auto">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-purple/50 to-blue-600/50 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
             <div className="relative flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl min-h-[52px]">

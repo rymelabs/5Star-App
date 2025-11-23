@@ -252,7 +252,7 @@ const Fixtures = () => {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-2 pt-6">
+      <div className="flex items-center justify-between px-4">
         <h1 className="page-header flex items-center gap-3">
           <Calendar className="w-8 h-8 text-brand-purple" />
           {t('pages.fixtures.title')}
