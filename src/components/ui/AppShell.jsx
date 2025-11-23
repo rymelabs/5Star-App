@@ -26,6 +26,9 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
         {children}
       </main>
 
+      {/* Bottom Gradient Overlay - Creates separation from bottom navbar */}
+      <div className="fixed bottom-0 left-0 right-0 h-32 pointer-events-none z-40 bg-gradient-to-t from-black via-black/60 to-transparent" />
+
       {/* Bottom Navigation Area */}
       {bottomNav && (
         <div className="fixed bottom-0 left-0 right-0 z-50">
