@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Calendar, Trophy, Star, Clock, CheckCircle2, TrendingUp } from 'lucide-react';
 import { useFootball } from '../../context/FootballContext';
-import TeamAvatar from '../../components/TeamAvatar';
+import NewTeamAvatar from '../NewTeamAvatar';
 
 const LeftSidebar = () => {
   const { followedTeams } = useFootball();
@@ -58,7 +58,7 @@ const LeftSidebar = () => {
               >
                 {({ isActive }) => (
                   <div className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
-                    <TeamAvatar name={team.name} logo={team.logo} size={24} />
+                    <NewTeamAvatar team={team} size={24} />
                     <span className={`text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
                       {team.name}
                     </span>

@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { fixturesCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
 import { addFixtureToCalendar } from '../utils/calendar';
-import TeamAvatar from '../components/TeamAvatar';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 
 const FixtureDetail = () => {
   const { id } = useParams();
@@ -274,26 +274,25 @@ const FixtureDetail = () => {
           </div>
 
           {/* Teams & Score */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-5">
             {/* Home Team */}
-            <div className="flex-1 flex flex-col items-center gap-4 group cursor-pointer"
+            <div className="flex-1 min-w-0 flex flex-col items-center gap-2 sm:gap-3 group cursor-pointer"
                  onClick={() => fixture.homeTeam?.id && navigate(`/teams/${fixture.homeTeam.id}`)}>
               <div className="relative">
                 <div className="absolute inset-0 bg-brand-purple/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <TeamAvatar 
-                  name={fixture.homeTeam?.name} 
-                  logo={fixture.homeTeam?.logo} 
-                  size={80} 
-                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
+                <NewTeamAvatar 
+                  team={fixture.homeTeam}
+                  size={64} 
+                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
                 />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white text-center leading-tight group-hover:text-brand-purple transition-colors">
+              <h2 className="text-base sm:text-lg font-bold text-white text-center leading-tight group-hover:text-brand-purple transition-colors whitespace-nowrap overflow-hidden text-ellipsis w-full px-1">
                 {fixture.homeTeam?.name}
               </h2>
             </div>
 
             {/* Score Display */}
-            <div className="flex flex-col items-center justify-center px-4 min-w-[140px] sm:min-w-[200px]">
+            <div className="flex flex-col items-center justify-center px-3 min-w-[120px] sm:min-w-[180px]">
               {isLiveMatch || isCompleted ? (
                 <div className="flex items-center justify-center gap-4 sm:gap-8 relative">
                   {/* Glow Effect behind score */}
@@ -315,18 +314,17 @@ const FixtureDetail = () => {
             </div>
 
             {/* Away Team */}
-            <div className="flex-1 flex flex-col items-center gap-4 group cursor-pointer"
+              <div className="flex-1 min-w-0 flex flex-col items-center gap-2 sm:gap-3 group cursor-pointer"
                  onClick={() => fixture.awayTeam?.id && navigate(`/teams/${fixture.awayTeam.id}`)}>
               <div className="relative">
                 <div className="absolute inset-0 bg-accent-green/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <TeamAvatar 
-                  name={fixture.awayTeam?.name} 
-                  logo={fixture.awayTeam?.logo} 
-                  size={80} 
-                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
+                <NewTeamAvatar 
+                  team={fixture.awayTeam}
+                  size={64} 
+                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
                 />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white text-center leading-tight group-hover:text-accent-green transition-colors">
+              <h2 className="text-base sm:text-lg font-bold text-white text-center leading-tight group-hover:text-accent-green transition-colors whitespace-nowrap overflow-hidden text-ellipsis w-full px-1">
                 {fixture.awayTeam?.name}
               </h2>
             </div>
@@ -482,7 +480,7 @@ const FixtureDetail = () => {
                             <span className="text-xs text-gray-500 uppercase tracking-wider">{event.type.replace('_', ' ')}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <TeamAvatar logo={team?.logo} name={team?.name} size={32} className="w-8 h-8 rounded-full" />
+                            <NewTeamAvatar team={team} size={28} className="w-7 h-7 rounded-full" />
                             <div>
                               <div className="text-white font-medium">{player?.name || 'Unknown Player'}</div>
                               <div className="text-xs text-gray-400">{team?.name}</div>
@@ -548,7 +546,7 @@ const FixtureDetail = () => {
                   {/* Home Team (Left) */}
                   <div className="flex-1 flex flex-col items-start gap-2 overflow-y-auto no-scrollbar">
                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/20 w-full sticky top-0">
-                        <TeamAvatar logo={fixture.homeTeam?.logo} name={fixture.homeTeam?.name} size={24} className="w-6 h-6 rounded-full" />
+                        <NewTeamAvatar team={fixture.homeTeam} size={20} className="w-5 h-5 rounded-full" />
                         <span className="text-white font-bold text-xs uppercase tracking-wider truncate max-w-[100px]">{fixture.homeTeam?.name}</span>
                     </div>
                     {fixture.homeLineup?.map(id => {
@@ -570,7 +568,7 @@ const FixtureDetail = () => {
                   <div className="flex-1 flex flex-col items-end gap-2 overflow-y-auto no-scrollbar">
                     <div className="flex items-center justify-end gap-2 mb-2 pb-2 border-b border-white/20 w-full sticky top-0">
                         <span className="text-white font-bold text-xs uppercase tracking-wider truncate max-w-[100px] text-right">{fixture.awayTeam?.name}</span>
-                        <TeamAvatar logo={fixture.awayTeam?.logo} name={fixture.awayTeam?.name} size={24} className="w-6 h-6 rounded-full" />
+                        <NewTeamAvatar team={fixture.awayTeam} size={20} className="w-5 h-5 rounded-full" />
                     </div>
                     {fixture.awayLineup?.map(id => {
                         const player = fixture.awayTeam?.players?.find(p => p.id === id);
@@ -596,7 +594,7 @@ const FixtureDetail = () => {
                 ].map(({ team, lineup, label }) => (
                   <div key={label} className="bg-white/5 border border-white/5 rounded-2xl overflow-hidden">
                     <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-3">
-                      <TeamAvatar logo={team?.logo} name={team?.name} size={40} className="w-10 h-10 rounded-full" />
+                      <NewTeamAvatar team={team} size={32} className="w-8 h-8 rounded-full" />
                       <div>
                         <h3 className="text-white font-bold">{team?.name}</h3>
                         <p className="text-xs text-gray-400">{lineup?.length || 0} Players</p>

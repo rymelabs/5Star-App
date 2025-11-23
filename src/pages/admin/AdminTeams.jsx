@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import TeamAvatar from '../../components/TeamAvatar';
+import NewTeamAvatar from '../../components/NewTeamAvatar';
 import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 import { Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal, Image, Link } from 'lucide-react';
 
@@ -253,7 +253,7 @@ const AdminTeams = () => {
         // Update existing team
         const updatedTeam = {
           ...formData,
-          logo: logoUrl || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+          logo: (logoUrl || '').trim(),
         };
         await updateTeam(editingTeam.id, updatedTeam);
         showSuccess(t('pages.adminTeams.teamUpdated'), t('pages.adminTeams.teamUpdatedDesc').replace('{name}', updatedTeam.name));
@@ -261,7 +261,7 @@ const AdminTeams = () => {
         // Add new team
         const newTeam = {
           ...formData,
-          logo: logoUrl || `https://ui-avatars.com/api/?name=${formData.name}&background=22c55e&color=fff&size=200`,
+          logo: (logoUrl || '').trim(),
         };
         await addTeam(newTeam);
         showSuccess(t('pages.adminTeams.teamAdded'), t('pages.adminTeams.teamAddedDesc').replace('{name}', newTeam.name));
@@ -882,7 +882,7 @@ const AdminTeams = () => {
               <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-brand-purple/10 via-transparent to-blue-500/10" />
               <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center space-x-2.5">
-                  <TeamAvatar 
+                  <NewTeamAvatar 
                     team={team} 
                     size={40} 
                     className="rounded-lg bg-black/30 border border-white/5"
