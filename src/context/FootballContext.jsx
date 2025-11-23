@@ -756,9 +756,18 @@ export const FootballProvider = ({ children }) => {
     return seasons.filter(season => season.ownerId === ownerId);
   }, [seasons, isAdmin, isSuperAdmin, ownerId]);
 
+  const followedTeams = useMemo(() => {
+    if (!user) return [];
+    return teams.filter(team => {
+      const followers = team.followers || [];
+      return followers.includes(user.uid);
+    });
+  }, [teams, user]);
+
   const value = {
     teams,
     ownedTeams,
+    followedTeams,
     fixtures,
     ownedFixtures,
     leagueTable,

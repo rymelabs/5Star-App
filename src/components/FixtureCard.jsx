@@ -3,8 +3,17 @@ import { MapPin } from 'lucide-react';
 import TeamAvatar from './TeamAvatar';
 import { isFixtureLive } from '../utils/helpers';
 import { formatDateTime } from '../utils/dateUtils';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import FixtureCardDesktop from './ui/FixtureCardDesktop';
 
 const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false }) => {
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  
+  // Use desktop variant only if not in compact mode and on desktop screen
+  if (isDesktop && !compact) {
+    return <FixtureCardDesktop fixture={fixture} onClick={onClick} />;
+  }
+
   const home = fixture.homeTeam || fixture.homeTeamId || {};
   const away = fixture.awayTeam || fixture.awayTeamId || {};
   const status = fixture.status || (isFixtureLive(fixture) ? 'live' : 'scheduled');

@@ -7,13 +7,17 @@ const TeamAvatar = ({ team, name = '', logo = '', size = 48, className = '' }) =
   const teamName = team?.name || name || '';
   const teamLogo = team?.logo || logo || '';
   
-  // Get single initial from team name
-  const getInitial = (name) => {
+  // Get first two initials from team name (or one if single word)
+  const getInitials = (name) => {
     if (!name || typeof name !== 'string' || !name.trim()) return '?';
-    return name.trim().charAt(0).toUpperCase();
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) {
+      return words[0].charAt(0).toUpperCase();
+    }
+    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
   };
   
-  const initial = getInitial(teamName);
+  const initials = getInitials(teamName);
   const sizePx = typeof size === 'number' ? size : 
                  size === 'xs' ? 32 : 
                  size === 'sm' ? 40 : 
@@ -23,20 +27,26 @@ const TeamAvatar = ({ team, name = '', logo = '', size = 48, className = '' }) =
 
   const showImage = teamLogo && !imgError && typeof teamLogo === 'string' && teamLogo.trim();
 
+  // Dynamic font size based on avatar size and initials length
+  const fontSize = initials.length === 1 
+    ? Math.max(14, Math.floor(sizePx * 0.5))
+    : Math.max(12, Math.floor(sizePx * 0.38));
+
   return (
     <div 
       style={{ width: `${sizePx}px`, height: `${sizePx}px` }} 
       className={`
         relative group flex-shrink-0 rounded-full 
         flex items-center justify-center
-        bg-gradient-to-b from-white/[0.12] to-white/[0.02]
-        shadow-[0_8px_16px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]
-        ring-1 ring-white/10 backdrop-blur-sm
+        transition-all duration-300
+        ${showImage ? 'bg-gradient-to-b from-white/[0.12] to-white/[0.02] shadow-[0_8px_16px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] ring-1 ring-white/10 backdrop-blur-sm' : ''}
         ${className}
       `}
     >
-      {/* Inner glow effect */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      {/* Inner glow effect for images */}
+      {showImage && (
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      )}
 
       {showImage ? (
         <div className="relative w-full h-full p-[15%] flex items-center justify-center">
@@ -52,12 +62,19 @@ const TeamAvatar = ({ team, name = '', logo = '', size = 48, className = '' }) =
           />
         </div>
       ) : (
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-brand-purple via-indigo-900 to-slate-900 flex items-center justify-center shadow-inner">
+        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-[#8b5cf6] via-[#7c3aed] to-[#6366f1] flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(139,92,246,0.5),inset_0_2px_8px_rgba(0,0,0,0.3)] overflow-hidden ring-2 ring-purple-500/30">
+          {/* Subtle shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent rounded-full" />
+          
+          {/* Animated glow on hover */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-purple/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          {/* Initials */}
           <span 
-            className="font-bold text-white/90 tracking-wider drop-shadow-md" 
-            style={{ fontSize: Math.max(12, Math.floor(sizePx / 2)) }}
+            className="relative font-black text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] select-none z-10" 
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1 }}
           >
-            {initial}
+            {initials}
           </span>
         </div>
       )}

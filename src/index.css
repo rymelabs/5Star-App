@@ -827,6 +827,16 @@
     border-radius: 4px;
   }
 
+  /* Utility class: hide horizontal scrollbars while keeping scroll interactions */
+  .hide-horizontal-scrollbar::-webkit-scrollbar:horizontal {
+    height: 0;
+  }
+
+  .hide-horizontal-scrollbar::-webkit-scrollbar-thumb:horizontal,
+  .hide-horizontal-scrollbar::-webkit-scrollbar-track:horizontal {
+    display: none;
+  }
+
   .fixture-detail-score {
     @apply text-5xl sm:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_30px_rgba(255,255,255,0.15)];
     font-variant-numeric: tabular-nums;

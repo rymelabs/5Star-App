@@ -237,7 +237,7 @@ const Fixtures = () => {
           key={fixture.id}
           className="min-w-[260px] sm:min-w-[320px] flex-shrink-0 snap-start rounded-[22px] bg-gradient-to-r from-brand-purple via-indigo-500 to-blue-500 p-[1px]"
         >
-          <FixtureCard fixture={fixture} onClick={handleFixtureClick} />
+          <FixtureCard fixture={fixture} onClick={handleFixtureClick} compact={true} />
         </div>
       ))}
     </div>

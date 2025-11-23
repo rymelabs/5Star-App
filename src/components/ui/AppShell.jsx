@@ -2,7 +2,7 @@ import React from 'react';
 
 const AppShell = React.forwardRef(({ children, header, bottomNav, className = '' }, ref) => {
   return (
-    <div className={`h-screen bg-app text-white flex flex-col relative overflow-hidden ${className}`}>
+    <div className={`h-screen bg-app text-white flex flex-col relative overflow-x-hidden overflow-y-hidden ${className}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Top-right glow */}
@@ -21,13 +21,15 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
       {/* Main Content Area */}
       <main 
         ref={ref}
-        className="flex-1 relative z-10 w-full max-w-md mx-auto px-4 py-6 pb-24 overflow-y-auto hide-scrollbar"
+        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar ${bottomNav ? 'pb-24' : ''}`}
       >
         {children}
       </main>
 
       {/* Bottom Gradient Overlay - Creates separation from bottom navbar */}
-      <div className="fixed bottom-0 left-0 right-0 h-32 pointer-events-none z-40 bg-gradient-to-t from-black via-black/60 to-transparent" />
+      {bottomNav && (
+        <div className="fixed bottom-0 left-0 right-0 h-32 pointer-events-none z-40 bg-gradient-to-t from-black via-black/60 to-transparent" />
+      )}
 
       {/* Bottom Navigation Area */}
       {bottomNav && (
