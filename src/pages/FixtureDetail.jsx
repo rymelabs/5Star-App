@@ -375,10 +375,10 @@ const FixtureDetail = () => {
                 {userPrediction && (
                   <p className="text-xs text-gray-400 mb-3 relative z-10">Total votes: {predictions.home + predictions.draw + predictions.away}</p>
                 )}
-                <div className="flex gap-3 relative z-10">
+                <div className="flex gap-2 relative z-10">
                   <button 
                     onClick={() => handlePrediction('home')}
-                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium group relative overflow-hidden ${
+                    className={`flex-1 py-1 px-2 rounded-lg transition-all border text-[11px] font-medium group relative overflow-hidden min-h-[36px] ${
                       userPrediction === 'home' 
                         ? 'bg-brand-purple border-brand-purple text-white' 
                         : 'bg-white/5 hover:bg-brand-purple/50 border-white/10 text-white'
@@ -386,12 +386,12 @@ const FixtureDetail = () => {
                   >
                     <span className="group-hover:scale-105 inline-block transition-transform relative z-10">{fixture.homeTeam?.name}</span>
                     {userPrediction && (
-                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.home} votes</div>
+                      <div className="text-[8px] text-white/50 mt-0.5 font-medium relative z-10">{predictions.home} votes</div>
                     )}
                   </button>
                   <button 
                     onClick={() => handlePrediction('draw')}
-                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium relative overflow-hidden ${
+                    className={`flex-1 py-1 px-2 rounded-lg transition-all border text-[11px] font-medium relative overflow-hidden min-h-[36px] ${
                       userPrediction === 'draw' 
                         ? 'bg-white/20 border-white/30 text-white' 
                         : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'
@@ -399,12 +399,12 @@ const FixtureDetail = () => {
                   >
                     <span className="relative z-10">{t('match.draw')}</span>
                     {userPrediction && (
-                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.draw} votes</div>
+                      <div className="text-[8px] text-white/50 mt-0.5 font-medium relative z-10">{predictions.draw} votes</div>
                     )}
                   </button>
                   <button 
                     onClick={() => handlePrediction('away')}
-                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium group relative overflow-hidden ${
+                    className={`flex-1 py-1 px-2 rounded-lg transition-all border text-[11px] font-medium group relative overflow-hidden min-h-[36px] ${
                       userPrediction === 'away' 
                         ? 'bg-accent-green border-accent-green text-white' 
                         : 'bg-white/5 hover:bg-accent-green/50 border-white/10 text-white'
@@ -412,7 +412,7 @@ const FixtureDetail = () => {
                   >
                     <span className="group-hover:scale-105 inline-block transition-transform relative z-10">{fixture.awayTeam?.name}</span>
                     {userPrediction && (
-                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.away} votes</div>
+                      <div className="text-[8px] text-white/50 mt-0.5 font-medium relative z-10">{predictions.away} votes</div>
                     )}
                   </button>
                 </div>
