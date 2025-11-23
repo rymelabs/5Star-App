@@ -2,9 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import Header from './ui/Header';
 import BottomNav from './ui/BottomNav';
 import AppShell from './ui/AppShell';
+import DesktopLayout from './layout/DesktopLayout';
+import MobileLayout from './layout/MobileLayout';
+import DesktopHeader from './desktop/DesktopHeader';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -12,6 +16,7 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
   const scrollContainerRef = useRef(null);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.sessionStorage === 'undefined') {
@@ -53,10 +58,14 @@ const Layout = ({ children }) => {
   return (
     <AppShell
       ref={scrollContainerRef}
-      header={<Header />}
-      bottomNav={<BottomNav />}
+      header={isDesktop ? <DesktopHeader /> : <Header />}
+      bottomNav={!isDesktop ? <BottomNav /> : null}
     >
-      {children}
+      {isDesktop ? (
+        <DesktopLayout>{children}</DesktopLayout>
+      ) : (
+        <MobileLayout>{children}</MobileLayout>
+      )}
     </AppShell>
   );
 };
