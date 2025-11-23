@@ -29,6 +29,8 @@ const FixtureDetail = () => {
   const [activeTab, setActiveTab] = useState('summary');
   const [lineupView, setLineupView] = useState('pitch');
   const [scrolled, setScrolled] = useState(false);
+  const [userPrediction, setUserPrediction] = useState(null);
+  const [predictions, setPredictions] = useState({ home: 0, draw: 0, away: 0 });
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -43,6 +45,11 @@ const FixtureDetail = () => {
     if (foundFixture) {
       setLikes(foundFixture.likes || 0);
       setIsLiked(foundFixture.likedBy?.includes(user?.uid) || false);
+      
+      // Load predictions
+      const fixtureVotes = foundFixture.predictions || { home: 0, draw: 0, away: 0 };
+      setPredictions(fixtureVotes);
+      setUserPrediction(foundFixture.userPredictions?.[user?.uid] || null);
       
       const savedReminders = localStorage.getItem('calendarReminders');
       if (savedReminders) {
@@ -80,6 +87,33 @@ const FixtureDetail = () => {
       console.error('Error adding comment:', error);
     } finally {
       setIsCommenting(false);
+    }
+  };
+
+  const handlePrediction = async (prediction) => {
+    if (!user) {
+      showError('Please sign in to make predictions');
+      return;
+    }
+
+    try {
+      const previousPrediction = userPrediction;
+      setUserPrediction(prediction);
+
+      // Optimistic update
+      setPredictions(prev => {
+        const updated = { ...prev };
+        if (previousPrediction) updated[previousPrediction]--;
+        updated[prediction]++;
+        return updated;
+      });
+
+      await fixturesCollection.updatePrediction(id, user.uid, prediction);
+      showSuccess(`You predicted: ${prediction === 'home' ? fixture.homeTeam?.name : prediction === 'away' ? fixture.awayTeam?.name : 'Draw'}`);
+    } catch (error) {
+      console.error('Error saving prediction:', error);
+      showError('Failed to save prediction');
+      setUserPrediction(userPrediction);
     }
   };
 
@@ -351,16 +385,49 @@ const FixtureDetail = () => {
             {!isCompleted && !isLiveMatch && (
               <div className="bg-gradient-to-br from-brand-purple/20 to-app border border-brand-purple/30 rounded-2xl p-4 text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple/20 blur-[50px] rounded-full pointer-events-none" />
-                <h3 className="text-white font-bold mb-4 relative z-10">{t('match.whoWillWin')}</h3>
+                <h3 className="text-white font-bold mb-2 relative z-10">{t('match.whoWillWin')}</h3>
+                {userPrediction && (
+                  <p className="text-xs text-gray-400 mb-3 relative z-10">Total votes: {predictions.home + predictions.draw + predictions.away}</p>
+                )}
                 <div className="flex gap-3 relative z-10">
-                  <button className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-brand-purple transition-colors border border-white/10 text-sm font-medium text-white group">
-                    <span className="group-hover:scale-105 inline-block transition-transform">{fixture.homeTeam?.name}</span>
+                  <button 
+                    onClick={() => handlePrediction('home')}
+                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium group relative overflow-hidden ${
+                      userPrediction === 'home' 
+                        ? 'bg-brand-purple border-brand-purple text-white' 
+                        : 'bg-white/5 hover:bg-brand-purple/50 border-white/10 text-white'
+                    }`}
+                  >
+                    <span className="group-hover:scale-105 inline-block transition-transform relative z-10">{fixture.homeTeam?.name}</span>
+                    {userPrediction && (
+                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.home} votes</div>
+                    )}
                   </button>
-                  <button className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10 text-sm font-medium text-gray-300">
-                    {t('match.draw')}
+                  <button 
+                    onClick={() => handlePrediction('draw')}
+                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium relative overflow-hidden ${
+                      userPrediction === 'draw' 
+                        ? 'bg-white/20 border-white/30 text-white' 
+                        : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'
+                    }`}
+                  >
+                    <span className="relative z-10">{t('match.draw')}</span>
+                    {userPrediction && (
+                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.draw} votes</div>
+                    )}
                   </button>
-                  <button className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-accent-green transition-colors border border-white/10 text-sm font-medium text-white group">
-                    <span className="group-hover:scale-105 inline-block transition-transform">{fixture.awayTeam?.name}</span>
+                  <button 
+                    onClick={() => handlePrediction('away')}
+                    className={`flex-1 py-3 rounded-xl transition-all border text-sm font-medium group relative overflow-hidden ${
+                      userPrediction === 'away' 
+                        ? 'bg-accent-green border-accent-green text-white' 
+                        : 'bg-white/5 hover:bg-accent-green/50 border-white/10 text-white'
+                    }`}
+                  >
+                    <span className="group-hover:scale-105 inline-block transition-transform relative z-10">{fixture.awayTeam?.name}</span>
+                    {userPrediction && (
+                      <div className="text-[10px] text-white/60 mt-1 font-bold relative z-10">{predictions.away} votes</div>
+                    )}
                   </button>
                 </div>
               </div>

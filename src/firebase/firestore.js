@@ -741,6 +741,44 @@ export const fixturesCollection = {
     }
   },
 
+  // Update user prediction for a fixture
+  updatePrediction: async (fixtureId, userId, prediction) => {
+    try {
+      const database = checkFirebaseInit();
+      const fixtureRef = doc(database, 'fixtures', fixtureId);
+      const fixtureDoc = await getDoc(fixtureRef);
+      
+      if (!fixtureDoc.exists()) {
+        throw new Error('Fixture not found');
+      }
+
+      const fixtureData = fixtureDoc.data();
+      const userPredictions = fixtureData.userPredictions || {};
+      const predictions = fixtureData.predictions || { home: 0, draw: 0, away: 0 };
+      
+      // Remove previous prediction if exists
+      const previousPrediction = userPredictions[userId];
+      if (previousPrediction && predictions[previousPrediction] > 0) {
+        predictions[previousPrediction]--;
+      }
+      
+      // Add new prediction
+      predictions[prediction]++;
+      userPredictions[userId] = prediction;
+
+      await updateDoc(fixtureRef, {
+        predictions,
+        userPredictions,
+        updatedAt: serverTimestamp()
+      });
+
+      return { predictions, userPrediction: prediction };
+    } catch (error) {
+      console.error('Error updating prediction:', error);
+      throw error;
+    }
+  },
+
   // Delete fixtures by season
   deleteBySeason: async (seasonId) => {
     try {
