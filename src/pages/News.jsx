@@ -307,7 +307,7 @@ const News = () => {
       className="min-h-screen bg-background pb-24"
     >
       {/* Header */}
-      <div className="px-4 sm:px-6 pt-6 pb-4">
+      <div className="px-4 pb-4">
         <h1 className="page-header flex items-center gap-3">
           <Newspaper className="w-8 h-8 text-brand-purple" />
           {t('pages.news.title')}
@@ -315,7 +315,7 @@ const News = () => {
       </div>
 
       {/* Search & Filter */}
-      <div className="px-4 sm:px-6 sticky top-[60px] z-20 mb-6">
+      <div className="px-4 sticky top-[60px] z-20 mb-6">
         <div className="flex gap-2.5">
           <div className="relative group flex-1">
             <div className="absolute inset-0 bg-brand-purple/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

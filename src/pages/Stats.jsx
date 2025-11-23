@@ -489,7 +489,7 @@ const Stats = () => {
 
       {/* Header */}
       <div className="relative w-full z-10">
-        <div className="px-4 sm:px-10 pt-6 pb-4">
+        <div className="px-4 pb-4">
           <h1 className="page-header mb-2 flex items-center gap-3">
             <BarChart3 className="w-8 h-8 text-brand-purple" />
             {t('stats.title')}
@@ -502,7 +502,7 @@ const Stats = () => {
 
       {/* Filters */}
       <div className="relative w-full z-10 mb-8">
-        <div className="px-4 sm:px-10">
+        <div className="px-4">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-4 text-white/80">
               <Filter className="w-4 h-4 text-brand-purple" />
