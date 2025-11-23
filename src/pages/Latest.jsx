@@ -302,6 +302,155 @@ const Latest = () => {
     navigate(`/fixtures/${fixture.id}`);
   };
 
+  // Determine order of News vs Recent Results
+  const shouldShowResultsFirst = React.useMemo(() => {
+    if (!recentResults.length || !latestNews.length) return false;
+    
+    try {
+      const latestResultDate = new Date(recentResults[0].dateTime);
+      const latestNewsDate = new Date(latestNews[0].publishedAt);
+      
+      // Show results first if they're more recent than news
+      return latestResultDate > latestNewsDate;
+    } catch {
+      return false;
+    }
+  }, [recentResults, latestNews]);
+
+  // News Section Component
+  const NewsSection = () => (
+    latestNews.length > 0 && (
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-lg font-semibold text-white">{t('pages.latest.latestNews') || 'Latest News'}</h2>
+          <button
+            onClick={() => navigate('/news')}
+            className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
+          >
+            {t('common.viewAll') || 'See all'}
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          {/* Featured Article */}
+          {latestNews[0] && (
+            <SurfaceCard 
+              interactive 
+              onClick={() => handleNewsClick(latestNews[0])}
+              className="p-0 overflow-hidden group rounded-2xl"
+            >
+              <div className="relative h-40 sm:h-48 w-full overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+                <img
+                  src={latestNews[0].image}
+                  alt={latestNews[0].title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+                  <PillChip 
+                    label="Featured" 
+                    size="sm" 
+                    variant="solid" 
+                    tone="primary" 
+                    className="mb-2"
+                  />
+                  <h3 className="font-semibold text-white text-base sm:text-lg leading-tight line-clamp-2">
+                    {latestNews[0].title}
+                  </h3>
+                </div>
+              </div>
+              <div className="p-3 sm:p-4">
+                <p className="text-gray-400 text-xs sm:text-sm line-clamp-2 mb-2">
+                  {truncateText(latestNews[0].excerpt || latestNews[0].summary || latestNews[0].content, 120)}
+                </p>
+                <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-500">
+                  <span>{formatDate(latestNews[0].publishedAt)}</span>
+                  <span className="text-brand-purple font-semibold">Read Article</span>
+                </div>
+              </div>
+            </SurfaceCard>
+          )}
+
+          {/* Secondary Articles */}
+          {latestNews.slice(1).map((article) => (
+            <SurfaceCard 
+              key={article.id} 
+              interactive 
+              onClick={() => handleNewsClick(article)}
+              className="flex gap-3 p-2.5 rounded-2xl"
+            >
+              <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 flex flex-col justify-between py-0.5">
+                <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2">
+                  {article.title}
+                </h4>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[11px] text-gray-500">{formatDate(article.publishedAt)}</span>
+                </div>
+              </div>
+            </SurfaceCard>
+          ))}
+        </div>
+      </section>
+    )
+  );
+
+  // Recent Results Section Component
+  const RecentResultsSection = () => (
+    recentResults.length > 0 && (
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-lg font-semibold text-white">Recent Results</h2>
+        </div>
+
+        <div className="flex overflow-x-auto gap-2.5 pb-4 -mx-4 px-4 hide-scrollbar">
+          {recentResults.map((fixture) => (
+            <div 
+              key={fixture.id} 
+              className="flex-shrink-0 w-56 rounded-2xl bg-gradient-to-br from-brand-purple via-indigo-500 to-blue-500 p-[1px]"
+            >
+              <SurfaceCard 
+                interactive 
+                onClick={() => handleFixtureClick(fixture)}
+                padding="sm"
+                className="flex flex-col gap-2 rounded-2xl h-full bg-app"
+              >
+                <div className="flex items-center justify-between text-[11px] text-gray-400 border-b border-white/5 pb-1.5">
+                  <span>{formatDate(fixture.dateTime)}</span>
+                  <span className="text-accent-green font-semibold">FT</span>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TeamAvatar team={fixture.homeTeam} size={28} />
+                      <span className="text-xs font-medium">{abbreviateTeamName(fixture.homeTeam?.name)}</span>
+                    </div>
+                    <span className="font-semibold text-base">{fixture.homeScore}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TeamAvatar team={fixture.awayTeam} size={28} />
+                      <span className="text-xs font-medium">{abbreviateTeamName(fixture.awayTeam?.name)}</span>
+                    </div>
+                    <span className="font-semibold text-base">{fixture.awayScore}</span>
+                  </div>
+                </div>
+              </SurfaceCard>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  );
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -320,134 +469,17 @@ const Latest = () => {
         </p>
       </header>
 
-      {/* News Section */}
-      {latestNews.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-lg font-semibold text-white">{t('pages.latest.latestNews') || 'Latest News'}</h2>
-            <button
-              onClick={() => navigate('/news')}
-              className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
-            >
-              {t('common.viewAll') || 'See all'}
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {/* Featured Article */}
-            {latestNews[0] && (
-              <SurfaceCard 
-                interactive 
-                onClick={() => handleNewsClick(latestNews[0])}
-                className="p-0 overflow-hidden group rounded-2xl"
-              >
-                <div className="relative h-40 sm:h-48 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                  <img
-                    src={latestNews[0].image}
-                    alt={latestNews[0].title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
-                    <PillChip 
-                      label="Featured" 
-                      size="sm" 
-                      variant="solid" 
-                      tone="primary" 
-                      className="mb-2"
-                    />
-                    <h3 className="font-semibold text-white text-base sm:text-lg leading-tight line-clamp-2">
-                      {latestNews[0].title}
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-3 sm:p-4">
-                  <p className="text-gray-400 text-xs sm:text-sm line-clamp-2 mb-2">
-                    {truncateText(latestNews[0].excerpt || latestNews[0].summary || latestNews[0].content, 120)}
-                  </p>
-                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-500">
-                    <span>{formatDate(latestNews[0].publishedAt)}</span>
-                    <span className="text-brand-purple font-semibold">Read Article</span>
-                  </div>
-                </div>
-              </SurfaceCard>
-            )}
-
-            {/* Secondary Articles */}
-            {latestNews.slice(1).map((article) => (
-              <SurfaceCard 
-                key={article.id} 
-                interactive 
-                onClick={() => handleNewsClick(article)}
-                className="flex gap-3 p-2.5 rounded-2xl"
-              >
-                <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 flex flex-col justify-between py-0.5">
-                  <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2">
-                    {article.title}
-                  </h4>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[11px] text-gray-500">{formatDate(article.publishedAt)}</span>
-                  </div>
-                </div>
-              </SurfaceCard>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Recent Results */}
-      {recentResults.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-lg font-semibold text-white">Recent Results</h2>
-          </div>
-
-          <div className="flex overflow-x-auto gap-2.5 pb-4 -mx-4 px-4 hide-scrollbar">
-            {recentResults.map((fixture) => (
-              <div 
-                key={fixture.id} 
-                className="flex-shrink-0 w-56 rounded-2xl bg-gradient-to-br from-brand-purple via-indigo-500 to-blue-500 p-[1px]"
-              >
-                <SurfaceCard 
-                  interactive 
-                  onClick={() => handleFixtureClick(fixture)}
-                  padding="sm"
-                  className="flex flex-col gap-2 rounded-2xl h-full bg-app"
-                >
-                  <div className="flex items-center justify-between text-[11px] text-gray-400 border-b border-white/5 pb-1.5">
-                    <span>{formatDate(fixture.dateTime)}</span>
-                    <span className="text-accent-green font-semibold">FT</span>
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <TeamAvatar team={fixture.homeTeam} size={28} />
-                        <span className="text-xs font-medium">{abbreviateTeamName(fixture.homeTeam?.name)}</span>
-                      </div>
-                      <span className="font-semibold text-base">{fixture.homeScore}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <TeamAvatar team={fixture.awayTeam} size={28} />
-                        <span className="text-xs font-medium">{abbreviateTeamName(fixture.awayTeam?.name)}</span>
-                      </div>
-                      <span className="font-semibold text-base">{fixture.awayScore}</span>
-                    </div>
-                  </div>
-                </SurfaceCard>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* Dynamic Order: Show Recent Results first if they're newer than news */}
+      {shouldShowResultsFirst ? (
+        <>
+          <RecentResultsSection />
+          <NewsSection />
+        </>
+      ) : (
+        <>
+          <NewsSection />
+          <RecentResultsSection />
+        </>
       )}
 
       {/* Season Fixtures */}
