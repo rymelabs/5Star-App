@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../../context/NewsContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSoftDelete } from '../../hooks/useSoftDelete';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -31,12 +32,12 @@ const AdminNews = () => {
   const {
     allArticles,
     addArticle,
-    deleteArticle,
     approveArticle,
     rejectArticle,
     newsSettings,
     updateNewsSettings
   } = useNews();
+  const { softDeleteArticle } = useSoftDelete();
   const { toast, showToast, hideToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -223,12 +224,18 @@ const AdminNews = () => {
   };
 
   const confirmDeleteArticle = async () => {
-    const { articleId } = confirmDelete;
+    const { articleId, articleTitle } = confirmDelete;
     setConfirmDelete({ isOpen: false, articleId: null, articleTitle: '' });
 
     try {
-      await deleteArticle(articleId);
-      showToast(t('adminNews.deleteSuccess'), 'success');
+      // Find the full article to pass to soft delete
+      const article = allArticles.find(a => a.id === articleId);
+      if (article) {
+        await softDeleteArticle(article);
+        showToast(`"${articleTitle}" moved to recycle bin`, 'success');
+      } else {
+        showToast(t('adminNews.articleNotFound') || 'Article not found', 'error');
+      }
     } catch (error) {
       console.error('AdminNews: Failed to delete article:', error);
       const errorMsg = error?.code === 'permission-denied'

@@ -4,6 +4,7 @@ import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useSoftDelete } from '../../hooks/useSoftDelete';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
@@ -18,9 +19,9 @@ const AdminTeams = () => {
     ownedTeams,
     ownedLeagues,
     addTeam,
-    updateTeam,
-    deleteTeam
+    updateTeam
   } = useFootball();
+  const { softDeleteTeam } = useSoftDelete();
   const teams = ownedTeams;
   const leagues = ownedLeagues;
   const { showSuccess, showError } = useNotification();
@@ -298,9 +299,9 @@ const AdminTeams = () => {
 
     try {
       setLoading(true);
-      console.log('🗑️ Attempting to delete team:', team.id, team.name);
-      await deleteTeam(team.id);
-      showSuccess(t('pages.adminTeams.teamDeleted'), t('pages.adminTeams.teamDeletedDesc').replace('{name}', team.name));
+      console.log('🗑️ Moving team to recycle bin:', team.id, team.name);
+      await softDeleteTeam(team);
+      showSuccess(t('pages.adminTeams.teamDeleted'), t('pages.adminTeams.teamDeletedDesc').replace('{name}', team.name) + ' (Moved to Recycle Bin)');
       setConfirmDelete({ isOpen: false, team: null });
     } catch (error) {
       console.error('❌ Error deleting team:', error);

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import { useNews } from '../../context/NewsContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useRecycleBin } from '../../context/RecycleBinContext';
 import { adminActivityCollection } from '../../firebase/firestore';
 import { 
   ArrowLeft, 
@@ -25,7 +26,8 @@ import {
   AlertTriangle,
   Database,
   Bell,
-  Inbox
+  Inbox,
+  RotateCcw
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -37,6 +39,7 @@ const AdminDashboard = () => {
   const { ownedTeams, ownedFixtures, leagueTable } = useFootball();
   const { articles } = useNews();
   const { t } = useLanguage();
+  const { recycleBinItems } = useRecycleBin();
   const teams = ownedTeams;
   const fixtures = ownedFixtures;
   const [recentActivities, setRecentActivities] = useState([]);
@@ -265,6 +268,14 @@ const AdminDashboard = () => {
       path: '/admin/advanced-settings',
       color: 'text-red-400',
       count: '-',
+    },
+    {
+      title: 'Recycle Bin',
+      description: 'View and restore deleted items',
+      icon: RotateCcw,
+      path: '/admin/recycle-bin',
+      color: 'text-gray-400',
+      count: recycleBinItems.length || 0,
     },
   ];
 
