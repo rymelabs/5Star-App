@@ -1,14 +1,24 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Trophy, Users, TrendingUp, Award, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import NewTeamAvatar from './NewTeamAvatar';
 import SurfaceCard from './ui/SurfaceCard';
 
 const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
   const [activeGroup, setActiveGroup] = useState(season?.groups?.[0]?.id || null);
+  const [slideDirection, setSlideDirection] = useState(1); // 1 = right, -1 = left
 
   useEffect(() => {
     setActiveGroup(season?.groups?.[0]?.id || null);
+    setSlideDirection(1);
   }, [season]);
+
+  const handleGroupChange = (groupId) => {
+    const currentIndex = season.groups.findIndex(g => g.id === activeGroup);
+    const newIndex = season.groups.findIndex(g => g.id === groupId);
+    setSlideDirection(newIndex > currentIndex ? 1 : -1);
+    setActiveGroup(groupId);
+  };
 
   if (!season || !season.groups || season.groups.length === 0) {
     return (
@@ -192,7 +202,7 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
           {season.groups.map((group) => (
             <button
               key={group.id}
-              onClick={() => setActiveGroup(group.id)}
+              onClick={() => handleGroupChange(group.id)}
               className={`
                 relative px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300
                 ${activeGroup === group.id
@@ -202,7 +212,11 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
               `}
             >
               {activeGroup === group.id && (
-                <div className="absolute inset-0 bg-brand-purple rounded-full -z-10" />
+                <motion.div 
+                  layoutId="group-tab-indicator"
+                  className="absolute inset-0 bg-brand-purple rounded-full -z-10" 
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
               )}
               {group.name}
             </button>
@@ -211,7 +225,15 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
       </div>
 
       {/* Standings Table */}
-      <div className="bg-elevated rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeGroup}
+          initial={{ opacity: 0, x: 15 * slideDirection }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -15 * slideDirection }}
+          transition={{ duration: 0.15, ease: 'easeInOut' }}
+        >
+          <div className="bg-elevated rounded-2xl overflow-hidden border border-white/10 shadow-xl">
         <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <table className="w-full min-w-[600px] text-xs sm:text-sm">
             <thead>
@@ -297,6 +319,8 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
           </div>
         )}
       </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
