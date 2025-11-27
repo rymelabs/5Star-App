@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Filter, Trophy, ArrowUpDown } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -273,19 +273,33 @@ const Fixtures = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex p-1 bg-white/5 rounded-full mx-4 sm:mx-2">
+      <div className="flex p-1 bg-white/5 rounded-full mx-4 sm:mx-2 relative">
+        <motion.div
+          className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
+          layoutId="fixtures-tab-indicator"
+          initial={false}
+          animate={{
+            left: activeTab === 'fixtures' ? '4px' : '50%',
+            width: 'calc(50% - 4px)',
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 400,
+            damping: 30,
+          }}
+        />
         <button
           onClick={() => setActiveTab('fixtures')}
-          className={`flex-1 py-2 text-sm font-medium rounded-full transition-all ${
-            activeTab === 'fixtures' ? 'bg-brand-purple text-white shadow-lg' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-2 text-sm font-medium rounded-full transition-colors relative z-10 ${
+            activeTab === 'fixtures' ? 'text-white' : 'text-gray-400 hover:text-white'
           }`}
         >
           {t('navigation.fixtures')}
         </button>
         <button
           onClick={() => setActiveTab('table')}
-          className={`flex-1 py-2 text-sm font-medium rounded-full transition-all ${
-            activeTab === 'table' ? 'bg-brand-purple text-white shadow-lg' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-2 text-sm font-medium rounded-full transition-colors relative z-10 ${
+            activeTab === 'table' ? 'text-white' : 'text-gray-400 hover:text-white'
           }`}
         >
           {t('pages.fixtures.table')}
@@ -334,7 +348,21 @@ const Fixtures = () => {
 
       {activeTab === 'fixtures' && (
         <div className="flex items-center justify-end px-4 sm:px-2">
-          <div className="flex bg-white/5 rounded-full p-1 gap-1">
+          <div className="flex bg-white/5 rounded-full p-1 gap-1 relative">
+            <motion.div
+              className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
+              layoutId="viewmode-tab-indicator"
+              initial={false}
+              animate={{
+                left: viewMode === 'date' ? '4px' : 'calc(50% + 2px)',
+                width: 'calc(50% - 6px)',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 30,
+              }}
+            />
             {[
               { id: 'date', label: t('pages.fixtures.byDate'), disabled: false },
               { id: 'group', label: t('pages.fixtures.byGroup'), disabled: !hasGroupData }
@@ -343,9 +371,9 @@ const Fixtures = () => {
                 key={option.id}
                 type="button"
                 onClick={() => !option.disabled && setViewMode(option.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors relative z-10 ${
                   viewMode === option.id
-                    ? 'bg-brand-purple text-white shadow-lg'
+                    ? 'text-white'
                     : 'text-gray-400 hover:text-white'
                 } ${option.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
@@ -357,10 +385,25 @@ const Fixtures = () => {
       )}
 
       {/* Content */}
-      {activeTab === 'fixtures' ? (
-        <div className="space-y-6">
+      <AnimatePresence mode="wait">
+        {activeTab === 'fixtures' ? (
+          <motion.div
+            key="fixtures-content"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="space-y-6"
+          >
+          <AnimatePresence mode="wait">
           {viewMode === 'date' && (
-            <>
+            <motion.div
+              key="date-view"
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
+            >
               {nextUpcomingFixture && sortedRecentFixtures.length === 0 && (
                 <section className="space-y-3 px-4 sm:px-2">
                   <div>
@@ -476,11 +519,17 @@ const Fixtures = () => {
                   <p>{t('pages.fixtures.noFixturesFound')}</p>
                 </div>
               )}
-            </>
+            </motion.div>
           )}
 
           {viewMode === 'group' && (
-            <>
+            <motion.div
+              key="group-view"
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
+            >
               {!hasGroupData && (
                 <SurfaceCard className="mx-2 text-center text-sm text-gray-400">
                   <div className="py-8 px-4">
@@ -525,11 +574,19 @@ const Fixtures = () => {
                   <p>{t('pages.fixtures.noFixturesFound')}</p>
                 </div>
               )}
-            </>
+            </motion.div>
           )}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       ) : (
-        <div className="px-0 sm:px-2">
+        <motion.div
+          key="table-content"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
+          className="px-0 sm:px-2"
+        >
           {showSeasonStandings ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
@@ -554,8 +611,9 @@ const Fixtures = () => {
               <p>{t('stats.noData')}</p>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </motion.div>
   );
 };
