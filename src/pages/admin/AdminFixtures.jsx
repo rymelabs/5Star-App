@@ -7,7 +7,7 @@ import { useToast } from '../../hooks/useToast';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
-import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 const AdminFixtures = () => {
   const { t } = useLanguage();
@@ -62,6 +62,25 @@ const AdminFixtures = () => {
     assistBy: ''
   });
   const [loading, setLoading] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+
+  const toggleGroup = (groupName) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
+  };
+
+  // Group fixtures by competition
+  const groupedFixtures = fixtures.reduce((groups, fixture) => {
+    const groupName = fixture.competition || 'Friendly';
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+    groups[groupName].push(fixture);
+    return groups;
+  }, {});
+
   const totalFixtures = fixtures.length;
   const upcomingFixtures = fixtures.filter(f => ['scheduled', 'playing', 'live'].includes(f.status)).length;
   const completedFixtures = fixtures.filter(f => ['finished', 'completed'].includes(f.status)).length;
@@ -320,8 +339,7 @@ const AdminFixtures = () => {
         groupId: formData.groupId || null,
         stage: formData.stage || null,
         homeLineup: formData.homeLineup || [],
-        awayLineup: formData.awayLineup || [],
-        events: formData.events || []
+        awayLineup: formData.awayLineup || [],        events: formData.events || []
       };
       
       await updateFixture(editingId, updates);
@@ -448,7 +466,6 @@ const AdminFixtures = () => {
                     value={formData.date}
                     onChange={handleInputChange}
                     className="input-field w-full"
-                    min={new Date().toISOString().split('T')[0]}
                     required
                   />
                 </div>
@@ -1083,114 +1100,219 @@ const AdminFixtures = () => {
 
         {/* Fixtures List */}
         {fixtures.length > 0 ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
-          {fixtures.map((fixture) => {
-            // Handle both old (date/time) and new (dateTime) formats
-            let dateTime;
-            if (fixture.dateTime) {
-              const dt = new Date(fixture.dateTime);
-              dateTime = {
-                date: dt.toLocaleDateString(),
-                time: dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-              };
-            } else {
-              dateTime = formatDateTime(fixture.date, fixture.time);
-            }
-            
-            // Safely get team data
-            const homeTeam = fixture.homeTeam || teams.find(t => t.id === fixture.homeTeamId) || { name: 'Unknown', logo: '' };
-            const awayTeam = fixture.awayTeam || teams.find(t => t.id === fixture.awayTeamId) || { name: 'Unknown', logo: '' };
-            
-            return (
-              <div key={fixture.id} className="card group relative overflow-hidden p-3">
-                <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-brand-purple/10 via-transparent to-blue-500/10" />
-                <div className="relative space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center flex-wrap gap-2 text-[11px] uppercase tracking-[0.3em] text-white/60">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold tracking-[0.25em] ${getStatusColor(fixture.status)}`}>
-                        {fixture.status.charAt(0).toUpperCase() + fixture.status.slice(1)}
-                      </span>
-                      {fixture.competition && <span>{fixture.competition}</span>}
-                      {fixture.round && <span>• {fixture.round}</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(fixture)}
-                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-[0.2em] flex items-center gap-2"
-                        title="Edit fixture"
-                      >
-                        <Edit className="w-4 h-4" />
-                        {t('common.edit')}
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(t('adminFixtures.deleteConfirm'))) {
-                            console.log('Delete fixture:', fixture.id);
-                          }
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-xs font-semibold uppercase tracking-[0.2em]"
-                        title={t('adminFixtures.deleteFixture')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        {t('common.delete')}
-                      </button>
+          <div className="space-y-6">
+            {Object.entries(groupedFixtures).map(([groupName, groupFixtures]) => (
+              <div key={groupName} className="rounded-xl border border-white/5 bg-[#0b1020]/50 overflow-hidden">
+                <button
+                  onClick={() => toggleGroup(groupName)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-1 bg-brand-purple rounded-full" />
+                    <div className="text-left">
+                      <h3 className="text-lg font-bold text-white">{groupName}</h3>
+                      <p className="text-xs text-gray-400">{groupFixtures.length} {t('adminFixtures.fixtures')}</p>
                     </div>
                   </div>
+                  {expandedGroups[groupName] ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+                
+                {expandedGroups[groupName] && (
+                  <div className="p-4 pt-0 space-y-3 border-t border-white/5 mt-2">
+                    {groupFixtures.map((fixture) => {
+                      // Handle both old (date/time) and new (dateTime) formats
+                      let dateTime;
+                      if (fixture.dateTime) {
+                        const dt = new Date(fixture.dateTime);
+                        dateTime = {
+                          date: dt.toLocaleDateString(),
+                          time: dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                        };
+                      } else {
+                        dateTime = formatDateTime(fixture.date, fixture.time);
+                      }
+                      
+                      // Safely get team data
+                      const homeTeam = fixture.homeTeam || teams.find(t => t.id === fixture.homeTeamId) || { name: 'Unknown', logo: '' };
+                      const awayTeam = fixture.awayTeam || teams.find(t => t.id === fixture.awayTeamId) || { name: 'Unknown', logo: '' };
+                      
+                      return (
+                        <div key={fixture.id} className="group relative w-full overflow-hidden rounded-xl border border-white/5 bg-[#0b1020] transition-all hover:border-white/10 hover:bg-[#111629]">
+                          {/* Background Gradients */}
+                          <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-brand-purple/5 blur-3xl transition-opacity group-hover:opacity-75" />
+                          <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl transition-opacity group-hover:opacity-75" />
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      <NewTeamAvatar 
-                        team={homeTeam} 
-                        size={40} 
-                        className="rounded-lg bg-black/30 border border-white/5"
-                      />
-                      <div>
-                        <p className="text-sm text-white/60 uppercase tracking-[0.25em]">{t('adminFixtures.home')}</p>
-                        <p className="text-lg font-semibold text-white">{homeTeam.name}</p>
-                      </div>
-                    </div>
+                          {/* Mobile Layout (< lg) */}
+                          <div className="lg:hidden p-3 relative">
+                            {/* Header: Date & Actions */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-white/40">
+                                <span>{dateTime.date}</span>
+                                <span className="text-white/20">•</span>
+                                <span>{dateTime.time}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleEdit(fixture)}
+                                  className="p-1.5 rounded hover:bg-brand-purple/20 text-white/60 hover:text-brand-purple transition-colors"
+                                  title={t('common.edit')}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(t('adminFixtures.deleteConfirm'))) {
+                                      console.log('Delete fixture:', fixture.id);
+                                    }
+                                  }}
+                                  className="p-1.5 rounded hover:bg-red-500/20 text-white/60 hover:text-red-400 transition-colors"
+                                  title={t('common.delete')}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
 
-                    <div className="text-center px-4">
-                      {fixture.status === 'finished' || fixture.status === 'completed' ? (
-                        <div className="text-2xl font-bold text-white">{fixture.homeScore} - {fixture.awayScore}</div>
-                      ) : (
-                        <div className="text-xs uppercase tracking-[0.4em] text-white/50">VS</div>
-                      )}
-                    </div>
+                            {/* Teams & Score Grid */}
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                              {/* Home Team */}
+                              <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-end sm:text-right">
+                                <span className="font-bold text-white text-xs sm:text-sm order-2 sm:order-1 truncate w-full">
+                                  {homeTeam.name}
+                                </span>
+                                <NewTeamAvatar 
+                                  team={homeTeam} 
+                                  size={32} 
+                                  className="flex-shrink-0 order-1 sm:order-2 h-8 w-8 sm:h-9 sm:w-9" 
+                                />
+                              </div>
 
-                    <div className="flex items-center gap-3 flex-1 justify-end">
-                      <div className="text-right">
-                        <p className="text-sm text-white/60 uppercase tracking-[0.25em]">{t('adminFixtures.away')}</p>
-                        <p className="text-lg font-semibold text-white">{awayTeam.name}</p>
-                      </div>
-                      <NewTeamAvatar 
-                        team={awayTeam} 
-                        size={40} 
-                        className="rounded-lg bg-black/30 border border-white/5"
-                      />
-                    </div>
+                              {/* Score / VS */}
+                              <div className="flex flex-col items-center justify-center rounded-lg bg-black/20 backdrop-blur-sm px-2 py-1 min-w-[50px]">
+                                {fixture.status === 'finished' || fixture.status === 'completed' || fixture.status === 'live' ? (
+                                  <div className="flex items-center gap-1 text-lg font-bold text-white">
+                                    <span>{fixture.homeScore ?? 0}</span>
+                                    <span className="text-white/20">-</span>
+                                    <span>{fixture.awayScore ?? 0}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm font-bold text-white/20">VS</span>
+                                )}
+                                {(fixture.status === 'finished' || fixture.status === 'completed') && (
+                                  <span className="text-[8px] font-medium uppercase text-white/40">FT</span>
+                                )}
+                                {fixture.status === 'live' && (
+                                  <span className="text-[8px] font-bold uppercase text-red-500 animate-pulse">LIVE</span>
+                                )}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-start sm:text-left">
+                                <NewTeamAvatar 
+                                  team={awayTeam} 
+                                  size={32} 
+                                  className="flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9" 
+                                />
+                                <span className="font-bold text-white text-xs sm:text-sm truncate w-full">
+                                  {awayTeam.name}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Footer: Competition & Status */}
+                            <div className="mt-3 flex items-center justify-between text-[10px]">
+                              <div className="flex items-center gap-1 text-white/40 uppercase tracking-wider truncate max-w-[60%]">
+                                {fixture.competition && <span className="truncate text-brand-purple">{fixture.competition}</span>}
+                                {fixture.round && (
+                                  <>
+                                    <span className="text-white/20">•</span>
+                                    <span className="truncate">{fixture.round}</span>
+                                  </>
+                                )}
+                              </div>
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest ${getStatusColor(fixture.status)}`}>
+                                {fixture.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Desktop Layout (>= lg) */}
+                          <div className="hidden lg:flex items-center justify-between p-3 gap-4 relative h-24">
+                            {/* Left: Teams & Scores */}
+                            <div className="flex flex-col justify-center gap-2 flex-1 min-w-0 h-full">
+                              {/* Home Team */}
+                              <div className="flex items-center gap-3">
+                                <NewTeamAvatar team={homeTeam} size={24} className="flex-shrink-0" />
+                                <span className="text-xs font-bold text-white truncate flex-1">{homeTeam.name}</span>
+                                <span className={`text-sm font-bold ${fixture.status === 'live' ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
+                                  {fixture.homeScore ?? '-'}
+                                </span>
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="flex items-center gap-3">
+                                <NewTeamAvatar team={awayTeam} size={24} className="flex-shrink-0" />
+                                <span className="text-xs font-bold text-white truncate flex-1">{awayTeam.name}</span>
+                                <span className={`text-sm font-bold ${fixture.status === 'live' ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
+                                  {fixture.awayScore ?? '-'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Middle: Date/Time & Status */}
+                            <div className="flex flex-col items-center justify-center gap-1 px-6 border-x border-white/5 min-w-[140px] h-full">
+                              <div className="flex flex-col items-center">
+                                <span className="text-xs font-bold text-white">{dateTime.time}</span>
+                                <span className="text-[9px] text-white/40 uppercase tracking-wider">{dateTime.date}</span>
+                              </div>
+                              {fixture.status === 'live' ? (
+                                <span className="mt-1 px-2 py-0.5 rounded-full bg-red-500/10 text-[9px] font-bold text-red-500 animate-pulse uppercase tracking-widest border border-red-500/20">
+                                  Live
+                                </span>
+                              ) : (fixture.status === 'finished' || fixture.status === 'completed') ? (
+                                <span className="mt-1 px-2 py-0.5 rounded-full bg-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest border border-white/10">
+                                  FT
+                                </span>
+                              ) : (
+                                <span className="mt-1 px-2 py-0.5 rounded-full bg-brand-purple/10 text-[9px] font-bold text-brand-purple uppercase tracking-widest border border-brand-purple/20">
+                                  Upcoming
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Right: Actions */}
+                            <div className="flex flex-col justify-center gap-2 h-full pl-2">
+                              <button
+                                onClick={() => handleEdit(fixture)}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-brand-purple hover:text-white text-white/40 transition-all duration-200 group"
+                                title={t('common.edit')}
+                              >
+                                <Edit className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(t('adminFixtures.deleteConfirm'))) {
+                                    console.log('Delete fixture:', fixture.id);
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500 hover:text-white text-white/40 transition-all duration-200 group"
+                                title={t('common.delete')}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  <div className="flex items-center flex-wrap gap-4 text-xs text-white/60">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{dateTime.date}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{dateTime.time}</span>
-                    </div>
-                    {fixture.venue && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{fixture.venue}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
-            );
-          })}
+            ))}
           </div>
         ) : (
           <div className="card text-center py-10">
