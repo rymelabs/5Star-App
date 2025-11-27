@@ -6,6 +6,7 @@ import { NotificationProvider } from './NotificationContext';
 import { CompetitionsProvider } from './CompetitionsContext';
 import { InstagramProvider } from './InstagramContext';
 import { LanguageProvider } from './LanguageContext';
+import { RecycleBinProvider } from './RecycleBinContext';
 
 // Combined provider component
 export const AppProvider = ({ children }) => {
@@ -16,9 +17,11 @@ export const AppProvider = ({ children }) => {
           <NewsProvider>
             <CompetitionsProvider>
               <InstagramProvider>
-                <NotificationProvider>
-                  {children}
-                </NotificationProvider>
+                <RecycleBinProvider>
+                  <NotificationProvider>
+                    {children}
+                  </NotificationProvider>
+                </RecycleBinProvider>
               </InstagramProvider>
             </CompetitionsProvider>
           </NewsProvider>

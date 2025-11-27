@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFootball } from '../../context/FootballContext';
 import { useCompetitions } from '../../context/CompetitionsContext';
+import { useAuth } from '../../context/AuthContext';
+import { useSoftDelete } from '../../hooks/useSoftDelete';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 const AdminFixtures = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     ownedFixtures,
     ownedTeams,
@@ -19,19 +23,20 @@ const AdminFixtures = () => {
     ownedSeasons,
     addFixture,
     updateFixture,
-    seasons: allSeasons,
     activeSeason
   } = useFootball();
-  const { ownedCompetitions, competitions: allCompetitions } = useCompetitions();
+  const { ownedCompetitions } = useCompetitions();
+  const { softDeleteFixture } = useSoftDelete();
 
   const fixtures = ownedFixtures;
   const teams = ownedTeams;
   const leagues = ownedLeagues;
-  const seasons = ownedSeasons.length ? ownedSeasons : allSeasons;
-  const competitions = ownedCompetitions.length ? ownedCompetitions : allCompetitions;
+  const seasons = ownedSeasons;
+  const competitions = ownedCompetitions;
   const { toast, showToast, hideToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, fixture: null });
   const [formData, setFormData] = useState({
     homeTeam: '',
     awayTeam: '',
@@ -349,6 +354,31 @@ const AdminFixtures = () => {
     } catch (error) {
       console.error('Error updating fixture:', error);
       showToast(t('adminFixtures.updateFailed') + ': ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFixture = (fixture) => {
+    setConfirmDelete({ isOpen: true, fixture });
+  };
+
+  const confirmDeleteFixture = async () => {
+    const fixture = confirmDelete.fixture;
+    if (!fixture) return;
+
+    try {
+      setLoading(true);
+      const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
+      const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+      const fixtureName = `${homeTeam?.name || 'Team'} vs ${awayTeam?.name || 'Team'}`;
+      
+      await softDeleteFixture(fixture);
+      showToast(`${fixtureName} moved to recycle bin`, 'success');
+      setConfirmDelete({ isOpen: false, fixture: null });
+    } catch (error) {
+      console.error('Error deleting fixture:', error);
+      showToast(t('adminFixtures.deleteFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -1164,11 +1194,7 @@ const AdminFixtures = () => {
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (confirm(t('adminFixtures.deleteConfirm'))) {
-                                      console.log('Delete fixture:', fixture.id);
-                                    }
-                                  }}
+                                  onClick={() => handleDeleteFixture(fixture)}
                                   className="p-1.5 rounded hover:bg-red-500/20 text-white/60 hover:text-red-400 transition-colors"
                                   title={t('common.delete')}
                                 >
@@ -1294,11 +1320,7 @@ const AdminFixtures = () => {
                                 <Edit className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
                               </button>
                               <button
-                                onClick={() => {
-                                  if (confirm(t('adminFixtures.deleteConfirm'))) {
-                                    console.log('Delete fixture:', fixture.id);
-                                  }
-                                }}
+                                onClick={() => handleDeleteFixture(fixture)}
                                 className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500 hover:text-white text-white/40 transition-all duration-200 group"
                                 title={t('common.delete')}
                               >
@@ -1330,6 +1352,17 @@ const AdminFixtures = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, fixture: null })}
+        onConfirm={confirmDeleteFixture}
+        title={t('adminFixtures.deleteFixture') || 'Delete Fixture'}
+        message={t('adminFixtures.deleteConfirm') || 'Are you sure you want to delete this fixture? It will be moved to the recycle bin.'}
+        confirmText={t('common.delete') || 'Delete'}
+        type="danger"
+      />
 
       {toast.show && (
         <Toast

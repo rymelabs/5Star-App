@@ -1,27 +1,64 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
+import { useRecycleBin } from '../../context/RecycleBinContext';
 import { getFirebaseDb } from '../../firebase/config';
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
-import { ArrowLeft, AlertTriangle, Trash2, Database } from 'lucide-react';
+import { collection, getDocs, doc, query, where, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { ArrowLeft, AlertTriangle, Trash2, Database, RotateCcw } from 'lucide-react';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import Toast from '../../components/Toast';
 
 const AdvancedSettings = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { retentionDays, recycleBinItems } = useRecycleBin();
   const [modalConfig, setModalConfig] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Delete handler functions
-  const deleteAllFromCollection = async (collectionName) => {
+  const ownerId = user?.uid || null;
+  const ownerName = user?.displayName || user?.email || 'Unknown';
+
+  // Soft delete - moves items to recycle bin instead of permanent deletion
+  const softDeleteOwnedFromCollection = async (collectionName, itemType) => {
+    if (!ownerId) {
+      throw new Error('User not authenticated');
+    }
     const database = getFirebaseDb();
-    const querySnapshot = await getDocs(collection(database, collectionName));
-    const batch = writeBatch(database);
-    querySnapshot.docs.forEach((document) => {
-      batch.delete(doc(database, collectionName, document.id));
-    });
-    await batch.commit();
+    const collectionRef = collection(database, collectionName);
+    const q = query(collectionRef, where('ownerId', '==', ownerId));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return 0; // No documents to delete
+    }
+
+    let count = 0;
+    for (const docSnapshot of querySnapshot.docs) {
+      const item = { ...docSnapshot.data(), id: docSnapshot.id };
+      const recycleBinId = `${collectionName}_${item.id}_${Date.now()}_${count}`;
+      
+      // Move to recycle bin
+      await setDoc(doc(database, 'recycleBin', recycleBinId), {
+        ...item,
+        originalId: item.id,
+        originalCollection: collectionName,
+        itemType: itemType,
+        ownerId: item.ownerId || ownerId,
+        ownerName: item.ownerName || ownerName,
+        deletedAt: serverTimestamp(),
+        deletedBy: ownerId,
+        deletedByName: ownerName,
+        expiresAt: new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1000)
+      });
+
+      // Delete from original collection
+      await deleteDoc(doc(database, collectionName, item.id));
+      count++;
+    }
+
+    return count;
   };
 
   const handleDeleteData = (dataType) => {
@@ -39,45 +76,47 @@ const AdvancedSettings = () => {
     
     setModalConfig({
       title: t('advancedSettings.deleteTitle').replace('{type}', label),
-      message: t('advancedSettings.deleteMessage').replace('{type}', label.toLowerCase()),
+      message: `${t('advancedSettings.deleteMessage').replace('{type}', label.toLowerCase())} Items will be moved to the recycle bin for ${retentionDays} days.`,
       confirmText: `DELETE ${dataType.toUpperCase()}`,
       onConfirm: async () => {
         try {
+          let totalDeleted = 0;
+          
           switch (dataType) {
             case 'seasons':
-              await deleteAllFromCollection('seasons');
+              totalDeleted = await softDeleteOwnedFromCollection('seasons', 'season');
               break;
             case 'leagues':
-              await deleteAllFromCollection('leagues');
+              totalDeleted = await softDeleteOwnedFromCollection('leagues', 'league');
               break;
             case 'teams':
-              await deleteAllFromCollection('teams');
+              totalDeleted = await softDeleteOwnedFromCollection('teams', 'team');
               break;
             case 'fixtures':
-              await deleteAllFromCollection('fixtures');
+              totalDeleted = await softDeleteOwnedFromCollection('fixtures', 'fixture');
               break;
             case 'tables':
-              await deleteAllFromCollection('leagueTable');
+              totalDeleted = await softDeleteOwnedFromCollection('leagueTable', 'table');
               break;
             case 'articles':
-              await deleteAllFromCollection('news');
+              totalDeleted = await softDeleteOwnedFromCollection('news', 'article');
               break;
             case 'everything':
-              await Promise.all([
-                deleteAllFromCollection('seasons'),
-                deleteAllFromCollection('leagues'),
-                deleteAllFromCollection('teams'),
-                deleteAllFromCollection('fixtures'),
-                deleteAllFromCollection('leagueTable'),
-                deleteAllFromCollection('news'),
-                deleteAllFromCollection('adminActivity'),
+              const results = await Promise.all([
+                softDeleteOwnedFromCollection('seasons', 'season'),
+                softDeleteOwnedFromCollection('leagues', 'league'),
+                softDeleteOwnedFromCollection('teams', 'team'),
+                softDeleteOwnedFromCollection('fixtures', 'fixture'),
+                softDeleteOwnedFromCollection('leagueTable', 'table'),
+                softDeleteOwnedFromCollection('news', 'article'),
               ]);
+              totalDeleted = results.reduce((sum, count) => sum + count, 0);
               break;
           }
           
           setToast({
             type: 'success',
-            message: t('advancedSettings.deleteSuccess').replace('{type}', label.toLowerCase()),
+            message: `${totalDeleted} ${label.toLowerCase()} moved to recycle bin`,
           });
           
           // Reload after a short delay
@@ -118,6 +157,36 @@ const AdvancedSettings = () => {
       </div>
 
       <div className="px-4 py-6">
+        {/* Recycle Bin Link */}
+        <button
+          onClick={() => navigate('/admin/recycle-bin')}
+          className="w-full flex items-center justify-between p-4 mb-6 bg-brand-purple/10 hover:bg-brand-purple/20 border border-brand-purple/20 hover:border-brand-purple/30 rounded-lg transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <RotateCcw className="w-5 h-5 text-brand-purple" />
+            <div className="text-left">
+              <p className="text-white font-medium">Recycle Bin</p>
+              <p className="text-gray-400 text-sm">
+                {recycleBinItems.length} {recycleBinItems.length === 1 ? 'item' : 'items'} • Auto-deletes after {retentionDays} days
+              </p>
+            </div>
+          </div>
+          <ArrowLeft className="w-5 h-5 text-brand-purple rotate-180" />
+        </button>
+
+        {/* Info Banner */}
+        <div className="flex items-start gap-3 mb-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <Database className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-blue-400 font-medium text-sm">
+              These actions only affect <span className="text-white font-semibold">your own data</span>. Data created by other admins will not be affected.
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Deleted items are moved to the Recycle Bin for {retentionDays} days before permanent deletion.
+            </p>
+          </div>
+        </div>
+
         {/* Warning Banner */}
         <div className="flex items-start gap-3 mb-8 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -226,6 +295,7 @@ const AdvancedSettings = () => {
                 <div className="text-left">
                   <p className="text-white font-semibold text-lg">{t('advancedSettings.deleteAllData')}</p>
                   <p className="text-gray-400 text-sm">{t('advancedSettings.deleteAllDataDesc')}</p>
+                  <p className="text-blue-400 text-xs mt-1">Only deletes your own data, not other admins' data</p>
                 </div>
               </div>
             </button>

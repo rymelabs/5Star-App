@@ -14,16 +14,18 @@ import {
 } from 'lucide-react';
 import { seasonsCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useSoftDelete } from '../../hooks/useSoftDelete';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import AdminPageLayout from '../../components/AdminPageLayout';
 
 const AdminSeasons = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { softDeleteSeason } = useSoftDelete();
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, seasonId: null });
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, season: null });
 
   const isAdmin = user?.isAdmin;
   const isSuperAdmin = user?.isSuperAdmin;
@@ -68,22 +70,22 @@ const AdminSeasons = () => {
     }
   };
 
-  const handleDelete = (seasonId) => {
-    setConfirmDelete({ isOpen: true, seasonId });
+  const handleDelete = (season) => {
+    setConfirmDelete({ isOpen: true, season });
   };
 
   const confirmDeleteSeason = async () => {
-    if (!confirmDelete.seasonId) return;
+    if (!confirmDelete.season) return;
 
     try {
-      await seasonsCollection.delete(confirmDelete.seasonId);
-      showToast('Season deleted successfully!', 'success');
+      await softDeleteSeason(confirmDelete.season);
+      showToast(`"${confirmDelete.season.name}" moved to recycle bin`, 'success');
       loadSeasons();
     } catch (error) {
       console.error('Error deleting season:', error);
       showToast('Failed to delete season', 'error');
     } finally {
-      setConfirmDelete({ isOpen: false, seasonId: null });
+      setConfirmDelete({ isOpen: false, season: null });
     }
   };
 
@@ -174,7 +176,7 @@ const AdminSeasons = () => {
                     <Edit className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(season.id)}
+                    onClick={() => handleDelete(season)}
                     className="p-1.5 rounded-md border border-red-400/40 text-red-100 hover:bg-red-500/15"
                     title="Delete"
                   >
@@ -279,10 +281,10 @@ const AdminSeasons = () => {
 
       <ConfirmationModal
         isOpen={confirmDelete.isOpen}
-        onClose={() => setConfirmDelete({ isOpen: false, seasonId: null })}
+        onClose={() => setConfirmDelete({ isOpen: false, season: null })}
         onConfirm={confirmDeleteSeason}
         title="Delete Season"
-        message="Are you sure you want to delete this season? This action cannot be undone."
+        message={`Are you sure you want to delete "${confirmDelete.season?.name || 'this season'}"? It will be moved to the recycle bin.`}
         confirmText="Delete"
         cancelText="Cancel"
         type="danger"

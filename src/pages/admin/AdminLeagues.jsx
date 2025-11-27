@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useSoftDelete } from '../../hooks/useSoftDelete';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import AdminPageLayout from '../../components/AdminPageLayout';
 
@@ -21,10 +22,11 @@ const AdminLeagues = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { softDeleteLeague } = useSoftDelete();
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, leagueId: null, leagueName: '' });
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, league: null });
 
   const isAdmin = user?.isAdmin;
   const isSuperAdmin = user?.isSuperAdmin;
@@ -58,17 +60,17 @@ const AdminLeagues = () => {
     }, 3000);
   };
 
-  const handleDelete = (leagueId, leagueName) => {
-    setConfirmDelete({ isOpen: true, leagueId, leagueName });
+  const handleDelete = (league) => {
+    setConfirmDelete({ isOpen: true, league });
   };
 
   const confirmDeleteLeague = async () => {
-    const { leagueId } = confirmDelete;
-    setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' });
+    const { league } = confirmDelete;
+    setConfirmDelete({ isOpen: false, league: null });
 
     try {
-      await leaguesCollection.delete(leagueId);
-      showToast(t('adminLeagues.deleteSuccess'), 'success');
+      await softDeleteLeague(league);
+      showToast(`"${league.name}" moved to recycle bin`, 'success');
       loadLeagues();
     } catch (error) {
       console.error('Error deleting league:', error);
@@ -204,7 +206,7 @@ const AdminLeagues = () => {
                     <Settings className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(league.id, league.name)}
+                    onClick={() => handleDelete(league)}
                     className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors"
                     title="Delete"
                   >
@@ -219,10 +221,10 @@ const AdminLeagues = () => {
 
       <ConfirmationModal
         isOpen={confirmDelete.isOpen}
-        onClose={() => setConfirmDelete({ isOpen: false, leagueId: null, leagueName: '' })}
+        onClose={() => setConfirmDelete({ isOpen: false, league: null })}
         onConfirm={confirmDeleteLeague}
         title={t('adminLeagues.deleteTitle')}
-        message={t('adminLeagues.deleteMessage', { name: confirmDelete.leagueName })}
+        message={t('adminLeagues.deleteMessage', { name: confirmDelete.league?.name })}
         confirmText={t('adminLeagues.deleteConfirm')}
         cancelText={t('common.cancel')}
         type="danger"

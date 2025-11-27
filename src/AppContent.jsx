@@ -58,6 +58,7 @@ const AdminNotifications = withLazyErrorLogging('Admin Notifications', () => imp
 const BulkTeamUploadPage = withLazyErrorLogging('Bulk Upload page', () => import('./pages/admin/BulkTeamUploadPage'));
 const AdminSubmissions = withLazyErrorLogging('Admin Submissions', () => import('./pages/admin/AdminSubmissions'));
 const AdminStats = withLazyErrorLogging('Admin Stats', () => import('./pages/admin/AdminStats'));
+const RecycleBin = withLazyErrorLogging('Recycle Bin', () => import('./pages/admin/RecycleBin'));
 
 const AppContent = () => {
   // Add error handling for context
@@ -166,6 +167,7 @@ const AppContent = () => {
             <Route path="/admin/notifications" element={requireAdminElement(<AdminNotifications />)} />
             <Route path="/admin/stats" element={requireAdminElement(<AdminStats />)} />
             <Route path="/admin/advanced-settings" element={requireAdminElement(<AdvancedSettings />)} />
+            <Route path="/admin/recycle-bin" element={requireAdminElement(<RecycleBin />)} />
             
             {/* Auth surfaces */}
             <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthLanding />} />

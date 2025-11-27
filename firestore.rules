@@ -232,5 +232,26 @@ service cloud.firestore {
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
+
+    // Recycle Bin collection - Admins can manage their own deleted items
+    match /recycleBin/{itemId} {
+      // Admins can read their own items, super-admins can read all
+      allow read: if request.auth != null && 
+        ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && 
+          resource.data.ownerId == request.auth.uid) ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
+      
+      // Admins can create items (soft delete) - must set ownerId to their own uid
+      allow create: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin') &&
+        request.resource.data.ownerId == request.auth.uid;
+      
+      // Admins can delete their own items, super-admins can delete any
+      allow delete: if request.auth != null && 
+        ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && 
+          resource.data.ownerId == request.auth.uid) ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
+    }
   }
 }
