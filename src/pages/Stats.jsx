@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { BarChart3, Filter, ChevronRight, Trophy, Users, TrendingUp, Target, Shield, AlertCircle } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useLanguage } from '../context/LanguageContext';
 import NewTeamAvatar from '../components/NewTeamAvatar';
-import { Trophy, Target, Users, Shield, AlertCircle, TrendingUp, Filter, BarChart3, ChevronRight } from 'lucide-react';
+import Select from '../components/ui/Select';
 
 const Stats = () => {
   const { fixtures, teams, activeSeason, seasons } = useFootball();
@@ -508,40 +509,16 @@ const Stats = () => {
               <Filter className="w-4 h-4 text-brand-purple" />
               <span className="text-sm font-bold uppercase tracking-wider">{t('stats.filters')}</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Season Filter */}
-              <div className="relative">
-                <select
-                  value={selectedSeason}
-                  onChange={(e) => setSelectedSeason(e.target.value)}
-                  className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple/50 transition-colors"
-                >
-                  <option value="all" className="bg-dark-900">{t('stats.allSeasons')}</option>
-                  {seasons.map(season => (
-                    <option key={season.id} value={season.id} className="bg-dark-900">{season.name}</option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
-                </div>
-              </div>
-
-              {/* Competition Filter */}
-              <div className="relative">
-                <select
-                  value={selectedCompetition}
-                  onChange={(e) => setSelectedCompetition(e.target.value)}
-                  className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple/50 transition-colors"
-                >
-                  <option value="all" className="bg-dark-900">{t('stats.allCompetitions')}</option>
-                  {availableCompetitions.map(comp => (
-                    <option key={comp} value={comp} className="bg-dark-900">{comp}</option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
-                </div>
-              </div>
+              <Select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                options={[
+                  { value: 'all', label: t('stats.allSeasons') },
+                  ...seasons.map(season => ({ value: season.id, label: season.name }))
+                ]}
+              />
             </div>
           </div>
         </div>
