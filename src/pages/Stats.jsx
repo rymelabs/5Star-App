@@ -1,24 +1,62 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Filter, ChevronRight, Trophy, Users, TrendingUp, Target, Shield, AlertCircle, X, Check } from 'lucide-react';
+import { BarChart3, Filter, ChevronDown, ChevronUp, Trophy, Users, TrendingUp, Target, Shield, AlertCircle, X, Check } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useLanguage } from '../context/LanguageContext';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 
 const Stats = () => {
-  const { fixtures, teams, activeSeason, seasons } = useFootball();
+  const { fixtures, teams, activeSeason, seasons, leagues } = useFootball();
   const { competitions } = useCompetitions();
   const { t } = useLanguage();
   const [statsFilter, setStatsFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('scorers');
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
   const [expandedTeamStats, setExpandedTeamStats] = useState({
     topScoring: false,
     bestDefense: false,
     bestGD: false,
     mostConceded: false
   });
+
+  // Helper function to get competition/group name for a fixture
+  const getFixtureGroupName = (fixture) => {
+    // Check for friendly first
+    if (fixture.type === 'friendly' || fixture.competition?.toLowerCase().includes('friendly')) {
+      return 'Friendly Matches';
+    }
+    
+    // Check for season
+    if (fixture.seasonId) {
+      const season = seasons?.find(s => s.id === fixture.seasonId);
+      return season?.name || fixture.competition || 'Season';
+    }
+    
+    // Check for league
+    if (fixture.leagueId) {
+      const league = leagues?.find(l => l.id === fixture.leagueId);
+      return league?.name || fixture.competition || 'League';
+    }
+    
+    // Check for competition
+    if (fixture.competitionId || fixture.competition) {
+      const comp = competitions?.find(c => c.id === fixture.competitionId);
+      return comp?.name || fixture.competition || 'Competition';
+    }
+    
+    return 'Other Matches';
+  };
+
+  // Helper to get group type for styling
+  const getGroupType = (fixture) => {
+    if (fixture.type === 'friendly' || fixture.competition?.toLowerCase().includes('friendly')) return 'friendly';
+    if (fixture.seasonId) return 'season';
+    if (fixture.leagueId) return 'league';
+    if (fixture.competitionId || fixture.competition) return 'competition';
+    return 'other';
+  };
 
   // Filter options for stats
   const filterOptions = [
@@ -79,12 +117,15 @@ const Stats = () => {
     });
   }, [fixtures, statsFilter]);
 
-  // Calculate Top Scorers (Players)
-  const topScorers = useMemo(() => {
-    const scorerMap = new Map();
+  // Calculate Top Scorers (Players) - Grouped by competition
+  const topScorersGrouped = useMemo(() => {
+    const groupedScorers = new Map();
 
     filteredFixtures.forEach(fixture => {
       if (!fixture.events) return;
+      
+      const groupName = getFixtureGroupName(fixture);
+      const groupType = getGroupType(fixture);
 
       fixture.events.forEach(event => {
         if (event.type === 'goal') {
@@ -92,9 +133,15 @@ const Stats = () => {
           const player = team?.players?.find(p => p.id === event.playerId);
 
           if (player) {
+            if (!groupedScorers.has(groupName)) {
+              groupedScorers.set(groupName, { type: groupType, players: new Map() });
+            }
+            
             const key = `${player.id}_${team.id}`;
-            if (!scorerMap.has(key)) {
-              scorerMap.set(key, {
+            const group = groupedScorers.get(groupName);
+            
+            if (!group.players.has(key)) {
+              group.players.set(key, {
                 playerId: player.id,
                 playerName: player.name,
                 teamName: team.name,
@@ -103,23 +150,37 @@ const Stats = () => {
                 jerseyNumber: player.jerseyNumber
               });
             }
-            scorerMap.get(key).goals++;
+            group.players.get(key).goals++;
           }
         }
       });
     });
 
-    return Array.from(scorerMap.values())
-      .sort((a, b) => b.goals - a.goals)
-      .slice(0, 20);
-  }, [filteredFixtures]);
+    // Convert to sorted array format
+    const result = [];
+    groupedScorers.forEach((data, groupName) => {
+      const players = Array.from(data.players.values())
+        .sort((a, b) => b.goals - a.goals)
+        .slice(0, 10);
+      if (players.length > 0) {
+        result.push({ groupName, type: data.type, players });
+      }
+    });
 
-  // Calculate Top Assists
-  const topAssisters = useMemo(() => {
-    const assistMap = new Map();
+    // Sort groups: seasons first, then leagues, then competitions, then friendly
+    const typeOrder = { season: 0, league: 1, competition: 2, friendly: 3, other: 4 };
+    return result.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+  }, [filteredFixtures, seasons, leagues, competitions]);
+
+  // Calculate Top Assists - Grouped by competition
+  const topAssistersGrouped = useMemo(() => {
+    const groupedAssisters = new Map();
 
     filteredFixtures.forEach(fixture => {
       if (!fixture.events) return;
+      
+      const groupName = getFixtureGroupName(fixture);
+      const groupType = getGroupType(fixture);
 
       fixture.events.forEach(event => {
         if (event.type === 'goal' && event.assistById) {
@@ -127,9 +188,15 @@ const Stats = () => {
           const player = team?.players?.find(p => p.id === event.assistById);
 
           if (player) {
+            if (!groupedAssisters.has(groupName)) {
+              groupedAssisters.set(groupName, { type: groupType, players: new Map() });
+            }
+            
             const key = `${player.id}_${team.id}`;
-            if (!assistMap.has(key)) {
-              assistMap.set(key, {
+            const group = groupedAssisters.get(groupName);
+            
+            if (!group.players.has(key)) {
+              group.players.set(key, {
                 playerId: player.id,
                 playerName: player.name,
                 teamName: team.name,
@@ -138,25 +205,41 @@ const Stats = () => {
                 jerseyNumber: player.jerseyNumber
               });
             }
-            assistMap.get(key).assists++;
+            group.players.get(key).assists++;
           }
         }
       });
     });
 
-    return Array.from(assistMap.values())
-      .sort((a, b) => b.assists - a.assists)
-      .slice(0, 20);
-  }, [filteredFixtures]);
+    const result = [];
+    groupedAssisters.forEach((data, groupName) => {
+      const players = Array.from(data.players.values())
+        .sort((a, b) => b.assists - a.assists)
+        .slice(0, 10);
+      if (players.length > 0) {
+        result.push({ groupName, type: data.type, players });
+      }
+    });
 
-  // Calculate Clean Sheets (Goalkeepers)
-  const cleanSheets = useMemo(() => {
-    const gkMap = new Map();
+    const typeOrder = { season: 0, league: 1, competition: 2, friendly: 3, other: 4 };
+    return result.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+  }, [filteredFixtures, seasons, leagues, competitions]);
+
+  // Calculate Clean Sheets (Goalkeepers) - Grouped by competition
+  const cleanSheetsGrouped = useMemo(() => {
+    const groupedGKs = new Map();
 
     filteredFixtures.forEach(fixture => {
-      // Ensure scores are numbers
       const homeScore = parseInt(fixture.homeScore) || 0;
       const awayScore = parseInt(fixture.awayScore) || 0;
+      
+      const groupName = getFixtureGroupName(fixture);
+      const groupType = getGroupType(fixture);
+      
+      if (!groupedGKs.has(groupName)) {
+        groupedGKs.set(groupName, { type: groupType, players: new Map() });
+      }
+      const group = groupedGKs.get(groupName);
       
       // Check home team
       const homeLineup = fixture.homeLineup || [];
@@ -164,11 +247,10 @@ const Stats = () => {
         homeLineup.includes(p.id) && p.isGoalkeeper
       );
       
-      // Home team clean sheet (away score is 0)
-      if (homeGK && awayScore === 0) {
+      if (homeGK) {
         const key = `${homeGK.id}_${fixture.homeTeam.id}`;
-        if (!gkMap.has(key)) {
-          gkMap.set(key, {
+        if (!group.players.has(key)) {
+          group.players.set(key, {
             playerId: homeGK.id,
             playerName: homeGK.name,
             teamName: fixture.homeTeam.name,
@@ -178,22 +260,8 @@ const Stats = () => {
             jerseyNumber: homeGK.jerseyNumber
           });
         }
-        gkMap.get(key).cleanSheets++;
-        gkMap.get(key).appearances++;
-      } else if (homeGK) {
-        const key = `${homeGK.id}_${fixture.homeTeam.id}`;
-        if (!gkMap.has(key)) {
-          gkMap.set(key, {
-            playerId: homeGK.id,
-            playerName: homeGK.name,
-            teamName: fixture.homeTeam.name,
-            teamLogo: fixture.homeTeam.logo,
-            cleanSheets: 0,
-            appearances: 0,
-            jerseyNumber: homeGK.jerseyNumber
-          });
-        }
-        gkMap.get(key).appearances++;
+        group.players.get(key).appearances++;
+        if (awayScore === 0) group.players.get(key).cleanSheets++;
       }
 
       // Check away team
@@ -202,11 +270,10 @@ const Stats = () => {
         awayLineup.includes(p.id) && p.isGoalkeeper
       );
       
-      // Away team clean sheet (home score is 0)
-      if (awayGK && homeScore === 0) {
+      if (awayGK) {
         const key = `${awayGK.id}_${fixture.awayTeam.id}`;
-        if (!gkMap.has(key)) {
-          gkMap.set(key, {
+        if (!group.players.has(key)) {
+          group.players.set(key, {
             playerId: awayGK.id,
             playerName: awayGK.name,
             teamName: fixture.awayTeam.name,
@@ -216,37 +283,35 @@ const Stats = () => {
             jerseyNumber: awayGK.jerseyNumber
           });
         }
-        gkMap.get(key).cleanSheets++;
-        gkMap.get(key).appearances++;
-      } else if (awayGK) {
-        const key = `${awayGK.id}_${fixture.awayTeam.id}`;
-        if (!gkMap.has(key)) {
-          gkMap.set(key, {
-            playerId: awayGK.id,
-            playerName: awayGK.name,
-            teamName: fixture.awayTeam.name,
-            teamLogo: fixture.awayTeam.logo,
-            cleanSheets: 0,
-            appearances: 0,
-            jerseyNumber: awayGK.jerseyNumber
-          });
-        }
-        gkMap.get(key).appearances++;
+        group.players.get(key).appearances++;
+        if (homeScore === 0) group.players.get(key).cleanSheets++;
       }
     });
 
-    return Array.from(gkMap.values())
-      .filter(gk => gk.appearances > 0)
-      .sort((a, b) => b.cleanSheets - a.cleanSheets || b.appearances - a.appearances)
-      .slice(0, 20);
-  }, [filteredFixtures]);
+    const result = [];
+    groupedGKs.forEach((data, groupName) => {
+      const players = Array.from(data.players.values())
+        .filter(gk => gk.appearances > 0)
+        .sort((a, b) => b.cleanSheets - a.cleanSheets || b.appearances - a.appearances)
+        .slice(0, 10);
+      if (players.length > 0) {
+        result.push({ groupName, type: data.type, players });
+      }
+    });
 
-  // Calculate Disciplinary Records
-  const disciplinaryRecords = useMemo(() => {
-    const cardMap = new Map();
+    const typeOrder = { season: 0, league: 1, competition: 2, friendly: 3, other: 4 };
+    return result.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+  }, [filteredFixtures, seasons, leagues, competitions]);
+
+  // Calculate Disciplinary Records - Grouped by competition
+  const disciplinaryGrouped = useMemo(() => {
+    const groupedCards = new Map();
 
     filteredFixtures.forEach(fixture => {
       if (!fixture.events) return;
+      
+      const groupName = getFixtureGroupName(fixture);
+      const groupType = getGroupType(fixture);
 
       fixture.events.forEach(event => {
         if (event.type === 'yellow_card' || event.type === 'red_card') {
@@ -254,9 +319,15 @@ const Stats = () => {
           const player = team?.players?.find(p => p.id === event.playerId);
 
           if (player) {
+            if (!groupedCards.has(groupName)) {
+              groupedCards.set(groupName, { type: groupType, players: new Map() });
+            }
+            
             const key = `${player.id}_${team.id}`;
-            if (!cardMap.has(key)) {
-              cardMap.set(key, {
+            const group = groupedCards.get(groupName);
+            
+            if (!group.players.has(key)) {
+              group.players.set(key, {
                 playerId: player.id,
                 playerName: player.name,
                 teamName: team.name,
@@ -267,19 +338,28 @@ const Stats = () => {
               });
             }
             if (event.type === 'yellow_card') {
-              cardMap.get(key).yellowCards++;
+              group.players.get(key).yellowCards++;
             } else {
-              cardMap.get(key).redCards++;
+              group.players.get(key).redCards++;
             }
           }
         }
       });
     });
 
-    return Array.from(cardMap.values())
-      .sort((a, b) => (b.redCards * 2 + b.yellowCards) - (a.redCards * 2 + a.yellowCards))
-      .slice(0, 20);
-  }, [filteredFixtures]);
+    const result = [];
+    groupedCards.forEach((data, groupName) => {
+      const players = Array.from(data.players.values())
+        .sort((a, b) => (b.redCards * 2 + b.yellowCards) - (a.redCards * 2 + a.yellowCards))
+        .slice(0, 10);
+      if (players.length > 0) {
+        result.push({ groupName, type: data.type, players });
+      }
+    });
+
+    const typeOrder = { season: 0, league: 1, competition: 2, friendly: 3, other: 4 };
+    return result.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+  }, [filteredFixtures, seasons, leagues, competitions]);
 
   // Get available competitions from filtered fixtures
   const availableCompetitions = useMemo(() => {
@@ -287,19 +367,27 @@ const Stats = () => {
     return Array.from(comps);
   }, [fixtures]);
 
-  // Calculate Team Statistics
-  const teamStats = useMemo(() => {
-    const statsMap = new Map();
+  // Calculate Team Statistics - Grouped by competition
+  const teamStatsGrouped = useMemo(() => {
+    const groupedStats = new Map();
 
-    filteredFixtures.forEach(fixture => {
+    filteredFixturesForTeams.forEach(fixture => {
       const homeScore = parseInt(fixture.homeScore) || 0;
       const awayScore = parseInt(fixture.awayScore) || 0;
+      
+      const groupName = getFixtureGroupName(fixture);
+      const groupType = getGroupType(fixture);
+      
+      if (!groupedStats.has(groupName)) {
+        groupedStats.set(groupName, { type: groupType, teams: new Map() });
+      }
+      const group = groupedStats.get(groupName);
 
       // Home team stats
       if (fixture.homeTeam) {
         const homeKey = fixture.homeTeam.id;
-        if (!statsMap.has(homeKey)) {
-          statsMap.set(homeKey, {
+        if (!group.teams.has(homeKey)) {
+          group.teams.set(homeKey, {
             teamId: fixture.homeTeam.id,
             teamName: fixture.homeTeam.name,
             teamLogo: fixture.homeTeam.logo,
@@ -314,7 +402,7 @@ const Stats = () => {
             points: 0
           });
         }
-        const homeStats = statsMap.get(homeKey);
+        const homeStats = group.teams.get(homeKey);
         homeStats.played++;
         homeStats.goalsFor += homeScore;
         homeStats.goalsAgainst += awayScore;
@@ -334,8 +422,8 @@ const Stats = () => {
       // Away team stats
       if (fixture.awayTeam) {
         const awayKey = fixture.awayTeam.id;
-        if (!statsMap.has(awayKey)) {
-          statsMap.set(awayKey, {
+        if (!group.teams.has(awayKey)) {
+          group.teams.set(awayKey, {
             teamId: fixture.awayTeam.id,
             teamName: fixture.awayTeam.name,
             teamLogo: fixture.awayTeam.logo,
@@ -350,7 +438,7 @@ const Stats = () => {
             points: 0
           });
         }
-        const awayStats = statsMap.get(awayKey);
+        const awayStats = group.teams.get(awayKey);
         awayStats.played++;
         awayStats.goalsFor += awayScore;
         awayStats.goalsAgainst += homeScore;
@@ -368,44 +456,31 @@ const Stats = () => {
       }
     });
 
-    // Calculate goal difference
-    return Array.from(statsMap.values()).map(team => ({
-      ...team,
-      goalDifference: team.goalsFor - team.goalsAgainst
-    }));
-  }, [filteredFixturesForTeams]);
+    // Convert to sorted array format with calculated goal difference
+    const result = [];
+    groupedStats.forEach((data, groupName) => {
+      const teams = Array.from(data.teams.values())
+        .map(team => ({ ...team, goalDifference: team.goalsFor - team.goalsAgainst }))
+        .filter(team => team.played > 0);
+      if (teams.length > 0) {
+        result.push({ groupName, type: data.type, teams });
+      }
+    });
 
-  // Top scoring teams
-  const topScoringTeams = useMemo(() => {
-    return [...teamStats]
-      .filter(team => team.played > 0)
-      .sort((a, b) => b.goalsFor - a.goalsFor || b.goalDifference - a.goalDifference)
-      .slice(0, 10);
-  }, [teamStats]);
+    const typeOrder = { season: 0, league: 1, competition: 2, friendly: 3, other: 4 };
+    return result.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+  }, [filteredFixturesForTeams, seasons, leagues, competitions]);
 
-  // Most goals conceded
-  const mostGoalsConceded = useMemo(() => {
-    return [...teamStats]
-      .filter(team => team.played > 0)
-      .sort((a, b) => b.goalsAgainst - a.goalsAgainst)
-      .slice(0, 10);
-  }, [teamStats]);
-
-  // Best defense (least goals conceded)
-  const bestDefense = useMemo(() => {
-    return [...teamStats]
-      .filter(team => team.played > 0)
-      .sort((a, b) => a.goalsAgainst - b.goalsAgainst || b.cleanSheets - a.cleanSheets)
-      .slice(0, 10);
-  }, [teamStats]);
-
-  // Best goal difference
-  const bestGoalDifference = useMemo(() => {
-    return [...teamStats]
-      .filter(team => team.played > 0)
-      .sort((a, b) => b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor)
-      .slice(0, 10);
-  }, [teamStats]);
+  // Get group type colors
+  const getGroupTypeColor = (type) => {
+    switch (type) {
+      case 'season': return { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: Trophy };
+      case 'league': return { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', icon: BarChart3 };
+      case 'competition': return { bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-400', icon: Target };
+      case 'friendly': return { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', icon: Users };
+      default: return { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-400', icon: BarChart3 };
+    }
+  };
 
   const tabs = [
     { id: 'scorers', label: t('stats.topScorers'), icon: Target, color: 'text-green-400' },
@@ -415,12 +490,12 @@ const Stats = () => {
     { id: 'teams', label: t('stats.teamStats'), icon: BarChart3, color: 'text-orange-400' }
   ];
 
-  const renderPlayerCard = (player, index, statKey) => {
+  const renderPlayerCard = (player, index, statKey, isInGroup = false) => {
     const isTop3 = index < 3;
     const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500';
     
     return (
-      <div key={`${player.playerId}_${player.teamName}`} className="group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3">
+      <div key={`${player.playerId}_${player.teamName}_${index}`} className={`group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3 ${isInGroup ? 'pl-4' : ''}`}>
         {/* Rank */}
         <div className={`text-xl sm:text-2xl font-black ${rankColor} w-7 text-center flex-shrink-0`}>
           {index + 1}
@@ -462,12 +537,12 @@ const Stats = () => {
     );
   };
 
-  const renderDisciplineCard = (player, index) => {
+  const renderDisciplineCard = (player, index, isInGroup = false) => {
     const isTop3 = index < 3;
     const rankColor = index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500';
 
     return (
-      <div key={`${player.playerId}_${player.teamName}`} className="group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3">
+      <div key={`${player.playerId}_${player.teamName}_${index}`} className={`group relative hover:bg-white/[0.06] border-b border-white/5 p-3 sm:p-4 transition-all duration-500 cursor-pointer overflow-hidden flex items-center gap-3 ${isInGroup ? 'pl-4' : ''}`}>
         {/* Rank */}
         <div className={`text-xl sm:text-2xl font-black ${rankColor} w-7 text-center flex-shrink-0`}>
           {index + 1}
@@ -513,6 +588,44 @@ const Stats = () => {
         </div>
       </div>
     );
+  };
+
+  // Render a collapsible group header
+  const renderGroupHeader = (groupName, type, playerCount, tabKey) => {
+    const colors = getGroupTypeColor(type);
+    const Icon = colors.icon;
+    const isExpanded = expandedGroups[`${tabKey}_${groupName}`] !== false; // Default to expanded
+    
+    return (
+      <button
+        onClick={() => setExpandedGroups(prev => ({
+          ...prev,
+          [`${tabKey}_${groupName}`]: !isExpanded
+        }))}
+        className={`w-full flex items-center justify-between p-4 ${colors.bg} border-b ${colors.border} hover:bg-white/5 transition-colors`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-full ${colors.bg} border ${colors.border} flex items-center justify-center`}>
+            <Icon className={`w-4 h-4 ${colors.text}`} />
+          </div>
+          <div className="text-left">
+            <h3 className={`font-bold ${colors.text}`}>{groupName}</h3>
+            <p className="text-xs text-gray-500">{playerCount} player{playerCount !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className={`w-5 h-5 ${colors.text}`} />
+        </motion.div>
+      </button>
+    );
+  };
+
+  // Check if a group is expanded
+  const isGroupExpanded = (tabKey, groupName) => {
+    return expandedGroups[`${tabKey}_${groupName}`] !== false;
   };
 
   return (
@@ -613,8 +726,24 @@ const Stats = () => {
             {/* Top Scorers */}
             {activeTab === 'scorers' && (
               <>
-                {topScorers.length > 0 ? (
-                  topScorers.map((player, index) => renderPlayerCard(player, index, 'goals'))
+                {topScorersGrouped.length > 0 ? (
+                  topScorersGrouped.map(group => (
+                    <div key={group.groupName}>
+                      {renderGroupHeader(group.groupName, group.type, group.players.length, 'scorers')}
+                      <AnimatePresence>
+                        {isGroupExpanded('scorers', group.groupName) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {group.players.map((player, index) => renderPlayerCard(player, index, 'goals', true))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))
                 ) : (
                   <div className="text-center py-20 px-4 rounded-2xl">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -630,8 +759,24 @@ const Stats = () => {
             {/* Top Assists */}
             {activeTab === 'assists' && (
               <>
-                {topAssisters.length > 0 ? (
-                  topAssisters.map((player, index) => renderPlayerCard(player, index, 'assists'))
+                {topAssistersGrouped.length > 0 ? (
+                  topAssistersGrouped.map(group => (
+                    <div key={group.groupName}>
+                      {renderGroupHeader(group.groupName, group.type, group.players.length, 'assists')}
+                      <AnimatePresence>
+                        {isGroupExpanded('assists', group.groupName) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {group.players.map((player, index) => renderPlayerCard(player, index, 'assists', true))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))
                 ) : (
                   <div className="text-center py-20 px-4 rounded-2xl">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -647,8 +792,24 @@ const Stats = () => {
             {/* Clean Sheets */}
             {activeTab === 'cleansheets' && (
               <>
-                {cleanSheets.length > 0 ? (
-                  cleanSheets.map((player, index) => renderPlayerCard(player, index, 'cleanSheets'))
+                {cleanSheetsGrouped.length > 0 ? (
+                  cleanSheetsGrouped.map(group => (
+                    <div key={group.groupName}>
+                      {renderGroupHeader(group.groupName, group.type, group.players.length, 'cleansheets')}
+                      <AnimatePresence>
+                        {isGroupExpanded('cleansheets', group.groupName) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {group.players.map((player, index) => renderPlayerCard(player, index, 'cleanSheets', true))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))
                 ) : (
                   <div className="text-center py-20 px-4 rounded-2xl">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -664,8 +825,24 @@ const Stats = () => {
             {/* Discipline */}
             {activeTab === 'discipline' && (
               <>
-                {disciplinaryRecords.length > 0 ? (
-                  disciplinaryRecords.map((player, index) => renderDisciplineCard(player, index))
+                {disciplinaryGrouped.length > 0 ? (
+                  disciplinaryGrouped.map(group => (
+                    <div key={group.groupName}>
+                      {renderGroupHeader(group.groupName, group.type, group.players.length, 'discipline')}
+                      <AnimatePresence>
+                        {isGroupExpanded('discipline', group.groupName) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {group.players.map((player, index) => renderDisciplineCard(player, index, true))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))
                 ) : (
                   <div className="text-center py-20 px-4 rounded-2xl">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -680,212 +857,121 @@ const Stats = () => {
 
             {/* Team Stats */}
             {activeTab === 'teams' && (
-              <div className="p-4 space-y-8">
-                {/* Top Scoring Teams */}
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-green-400" />
-                    {t('stats.topScoringTeams')}
-                  </h3>
-                  {topScoringTeams.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        {topScoringTeams.slice(0, expandedTeamStats.topScoring ? 10 : 3).map((team, index) => (
-                          <div
-                            key={team.teamId}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
-                              index < 3 
-                                ? 'bg-green-500/10 border-green-500/20' 
-                                : 'bg-white/5 border-white/5 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-green-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
-                            <div className="flex-1">
-                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
-                              <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
+              <div className="p-4 space-y-6">
+                {teamStatsGrouped.length > 0 ? (
+                  teamStatsGrouped.map(group => {
+                    const colors = getGroupTypeColor(group.type);
+                    const Icon = colors.icon;
+                    const isExpanded = expandedGroups[`teams_${group.groupName}`] !== false;
+                    
+                    // Sort teams for different categories within this group
+                    const topScoring = [...group.teams].sort((a, b) => b.goalsFor - a.goalsFor).slice(0, 5);
+                    const bestDefenseTeams = [...group.teams].sort((a, b) => a.goalsAgainst - b.goalsAgainst).slice(0, 5);
+                    const bestGD = [...group.teams].sort((a, b) => b.goalDifference - a.goalDifference).slice(0, 5);
+                    
+                    return (
+                      <div key={group.groupName} className={`rounded-2xl border ${colors.border} overflow-hidden`}>
+                        {/* Group Header */}
+                        <button
+                          onClick={() => setExpandedGroups(prev => ({
+                            ...prev,
+                            [`teams_${group.groupName}`]: !isExpanded
+                          }))}
+                          className={`w-full flex items-center justify-between p-4 ${colors.bg} hover:bg-white/5 transition-colors`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full ${colors.bg} border ${colors.border} flex items-center justify-center`}>
+                              <Icon className={`w-5 h-5 ${colors.text}`} />
                             </div>
-                            <div className="text-right">
-                              <div className="text-lg sm:text-xl font-black text-green-400">{team.goalsFor}</div>
-                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('pages.latest.goals')}</div>
+                            <div className="text-left">
+                              <h3 className={`font-bold text-lg ${colors.text}`}>{group.groupName}</h3>
+                              <p className="text-xs text-gray-500">{group.teams.length} team{group.teams.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                      {topScoringTeams.length > 3 && (
-                        <button
-                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, topScoring: !prev.topScoring }))}
-                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-green-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
-                        >
-                          {expandedTeamStats.topScoring ? t('stats.showLess') : (
-                            <>
-                              {t('stats.seeMore')} <span className="bg-green-500/20 px-2 py-0.5 rounded text-xs">+{topScoringTeams.length - 3}</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                      <p className="text-sm">{t('stats.noTeamData')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Worst Defense */}
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                    {t('stats.mostConceded')}
-                  </h3>
-                  {mostGoalsConceded.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        {mostGoalsConceded.slice(0, expandedTeamStats.mostConceded ? 10 : 3).map((team, index) => (
-                          <div
-                            key={team.teamId}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
-                              index < 3 
-                                ? 'bg-red-500/10 border-red-500/20' 
-                                : 'bg-white/5 border-white/5 hover:bg-white/10'
-                            }`}
+                          <motion.div
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-red-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
-                            <div className="flex-1">
-                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
-                              <p className="text-[11px] text-gray-400">{team.played} {t('stats.matches')}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg sm:text-xl font-black text-red-400">{team.goalsAgainst}</div>
-                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('stats.conceded')}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {mostGoalsConceded.length > 3 && (
-                        <button
-                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, mostConceded: !prev.mostConceded }))}
-                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-red-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
-                        >
-                          {expandedTeamStats.mostConceded ? t('stats.showLess') : (
-                            <>
-                              {t('stats.seeMore')} <span className="bg-red-500/20 px-2 py-0.5 rounded text-xs">+{mostGoalsConceded.length - 3}</span>
-                            </>
-                          )}
+                            <ChevronDown className={`w-5 h-5 ${colors.text}`} />
+                          </motion.div>
                         </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                      <p className="text-sm">{t('stats.noTeamData')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Best Defense */}
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-blue-400" />
-                    {t('stats.bestDefense')}
-                  </h3>
-                  {bestDefense.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        {bestDefense.slice(0, expandedTeamStats.bestDefense ? 10 : 3).map((team, index) => (
-                          <div
-                            key={team.teamId}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
-                              index < 3 
-                                ? 'bg-blue-500/10 border-blue-500/20' 
-                                : 'bg-white/5 border-white/5 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-blue-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
-                            <div className="flex-1">
-                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
-                              <p className="text-[11px] text-gray-400">{team.cleanSheets} {t('stats.cleanSheets').toLowerCase()}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg sm:text-xl font-black text-blue-400">{team.goalsAgainst}</div>
-                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('stats.conceded')}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {bestDefense.length > 3 && (
-                        <button
-                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestDefense: !prev.bestDefense }))}
-                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-blue-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
-                        >
-                          {expandedTeamStats.bestDefense ? t('stats.showLess') : (
-                            <>
-                              {t('stats.seeMore')} <span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">+{bestDefense.length - 3}</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                      <p className="text-sm">{t('stats.noTeamData')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Best Goal Difference */}
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-purple-400" />
-                    {t('stats.bestGoalDiff')}
-                  </h3>
-                  {bestGoalDifference.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        {bestGoalDifference.slice(0, expandedTeamStats.bestGD ? 10 : 3).map((team, index) => (
-                          <div
-                            key={team.teamId}
-                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all duration-300 ${
-                              index < 3 
-                                ? 'bg-purple-500/10 border-purple-500/20' 
-                                : 'bg-white/5 border-white/5 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className={`text-base sm:text-lg font-black w-7 ${index < 3 ? 'text-purple-400' : 'text-gray-500'}`}>{index + 1}</span>
-                            <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={32} />
-                            <div className="flex-1">
-                              <p className="text-white font-semibold text-sm sm:text-base">{team.teamName}</p>
-                              <p className="text-[11px] text-gray-400">{team.goalsFor} {t('stats.scored')}, {team.goalsAgainst} {t('stats.conceded')}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className={`text-lg sm:text-xl font-black ${team.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {team.goalDifference >= 0 ? '+' : ''}{team.goalDifference}
+                        
+                        {/* Group Content */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="bg-black/30 p-4 space-y-6"
+                            >
+                              {/* Top Scoring */}
+                              <div>
+                                <h4 className="text-sm font-bold text-green-400 mb-3 flex items-center gap-2">
+                                  <Target className="w-4 h-4" /> Top Scoring
+                                </h4>
+                                <div className="space-y-2">
+                                  {topScoring.map((team, index) => (
+                                    <div key={team.teamId} className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                                      <span className={`text-sm font-bold w-5 ${index < 3 ? 'text-green-400' : 'text-gray-500'}`}>{index + 1}</span>
+                                      <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={24} />
+                                      <span className="flex-1 text-sm text-white truncate">{team.teamName}</span>
+                                      <span className="text-green-400 font-bold">{team.goalsFor}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="text-[10px] text-gray-400 uppercase tracking-wider">GD</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {bestGoalDifference.length > 3 && (
-                        <button
-                          onClick={() => setExpandedTeamStats(prev => ({ ...prev, bestGD: !prev.bestGD }))}
-                          className="w-full mt-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-purple-400 font-semibold transition-all text-sm flex items-center justify-center gap-2"
-                        >
-                          {expandedTeamStats.bestGD ? t('stats.showLess') : (
-                            <>
-                              {t('stats.seeMore')} <span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">+{bestGoalDifference.length - 3}</span>
-                            </>
+                              
+                              {/* Best Defense */}
+                              <div>
+                                <h4 className="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2">
+                                  <Shield className="w-4 h-4" /> Best Defense
+                                </h4>
+                                <div className="space-y-2">
+                                  {bestDefenseTeams.map((team, index) => (
+                                    <div key={team.teamId} className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                                      <span className={`text-sm font-bold w-5 ${index < 3 ? 'text-blue-400' : 'text-gray-500'}`}>{index + 1}</span>
+                                      <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={24} />
+                                      <span className="flex-1 text-sm text-white truncate">{team.teamName}</span>
+                                      <span className="text-blue-400 font-bold">{team.goalsAgainst}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Best Goal Difference */}
+                              <div>
+                                <h4 className="text-sm font-bold text-purple-400 mb-3 flex items-center gap-2">
+                                  <Trophy className="w-4 h-4" /> Best Goal Difference
+                                </h4>
+                                <div className="space-y-2">
+                                  {bestGD.map((team, index) => (
+                                    <div key={team.teamId} className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                                      <span className={`text-sm font-bold w-5 ${index < 3 ? 'text-purple-400' : 'text-gray-500'}`}>{index + 1}</span>
+                                      <NewTeamAvatar team={{ id: team.teamId, name: team.teamName, logo: team.teamLogo }} size={24} />
+                                      <span className="flex-1 text-sm text-white truncate">{team.teamName}</span>
+                                      <span className={`font-bold ${team.goalDifference >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {team.goalDifference >= 0 ? '+' : ''}{team.goalDifference}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </motion.div>
                           )}
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                      <p className="text-sm">{t('stats.noTeamData')}</p>
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-20 px-4 rounded-2xl">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="w-8 h-8 text-gray-600" />
                     </div>
-                  )}
-                </div>
+                    <p className="text-gray-400 font-medium">{t('stats.noTeamData')}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
