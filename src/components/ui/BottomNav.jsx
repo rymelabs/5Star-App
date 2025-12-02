@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { navItems } from '../navItems';
 
@@ -10,6 +11,7 @@ const BottomNav = () => {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
 
   // Get current page index
   const getCurrentIndex = () => {
@@ -24,17 +26,24 @@ const BottomNav = () => {
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
     setIsSwiping(true);
+    setSwipeOffset(0);
   };
 
   const handleTouchMove = (e) => {
     touchEndX.current = e.touches[0].clientX;
+    const diff = touchEndX.current - touchStartX.current;
+    setSwipeOffset(diff);
   };
 
   const handleTouchEnd = () => {
     setIsSwiping(false);
     const swipeDistance = touchStartX.current - touchEndX.current;
     const minSwipeDistance = 50; // Minimum swipe distance to trigger navigation
+    
+    // Reset offset
+    setSwipeOffset(0);
 
     if (Math.abs(swipeDistance) < minSwipeDistance) return;
 
@@ -66,7 +75,22 @@ const BottomNav = () => {
         {/* Glass reflection effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
         
-        <div className="flex justify-between items-center px-2 py-2">
+        {/* Swipe Indicators */}
+        <div 
+            className={`absolute left-2 top-1/2 -translate-y-1/2 text-brand-purple transition-opacity duration-300 pointer-events-none z-10 ${swipeOffset > 40 ? 'opacity-100' : 'opacity-0'}`}
+        >
+            <ChevronLeft className="w-6 h-6" />
+        </div>
+        <div 
+            className={`absolute right-2 top-1/2 -translate-y-1/2 text-brand-purple transition-opacity duration-300 pointer-events-none z-10 ${swipeOffset < -40 ? 'opacity-100' : 'opacity-0'}`}
+        >
+            <ChevronRight className="w-6 h-6" />
+        </div>
+
+        <div 
+          className="flex justify-between items-center px-2 py-2 transition-transform duration-200 ease-out"
+          style={{ transform: `translateX(${swipeOffset * 0.3}px)` }}
+        >
           {navItems.map((item) => (
             <NavLink
               key={item.path}
