@@ -13,6 +13,12 @@ const BottomNav = () => {
   const [isSwiping, setIsSwiping] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
 
+  const triggerHaptic = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(15); // Light vibration for feedback
+    }
+  };
+
   // Get current page index
   const getCurrentIndex = () => {
     const index = navItems.findIndex(item => {
@@ -53,12 +59,14 @@ const BottomNav = () => {
       // Swiped left - go to next page
       const nextIndex = Math.min(currentIndex + 1, navItems.length - 1);
       if (nextIndex !== currentIndex) {
+        triggerHaptic();
         navigate(navItems[nextIndex].path);
       }
     } else {
       // Swiped right - go to previous page
       const prevIndex = Math.max(currentIndex - 1, 0);
       if (prevIndex !== currentIndex) {
+        triggerHaptic();
         navigate(navItems[prevIndex].path);
       }
     }
@@ -95,6 +103,7 @@ const BottomNav = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={triggerHaptic}
               className={({ isActive }) => `
                 relative flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all duration-300
                 ${isActive ? 'text-brand-purple' : 'text-gray-400 hover:text-white hover:bg-white/5'}
