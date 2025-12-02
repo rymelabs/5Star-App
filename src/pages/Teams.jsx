@@ -365,7 +365,7 @@ const Teams = () => {
         <div className="px-4 sticky top-[20px] z-30 mb-8">
           <div className="relative group max-w-2xl mx-auto">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-purple/50 to-blue-600/50 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
-            <div className="relative flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl min-h-[52px]">
+            <div className="relative flex items-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl min-h-[52px]">
               <Search className="ml-4 w-4 h-4 text-gray-400 group-focus-within:text-white transition-colors" />
               <input
                 type="text"
@@ -442,7 +442,7 @@ const Teams = () => {
                       onClick={(e) => handleFollowToggle(e, team)}
                       disabled={followingLoading[team.id]}
                       className={`
-                        relative z-10 px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-1.5 flex-shrink-0
+                        relative z-10 px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-1.5 flex-shrink-0
                         ${(team.followers || []).includes(user?.uid)
                           ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
                           : 'bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/5'

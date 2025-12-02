@@ -326,14 +326,14 @@ const News = () => {
                 placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-2.5 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
+                className="w-full pl-12 pr-4 py-2.5 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-full text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
               />
             </div>
           </div>
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-3 py-2.5 rounded-lg text-sm font-medium border transition-all flex items-center justify-center ${
+            className={`px-3 py-2.5 rounded-full text-sm font-medium border transition-all flex items-center justify-center ${
               showFilters 
                 ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
                 : 'bg-elevated/80 backdrop-blur-xl text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
