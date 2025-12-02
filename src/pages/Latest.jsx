@@ -173,100 +173,60 @@ const Latest = () => {
       .slice(0, 6);
   }, [fixtures]);
 
-  // Calculate top scoring teams from league table data (fallback to fixtures if needed)
-  const topScoringTeams = React.useMemo(() => {
-    const normalizeNumber = (value) => {
-      const num = Number(value);
-      return Number.isFinite(num) ? num : 0;
-    };
+  // Calculate top scoring teams grouped by competition
+  const topScoringTeamsByCompetition = React.useMemo(() => {
+    if (!fixtures || fixtures.length === 0) return [];
 
-    if (Array.isArray(leagueTable) && leagueTable.length > 0) {
-      const normalized = leagueTable
-        .map((entry, index) => {
-          const teamInfo = entry.team || {
-            id: entry.teamId || entry.id,
-            name: entry.teamName || entry.name,
-            logo: entry.teamLogo || entry.logo
-          };
-
-          const goals = normalizeNumber(
-            entry.goalsFor ??
-            teamInfo?.goalsFor ??
-            entry.gf ??
-            entry.goals ??
-            entry.scored
-          );
-
-          const matches = normalizeNumber(
-            entry.matches ??
-            entry.played ??
-            entry.playedMatches ??
-            entry.gamesPlayed ??
-            entry.playedGames ??
-            entry.matchPlayed ??
-            entry.matchesPlayed ??
-            entry.mp ??
-            teamInfo?.played
-          );
-
-          return {
-            id: teamInfo?.id || `table-${index}`,
-            name: teamInfo?.name || 'Unknown Team',
-            logo: teamInfo?.logo || '',
-            goals,
-            matches
-          };
-        })
-        .filter(team => team.id);
-
-      return normalized
-        .sort((a, b) => {
-          if (b.goals !== a.goals) return b.goals - a.goals;
-          return a.matches - b.matches;
-        })
-        .slice(0, 5);
-    }
-
-    if (!Array.isArray(fixtures) || fixtures.length === 0) return [];
-
-    const scorerMap = new Map();
-    const ensureTeamEntry = (team) => {
-      if (!team?.id) return null;
-      if (!scorerMap.has(team.id)) {
-        scorerMap.set(team.id, {
-          id: team.id,
-          name: team.name,
-          logo: team.logo,
-          goals: 0,
-          matches: 0
-        });
-      }
-      return scorerMap.get(team.id);
-    };
+    const competitionsMap = new Map();
 
     fixtures
       .filter(f => f.status === 'completed')
       .forEach(fixture => {
-        const homeEntry = ensureTeamEntry(fixture.homeTeam);
-        const awayEntry = ensureTeamEntry(fixture.awayTeam);
-        const homeGoals = normalizeNumber(fixture.homeScore);
-        const awayGoals = normalizeNumber(fixture.awayScore);
-
-        if (homeEntry) {
-          homeEntry.matches += 1;
-          homeEntry.goals += homeGoals;
+        const compName = fixture.competition || 'Unknown Competition';
+        
+        if (!competitionsMap.has(compName)) {
+          competitionsMap.set(compName, {
+            name: compName,
+            teamsMap: new Map()
+          });
         }
+        
+        const compData = competitionsMap.get(compName);
+        const teamsMap = compData.teamsMap;
 
-        if (awayEntry) {
-          awayEntry.matches += 1;
-          awayEntry.goals += awayGoals;
-        }
+        const processTeam = (team, score) => {
+            if (!team?.id) return;
+            const scoreNum = Number(score);
+            if (isNaN(scoreNum)) return;
+
+            if (!teamsMap.has(team.id)) {
+                teamsMap.set(team.id, {
+                    id: team.id,
+                    name: team.name,
+                    logo: team.logo,
+                    goals: 0,
+                    matches: 0
+                });
+            }
+            const entry = teamsMap.get(team.id);
+            entry.matches += 1;
+            entry.goals += scoreNum;
+        };
+
+        processTeam(fixture.homeTeam, fixture.homeScore);
+        processTeam(fixture.awayTeam, fixture.awayScore);
       });
 
-    return Array.from(scorerMap.values())
-      .sort((a, b) => b.goals - a.goals)
-      .slice(0, 5);
-  }, [leagueTable, fixtures]);
+    return Array.from(competitionsMap.values())
+        .map(comp => ({
+            name: comp.name,
+            teams: Array.from(comp.teamsMap.values())
+                .sort((a, b) => b.goals - a.goals)
+                .slice(0, 5)
+        }))
+        .filter(comp => comp.teams.length > 0)
+        .sort((a, b) => a.name.localeCompare(b.name));
+  }, [fixtures]);
 
   // Calculate team form (last 5 matches)
   const teamForm = React.useMemo(() => {
@@ -543,8 +503,8 @@ const Latest = () => {
       )}
 
       {/* Top Scoring Teams */}
-      {topScoringTeams.length > 0 && (
-        <section className="space-y-4">
+      {topScoringTeamsByCompetition.length > 0 && (
+        <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-lg font-semibold text-white">Top Scoring Teams</h2>
             <button
@@ -555,28 +515,41 @@ const Latest = () => {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {topScoringTeams.map((stat, index) => (
-              <div
-                key={stat.id || `top-team-${index}`}
-                className="rounded-2xl bg-gradient-to-r from-brand-purple via-indigo-500 to-sky-400 p-[1px] shadow-[0_10px_30px_rgba(59,7,100,0.35)]"
-              >
-                <SurfaceCard className="flex items-center justify-between p-3 rounded-[22px] bg-[#0c0c0f]">
-                  <div className="flex items-center gap-3">
-                    <div className="font-bold text-gray-400 w-5 text-center">{index + 1}</div>
-                    <NewTeamAvatar team={{ id: stat.id, name: stat.name, logo: stat.logo }} size={32} />
-                    <div>
-                      <div className="font-semibold text-sm text-white">{stat.name}</div>
-                      <div className="text-xs text-gray-400">
-                        {stat.matches} {stat.matches === 1 ? 'match' : 'matches'}
-                      </div>
+          <div className="space-y-8">
+            {topScoringTeamsByCompetition.map((competition) => (
+              <div key={competition.name} className="space-y-3">
+                <div className="flex items-center gap-2 px-2">
+                  <Trophy className="w-4 h-4 text-brand-purple" />
+                  <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider">{competition.name}</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {competition.teams.map((stat, index) => (
+                    <div
+                      key={stat.id}
+                      className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px] hover:from-brand-purple hover:via-indigo-500 hover:to-sky-400 transition-all duration-300 group"
+                    >
+                      <SurfaceCard className="flex items-center justify-between p-3 rounded-[22px] bg-[#0c0c0f] group-hover:bg-[#121215] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`font-bold w-5 text-center ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
+                            {index + 1}
+                          </div>
+                          <NewTeamAvatar team={{ id: stat.id, name: stat.name, logo: stat.logo }} size={32} />
+                          <div>
+                            <div className="font-semibold text-sm text-white group-hover:text-brand-purple transition-colors">{stat.name}</div>
+                            <div className="text-xs text-gray-400">
+                              {stat.matches} {stat.matches === 1 ? 'match' : 'matches'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-lg font-bold text-brand-purple">{stat.goals}</span>
+                          <span className="text-[10px] text-gray-500 uppercase tracking-wider">Goals</span>
+                        </div>
+                      </SurfaceCard>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-lg font-bold text-brand-purple">{stat.goals}</span>
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">Goals</span>
-                  </div>
-                </SurfaceCard>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
