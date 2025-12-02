@@ -15,8 +15,8 @@ const RECENT_RESULTS_LIMIT = 6;
 const LAST_RESULTS_HIGHLIGHT = 3; // Number of most recent matches to show prominently
 
 const CompetitionGroup = ({ group, onFixtureClick }) => (
-  <div className="overflow-hidden rounded-xl border border-white/5 bg-white/5 mb-3 last:mb-0">
-    <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border-b border-white/5">
+  <div className="overflow-hidden border-y border-white/5 bg-white/5 mb-3 last:mb-0 sm:rounded-xl sm:border-x">
+    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-b border-white/5">
       {group.info.logo ? (
         <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
       ) : (
@@ -502,8 +502,8 @@ const Fixtures = () => {
             >
               {/* Live Matches Section - Always on top when available */}
               {liveFixtures.length > 0 && (
-                <section className="space-y-3 px-4 sm:px-2">
-                  <div className="flex items-center gap-2">
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2 px-4">
                     <div className="relative">
                       <Radio className="w-5 h-5 text-red-500" />
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
@@ -523,8 +523,8 @@ const Fixtures = () => {
 
               {/* Last 3 Results - Prominent Section */}
               {lastThreeResults.length > 0 && (
-                <section className="space-y-3 px-4 sm:px-2">
-                  <div className="flex items-center justify-between">
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between px-4">
                     <div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -562,8 +562,8 @@ const Fixtures = () => {
 
               {/* More Recent Results - Carousel */}
               {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0) && (
-                <section className="space-y-3 px-4 sm:px-2">
-                  <div className="flex flex-col items-start gap-3">
+                <section className="space-y-3">
+                  <div className="flex flex-col items-start gap-3 px-4">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">More Results</p>
                       <h3 className="text-base font-semibold text-white">Recent Results</h3>
