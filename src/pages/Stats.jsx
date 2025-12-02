@@ -1,19 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { BarChart3, Filter, ChevronRight, Trophy, Users, TrendingUp, Target, Shield, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart3, Filter, ChevronRight, Trophy, Users, TrendingUp, Target, Shield, AlertCircle, X, Check } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useLanguage } from '../context/LanguageContext';
 import NewTeamAvatar from '../components/NewTeamAvatar';
-import Select from '../components/ui/Select';
 
 const Stats = () => {
   const { fixtures, teams, activeSeason, seasons } = useFootball();
   const { competitions } = useCompetitions();
   const { t } = useLanguage();
-  const [selectedSeason, setSelectedSeason] = useState('all');
-  const [selectedCompetition, setSelectedCompetition] = useState('all');
+  const [statsFilter, setStatsFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('scorers');
+  const [showFilters, setShowFilters] = useState(false);
   const [expandedTeamStats, setExpandedTeamStats] = useState({
     topScoring: false,
     bestDefense: false,
@@ -21,25 +20,64 @@ const Stats = () => {
     mostConceded: false
   });
 
-  // Filter fixtures based on selected filters (for player stats - requires events)
+  // Filter options for stats
+  const filterOptions = [
+    { id: 'all', label: 'All' },
+    { id: 'season', label: 'Seasons' },
+    { id: 'friendly', label: 'Friendly' },
+    { id: 'competition', label: 'Competitions' },
+    { id: 'league', label: 'League' }
+  ];
+
+  // Filter fixtures based on selected filter (for player stats - requires events)
   const filteredFixtures = useMemo(() => {
     return fixtures.filter(fixture => {
       const isCompleted = fixture.status === 'completed';
-      const matchesSeason = selectedSeason === 'all' || fixture.season === selectedSeason;
-      const matchesCompetition = selectedCompetition === 'all' || fixture.competition === selectedCompetition;
-      return isCompleted && matchesSeason && matchesCompetition && fixture.events;
+      if (!isCompleted || !fixture.events) return false;
+      
+      if (statsFilter === 'all') return true;
+      // Seasons: fixtures that belong to a season (tournament format)
+      if (statsFilter === 'season') return Boolean(fixture.seasonId);
+      // Friendly: fixtures with no seasonId, no leagueId, and no competitionId (or type is 'friendly')
+      if (statsFilter === 'friendly') {
+        return fixture.type === 'friendly' || 
+               fixture.competition?.toLowerCase().includes('friendly') ||
+               (!fixture.seasonId && !fixture.leagueId && !fixture.competitionId);
+      }
+      // Competition: fixtures that have a competition name but are NOT season or league
+      if (statsFilter === 'competition') {
+        return Boolean(fixture.competitionId || (fixture.competition && !fixture.seasonId && !fixture.leagueId && fixture.type !== 'friendly'));
+      }
+      // League: fixtures that belong to a league
+      if (statsFilter === 'league') return Boolean(fixture.leagueId);
+      return true;
     });
-  }, [fixtures, selectedSeason, selectedCompetition]);
+  }, [fixtures, statsFilter]);
 
   // Filter fixtures for team stats (requires completed status and scores)
   const filteredFixturesForTeams = useMemo(() => {
     return fixtures.filter(fixture => {
       const isCompleted = fixture.status === 'completed';
-      const matchesSeason = selectedSeason === 'all' || fixture.season === selectedSeason;
-      const matchesCompetition = selectedCompetition === 'all' || fixture.competition === selectedCompetition;
-      return isCompleted && matchesSeason && matchesCompetition;
+      if (!isCompleted) return false;
+      
+      if (statsFilter === 'all') return true;
+      // Seasons: fixtures that belong to a season (tournament format)
+      if (statsFilter === 'season') return Boolean(fixture.seasonId);
+      // Friendly: fixtures with no seasonId, no leagueId, and no competitionId (or type is 'friendly')
+      if (statsFilter === 'friendly') {
+        return fixture.type === 'friendly' || 
+               fixture.competition?.toLowerCase().includes('friendly') ||
+               (!fixture.seasonId && !fixture.leagueId && !fixture.competitionId);
+      }
+      // Competition: fixtures that have a competition name but are NOT season or league
+      if (statsFilter === 'competition') {
+        return Boolean(fixture.competitionId || (fixture.competition && !fixture.seasonId && !fixture.leagueId && fixture.type !== 'friendly'));
+      }
+      // League: fixtures that belong to a league
+      if (statsFilter === 'league') return Boolean(fixture.leagueId);
+      return true;
     });
-  }, [fixtures, selectedSeason, selectedCompetition]);
+  }, [fixtures, statsFilter]);
 
   // Calculate Top Scorers (Players)
   const topScorers = useMemo(() => {
@@ -490,39 +528,59 @@ const Stats = () => {
 
       {/* Header */}
       <div className="relative w-full z-10">
-        <div className="px-4 pb-4">
-          <h1 className="page-header mb-2 flex items-center gap-3">
-            <BarChart3 className="w-6 h-6 text-brand-purple" />
-            {t('stats.title')}
-          </h1>
-          <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
-            {t('stats.trackPerformance')}
-          </p>
+        <div className="px-4 pb-4 flex items-start justify-between">
+          <div>
+            <h1 className="page-header mb-2 flex items-center gap-3">
+              <BarChart3 className="w-6 h-6 text-brand-purple" />
+              {t('stats.title')}
+            </h1>
+            <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+              {t('stats.trackPerformance')}
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2 rounded-full transition-colors ${showFilters ? 'bg-brand-purple text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+          >
+            <Filter className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="relative w-full z-10 mb-8">
-        <div className="px-4">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-4 text-white/80">
-              <Filter className="w-4 h-4 text-brand-purple" />
-              <span className="text-sm font-bold uppercase tracking-wider">{t('stats.filters')}</span>
+      {/* Filter Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative z-20 px-4 mb-6 overflow-hidden"
+          >
+            <div className="bg-black border border-white/10 rounded-2xl p-4">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Show Stats From</h4>
+              <div className="flex flex-wrap gap-2">
+                {filterOptions.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setStatsFilter(option.id);
+                      setShowFilters(false);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      statsFilter === option.id
+                        ? 'bg-brand-purple text-white'
+                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              {/* Season Filter */}
-              <Select
-                value={selectedSeason}
-                onChange={(e) => setSelectedSeason(e.target.value)}
-                options={[
-                  { value: 'all', label: t('stats.allSeasons') },
-                  ...seasons.map(season => ({ value: season.id, label: season.name }))
-                ]}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="w-full mx-auto px-0 sm:px-6 relative z-10">
         {/* Tabs */}
