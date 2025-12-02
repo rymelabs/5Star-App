@@ -61,6 +61,8 @@ const AdminStats = withLazyErrorLogging('Admin Stats', () => import('./pages/adm
 const RecycleBin = withLazyErrorLogging('Recycle Bin', () => import('./pages/admin/RecycleBin'));
 
 const AppContent = () => {
+  const location = useLocation();
+  
   // Add error handling for context
   let user, loading, isAuthenticated;
   try {
@@ -94,8 +96,6 @@ const AppContent = () => {
   }
 
   console.log('🔍 AppContent - Current user state:', user ? `Logged in as ${user.email}` : 'Not logged in');
-
-  const location = useLocation();
 
   const requireAuthElement = (element) => (
     isAuthenticated
