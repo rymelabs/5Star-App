@@ -22,9 +22,11 @@ const DesktopHeader = () => {
       {/* Logo & Nav */}
       <div className="flex items-center gap-12">
         <Link to="/" className="flex items-center">
-          <span className="text-xl font-black tracking-tight text-white">
-            fivescores.com
-          </span>
+          <img 
+            src="/Fivescores logo.svg" 
+            alt="Fivescores" 
+            className="h-10 w-auto drop-shadow-[0_0_10px_rgba(109,40,217,0.5)]"
+          />
         </Link>
         
         <nav className="hidden md:flex items-center gap-1">

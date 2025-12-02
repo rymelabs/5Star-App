@@ -1569,7 +1569,7 @@ export const seasonsCollection = {
       const currentYear = new Date().getFullYear();
       
       const season = {
-        name: seasonData.name || `5Star Premier League Season ${currentYear}`,
+        name: seasonData.name || `Fivescores Premier League Season ${currentYear}`,
         year: seasonData.year || currentYear,
         isActive: seasonData.isActive || false,
         status: 'upcoming', // upcoming, ongoing, completed

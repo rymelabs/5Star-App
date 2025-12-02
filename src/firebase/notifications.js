@@ -32,7 +32,7 @@ export const createNotification = async (userId, notificationData) => {
       type: notificationData.type, // 'fixture', 'match', 'article', etc.
       title: notificationData.title,
       body: notificationData.body,
-      icon: notificationData.icon || '/5Star-Logo.png',
+      icon: notificationData.icon || '/Fivescores logo.svg',
       data: notificationData.data || {},
       read: false,
       delivered: false,
