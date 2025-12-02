@@ -69,7 +69,7 @@ const ProfileSetup = () => {
       <div className="w-full max-w-md relative z-50 animate-[fadeInUp_0.6s_ease-out]">
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border-2 border-primary-600/30 hover:shadow-primary-500/20 transition-shadow duration-300">
           <div className="text-center mb-8">
-            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-16 h-16 mx-auto mb-4 animate-[bounce_1s_ease-in-out]" />
+            <img src="/Fivescores logo.svg" alt="Fivescores" className="w-16 h-16 mx-auto mb-4 animate-[bounce_1s_ease-in-out]" />
             <h1 className="text-lg font-bold text-white tracking-tight mb-2 animate-[fadeInUp_0.7s_ease-out]">
               {step === 1 ? 'Welcome!' : 'Almost Done'}
             </h1>

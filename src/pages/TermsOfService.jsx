@@ -36,7 +36,7 @@ const TermsOfService = () => {
           </h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              These Terms of Service ("Terms") govern your access to and use of the 5Star Premier League mobile application 
+              These Terms of Service ("Terms") govern your access to and use of the Fivescores mobile application 
               ("App"), developed and operated by RymeLabs ("we," "us," or "our"). By accessing or using the App, you agree 
               to be bound by these Terms.
             </p>
@@ -150,7 +150,7 @@ const TermsOfService = () => {
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
               All content, features, and functionality of the App, including but not limited to text, graphics, logos, 
-              images, and software, are the exclusive property of RymeLabs or the 5Star Premier League and are protected 
+              images, and software, are the exclusive property of RymeLabs or Fivescores and are protected 
               by copyright, trademark, and other intellectual property laws.
             </p>
             <p>
@@ -210,7 +210,7 @@ const TermsOfService = () => {
           <h2 className="text-xl font-bold text-white mb-4">10. Indemnification</h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              You agree to indemnify, defend, and hold harmless RymeLabs, the 5Star Premier League, and their officers, 
+              You agree to indemnify, defend, and hold harmless RymeLabs, Fivescores, and their officers, 
               directors, employees, and agents from any claims, liabilities, damages, losses, and expenses (including 
               reasonable attorneys' fees) arising out of or in any way connected with:
             </p>
@@ -270,7 +270,7 @@ const TermsOfService = () => {
             <div className="pt-2 space-y-1">
               <p><strong>Email:</strong> <a href="mailto:RymeLabs@gmail.com" className="text-primary-400 hover:text-primary-300">RymeLabs@gmail.com</a></p>
               <p><strong>Company:</strong> RymeLabs</p>
-              <p><strong>App:</strong> 5Star Premier League</p>
+              <p><strong>App:</strong> Fivescores</p>
             </div>
           </div>
         </div>
@@ -278,7 +278,7 @@ const TermsOfService = () => {
         {/* Acknowledgment */}
         <div className="card p-4 bg-primary-500/10 border border-primary-500/20">
           <p className="text-sm text-primary-300">
-            By using the 5Star Premier League App, you acknowledge that you have read, understood, and agree to be bound 
+            By using the Fivescores App, you acknowledge that you have read, understood, and agree to be bound 
             by these Terms of Service.
           </p>
         </div>

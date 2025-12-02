@@ -25,7 +25,7 @@ const About = () => {
         <div className="text-center py-8">
           <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden shadow-xl bg-white p-2">
             <img 
-              src="/5Star.jpg" 
+              src="/Fivescores logo.svg" 
               alt="Fivescores" 
               className="w-full h-full object-contain"
             />

@@ -112,7 +112,7 @@ const AuthLanding = () => {
           <div className="absolute inset-0 bg-brand-purple/20 blur-3xl rounded-full" />
           <div className="relative">
             <img 
-              src="/5StarLogo.svg" 
+              src="/Fivescores logo.svg" 
               alt="Fivescores" 
               className="w-20 h-20 relative z-10" 
             />
