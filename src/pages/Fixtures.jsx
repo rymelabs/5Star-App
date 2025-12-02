@@ -303,7 +303,7 @@ const Fixtures = () => {
   );
 
   const renderCarouselItems = (fixtures) => (
-    <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+    <div className="flex gap-3 overflow-x-auto pb-2 px-6 sm:mx-0 sm:px-0 snap-x snap-mandatory">
       {fixtures.map((fixture) => (
         <div
           key={fixture.id}
@@ -338,7 +338,7 @@ const Fixtures = () => {
       </div>
 
       {/* Quick Filter Bar - Livescore/Sofascore Style */}
-      <div className="flex gap-2 overflow-x-auto px-4 pb-1 -mx-1 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto px-6 pb-1 scrollbar-hide">
         {[
           { id: 'all', label: 'All', icon: null },
           { id: 'live', label: 'Live', icon: Radio, pulse: liveFixturesCount > 0 },

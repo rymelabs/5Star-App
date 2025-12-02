@@ -197,7 +197,7 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
   return (
     <div className="space-y-6">
       {/* Group Tabs - Sleek Segmented Control */}
-      <div className="overflow-x-auto hide-scrollbar pb-2">
+      <div className="overflow-x-auto hide-scrollbar pb-2 px-6">
         <div className="flex space-x-1.5 min-w-max">
           {season.groups.map((group) => (
             <button

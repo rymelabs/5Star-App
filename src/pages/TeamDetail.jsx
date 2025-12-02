@@ -436,7 +436,7 @@ const TeamDetail = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto px-4 sm:px-6 gap-4 scrollbar-hide border-t border-white/5 bg-black/20 backdrop-blur-sm">
+        <div className="flex overflow-x-auto px-6 gap-4 scrollbar-hide border-t border-white/5 bg-black/20 backdrop-blur-sm">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (

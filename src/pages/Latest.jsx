@@ -415,7 +415,7 @@ const Latest = () => {
           <h2 className="text-lg font-semibold text-white">Recent Results</h2>
         </div>
 
-        <div className="flex overflow-x-auto gap-2.5 pb-4 -mx-4 px-4 hide-scrollbar">
+        <div className="flex overflow-x-auto gap-2.5 pb-4 px-6 hide-scrollbar">
           {recentResults.map((fixture) => (
             <div 
               key={fixture.id} 

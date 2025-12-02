@@ -265,7 +265,7 @@ const PlayerDetail = () => {
 
       {/* Tabs Navigation */}
       <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 mb-6">
-        <div className="flex overflow-x-auto hide-scrollbar max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex overflow-x-auto hide-scrollbar max-w-7xl mx-auto px-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
