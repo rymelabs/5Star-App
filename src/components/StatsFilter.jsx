@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Select = ({ 
+const StatsFilter = ({ 
   options = [], 
   value, 
   onChange, 
@@ -14,6 +14,7 @@ const Select = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
+  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -31,7 +32,6 @@ const Select = ({
 
   const handleSelect = (option) => {
     if (onChange) {
-      // Mimic event object for compatibility with standard onChange handlers
       onChange({ target: { value: option.value } });
     }
     setIsOpen(false);
@@ -51,7 +51,7 @@ const Select = ({
         disabled={disabled}
         className={`
           w-full flex items-center justify-between px-4 py-3 
-          bg-[#0a0a0a] border border-white/10 rounded-xl 
+          bg-black border border-white/10 rounded-xl 
           text-left text-sm transition-all duration-200
           ${isOpen ? 'border-brand-purple ring-1 ring-brand-purple/50' : 'hover:border-white/20'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -72,7 +72,7 @@ const Select = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute z-50 w-full mt-2 overflow-hidden bg-[#0a0a0a] border border-white/10 rounded-xl shadow-xl shadow-black/50"
+            className="absolute z-50 w-full mt-2 overflow-hidden bg-black border border-white/10 rounded-xl shadow-xl shadow-black/50"
           >
             <div className="max-h-60 overflow-auto py-1 custom-scrollbar">
               {options.length === 0 ? (
@@ -87,10 +87,10 @@ const Select = ({
                     onClick={() => handleSelect(option)}
                     className={`
                       w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors
-                      border border-white/5 rounded-lg
+                      border-b border-white/5 last:border-0
                       ${option.value === value 
-                        ? 'bg-black text-brand-purple font-semibold border-brand-purple/50 shadow-[0_0_20px_rgba(109,40,217,0.25)]' 
-                        : 'bg-black text-gray-200 hover:bg-[#1a1a1a] hover:text-white'}
+                        ? 'bg-black text-brand-purple font-semibold' 
+                        : 'bg-black text-gray-300 hover:bg-[#1a1a1a] hover:text-white'}
                     `}
                   >
                     <span className="truncate">{option.label}</span>
@@ -108,4 +108,4 @@ const Select = ({
   );
 };
 
-export default Select;
+export default StatsFilter;
