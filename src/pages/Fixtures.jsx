@@ -9,6 +9,7 @@ import { abbreviateTeamName } from '../utils/helpers';
 import SeasonStandings from '../components/SeasonStandings';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
+import Select from '../components/ui/Select';
 import FixtureCard from '../components/FixtureCard';
 
 const RECENT_RESULTS_LIMIT = 6;
@@ -407,18 +408,17 @@ const Fixtures = () => {
           {seasons && seasons.length > 0 && (
             <div>
               <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">{t('pages.fixtures.season')}</h3>
-              <select
+              <Select
                 value={selectedSeasonId}
                 onChange={(e) => setSelectedSeasonId(e.target.value)}
-                className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-purple transition-colors"
-              >
-                <option value="all">{t('stats.allSeasons')}</option>
-                {seasons.map(season => (
-                  <option key={season.id} value={season.id}>
-                    {season.name} ({season.year})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: 'all', label: t('stats.allSeasons') },
+                  ...(seasons || []).map(season => ({
+                    value: season.id,
+                    label: `${season.name} (${season.year})`
+                  }))
+                ]}
+              />
             </div>
           )}
 
