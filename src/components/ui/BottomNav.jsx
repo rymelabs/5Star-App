@@ -7,7 +7,7 @@ const BottomNav = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="w-full max-w-md mx-auto px-6 pb-6">
+    <div className="w-full max-w-xs mx-auto px-4 pb-6">
       <nav className="bg-elevated/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl shadow-black/50 relative overflow-hidden group">
         {/* Glass reflection effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
