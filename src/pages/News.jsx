@@ -309,7 +309,7 @@ const News = () => {
       {/* Header */}
       <div className="px-4 pb-4">
         <h1 className="page-header flex items-center gap-3">
-          <Newspaper className="w-8 h-8 text-brand-purple" />
+          <Newspaper className="w-6 h-6 text-brand-purple" />
           {t('pages.news.title')}
         </h1>
       </div>

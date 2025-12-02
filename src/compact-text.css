@@ -43,7 +43,7 @@ input[type="number"] {
    ======================================== */
 /* Use this class for main page titles/headers */
 .page-header {
-  font-size: 30px !important;
+  font-size: 22px !important;
   font-weight: 700 !important;
   color: #6D28D9 !important;
   line-height: 1.2 !important;

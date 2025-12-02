@@ -353,7 +353,7 @@ const Teams = () => {
         {/* Header */}
         <div className="relative px-4 pb-4 z-10">
           <h1 className="page-header mb-2 flex items-center gap-3">
-            <Users className="w-8 h-8 text-brand-purple" />
+            <Users className="w-6 h-6 text-brand-purple" />
             {t('pages.teams.title')}
           </h1>
           <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">

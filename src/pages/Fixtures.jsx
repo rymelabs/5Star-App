@@ -326,7 +326,7 @@ const Fixtures = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-4">
         <h1 className="page-header flex items-center gap-3">
-          <Calendar className="w-8 h-8 text-brand-purple" />
+          <Calendar className="w-6 h-6 text-brand-purple" />
           {t('pages.fixtures.title')}
         </h1>
         <button 

@@ -491,7 +491,7 @@ const Stats = () => {
       <div className="relative w-full z-10">
         <div className="px-4 pb-4">
           <h1 className="page-header mb-2 flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-brand-purple" />
+            <BarChart3 className="w-6 h-6 text-brand-purple" />
             {t('stats.title')}
           </h1>
           <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
