@@ -338,30 +338,33 @@ const Latest = () => {
           )}
 
           {/* Secondary Articles */}
-          {latestNews.slice(1).map((article) => (
-            <SurfaceCard 
-              key={article.id} 
-              interactive 
-              onClick={() => handleNewsClick(article)}
-              className="flex gap-3 p-2.5 rounded-2xl"
-            >
-              <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 flex flex-col justify-between py-0.5">
-                <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2">
-                  {article.title}
-                </h4>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[11px] text-gray-500">{formatDate(article.publishedAt)}</span>
-                </div>
-              </div>
-            </SurfaceCard>
-          ))}
+          {latestNews.length > 1 && (
+            <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
+              <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
+                {latestNews.slice(1).map((article) => (
+                  <div
+                    key={article.id}
+                    onClick={() => handleNewsClick(article)}
+                    className="flex gap-3 p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2 mb-1">
+                        {article.title}
+                      </h4>
+                      <span className="text-[11px] text-gray-500">{formatDate(article.publishedAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </SurfaceCard>
+            </div>
+          )}
         </div>
       </section>
     )
@@ -379,13 +382,13 @@ const Latest = () => {
           {recentResults.map((fixture) => (
             <div 
               key={fixture.id} 
-              className="flex-shrink-0 w-56 rounded-2xl bg-gradient-to-br from-brand-purple via-indigo-500 to-blue-500 p-[1px]"
+              className="flex-shrink-0 w-56 rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]"
             >
               <SurfaceCard 
                 interactive 
                 onClick={() => handleFixtureClick(fixture)}
                 padding="sm"
-                className="flex flex-col gap-2 rounded-2xl h-full bg-app"
+                className="flex flex-col gap-2 rounded-[22px] h-full bg-[#0c0c0f]"
               >
                 <div className="flex items-center justify-between text-[11px] text-gray-400 border-b border-white/5 pb-1.5">
                   <span>{formatDate(fixture.dateTime)}</span>
@@ -427,7 +430,7 @@ const Latest = () => {
     >
       <header className="px-4 space-y-1">
         <h1 className="page-header flex items-center gap-3">
-          <TrendingUp className="w-8 h-8 text-brand-purple" />
+          <TrendingUp className="w-6 h-6 text-brand-purple" />
           {t('pages.latest.title') || 'Latest'}
         </h1>
         <p className="text-gray-400 text-sm sm:text-base max-w-2xl">
@@ -461,43 +464,43 @@ const Latest = () => {
             </button>
           </div>
 
-          <div className="space-y-3">
-            {seasonFixtures.map((fixture) => (
-              <SurfaceCard 
-                key={fixture.id} 
-                interactive 
-                onClick={() => handleFixtureClick(fixture)}
-                padding="sm"
-                className="flex flex-col gap-2 rounded-2xl"
-              >
-                <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-400 border-b border-white/5 pb-1.5">
-                  <span>{formatDate(fixture.dateTime)} • {formatTime(fixture.dateTime)}</span>
-                  <span className="text-brand-purple font-semibold">{fixture.competition || 'League'}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <NewTeamAvatar team={fixture.homeTeam} size="sm" />
-                    <span className="text-[11px] font-medium text-center line-clamp-1">
-                      {abbreviateTeamName(fixture.homeTeam?.name)}
-                    </span>
+          <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
+            <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
+              {seasonFixtures.map((fixture) => (
+                <div
+                  key={fixture.id}
+                  onClick={() => handleFixtureClick(fixture)}
+                  className="flex flex-col gap-2 p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-400 pb-1.5">
+                    <span>{formatDate(fixture.dateTime)} • {formatTime(fixture.dateTime)}</span>
+                    <span className="text-brand-purple font-semibold">{fixture.competition || 'League'}</span>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center w-1/3">
-                    <div className="bg-white/5 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide">
-                      VS
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center w-1/3 gap-1.5">
+                      <NewTeamAvatar team={fixture.homeTeam} size="sm" />
+                      <span className="text-[11px] font-medium text-center line-clamp-1">
+                        {abbreviateTeamName(fixture.homeTeam?.name)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center w-1/3">
+                      <div className="bg-white/5 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide">
+                        VS
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center w-1/3 gap-1.5">
+                      <NewTeamAvatar team={fixture.awayTeam} size="sm" />
+                      <span className="text-[11px] font-medium text-center line-clamp-1">
+                        {abbreviateTeamName(fixture.awayTeam?.name)}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <NewTeamAvatar team={fixture.awayTeam} size="sm" />
-                    <span className="text-[11px] font-medium text-center line-clamp-1">
-                      {abbreviateTeamName(fixture.awayTeam?.name)}
-                    </span>
-                  </div>
                 </div>
-              </SurfaceCard>
-            ))}
+              ))}
+            </SurfaceCard>
           </div>
         </section>
       )}
@@ -569,43 +572,43 @@ const Latest = () => {
             </button>
           </div>
 
-          <div className="space-y-3">
-            {upcomingFixtures.map((fixture) => (
-              <SurfaceCard 
-                key={fixture.id} 
-                interactive 
-                onClick={() => handleFixtureClick(fixture)}
-                padding="sm"
-                className="flex flex-col gap-2 rounded-2xl"
-              >
-                <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-400 border-b border-white/5 pb-1.5">
-                  <span>{formatDate(fixture.dateTime)} • {formatTime(fixture.dateTime)}</span>
-                  <span className="text-brand-purple font-semibold">{fixture.competition || 'League'}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <NewTeamAvatar team={fixture.homeTeam} size="sm" />
-                    <span className="text-[11px] font-medium text-center line-clamp-1">
-                      {abbreviateTeamName(fixture.homeTeam?.name)}
-                    </span>
+          <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
+            <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
+              {upcomingFixtures.map((fixture) => (
+                <div
+                  key={fixture.id}
+                  onClick={() => handleFixtureClick(fixture)}
+                  className="flex flex-col gap-2 p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-gray-400 pb-1.5">
+                    <span>{formatDate(fixture.dateTime)} • {formatTime(fixture.dateTime)}</span>
+                    <span className="text-brand-purple font-semibold">{fixture.competition || 'League'}</span>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center w-1/3">
-                    <div className="bg-white/5 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide">
-                      VS
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center w-1/3 gap-1.5">
+                      <NewTeamAvatar team={fixture.homeTeam} size="sm" />
+                      <span className="text-[11px] font-medium text-center line-clamp-1">
+                        {abbreviateTeamName(fixture.homeTeam?.name)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center w-1/3">
+                      <div className="bg-white/5 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide">
+                        VS
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center w-1/3 gap-1.5">
+                      <NewTeamAvatar team={fixture.awayTeam} size="sm" />
+                      <span className="text-[11px] font-medium text-center line-clamp-1">
+                        {abbreviateTeamName(fixture.awayTeam?.name)}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col items-center w-1/3 gap-1.5">
-                    <NewTeamAvatar team={fixture.awayTeam} size="sm" />
-                    <span className="text-[11px] font-medium text-center line-clamp-1">
-                      {abbreviateTeamName(fixture.awayTeam?.name)}
-                    </span>
-                  </div>
                 </div>
-              </SurfaceCard>
-            ))}
+              ))}
+            </SurfaceCard>
           </div>
         </section>
       )}
