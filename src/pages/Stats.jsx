@@ -549,7 +549,7 @@ const Stats = () => {
 
       <div className="w-full mx-auto px-0 sm:px-6 relative z-10">
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-4 sm:px-0">
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-6 sm:px-0">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
