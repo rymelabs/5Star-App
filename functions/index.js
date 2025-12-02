@@ -151,14 +151,14 @@ async function sendEmailNotification(userId, notification) {
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || "5Star App <noreply@5starapp.com>",
+      from: process.env.EMAIL_FROM || "Fivescores <noreply@fivescores.com>",
       to: email,
       subject: notification.title,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
-            <img src="${notification.icon || "https://your-app-url.com/5Star-Logo.png"}" alt="5Star App" style="width: 60px; height: 60px;">
-            <h1 style="color: white; margin: 10px 0;">5Star App</h1>
+            <img src="${notification.icon || "https://fivescores.com/Fivescores logo.svg"}" alt="Fivescores" style="width: 60px; height: 60px;">
+            <h1 style="color: white; margin: 10px 0;">Fivescores</h1>
           </div>
           <div style="padding: 30px; background: #f9fafb;">
             <h2 style="color: #1f2937; margin-top: 0;">${notification.title}</h2>
@@ -170,7 +170,7 @@ async function sendEmailNotification(userId, notification) {
             ` : ""}
           </div>
           <div style="background: #e5e7eb; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
-            <p>You're receiving this because you follow teams on 5Star App.</p>
+            <p>You're receiving this because you follow teams on Fivescores.</p>
             <p>Manage your notification preferences in the app settings.</p>
           </div>
         </div>
@@ -207,7 +207,7 @@ async function getTeamInfo(teamRef, fallbackName = "Unknown Team") {
     return {
       id: null,
       name: fallbackName || "Unknown Team",
-      logo: "/5Star-Logo.png",
+      logo: "/Fivescores logo.svg",
       followers: [],
     };
   }
@@ -219,7 +219,7 @@ async function getTeamInfo(teamRef, fallbackName = "Unknown Team") {
       return {
         id: teamId,
         name: data.name || fallbackName || buildFallbackTeamName(teamId),
-        logo: data.logo || "/5Star-Logo.png",
+        logo: data.logo || "/Fivescores logo.svg",
         followers: data.followers || [],
       };
     }
@@ -230,7 +230,7 @@ async function getTeamInfo(teamRef, fallbackName = "Unknown Team") {
   return {
     id: teamId,
     name: buildFallbackTeamName(teamId, fallbackName),
-    logo: "/5Star-Logo.png",
+    logo: "/Fivescores logo.svg",
     followers: [],
   };
 }
@@ -296,7 +296,7 @@ async function createAndSendNotification(userId, notificationData, settingKey) {
       type: notificationData.type,
       title: notificationData.title,
       body: notificationData.body,
-      icon: notificationData.icon || "/5Star-Logo.png",
+      icon: notificationData.icon || "/Fivescores logo.svg",
       data: notificationData.data || {},
       read: false,
       delivered: false,
@@ -350,7 +350,7 @@ exports.onFixtureCreated = onDocumentCreated("fixtures/{fixtureId}", async (even
         type: "fixture_created",
         title: "⚽ New Match Scheduled",
         body: `${homeTeam.name} vs ${awayTeam.name} - ${kickoffLabel}`,
-        icon: homeTeam.logo || "/5Star-Logo.png",
+        icon: homeTeam.logo || "/Fivescores logo.svg",
         data: {
           fixtureId,
           type: "fixture",
@@ -397,7 +397,7 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
           type: "match_live",
           title: "🔴 LIVE NOW!",
           body: `${homeTeam.name} vs ${awayTeam.name} - Match is live!`,
-          icon: homeTeam.logo || "/5Star-Logo.png",
+          icon: homeTeam.logo || "/Fivescores logo.svg",
           data: {
             fixtureId,
             type: "match_live",
@@ -423,7 +423,7 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
           type: "score_update",
           title: "⚽ GOAL!",
           body: scoreline,
-          icon: homeTeam.logo || "/5Star-Logo.png",
+          icon: homeTeam.logo || "/Fivescores logo.svg",
           data: {
             fixtureId,
             type: "score_update",
@@ -447,7 +447,7 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
           type: "match_finished",
           title: "⚽ Full Time",
           body: scoreline,
-          icon: homeTeam.logo || "/5Star-Logo.png",
+          icon: homeTeam.logo || "/Fivescores logo.svg",
           data: {
             fixtureId,
             type: "match_result",
@@ -502,7 +502,7 @@ exports.onArticleCreated = onDocumentCreated("articles/{articleId}", async (even
         type: "article_published",
         title: "📰 New Article",
         body: article.title,
-        icon: article.image || "/5Star-Logo.png",
+        icon: article.image || "/Fivescores logo.svg",
         data: {
           articleId,
           type: "article",
@@ -562,7 +562,7 @@ exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (_event) => {
           type: "upcoming_match_reminder",
           title: "⏰ Match Tomorrow",
           body: `${homeTeam.name} vs ${awayTeam.name} - ${formatFixtureDateLabel(fixture)}`,
-          icon: homeTeam.logo || "/5Star-Logo.png",
+          icon: homeTeam.logo || "/Fivescores logo.svg",
           data: {
             fixtureId,
             type: "upcoming_match",

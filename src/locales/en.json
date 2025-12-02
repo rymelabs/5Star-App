@@ -649,7 +649,7 @@
                          "review":  "Review",
                          "seasonDetails":  "Season Details",
                          "seasonName":  "Season Name",
-                         "seasonNamePlaceholder":  "5Star Premier League Season {year}",
+                         "seasonNamePlaceholder":  "Fivescores Premier League Season {year}",
                          "defaultNameHint":  "Leave empty to use default name with current year",
                          "year":  "Year",
                          "groupStageConfig":  "Group Stage Configuration",

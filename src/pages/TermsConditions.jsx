@@ -36,9 +36,9 @@ const TermsConditions = () => {
           </h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              Welcome to the 5Star Premier League mobile application ("App"). These Terms and Conditions ("Terms") constitute 
+              Welcome to the Fivescores (5Star Premier League) mobile application ("App"). These Terms and Conditions ("Terms") constitute 
               a legally binding agreement between you ("User," "you," or "your") and RymeLabs ("Company," "we," "us," or "our"), 
-              governing your access to and use of the 5Star Premier League App and all related services, features, content, 
+              governing your access to and use of the Fivescores App and all related services, features, content, 
               and applications offered by RymeLabs.
             </p>
             <p>
@@ -236,7 +236,7 @@ const TermsConditions = () => {
                   (with opt-out options)
                 </li>
                 <li>
-                  <strong className="text-white">5Star Premier League:</strong> The league organization for operational and 
+                  <strong className="text-white">Fivescores (5Star Premier League):</strong> The league organization for operational and 
                   promotional purposes
                 </li>
                 <li>
@@ -357,7 +357,7 @@ const TermsConditions = () => {
             <p>
               The App and its entire contents, features, and functionality (including but not limited to all information, 
               software, text, displays, images, video, audio, design, selection, and arrangement) are owned by RymeLabs, 
-              the 5Star Premier League, or their licensors and are protected by international copyright, trademark, patent, 
+              Fivescores (5Star Premier League), or their licensors and are protected by international copyright, trademark, patent, 
               trade secret, and other intellectual property or proprietary rights laws.
             </p>
             <p>
@@ -382,7 +382,7 @@ const TermsConditions = () => {
           </h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p className="uppercase font-semibold text-white">
-              TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL RYMELABS, THE 5STAR PREMIER LEAGUE, OR 
+              TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL RYMELABS, FIVESCORES (5STAR PREMIER LEAGUE), OR 
               THEIR DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, SUPPLIERS, OR AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, 
               SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, 
               OR OTHER INTANGIBLE LOSSES, RESULTING FROM:
@@ -487,7 +487,7 @@ const TermsConditions = () => {
             <div className="pt-2 space-y-1">
               <p><strong>Email:</strong> <a href="mailto:RymeLabs@gmail.com" className="text-primary-400 hover:text-primary-300">RymeLabs@gmail.com</a></p>
               <p><strong>Company:</strong> RymeLabs</p>
-              <p><strong>Application:</strong> 5Star Premier League Official App</p>
+              <p><strong>Application:</strong> Fivescores (5Star Premier League) Official App</p>
             </div>
             <p className="pt-3">
               We aim to respond to all inquiries within 48 business hours.
@@ -503,7 +503,7 @@ const TermsConditions = () => {
           </h2>
           <div className="text-primary-200 text-sm leading-relaxed space-y-3">
             <p className="font-semibold">
-              BY CLICKING "I ACCEPT," DOWNLOADING, INSTALLING, OR USING THE 5STAR PREMIER LEAGUE APP, YOU ACKNOWLEDGE THAT:
+              BY CLICKING "I ACCEPT," DOWNLOADING, INSTALLING, OR USING THE FIVESCORES APP, YOU ACKNOWLEDGE THAT:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>You have read and understood these Terms and Conditions in their entirety</li>

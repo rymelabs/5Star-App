@@ -14,12 +14,34 @@ import {
   markAllNotificationsAsRead 
 } from '../firebase/notifications';
 
-const NotificationContext = createContext();
+const NotificationContext = createContext(null);
+
+// Default values when context is not available
+const defaultNotificationContext = {
+  notifications: [],
+  inboxNotifications: [],
+  unreadCount: 0,
+  fcmToken: null,
+  permissionGranted: false,
+  addNotification: () => {},
+  removeNotification: () => {},
+  showSuccess: () => {},
+  showError: () => {},
+  showWarning: () => {},
+  showInfo: () => {},
+  fetchNotifications: () => Promise.resolve([]),
+  markAsRead: () => Promise.resolve(),
+  markAllAsRead: () => Promise.resolve(),
+  initializePushNotifications: () => Promise.resolve({ success: false }),
+  clearFCMToken: () => Promise.resolve(),
+};
 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+    // Return default context instead of throwing - handles edge cases during HMR
+    console.warn('useNotification called outside NotificationProvider, using defaults');
+    return defaultNotificationContext;
   }
   return context;
 };

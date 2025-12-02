@@ -226,8 +226,8 @@ export const onForegroundMessage = async (callback) => {
     const notificationData = {
       title: payload.notification?.title || 'New Notification',
       body: payload.notification?.body || '',
-      icon: payload.notification?.icon || '/5Star-Logo.png',
-      badge: payload.notification?.badge || '/5Star-Logo.png',
+      icon: payload.notification?.icon || '/Fivescores logo.svg',
+      badge: payload.notification?.badge || '/Fivescores logo.svg',
       data: payload.data || {},
       timestamp: new Date().toISOString()
     };

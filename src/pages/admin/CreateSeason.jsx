@@ -501,7 +501,7 @@ const CreateSeason = () => {
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="text-gray-400">{t('createSeason.seasonName')}</span>
                 <span className="text-white font-medium">
-                  {formData.name || `5Star Premier League Season ${currentYear}`}
+                  {formData.name || `Fivescores Premier League Season ${currentYear}`}
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
