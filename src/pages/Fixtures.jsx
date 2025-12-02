@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Filter, Trophy, ArrowUpDown } from 'lucide-react';
+import { Calendar, Filter, Trophy, ArrowUpDown, Clock, CheckCircle2, Radio } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDate, isToday } from '../utils/dateUtils';
@@ -12,10 +12,35 @@ import PillChip from '../components/ui/PillChip';
 import FixtureCard from '../components/FixtureCard';
 
 const RECENT_RESULTS_LIMIT = 6;
+const LAST_RESULTS_HIGHLIGHT = 3; // Number of most recent matches to show prominently
+
+const CompetitionGroup = ({ group, onFixtureClick }) => (
+  <div className="overflow-hidden rounded-xl border border-white/5 bg-white/5 mb-3 last:mb-0">
+    <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border-b border-white/5">
+      {group.info.logo ? (
+        <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
+      ) : (
+        <Trophy className="w-3.5 h-3.5 text-brand-purple" />
+      )}
+      <h4 className="text-[9px] font-bold text-white/80 uppercase tracking-wider">{group.info.name}</h4>
+    </div>
+    <div>
+      {group.fixtures.map((fixture) => (
+        <FixtureCard 
+          key={fixture.id} 
+          fixture={fixture} 
+          onClick={onFixtureClick} 
+          variant="row"
+          compact={true}
+        />
+      ))}
+    </div>
+  </div>
+);
 
 const Fixtures = () => {
   const navigate = useNavigate();
-  const { fixtures = [], leagueTable = [], leagueSettings = {}, seasons = [], activeSeason = null, teams = [] } = useFootball();
+  const { fixtures = [], leagueTable = [], leagueSettings = {}, seasons = [], activeSeason = null, teams = [], leagues = [] } = useFootball();
   const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('fixtures');
@@ -26,6 +51,33 @@ const Fixtures = () => {
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'group'
   const [pastDateFilter, setPastDateFilter] = useState('');
   const [recentSortOrder, setRecentSortOrder] = useState('desc');
+
+  const getCompetitionInfo = (fixture) => {
+    if (fixture.leagueId) {
+      const league = leagues.find(l => l.id === fixture.leagueId);
+      if (league) return { id: league.id, name: league.name, logo: league.logo, type: 'league' };
+    }
+    if (fixture.seasonId) {
+      const season = seasons.find(s => s.id === fixture.seasonId);
+      if (season) return { id: season.id, name: season.name, logo: null, type: 'season' };
+    }
+    return { id: 'unknown', name: 'Unknown Competition', logo: null, type: 'unknown' };
+  };
+
+  const groupFixturesByCompetition = (fixturesList) => {
+    const groups = {};
+    fixturesList.forEach(fixture => {
+      const comp = getCompetitionInfo(fixture);
+      if (!groups[comp.id]) {
+        groups[comp.id] = {
+          info: comp,
+          fixtures: []
+        };
+      }
+      groups[comp.id].fixtures.push(fixture);
+    });
+    return Object.values(groups).sort((a, b) => a.info.name.localeCompare(b.info.name));
+  };
 
   useEffect(() => {
     if (activeSeason?.id) {
@@ -89,17 +141,28 @@ const Fixtures = () => {
     return filtered;
   }, [fixtures, statusFilter, selectedSeasonId, activeSeason]);
 
+  // Get live fixtures count for tab indicator
+  const liveFixturesCount = useMemo(() => {
+    return fixtures.filter(f => f.status === 'live').length;
+  }, [fixtures]);
+
   // Groupings
-  const { recentFixtures, pastDateGroups, upcomingGroups } = useMemo(() => {
+  const { lastThreeResults, recentFixtures, pastDateGroups, upcomingGroups, liveFixtures } = useMemo(() => {
     if (!filteredFixtures.length) {
-      return { recentFixtures: [], pastDateGroups: [], upcomingGroups: [] };
+      return { lastThreeResults: [], recentFixtures: [], pastDateGroups: [], upcomingGroups: [], liveFixtures: [] };
     }
 
     const now = new Date();
     const pastFixtures = [];
     const upcomingGroupsMap = {};
+    const live = [];
 
     filteredFixtures.forEach((fixture) => {
+      // Collect live fixtures
+      if (fixture.status === 'live') {
+        live.push(fixture);
+      }
+
       const date = new Date(fixture.dateTime);
       if (Number.isNaN(date.getTime())) {
         return;
@@ -138,7 +201,9 @@ const Fixtures = () => {
       .filter((fixture) => fixture.status === 'completed')
       .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
-    const recent = completedPastFixtures.slice(0, RECENT_RESULTS_LIMIT);
+    // Split: first 3 for prominent display, rest for carousel
+    const lastThree = completedPastFixtures.slice(0, LAST_RESULTS_HIGHLIGHT);
+    const recent = completedPastFixtures.slice(LAST_RESULTS_HIGHLIGHT, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
 
     const pastDateGroups = Object.values(pastGroupsMap)
       .map((group) => ({
@@ -154,7 +219,7 @@ const Fixtures = () => {
       }))
       .sort((a, b) => new Date(a.key) - new Date(b.key));
 
-    return { recentFixtures: recent, pastDateGroups, upcomingGroups };
+    return { lastThreeResults: lastThree, recentFixtures: recent, pastDateGroups, upcomingGroups, liveFixtures: live };
   }, [filteredFixtures]);
 
   const sortedRecentFixtures = useMemo(() => {
@@ -270,6 +335,36 @@ const Fixtures = () => {
         >
           <Filter className="w-5 h-5" />
         </button>
+      </div>
+
+      {/* Quick Filter Bar - Livescore/Sofascore Style */}
+      <div className="flex gap-2 overflow-x-auto px-4 pb-1 -mx-1 scrollbar-hide">
+        {[
+          { id: 'all', label: 'All', icon: null },
+          { id: 'live', label: 'Live', icon: Radio, pulse: liveFixturesCount > 0 },
+          { id: 'completed', label: 'Finished', icon: CheckCircle2 },
+          { id: 'upcoming', label: 'Upcoming', icon: Clock },
+        ].map((filter) => (
+          <button
+            key={filter.id}
+            onClick={() => setStatusFilter(filter.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              statusFilter === filter.id
+                ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {filter.icon && (
+              <filter.icon className={`w-4 h-4 ${filter.pulse ? 'animate-pulse text-red-400' : ''}`} />
+            )}
+            {filter.label}
+            {filter.id === 'live' && liveFixturesCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full animate-pulse">
+                {liveFixturesCount}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -403,13 +498,58 @@ const Fixtures = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 15 }}
               transition={{ duration: 0.15, ease: 'easeInOut' }}
+              className="space-y-6"
             >
-              {nextUpcomingFixture && sortedRecentFixtures.length === 0 && (
+              {/* Live Matches Section - Always on top when available */}
+              {liveFixtures.length > 0 && (
                 <section className="space-y-3 px-4 sm:px-2">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Up Next</p>
-                    <h3 className="text-base font-semibold text-white">Upcoming Fixture</h3>
-                    <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Radio className="w-5 h-5 text-red-500" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-white">Live Now</h3>
+                      <span className="text-[11px] text-white/40">{liveFixtures.length} match{liveFixtures.length > 1 ? 'es' : ''} in progress</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {groupFixturesByCompetition(liveFixtures).map((group) => (
+                      <CompetitionGroup key={group.info.id} group={group} onFixtureClick={handleFixtureClick} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Last 3 Results - Prominent Section */}
+              {lastThreeResults.length > 0 && (
+                <section className="space-y-3 px-4 sm:px-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <h3 className="text-base font-semibold text-white">Last {lastThreeResults.length} Results</h3>
+                      </div>
+                      <span className="text-[11px] text-white/40 ml-7">Most recently completed matches</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {groupFixturesByCompetition(lastThreeResults).map((group) => (
+                      <CompetitionGroup key={group.info.id} group={group} onFixtureClick={handleFixtureClick} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Next Up - Show when no completed matches yet */}
+              {nextUpcomingFixture && lastThreeResults.length === 0 && sortedRecentFixtures.length === 0 && (
+                <section className="space-y-3 px-4 sm:px-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                    <div>
+                      <h3 className="text-base font-semibold text-white">Up Next</h3>
+                      <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
+                    </div>
                   </div>
                   <FixtureCard
                     key={nextUpcomingFixture.id}
@@ -420,13 +560,14 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0 || nextUpcomingFixture) && (
+              {/* More Recent Results - Carousel */}
+              {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0) && (
                 <section className="space-y-3 px-4 sm:px-2">
                   <div className="flex flex-col items-start gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Just Finished</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">More Results</p>
                       <h3 className="text-base font-semibold text-white">Recent Results</h3>
-                      <span className="text-[11px] text-white/40">Latest completed fixtures</span>
+                      <span className="text-[11px] text-white/40">Scroll for more completed fixtures</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {pastDateGroups.length > 0 && (
@@ -464,11 +605,11 @@ const Fixtures = () => {
 
                   {sortedRecentFixtures.length > 0 ? (
                     renderCarouselItems(sortedRecentFixtures)
-                  ) : (
+                  ) : !pastDateFilter && lastThreeResults.length === 0 ? (
                     <SurfaceCard className="text-center text-xs text-white/50">
                       No fixtures have finished yet. Check back after the next match.
                     </SurfaceCard>
-                  )}
+                  ) : null}
 
                   {pastDateFilter && (
                     <div className="space-y-2">
@@ -499,13 +640,8 @@ const Fixtures = () => {
                       </div>
 
                       <div className="space-y-3 px-0 sm:px-2">
-                        {group.fixtures.map((fixture) => (
-                          <FixtureCard
-                            key={fixture.id}
-                            fixture={fixture}
-                            onClick={handleFixtureClick}
-                            compact={true}
-                          />
+                        {groupFixturesByCompetition(group.fixtures).map((compGroup) => (
+                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} />
                         ))}
                       </div>
                     </div>
@@ -513,7 +649,7 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {recentFixtures.length === 0 && pastDateGroups.length === 0 && upcomingGroups.length === 0 && (
+              {lastThreeResults.length === 0 && liveFixtures.length === 0 && recentFixtures.length === 0 && pastDateGroups.length === 0 && upcomingGroups.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                   <Calendar className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>{t('pages.fixtures.noFixturesFound')}</p>
