@@ -222,7 +222,7 @@ const Latest = () => {
             name: comp.name,
             teams: Array.from(comp.teamsMap.values())
                 .sort((a, b) => b.goals - a.goals)
-                .slice(0, 5)
+                .slice(0, 3)
         }))
         .filter(comp => comp.teams.length > 0)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -523,13 +523,13 @@ const Latest = () => {
                   <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider">{competition.name}</h3>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {competition.teams.map((stat, index) => (
-                    <div
-                      key={stat.id}
-                      className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px] hover:from-brand-purple hover:via-indigo-500 hover:to-sky-400 transition-all duration-300 group"
-                    >
-                      <SurfaceCard className="flex items-center justify-between p-3 rounded-[22px] bg-[#0c0c0f] group-hover:bg-[#121215] transition-colors">
+                <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
+                  <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
+                    {competition.teams.map((stat, index) => (
+                      <div
+                        key={stat.id}
+                        className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group"
+                      >
                         <div className="flex items-center gap-3">
                           <div className={`font-bold w-5 text-center ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
                             {index + 1}
@@ -546,9 +546,9 @@ const Latest = () => {
                           <span className="text-lg font-bold text-brand-purple">{stat.goals}</span>
                           <span className="text-[10px] text-gray-500 uppercase tracking-wider">Goals</span>
                         </div>
-                      </SurfaceCard>
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </SurfaceCard>
                 </div>
               </div>
             ))}
