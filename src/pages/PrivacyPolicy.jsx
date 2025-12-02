@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
           </h2>
           <div className="text-gray-300 text-sm leading-relaxed space-y-3">
             <p>
-              Welcome to the 5Star Premier League application ("App"), developed and operated by RymeLabs ("we," "us," or "our"). 
+              Welcome to the Fivescores application ("App"), developed and operated by RymeLabs ("we," "us," or "our"). 
               This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile 
               application and related services.
             </p>
@@ -243,7 +243,7 @@ const PrivacyPolicy = () => {
             <div className="pt-2 space-y-1">
               <p><strong>Email:</strong> <a href="mailto:RymeLabs@gmail.com" className="text-primary-400 hover:text-primary-300">RymeLabs@gmail.com</a></p>
               <p><strong>Company:</strong> RymeLabs</p>
-              <p><strong>App:</strong> 5Star Premier League</p>
+              <p><strong>App:</strong> Fivescores</p>
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ const PrivacyPolicy = () => {
         {/* Consent */}
         <div className="card p-4 bg-primary-500/10 border border-primary-500/20">
           <p className="text-sm text-primary-300">
-            By using the 5Star Premier League App, you acknowledge that you have read and understood this Privacy Policy 
+            By using the Fivescores App, you acknowledge that you have read and understood this Privacy Policy 
             and agree to the collection, use, and disclosure of your information as described herein.
           </p>
         </div>

@@ -19,8 +19,8 @@ const Header = ({ onSearchClick, onProfileClick }) => {
         {/* App Logo */}
         <div className="flex items-center">
           <img 
-            src="/5StarLogo.svg" 
-            alt="5Star" 
+            src="/Fivescores logo.svg" 
+            alt="Fivescores" 
             className="h-12 w-auto"
           />
         </div>

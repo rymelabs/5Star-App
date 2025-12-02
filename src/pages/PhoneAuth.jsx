@@ -409,7 +409,7 @@ const PhoneAuth = () => {
               className="-ml-2"
             />
             <div className="flex-1 text-center">
-              <img src="/5StarLogo.svg" alt="5Star Logo" className="w-12 h-12 mx-auto" />
+              <img src="/Fivescores logo.svg" alt="Fivescores" className="w-12 h-12 mx-auto" />
             </div>
           </div>
 

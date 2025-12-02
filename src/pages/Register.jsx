@@ -64,7 +64,7 @@ const Register = () => {
       <div className="w-full max-w-md">
         <div className="bg-dark-900 rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
-            <img src="/5StarLogo.svg" alt="5Star Logo" className="w-16 h-16 mx-auto mb-4" />
+            <img src="/Fivescores logo.svg" alt="Fivescores" className="w-16 h-16 mx-auto mb-4" />
             <p className="text-gray-400 mt-2">Create your account</p>
           </div>
 

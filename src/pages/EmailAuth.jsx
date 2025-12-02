@@ -118,7 +118,7 @@ const EmailAuth = () => {
           transition={{ delay: 0.3 }}
           className="flex-1 flex justify-center"
         >
-          <img src="/5StarLogo.svg" alt="Fivescores" className="w-16 h-16" />
+          <img src="/Fivescores logo.svg" alt="Fivescores" className="w-16 h-16" />
         </motion.div>
         <div className="w-9" /> {/* Spacer for centering */}
       </div>
