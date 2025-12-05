@@ -10,15 +10,15 @@ import SeasonStandings from '../components/SeasonStandings';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
 import Select from '../components/ui/Select';
-import FixtureCard from '../components/FixtureCard';
 import CompactFixtureRow from '../components/CompactFixtureRow';
+import NewTeamAvatar from '../components/NewTeamAvatar';
 
 const RECENT_RESULTS_LIMIT = 6;
 const LAST_RESULTS_HIGHLIGHT = 3; // Number of most recent matches to show prominently
 
 const CompetitionGroup = ({ group, onFixtureClick }) => (
-  <div className="overflow-hidden border-y border-white/5 bg-white/5 mb-3 last:mb-0 sm:rounded-xl sm:border-x">
-    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-b border-white/5">
+  <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden mb-3 last:mb-0">
+    <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] border-b border-white/[0.04]">
       {group.info.logo ? (
         <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
       ) : (
@@ -202,8 +202,12 @@ const Fixtures = () => {
       .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
     // Split: first 3 for prominent display, rest for carousel
-    const lastThree = completedPastFixtures.slice(0, LAST_RESULTS_HIGHLIGHT);
-    const recent = completedPastFixtures.slice(LAST_RESULTS_HIGHLIGHT, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
+    // const lastThree = completedPastFixtures.slice(0, LAST_RESULTS_HIGHLIGHT);
+    // const recent = completedPastFixtures.slice(LAST_RESULTS_HIGHLIGHT, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
+    
+    // Combined recent results (like Latest page)
+    const recent = completedPastFixtures.slice(0, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
+    const lastThree = []; // Empty to disable the split section
 
     const pastDateGroups = Object.values(pastGroupsMap)
       .map((group) => ({
@@ -303,13 +307,45 @@ const Fixtures = () => {
   );
 
   const renderCarouselItems = (fixtures) => (
-    <div className="flex gap-3 overflow-x-auto pb-2 px-6 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+    <div className="flex gap-2 overflow-x-auto pb-2 px-4 hide-scrollbar">
       {fixtures.map((fixture) => (
-        <div
-          key={fixture.id}
-          className="min-w-[260px] sm:min-w-[320px] flex-shrink-0 snap-start rounded-[22px] bg-gradient-to-r from-brand-purple via-indigo-500 to-blue-500 p-[1px]"
+        <div 
+          key={fixture.id} 
+          onClick={() => handleFixtureClick(fixture)}
+          className="flex-shrink-0 w-44 bg-[#0a0a0a]/50 backdrop-blur-sm rounded-lg border border-white/[0.04] p-3 cursor-pointer hover:bg-white/[0.03] transition-all group"
         >
-          <FixtureCard fixture={fixture} onClick={handleFixtureClick} compact={true} />
+          {/* Match Info */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] text-gray-500">{formatDate(fixture.dateTime)}</span>
+            <span className="text-[10px] font-bold text-emerald-400">FT</span>
+          </div>
+          
+          {/* Teams */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <NewTeamAvatar team={fixture.homeTeam} size={18} />
+                <span className={`text-[11px] truncate ${
+                  Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white font-semibold' : 'text-gray-400'
+                }`}>{abbreviateTeamName(fixture.homeTeam?.name)}</span>
+              </div>
+              <span className={`text-sm font-bold ml-2 ${
+                Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white' : 'text-gray-500'
+              }`}>{fixture.homeScore}</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <NewTeamAvatar team={fixture.awayTeam} size={18} />
+                <span className={`text-[11px] truncate ${
+                  Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white font-semibold' : 'text-gray-400'
+                }`}>{abbreviateTeamName(fixture.awayTeam?.name)}</span>
+              </div>
+              <span className={`text-sm font-bold ml-2 ${
+                Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white' : 'text-gray-500'
+              }`}>{fixture.awayScore}</span>
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -520,8 +556,8 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {/* Last 3 Results - Prominent Section */}
-              {lastThreeResults.length > 0 && (
+              {/* Last 3 Results - Prominent Section (Disabled/Merged) */}
+              {/* {lastThreeResults.length > 0 && (
                 <section className="space-y-3">
                   <div className="flex items-center justify-between px-4">
                     <div>
@@ -538,7 +574,7 @@ const Fixtures = () => {
                     ))}
                   </div>
                 </section>
-              )}
+              )} */}
 
               {/* Next Up - Show when no completed matches yet */}
               {nextUpcomingFixture && lastThreeResults.length === 0 && sortedRecentFixtures.length === 0 && (
@@ -550,7 +586,7 @@ const Fixtures = () => {
                       <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
                     </div>
                   </div>
-                  <div className="bg-white/5 rounded-xl overflow-hidden">
+                  <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
                     <CompactFixtureRow
                       key={nextUpcomingFixture.id}
                       fixture={nextUpcomingFixture}
@@ -565,9 +601,10 @@ const Fixtures = () => {
                 <section className="space-y-3">
                   <div className="flex flex-col items-start gap-3 px-4">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">More Results</p>
-                      <h3 className="text-base font-semibold text-white">Recent Results</h3>
-                      <span className="text-[11px] text-white/40">Scroll for more completed fixtures</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                        <h2 className="text-sm font-bold text-white tracking-wide">Results</h2>
+                      </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {pastDateGroups.length > 0 && (

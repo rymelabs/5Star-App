@@ -16,29 +16,35 @@ const BottomNav = () => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const controls = useAnimation();
 
-  const triggerShimmy = async () => {
+  const triggerShimmy = async (count = 1) => {
     if (!isFestiveSeason()) return;
     
-    await controls.start({
-      borderColor: ["rgba(255, 255, 255, 0.1)", "#ef4444", "#ef4444", "rgba(255, 255, 255, 0.1)"],
-      boxShadow: [
-        "0 25px 50px -12px rgba(0, 0, 0, 0.5)", // Default shadow
-        "0 0 15px rgba(239, 68, 68, 0.5)",      // Red glow
-        "0 0 15px rgba(239, 68, 68, 0.5)", 
-        "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
-      ],
-      transition: { duration: 2.5, times: [0, 0.2, 0.8, 1] }
-    });
+    for (let i = 0; i < count; i++) {
+      await controls.start({
+        borderColor: ["rgba(255, 255, 255, 0.1)", "#ef4444", "#ef4444", "rgba(255, 255, 255, 0.1)"],
+        boxShadow: [
+          "0 25px 50px -12px rgba(0, 0, 0, 0.5)", // Default shadow
+          "0 0 15px rgba(239, 68, 68, 0.5)",      // Red glow
+          "0 0 15px rgba(239, 68, 68, 0.5)", 
+          "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+        ],
+        transition: { duration: 2.5, times: [0, 0.2, 0.8, 1] }
+      });
+
+      if (i < count - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
   };
 
   useEffect(() => {
     if (!isFestiveSeason()) return;
 
-    // Initial trigger shortly after load
-    const initialTimeout = setTimeout(triggerShimmy, 2000); 
+    // Initial trigger shortly after load - Heartbeat (2 times)
+    const initialTimeout = setTimeout(() => triggerShimmy(2), 2000); 
 
     // Repeat every 20 minutes
-    const interval = setInterval(triggerShimmy, 20 * 60 * 1000);
+    const interval = setInterval(() => triggerShimmy(1), 20 * 60 * 1000);
 
     return () => {
       clearTimeout(initialTimeout);
