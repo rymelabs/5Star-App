@@ -697,7 +697,7 @@ const Stats = () => {
 
       <div className="w-full mx-auto px-0 sm:px-6 relative z-10">
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-6 sm:px-0">
+        <div className="tab-nav flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar px-6 sm:px-0">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -706,14 +706,14 @@ const Stats = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-5 py-2.5 rounded-full font-bold whitespace-nowrap transition-all duration-300 border
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs whitespace-nowrap transition-all duration-300 border
                   ${isActive
                     ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20'
                     : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
                   }
                 `}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : ''}`} />
+                <Icon className={`w-3 h-3 ${isActive ? 'text-white' : ''}`} />
                 {tab.label}
               </button>
             );

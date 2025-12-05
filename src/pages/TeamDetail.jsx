@@ -436,7 +436,7 @@ const TeamDetail = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto px-6 gap-4 scrollbar-hide border-t border-white/5 bg-black/20 backdrop-blur-sm">
+        <div className="tab-nav flex overflow-x-auto px-6 gap-3 scrollbar-hide border-t border-white/5 bg-black/20 backdrop-blur-sm">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -444,14 +444,14 @@ const TeamDetail = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-1.5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-all whitespace-nowrap
+                  flex items-center gap-1 py-2 text-[10px] sm:text-xs font-medium border-b-2 transition-all whitespace-nowrap
                   ${isActive 
                     ? 'border-brand-purple text-white' 
                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
                   }
                 `}
               >
-                <tab.icon className={`w-3.5 h-3.5 ${isActive ? 'text-brand-purple' : 'text-gray-500'}`} />
+                <tab.icon className={`w-3 h-3 ${isActive ? 'text-brand-purple' : 'text-gray-500'}`} />
                 {tab.label}
               </button>
             );

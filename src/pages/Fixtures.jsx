@@ -13,8 +13,8 @@ import Select from '../components/ui/Select';
 import CompactFixtureRow from '../components/CompactFixtureRow';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 
+const LAST_RESULTS_HIGHLIGHT = 3;
 const RECENT_RESULTS_LIMIT = 6;
-const LAST_RESULTS_HIGHLIGHT = 3; // Number of most recent matches to show prominently
 
 const CompetitionGroup = ({ group, onFixtureClick }) => (
   <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden mb-3 last:mb-0">
@@ -40,8 +40,8 @@ const CompetitionGroup = ({ group, onFixtureClick }) => (
 
 const Fixtures = () => {
   const navigate = useNavigate();
-  const { fixtures = [], leagueTable = [], leagueSettings = {}, seasons = [], activeSeason = null, teams = [], leagues = [] } = useFootball();
   const { t } = useLanguage();
+  const { fixtures = [], leagueTable = [], leagueSettings = {}, seasons = [], activeSeason = null, teams = [], leagues = [] } = useFootball();
 
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -327,14 +327,14 @@ const Fixtures = () => {
           onClick={() => setShowFilters(!showFilters)} 
           className={`p-2 rounded-full transition-colors ${showFilters ? 'bg-brand-purple text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
         >
-          <Filter className="w-5 h-5" />
+          <Filter className="w-4 h-4" />
         </button>
       </div>
 
       {/* Quick Filter Bar - Livescore/Sofascore Style */}
       <div className="flex gap-2 overflow-x-auto px-6 pb-1 scrollbar-hide">
         {[
-          { id: 'all', label: 'All', icon: null },
+          { id: 'all', label: 'All', icon: null, pillClass: 'rounded-full' },
           { id: 'live', label: 'Live', icon: Radio, pulse: liveFixturesCount > 0 },
           { id: 'completed', label: 'Finished', icon: CheckCircle2 },
           { id: 'upcoming', label: 'Upcoming', icon: Clock },
@@ -342,7 +342,7 @@ const Fixtures = () => {
           <button
             key={filter.id}
             onClick={() => setStatusFilter(filter.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+            className={`flex items-center gap-1.5 px-6 py-2 ${filter.pillClass || 'rounded-full'} text-sm font-medium whitespace-nowrap transition-all ${
               statusFilter === filter.id
                 ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
@@ -361,38 +361,76 @@ const Fixtures = () => {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex p-1 bg-white/5 rounded-full mx-4 sm:mx-2 relative">
-        <motion.div
-          className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
-          layoutId="fixtures-tab-indicator"
-          initial={false}
-          animate={{
-            left: activeTab === 'fixtures' ? '4px' : '50%',
-            width: 'calc(50% - 4px)',
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 400,
-            damping: 30,
-          }}
-        />
-        <button
-          onClick={() => setActiveTab('fixtures')}
-          className={`flex-1 py-2 text-sm font-medium rounded-full transition-colors relative z-10 ${
-            activeTab === 'fixtures' ? 'text-white' : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          {t('navigation.fixtures')}
-        </button>
-        <button
-          onClick={() => setActiveTab('table')}
-          className={`flex-1 py-2 text-sm font-medium rounded-full transition-colors relative z-10 ${
-            activeTab === 'table' ? 'text-white' : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          {t('pages.fixtures.table')}
-        </button>
+      {/* Tabs + View Mode */}
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-2">
+        <div className="tab-nav flex p-1 bg-white/5 rounded-full w-[210px] sm:w-[240px] max-w-full relative">
+          <motion.div
+            className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
+            layoutId="fixtures-tab-indicator"
+            initial={false}
+            animate={{
+              left: activeTab === 'fixtures' ? '4px' : '50%',
+              width: 'calc(50% - 4px)',
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 400,
+              damping: 30,
+            }}
+          />
+          <button
+            onClick={() => setActiveTab('fixtures')}
+            className={`flex-1 py-1 px-2 text-[11px] font-semibold rounded-full transition-colors relative z-10 ${
+              activeTab === 'fixtures' ? 'text-white' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            {t('navigation.fixtures')}
+          </button>
+          <button
+            onClick={() => setActiveTab('table')}
+            className={`flex-1 py-1 px-2 text-[11px] font-semibold rounded-full transition-colors relative z-10 ${
+              activeTab === 'table' ? 'text-white' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            {t('pages.fixtures.table')}
+          </button>
+        </div>
+
+        {activeTab === 'fixtures' && (
+          <div className="flex bg-white/5 rounded-full p-1 gap-1 relative">
+            <motion.div
+              className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
+              layoutId="viewmode-tab-indicator"
+              initial={false}
+              animate={{
+                left: viewMode === 'date' ? '4px' : 'calc(50% + 2px)',
+                width: 'calc(50% - 6px)',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 30,
+              }}
+            />
+            {[
+              { id: 'date', label: t('pages.fixtures.byDate'), disabled: false },
+              { id: 'group', label: t('pages.fixtures.byGroup'), disabled: !hasGroupData }
+            ].map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => !option.disabled && setViewMode(option.id)}
+                className={`px-3 py-1.5 text-[11px] font-medium rounded-full transition-colors relative z-10 ${
+                  viewMode === option.id
+                    ? 'text-white'
+                    : 'text-gray-400 hover:text-white'
+                } ${option.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filters Panel */}
@@ -434,43 +472,7 @@ const Fixtures = () => {
         </SurfaceCard>
       )}
 
-      {activeTab === 'fixtures' && (
-        <div className="flex items-center justify-end px-4 sm:px-2">
-          <div className="flex bg-white/5 rounded-full p-1 gap-1 relative">
-            <motion.div
-              className="absolute top-1 bottom-1 bg-brand-purple rounded-full shadow-lg"
-              layoutId="viewmode-tab-indicator"
-              initial={false}
-              animate={{
-                left: viewMode === 'date' ? '4px' : 'calc(50% + 2px)',
-                width: 'calc(50% - 6px)',
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 400,
-                damping: 30,
-              }}
-            />
-            {[
-              { id: 'date', label: t('pages.fixtures.byDate'), disabled: false },
-              { id: 'group', label: t('pages.fixtures.byGroup'), disabled: !hasGroupData }
-            ].map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => !option.disabled && setViewMode(option.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors relative z-10 ${
-                  viewMode === option.id
-                    ? 'text-white'
-                    : 'text-gray-400 hover:text-white'
-                } ${option.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* View toggle moved inline with tabs above */}
 
       {/* Content */}
       <AnimatePresence mode="wait">

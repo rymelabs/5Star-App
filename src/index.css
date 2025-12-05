@@ -70,27 +70,28 @@
 
 @layer components {
   .display-xl {
-    @apply text-3xl md:text-4xl font-extrabold text-white;
+    @apply text-xl md:text-2xl font-extrabold text-white;
   }
   .headline-lg {
-    @apply text-2xl font-bold text-white;
+    @apply text-lg font-bold text-white;
   }
   .title-md {
-    @apply text-lg font-semibold text-white;
+    @apply text-sm font-semibold text-white;
   }
   .body-text {
-    @apply text-sm md:text-base text-gray-400;
+    @apply text-xs md:text-sm text-gray-400;
   }
   .label-xs {
-    @apply text-[11px] uppercase tracking-wide text-gray-500;
+    @apply text-[9px] uppercase tracking-wide text-gray-500;
   }
 
+
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200;
+    @apply bg-primary-600 hover:bg-primary-700 text-white px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200;
   }
   
   .btn-secondary {
-    @apply bg-accent-600 hover:bg-accent-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200;
+    @apply bg-accent-600 hover:bg-accent-700 text-white px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200;
   }
   
   .card {
