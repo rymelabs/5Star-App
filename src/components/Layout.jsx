@@ -18,6 +18,9 @@ const Layout = ({ children }) => {
   const scrollContainerRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+  const authHiddenRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
+  const hideChrome = authHiddenRoutes.some((path) => location.pathname.startsWith(path));
+
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.sessionStorage === 'undefined') {
       return undefined;
@@ -58,8 +61,8 @@ const Layout = ({ children }) => {
   return (
     <AppShell
       ref={scrollContainerRef}
-      header={isDesktop ? <DesktopHeader /> : <Header />}
-      bottomNav={!isDesktop ? <BottomNav /> : null}
+      header={!hideChrome ? (isDesktop ? <DesktopHeader /> : <Header />) : null}
+      bottomNav={!isDesktop && !hideChrome ? <BottomNav /> : null}
     >
       {isDesktop ? (
         <DesktopLayout>{children}</DesktopLayout>

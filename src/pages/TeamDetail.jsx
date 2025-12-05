@@ -401,7 +401,7 @@ const TeamDetail = () => {
                   onClick={handleFollowToggle}
                   disabled={followLoading}
                   className={`
-                    flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 w-full sm:w-auto
+                    follow-team-btn flex items-center justify-center gap-1.5 px-4 py-4 rounded-full font-semibold text-sm transition-all duration-300 w-full sm:w-auto
                     ${isFollowing
                       ? 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/5'
                       : 'bg-brand-purple text-white hover:bg-brand-purple/90 shadow-[0_0_20px_rgba(109,40,217,0.4)] hover:shadow-[0_0_25px_rgba(109,40,217,0.6)]'
