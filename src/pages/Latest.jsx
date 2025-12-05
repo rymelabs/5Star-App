@@ -387,7 +387,7 @@ const Latest = () => {
             <div 
               key={fixture.id} 
               onClick={() => handleFixtureClick(fixture)}
-              className="flex-shrink-0 w-44 bg-[#0a0a0a]/80 backdrop-blur-sm rounded-lg border border-white/[0.04] p-3 cursor-pointer hover:bg-white/[0.03] transition-all group"
+              className="flex-shrink-0 w-44 bg-[#0a0a0a]/50 backdrop-blur-sm rounded-lg border border-white/[0.04] p-3 cursor-pointer hover:bg-white/[0.03] transition-all group"
             >
               {/* Match Info */}
               <div className="flex items-center justify-between mb-2">
@@ -476,7 +476,7 @@ const Latest = () => {
             </button>
           </div>
 
-          <div className="bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
             {seasonFixtures.map((fixture) => (
               <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
             ))}
@@ -555,7 +555,7 @@ const Latest = () => {
             </button>
           </div>
 
-          <div className="bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
             {upcomingFixtures.map((fixture) => (
               <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
             ))}
