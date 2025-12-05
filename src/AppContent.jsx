@@ -97,6 +97,9 @@ const AppContent = () => {
 
   console.log('🔍 AppContent - Current user state:', user ? `Logged in as ${user.email}` : 'Not logged in');
 
+  const authStandaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
+  const isAuthStandalone = authStandaloneRoutes.some((path) => location.pathname.startsWith(path));
+
   const requireAuthElement = (element) => (
     isAuthenticated
       ? element
@@ -109,80 +112,84 @@ const AppContent = () => {
       : <Navigate to="/" replace />
   );
 
-  return (
-    <Layout>
-      <React.Suspense fallback={
-        <div className="p-6 text-center">
-          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      }>
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Latest />} />
-            <Route path="/fixtures" element={<Fixtures />} />
-            <Route path="/fixtures/:id" element={<FixtureDetail />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/teams/:id" element={<TeamDetail />} />
-            <Route path="/teams/:teamId/players/:id" element={<PlayerDetail />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/news/:id" element={<NewsArticle />} />
-            <Route path="/stats" element={<Stats />} />
-            
-            {/* About page - accessible to all users */}
-            <Route path="/about" element={<About />} />
-            <Route path="/submit-team" element={<SubmitTeam />} />
-            
-            {/* Legal pages - accessible to all users */}
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/terms-and-conditions" element={<TermsConditions />} />
-            <Route path="/licenses" element={<Licenses />} />
-            
-            {/* Profile + settings flows require authentication */}
-            <Route path="/profile-setup" element={requireAuthElement(<ProfileSetup />)} />
-            <Route path="/profile" element={requireAuthElement(<Profile />)} />
-            <Route path="/settings" element={requireAuthElement(<Settings />)} />
-            <Route path="/notifications" element={requireAuthElement(<NotificationInbox />)} />
-            
-            {/* Admin Routes - Only accessible to admins */}
-            <Route path="/admin" element={requireAdminElement(<AdminDashboard />)} />
-            <Route path="/admin/dashboard" element={requireAdminElement(<AdminDashboard />)} />
-            <Route path="/admin/teams" element={requireAdminElement(<AdminTeams />)} />
-            <Route path="/admin/teams/upload" element={requireAdminElement(<BulkTeamUploadPage />)} />
-            <Route path="/admin/submissions" element={requireAdminElement(<AdminSubmissions />)} />
-            <Route path="/admin/teams/edit/:teamId" element={requireAdminElement(<EditTeam />)} />
-            <Route path="/admin/fixtures" element={requireAdminElement(<AdminFixtures />)} />
-            <Route path="/admin/news" element={requireAdminElement(<AdminNews />)} />
-            <Route path="/admin/news/edit/:id" element={requireAdminElement(<EditNews />)} />
-            <Route path="/admin/league-settings" element={requireAdminElement(<AdminLeagueSettings />)} />
-            <Route path="/admin/leagues" element={requireAdminElement(<AdminLeagues />)} />
-            <Route path="/admin/leagues/create" element={requireAdminElement(<CreateLeague />)} />
-            <Route path="/admin/leagues/edit/:id" element={requireAdminElement(<EditLeague />)} />
-            <Route path="/admin/seasons" element={requireAdminElement(<AdminSeasons />)} />
-            <Route path="/admin/seasons/create" element={requireAdminElement(<CreateSeason />)} />
-            <Route path="/admin/seasons/:seasonId/edit" element={requireAdminElement(<EditSeason />)} />
-            <Route path="/admin/seasons/:seasonId" element={requireAdminElement(<SeasonDetail />)} />
-            <Route path="/admin/instagram" element={requireAdminElement(<InstagramSettings />)} />
-            <Route path="/admin/notifications" element={requireAdminElement(<AdminNotifications />)} />
-            <Route path="/admin/stats" element={requireAdminElement(<AdminStats />)} />
-            <Route path="/admin/advanced-settings" element={requireAdminElement(<AdvancedSettings />)} />
-            <Route path="/admin/recycle-bin" element={requireAdminElement(<RecycleBin />)} />
-            
-            {/* Auth surfaces */}
-            <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthLanding />} />
-            <Route path="/email-auth" element={isAuthenticated ? <Navigate to="/" replace /> : <EmailAuth />} />
-            <Route path="/phone-auth" element={<Navigate to="/auth" replace />} />
-            <Route path="/login" element={<Navigate to="/auth" replace />} />
-            <Route path="/register" element={<Navigate to="/auth" replace />} />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
-      </React.Suspense>
-    </Layout>
+  const routedContent = (
+    <React.Suspense fallback={
+      <div className="p-6 text-center">
+        <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Latest />} />
+          <Route path="/fixtures" element={<Fixtures />} />
+          <Route path="/fixtures/:id" element={<FixtureDetail />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/:id" element={<TeamDetail />} />
+          <Route path="/teams/:teamId/players/:id" element={<PlayerDetail />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:id" element={<NewsArticle />} />
+          <Route path="/stats" element={<Stats />} />
+          
+          {/* About page - accessible to all users */}
+          <Route path="/about" element={<About />} />
+          <Route path="/submit-team" element={<SubmitTeam />} />
+          
+          {/* Legal pages - accessible to all users */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/terms-and-conditions" element={<TermsConditions />} />
+          <Route path="/licenses" element={<Licenses />} />
+          
+          {/* Profile + settings flows require authentication */}
+          <Route path="/profile-setup" element={requireAuthElement(<ProfileSetup />)} />
+          <Route path="/profile" element={requireAuthElement(<Profile />)} />
+          <Route path="/settings" element={requireAuthElement(<Settings />)} />
+          <Route path="/notifications" element={requireAuthElement(<NotificationInbox />)} />
+          
+          {/* Admin Routes - Only accessible to admins */}
+          <Route path="/admin" element={requireAdminElement(<AdminDashboard />)} />
+          <Route path="/admin/dashboard" element={requireAdminElement(<AdminDashboard />)} />
+          <Route path="/admin/teams" element={requireAdminElement(<AdminTeams />)} />
+          <Route path="/admin/teams/upload" element={requireAdminElement(<BulkTeamUploadPage />)} />
+          <Route path="/admin/submissions" element={requireAdminElement(<AdminSubmissions />)} />
+          <Route path="/admin/teams/edit/:teamId" element={requireAdminElement(<EditTeam />)} />
+          <Route path="/admin/fixtures" element={requireAdminElement(<AdminFixtures />)} />
+          <Route path="/admin/news" element={requireAdminElement(<AdminNews />)} />
+          <Route path="/admin/news/edit/:id" element={requireAdminElement(<EditNews />)} />
+          <Route path="/admin/league-settings" element={requireAdminElement(<AdminLeagueSettings />)} />
+          <Route path="/admin/leagues" element={requireAdminElement(<AdminLeagues />)} />
+          <Route path="/admin/leagues/create" element={requireAdminElement(<CreateLeague />)} />
+          <Route path="/admin/leagues/edit/:id" element={requireAdminElement(<EditLeague />)} />
+          <Route path="/admin/seasons" element={requireAdminElement(<AdminSeasons />)} />
+          <Route path="/admin/seasons/create" element={requireAdminElement(<CreateSeason />)} />
+          <Route path="/admin/seasons/:seasonId/edit" element={requireAdminElement(<EditSeason />)} />
+          <Route path="/admin/seasons/:seasonId" element={requireAdminElement(<SeasonDetail />)} />
+          <Route path="/admin/instagram" element={requireAdminElement(<InstagramSettings />)} />
+          <Route path="/admin/notifications" element={requireAdminElement(<AdminNotifications />)} />
+          <Route path="/admin/stats" element={requireAdminElement(<AdminStats />)} />
+          <Route path="/admin/advanced-settings" element={requireAdminElement(<AdvancedSettings />)} />
+          <Route path="/admin/recycle-bin" element={requireAdminElement(<RecycleBin />)} />
+          
+          {/* Auth surfaces */}
+          <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthLanding />} />
+          <Route path="/email-auth" element={isAuthenticated ? <Navigate to="/" replace /> : <EmailAuth />} />
+          <Route path="/phone-auth" element={<Navigate to="/auth" replace />} />
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <Route path="/register" element={<Navigate to="/auth" replace />} />
+          
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
+    </React.Suspense>
   );
+
+  if (isAuthStandalone) {
+    return routedContent;
+  }
+
+  return <Layout>{routedContent}</Layout>;
 };
 
 export default AppContent;

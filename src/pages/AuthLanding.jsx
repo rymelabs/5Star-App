@@ -15,6 +15,13 @@ const AuthLanding = () => {
   const { signInWithGoogle, signInAnonymously } = useAuth();
   const navigate = useNavigate();
 
+  const isFestiveSeason = new Date().getMonth() === 11; // December
+  // Use existing assets in /public
+  const logoSrc = isFestiveSeason
+    ? '/Fivescores logo Christmas.svg'
+    : '/Fivescores logo.png';
+  const logoAlt = isFestiveSeason ? 'Fivescores Christmas' : 'Fivescores';
+
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
@@ -101,26 +108,20 @@ const AuthLanding = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[100px]" />
       </div>
 
-      {/* Logo & Heading */}
+      {/* Heading (stacked welcome above seasonal logo) */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
         className="text-center mb-10 relative z-10"
       >
-        <div className="relative inline-flex items-center justify-center mb-6">
-          <div className="absolute inset-0 bg-brand-purple/20 blur-3xl rounded-full" />
-          <div className="relative">
-            <img 
-              src="/Fivescores logo.svg" 
-              alt="Fivescores" 
-              className="w-20 h-20 relative z-10" 
-            />
-          </div>
-        </div>
-        
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
-          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-blue-500">Fivescores</span>
+        <h1 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight flex flex-col items-center justify-center gap-2">
+          <span className="leading-tight">Welcome to</span>
+          <img
+            src={logoSrc}
+            alt={logoAlt}
+            className="h-10 md:h-12 w-auto drop-shadow-[0_10px_40px_rgba(109,40,217,0.45)]"
+          />
         </h1>
         <p className="text-white/60 text-sm md:text-base font-medium">
           Your premium sports experience starts here
@@ -138,7 +139,7 @@ const AuthLanding = () => {
       )}
 
       {/* Auth Options */}
-      <div className="space-y-3 mb-8 relative z-10">
+      <div className="flex flex-col gap-3 mb-8 relative z-10 max-w-md mx-auto w-full">
         {authOptions.map((option, index) => {
           const IconComponent = option.icon;
           return (

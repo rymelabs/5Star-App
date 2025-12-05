@@ -11,7 +11,7 @@ const DesktopLayout = ({ children }) => {
       </aside>
       
       {/* Main Content */}
-      <main className="min-h-screen w-full min-w-0 pb-12">
+      <main className="min-h-screen w-full min-w-0 pb-12 lg:pb-20">
         {children}
       </main>
       
