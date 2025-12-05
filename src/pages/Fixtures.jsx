@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Filter, Trophy, ArrowUpDown, Clock, CheckCircle2, Radio } from 'lucide-react';
+import { Calendar, Filter, Trophy, ArrowUpDown, Radio, CheckCircle2, Clock } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
-import { formatDate, isToday } from '../utils/dateUtils';
+import { formatDate, isToday, getMatchDayLabel } from '../utils/dateUtils';
 import { abbreviateTeamName } from '../utils/helpers';
 import SeasonStandings from '../components/SeasonStandings';
 import SurfaceCard from '../components/ui/SurfaceCard';
@@ -49,7 +49,6 @@ const Fixtures = () => {
   const [selectedTableSeasonId, setSelectedTableSeasonId] = useState(activeSeason?.id || null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'group'
-  const [pastDateFilter, setPastDateFilter] = useState('');
   const [recentSortOrder, setRecentSortOrder] = useState('desc');
 
   const getCompetitionInfo = (fixture) => {
@@ -147,15 +146,17 @@ const Fixtures = () => {
   }, [fixtures]);
 
   // Groupings
-  const { lastThreeResults, recentFixtures, pastDateGroups, upcomingGroups, liveFixtures } = useMemo(() => {
+  const { lastThreeResults, recentFixtures, pastDateGroups, upcomingGroups, liveFixtures, todayFixtures } = useMemo(() => {
     if (!filteredFixtures.length) {
-      return { lastThreeResults: [], recentFixtures: [], pastDateGroups: [], upcomingGroups: [], liveFixtures: [] };
+      return { lastThreeResults: [], recentFixtures: [], pastDateGroups: [], upcomingGroups: [], liveFixtures: [], todayFixtures: [] };
     }
 
     const now = new Date();
+    const todayKey = now.toISOString().split('T')[0];
     const pastFixtures = [];
     const upcomingGroupsMap = {};
     const live = [];
+    const today = [];
 
     filteredFixtures.forEach((fixture) => {
       // Collect live fixtures
@@ -168,8 +169,14 @@ const Fixtures = () => {
         return;
       }
 
+      const key = date.toISOString().split('T')[0];
+      
+      // Collect today's non-live upcoming fixtures
+      if (key === todayKey && fixture.status !== 'live' && fixture.status !== 'completed') {
+        today.push(fixture);
+      }
+
       if (date >= now) {
-        const key = date.toISOString().split('T')[0];
         if (!upcomingGroupsMap[key]) {
           upcomingGroupsMap[key] = {
             key,
@@ -223,39 +230,35 @@ const Fixtures = () => {
       }))
       .sort((a, b) => new Date(a.key) - new Date(b.key));
 
-    return { lastThreeResults: lastThree, recentFixtures: recent, pastDateGroups, upcomingGroups, liveFixtures: live };
+    // Sort today's fixtures by time
+    today.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+    return { lastThreeResults: lastThree, recentFixtures: recent, pastDateGroups, upcomingGroups, liveFixtures: live, todayFixtures: today };
   }, [filteredFixtures]);
 
-  const sortedRecentFixtures = useMemo(() => {
-    const items = [...recentFixtures];
-    items.sort((a, b) => recentSortOrder === 'desc'
-      ? new Date(b.dateTime) - new Date(a.dateTime)
-      : new Date(a.dateTime) - new Date(b.dateTime));
-    return items;
+  // Group results by date, then by competition
+  const resultDateGroups = useMemo(() => {
+    if (!recentFixtures.length) return [];
+    
+    const dateMap = {};
+    recentFixtures.forEach(fixture => {
+      const key = new Date(fixture.dateTime).toISOString().split('T')[0];
+      if (!dateMap[key]) {
+        dateMap[key] = {
+          key,
+          label: getMatchDayLabel(key),
+          fixtures: []
+        };
+      }
+      dateMap[key].fixtures.push(fixture);
+    });
+    
+    return Object.values(dateMap)
+      .sort((a, b) => recentSortOrder === 'desc' 
+        ? new Date(b.key) - new Date(a.key)
+        : new Date(a.key) - new Date(b.key)
+      );
   }, [recentFixtures, recentSortOrder]);
-
-  const selectedPastGroup = useMemo(() => {
-    if (!pastDateFilter) return null;
-    return pastDateGroups.find(group => group.key === pastDateFilter) || null;
-  }, [pastDateFilter, pastDateGroups]);
-
-  const filteredPastFixtures = useMemo(() => {
-    if (!selectedPastGroup) return [];
-    const items = [...selectedPastGroup.fixtures];
-    items.sort((a, b) => recentSortOrder === 'desc'
-      ? new Date(b.dateTime) - new Date(a.dateTime)
-      : new Date(a.dateTime) - new Date(b.dateTime));
-    return items;
-  }, [selectedPastGroup, recentSortOrder]);
-
-  const nextUpcomingFixture = useMemo(() => {
-    if (!upcomingGroups.length) return null;
-    const firstGroup = upcomingGroups[0];
-    return firstGroup?.fixtures?.[0] || null;
-  }, [upcomingGroups]);
-
-  const maxPastDateKey = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const minPastDateKey = useMemo(() => pastDateGroups.length ? pastDateGroups[pastDateGroups.length - 1].key : '', [pastDateGroups]);
 
   const groupViewSeasonId = useMemo(
     () => (selectedSeasonId && selectedSeasonId !== 'all') ? selectedSeasonId : (activeSeason?.id || null),
@@ -304,51 +307,6 @@ const Fixtures = () => {
       fixture={fixture}
       onClick={handleFixtureClick}
     />
-  );
-
-  const renderCarouselItems = (fixtures) => (
-    <div className="flex gap-2 overflow-x-auto pb-2 px-4 hide-scrollbar">
-      {fixtures.map((fixture) => (
-        <div 
-          key={fixture.id} 
-          onClick={() => handleFixtureClick(fixture)}
-          className="flex-shrink-0 w-44 bg-[#0a0a0a]/50 backdrop-blur-sm rounded-lg border border-white/[0.04] p-3 cursor-pointer hover:bg-white/[0.03] transition-all group"
-        >
-          {/* Match Info */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-gray-500">{formatDate(fixture.dateTime)}</span>
-            <span className="text-[10px] font-bold text-emerald-400">FT</span>
-          </div>
-          
-          {/* Teams */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <NewTeamAvatar team={fixture.homeTeam} size={18} />
-                <span className={`text-[11px] truncate ${
-                  Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white font-semibold' : 'text-gray-400'
-                }`}>{abbreviateTeamName(fixture.homeTeam?.name)}</span>
-              </div>
-              <span className={`text-sm font-bold ml-2 ${
-                Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white' : 'text-gray-500'
-              }`}>{fixture.homeScore}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <NewTeamAvatar team={fixture.awayTeam} size={18} />
-                <span className={`text-[11px] truncate ${
-                  Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white font-semibold' : 'text-gray-400'
-                }`}>{abbreviateTeamName(fixture.awayTeam?.name)}</span>
-              </div>
-              <span className={`text-sm font-bold ml-2 ${
-                Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white' : 'text-gray-500'
-              }`}>{fixture.awayScore}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 
   return (
@@ -544,8 +502,8 @@ const Fixtures = () => {
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-white">Live Now</h3>
-                      <span className="text-[11px] text-white/40">{liveFixtures.length} match{liveFixtures.length > 1 ? 'es' : ''} in progress</span>
+                      <h3 className="text-base font-semibold text-white">{t('pages.fixtures.liveNow') || 'Live Now'}</h3>
+                      <span className="text-[11px] text-white/40">{liveFixtures.length} {t('pages.fixtures.matchesInProgress') || `match${liveFixtures.length > 1 ? 'es' : ''} in progress`}</span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -556,123 +514,32 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {/* Last 3 Results - Prominent Section (Disabled/Merged) */}
-              {/* {lastThreeResults.length > 0 && (
+              {/* Today's Matches - Highlighted Section */}
+              {todayFixtures.length > 0 && (
                 <section className="space-y-3">
                   <div className="flex items-center justify-between px-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        <h3 className="text-base font-semibold text-white">Last {lastThreeResults.length} Results</h3>
-                      </div>
-                      <span className="text-[11px] text-white/40 ml-7">Most recently completed matches</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-amber-500 rounded-full" />
+                      <h2 className="text-sm font-bold text-white tracking-wide">{t('pages.fixtures.today') || 'Today'}</h2>
                     </div>
+                    <span className="text-[11px] text-white/40">{todayFixtures.length} {t('pages.fixtures.matches') || 'matches'}</span>
                   </div>
-                  <div className="space-y-2">
-                    {groupFixturesByCompetition(lastThreeResults).map((group) => (
-                      <CompetitionGroup key={group.info.id} group={group} onFixtureClick={handleFixtureClick} />
+                  <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+                    {todayFixtures.map((fixture) => (
+                      <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
                     ))}
                   </div>
                 </section>
-              )} */}
-
-              {/* Next Up - Show when no completed matches yet */}
-              {nextUpcomingFixture && lastThreeResults.length === 0 && sortedRecentFixtures.length === 0 && (
-                <section className="space-y-3 px-4 sm:px-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-400" />
-                    <div>
-                      <h3 className="text-base font-semibold text-white">Up Next</h3>
-                      <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
-                    <CompactFixtureRow
-                      key={nextUpcomingFixture.id}
-                      fixture={nextUpcomingFixture}
-                      onClick={handleFixtureClick}
-                    />
-                  </div>
-                </section>
               )}
 
-              {/* More Recent Results - Carousel */}
-              {(sortedRecentFixtures.length > 0 || pastDateGroups.length > 0) && (
-                <section className="space-y-3">
-                  <div className="flex flex-col items-start gap-3 px-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-                        <h2 className="text-sm font-bold text-white tracking-wide">Results</h2>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {pastDateGroups.length > 0 && (
-                        <label className="text-[11px] text-white/60 flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg border border-white/10">
-                          <span>Date</span>
-                          <input
-                            type="date"
-                            value={pastDateFilter}
-                            onChange={(e) => setPastDateFilter(e.target.value)}
-                            min={minPastDateKey || undefined}
-                            max={maxPastDateKey}
-                            className="bg-transparent text-white text-xs focus:outline-none"
-                          />
-                        </label>
-                      )}
-                      {pastDateFilter && (
-                        <button
-                          type="button"
-                          onClick={() => setPastDateFilter('')}
-                          className="text-[11px] text-white/60 hover:text-white underline"
-                        >
-                          Clear
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setRecentSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
-                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-[11px] text-white/70 hover:text-white"
-                      >
-                        <ArrowUpDown className="w-3 h-3" />
-                        {recentSortOrder === 'desc' ? 'Newest' : 'Oldest'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {sortedRecentFixtures.length > 0 ? (
-                    renderCarouselItems(sortedRecentFixtures)
-                  ) : !pastDateFilter && lastThreeResults.length === 0 ? (
-                    <SurfaceCard className="text-center text-xs text-white/50">
-                      No fixtures have finished yet. Check back after the next match.
-                    </SurfaceCard>
-                  ) : null}
-
-                  {pastDateFilter && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-white/40">
-                        <span>{formatDate(pastDateFilter)}</span>
-                        <span className="text-[10px] text-white/30">Filtered Results</span>
-                      </div>
-                      {filteredPastFixtures.length > 0 ? (
-                        renderCarouselItems(filteredPastFixtures)
-                      ) : (
-                        <SurfaceCard className="text-center text-xs text-white/50">
-                          No matches recorded for this date.
-                        </SurfaceCard>
-                      )}
-                    </div>
-                  )}
-                </section>
-              )}
-
+              {/* Upcoming Fixtures - After Today */}
               {upcomingGroups.length > 0 && (
                 <section className="space-y-4">
                   {upcomingGroups.map((group) => (
                     <div key={group.key} className="space-y-3">
                       <div className="sticky top-16 z-20 bg-app/95 backdrop-blur-sm py-2 px-4 border-b border-white/5">
                         <h3 className="text-sm font-bold text-brand-purple uppercase tracking-wider">
-                          {group.label}
+                          {getMatchDayLabel(group.key)}
                         </h3>
                       </div>
 
@@ -686,7 +553,44 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {lastThreeResults.length === 0 && liveFixtures.length === 0 && recentFixtures.length === 0 && pastDateGroups.length === 0 && upcomingGroups.length === 0 && (
+              {/* Results Section - Grouped by date, then by competition */}
+              {resultDateGroups.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                      <h2 className="text-sm font-bold text-white tracking-wide">{t('pages.fixtures.results') || 'Results'}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRecentSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
+                      className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
+                    >
+                      <ArrowUpDown className="w-3 h-3" />
+                      {recentSortOrder === 'desc' ? t('pages.fixtures.newest') || 'Newest' : t('pages.fixtures.oldest') || 'Oldest'}
+                    </button>
+                  </div>
+                  
+                  {resultDateGroups.map((dateGroup) => (
+                    <div key={dateGroup.key} className="space-y-3">
+                      <div className="sticky top-16 z-20 bg-app/95 backdrop-blur-sm py-2 px-4 border-b border-white/5">
+                        <h3 className="text-sm font-bold text-emerald-500 uppercase tracking-wider">
+                          {dateGroup.label}
+                        </h3>
+                      </div>
+
+                      <div className="space-y-3 px-0 sm:px-2">
+                        {groupFixturesByCompetition(dateGroup.fixtures).map((compGroup) => (
+                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              )}
+
+              {/* Empty State */}
+              {liveFixtures.length === 0 && todayFixtures.length === 0 && upcomingGroups.length === 0 && recentFixtures.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                   <Calendar className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>{t('pages.fixtures.noFixturesFound')}</p>
