@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion, useAnimation } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { navItems } from '../navItems';
+import { isFestiveSeason } from '../../utils/dateUtils';
 
 const BottomNav = () => {
   const { t } = useLanguage();
@@ -12,6 +14,42 @@ const BottomNav = () => {
   const touchEndX = useRef(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
+  const controls = useAnimation();
+
+  const triggerShimmy = async () => {
+    if (!isFestiveSeason()) return;
+    
+    await controls.start({
+      borderColor: ["rgba(255, 255, 255, 0.1)", "#ef4444", "#ef4444", "rgba(255, 255, 255, 0.1)"],
+      boxShadow: [
+        "0 25px 50px -12px rgba(0, 0, 0, 0.5)", // Default shadow
+        "0 0 15px rgba(239, 68, 68, 0.5)",      // Red glow
+        "0 0 15px rgba(239, 68, 68, 0.5)", 
+        "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+      ],
+      transition: { duration: 2.5, times: [0, 0.2, 0.8, 1] }
+    });
+  };
+
+  useEffect(() => {
+    if (!isFestiveSeason()) return;
+
+    // Initial trigger shortly after load
+    const initialTimeout = setTimeout(triggerShimmy, 2000); 
+
+    // Repeat every 20 minutes
+    const interval = setInterval(triggerShimmy, 20 * 60 * 1000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [controls]);
+
+  const handleNavClick = () => {
+    triggerHaptic();
+    triggerShimmy();
+  };
 
   const triggerHaptic = () => {
     if (navigator.vibrate) {
@@ -74,7 +112,8 @@ const BottomNav = () => {
 
   return (
     <div className="w-full max-w-xs mx-auto px-4 pb-6">
-      <nav 
+      <motion.nav 
+        animate={controls}
         className="bg-elevated/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl shadow-black/50 relative overflow-hidden group touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -103,7 +142,7 @@ const BottomNav = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={triggerHaptic}
+              onClick={handleNavClick}
               className={({ isActive }) => `
                 relative flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all duration-300
                 ${isActive ? 'text-brand-purple' : 'text-gray-400 hover:text-white hover:bg-white/5'}
@@ -136,7 +175,7 @@ const BottomNav = () => {
             </NavLink>
           ))}
         </div>
-      </nav>
+      </motion.nav>
     </div>
   );
 };

@@ -15,7 +15,7 @@ export const formatTime = (dateString) => {
   return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   });
 };
 
@@ -48,6 +48,12 @@ export const getRelativeTime = (dateString) => {
   }
   
   return formatDate(dateString);
+};
+
+export const isFestiveSeason = () => {
+  const now = new Date();
+  const endDate = new Date('2026-01-25T23:59:59');
+  return now <= endDate;
 };
 
 export const isToday = (dateString) => {

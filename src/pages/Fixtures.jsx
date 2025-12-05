@@ -11,6 +11,7 @@ import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
 import Select from '../components/ui/Select';
 import FixtureCard from '../components/FixtureCard';
+import CompactFixtureRow from '../components/CompactFixtureRow';
 
 const RECENT_RESULTS_LIMIT = 6;
 const LAST_RESULTS_HIGHLIGHT = 3; // Number of most recent matches to show prominently
@@ -27,12 +28,10 @@ const CompetitionGroup = ({ group, onFixtureClick }) => (
     </div>
     <div>
       {group.fixtures.map((fixture) => (
-        <FixtureCard 
-          key={fixture.id} 
-          fixture={fixture} 
-          onClick={onFixtureClick} 
-          variant="row"
-          compact={true}
+        <CompactFixtureRow
+          key={fixture.id}
+          fixture={fixture}
+          onClick={onFixtureClick}
         />
       ))}
     </div>
@@ -296,7 +295,7 @@ const Fixtures = () => {
   const handleFixtureClick = (fixture) => navigate(`/fixtures/${fixture.id}`);
 
   const renderFixtureCard = (fixture) => (
-    <FixtureCard
+    <CompactFixtureRow
       key={fixture.id}
       fixture={fixture}
       onClick={handleFixtureClick}
@@ -551,12 +550,13 @@ const Fixtures = () => {
                       <span className="text-[11px] text-white/40">Displayed until the first result comes in</span>
                     </div>
                   </div>
-                  <FixtureCard
-                    key={nextUpcomingFixture.id}
-                    fixture={nextUpcomingFixture}
-                    onClick={handleFixtureClick}
-                    compact={true}
-                  />
+                  <div className="bg-white/5 rounded-xl overflow-hidden">
+                    <CompactFixtureRow
+                      key={nextUpcomingFixture.id}
+                      fixture={nextUpcomingFixture}
+                      onClick={handleFixtureClick}
+                    />
+                  </div>
                 </section>
               )}
 
