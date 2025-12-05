@@ -197,14 +197,14 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
   return (
     <div className="space-y-6">
       {/* Group Tabs - Sleek Segmented Control */}
-      <div className="overflow-x-auto hide-scrollbar pb-2 px-6">
+      <div className="tab-nav overflow-x-auto hide-scrollbar pb-2 px-6">
         <div className="flex space-x-1.5 min-w-max">
           {season.groups.map((group) => (
             <button
               key={group.id}
               onClick={() => handleGroupChange(group.id)}
               className={`
-                relative px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300
+                relative px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-semibold transition-all duration-300
                 ${activeGroup === group.id
                   ? 'text-white shadow-[0_0_20px_rgba(109,40,217,0.3)]'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'

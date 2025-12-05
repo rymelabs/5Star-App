@@ -43,7 +43,7 @@ input[type="number"] {
    ======================================== */
 /* Use this class for main page titles/headers */
 .page-header {
-  font-size: 22px !important;
+  font-size: 17px !important;
   font-weight: 700 !important;
   color: #6D28D9 !important;
   line-height: 1.2 !important;
@@ -51,28 +51,28 @@ input[type="number"] {
 
 /* Page header variants */
 .page-header-white {
-  font-size: 20px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   line-height: 1.2 !important;
 }
 
 .page-header-lg {
-  font-size: 24px !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
   color: #3B82F6 !important;
   line-height: 1.2 !important;
 }
 
 .admin-header {
-  font-size: 18px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   line-height: 1.2 !important;
 }
 
 .page-subheader {
-  font-size: 16px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   color: #9CA3AF !important; /* gray-400 */
   line-height: 1.3 !important;
@@ -83,14 +83,14 @@ input[type="number"] {
    ======================================== */
 /* Use this class for fixture detail page scores */
 .fixture-score {
-  font-size: 30px !important; /* 3rem */
+  font-size: 24px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   letter-spacing: 0.05em !important;
 }
 
 .fixture-score-vs {
-  font-size: 36px !important; /* 2.25rem */
+  font-size: 28px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   letter-spacing: 0.1em !important;
@@ -104,130 +104,145 @@ input[type="number"] {
    END PAGE HEADER STYLING
    ======================================== */
 
-/* Headers (h1, h2, h3) - 15px */
+/* Headers (h1, h2, h3) - 12px */
 h1, h2, h3,
 .text-xl, .text-2xl, .text-3xl,
 .text-lg {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
-/* Subheaders and medium text - 14px */
+/* Subheaders and medium text - 11px */
 .text-base,
 h4, h5, h6 {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
-/* Content and body text - 12px */
+/* Content and body text - 10px */
 .text-sm,
 p:not(.fixture-detail-score):not(.fixture-detail-divider),
 span:not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider),
 div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base):not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider) {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
-/* Small text and labels - 11px */
+/* Small text and labels - 9px */
 .text-xs,
 label:not(.text-sm):not(.text-base):not(.text-lg) {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* Specific component overrides */
 .card h1, .card h2, .card h3 {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
 .card .text-base,
 .card h4 {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
 .card p,
 .card span:not(.text-xs):not(.fixture-detail-score):not(.fixture-detail-divider),
 .card .text-sm {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 .card .text-xs,
 .card label {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
-/* Button text sizes */
+/* Button text sizes and compact padding */
 button {
-  font-size: 12px !important;
+  font-size: 10px !important;
+  padding: 4px 8px !important;
 }
 
 button.text-sm {
-  font-size: 11px !important;
+  font-size: 9px !important;
+  padding: 3px 6px !important;
+}
+
+button.text-xs {
+  font-size: 8px !important;
+  padding: 2px 5px !important;
+}
+
+/* Larger action buttons */
+button.btn-primary,
+button.btn-secondary,
+button[type="submit"] {
+  padding: 6px 12px !important;
+  font-size: 10px !important;
 }
 
 /* Input and form field text */
 input, textarea, select {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Badge and tag text */
 .badge, .tag, span[class*="badge"], span[class*="tag"] {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* Table text */
 table th {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 table td {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* List items */
 li {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Score displays - keep bold visible */
 .font-bold.text-lg,
 .font-bold.text-xl,
 .font-bold.text-2xl {
-  font-size: 15px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
 }
 
 /* Navigation text */
 nav a, nav button {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Modal headers */
 .modal h1, .modal h2, .modal h3 {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
 .modal p, .modal span {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Notification text */
 .notification .title {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
 .notification .message {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Team/Player names in cards */
 .team-name, .player-name {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
 /* Stat numbers */
 .stat-value {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
 .stat-label {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* Reduce padding to make cards more compact */
@@ -283,30 +298,30 @@ nav a, nav button {
 
 /* Fixture card specific */
 .fixture-card .team-name {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 .fixture-card .score {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
 .fixture-card .time,
 .fixture-card .date {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* News card specific */
 .news-card h3 {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
 .news-card p {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* News article header - centralised from NewsArticle.jsx */
 .news-article-header {
-  font-size: 27px !important; /* approximates text-2xl/md:text-4xl scaling in compact sizing */
+  font-size: 20px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
   margin-bottom: 12px !important;
@@ -316,27 +331,27 @@ nav a, nav button {
 
 /* League table specific */
 .league-table th {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 .league-table td {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 .league-table .team-name {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 /* Admin panel specific */
 .admin-panel h1 {
-  font-size: 15px !important;
+  font-size: 12px !important;
 }
 
 .admin-panel label {
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 .admin-panel input,
 .admin-panel textarea {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }

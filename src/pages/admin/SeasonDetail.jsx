@@ -449,7 +449,7 @@ const SeasonDetail = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-dark-800 p-1 rounded-lg overflow-x-auto">
+      <div className="tab-nav flex space-x-1 mb-6 bg-dark-800 p-1 rounded-lg overflow-x-auto">
         {[
           { id: 'groups', label: 'Groups', icon: Users },
           { id: 'knockout', label: 'Knockout', icon: Trophy },
@@ -458,13 +458,13 @@ const SeasonDetail = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 min-w-[90px] px-3 sm:px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center space-x-1 sm:space-x-2 whitespace-nowrap ${
+            className={`flex-1 min-w-[90px] px-2.5 sm:px-3 py-1.5 rounded-lg font-medium text-xs transition-colors flex items-center justify-center space-x-1 sm:space-x-1.5 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-primary-500 text-white'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <tab.icon className="w-4 h-4 flex-shrink-0" />
+            <tab.icon className="w-3 h-3 flex-shrink-0" />
             <span>{tab.label}</span>
           </button>
         ))}
