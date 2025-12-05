@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { isFestiveSeason } from '../../utils/dateUtils';
+import ChristmasLogo from '../ChristmasLogo';
 
 const DesktopHeader = () => {
   const location = useLocation();
@@ -22,11 +24,15 @@ const DesktopHeader = () => {
       {/* Logo & Nav */}
       <div className="flex items-center gap-12">
         <Link to="/" className="flex items-center">
-          <img 
-            src="/Fivescores logo.svg" 
-            alt="Fivescores" 
-            className="h-10 w-auto drop-shadow-[0_0_10px_rgba(109,40,217,0.5)]"
-          />
+          {isFestiveSeason() ? (
+            <ChristmasLogo className="h-10 w-auto drop-shadow-[0_0_10px_rgba(109,40,217,0.5)]" />
+          ) : (
+            <img 
+              src="/Fivescores logo.svg" 
+              alt="Fivescores" 
+              className="h-10 w-auto drop-shadow-[0_0_10px_rgba(109,40,217,0.5)]"
+            />
+          )}
         </Link>
         
         <nav className="hidden md:flex items-center gap-1">
