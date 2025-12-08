@@ -52,6 +52,10 @@ const AdminFixtures = () => {
     leagueId: '',
     groupId: '',
     stage: '',
+    decidedByPenalties: false,
+    penaltyHomeScore: '',
+    penaltyAwayScore: '',
+    penaltyWinnerId: '',
     homeLineup: [],
     awayLineup: [],
     events: []
@@ -121,6 +125,16 @@ const AdminFixtures = () => {
     }
   };
 
+  const handlePenaltyToggle = (checked) => {
+    setFormData(prev => ({
+      ...prev,
+      decidedByPenalties: checked,
+      penaltyHomeScore: checked ? prev.penaltyHomeScore : '',
+      penaltyAwayScore: checked ? prev.penaltyAwayScore : '',
+      penaltyWinnerId: checked ? prev.penaltyWinnerId : '',
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.homeTeam || !formData.awayTeam || !formData.date || !formData.time) return;
@@ -146,6 +160,10 @@ const AdminFixtures = () => {
         leagueId: formData.leagueId || null,
         groupId: formData.groupId || null,
         stage: formData.stage || null,
+        decidedByPenalties: formData.decidedByPenalties || false,
+        penaltyHomeScore: formData.decidedByPenalties && formData.penaltyHomeScore !== '' ? parseInt(formData.penaltyHomeScore) : null,
+        penaltyAwayScore: formData.decidedByPenalties && formData.penaltyAwayScore !== '' ? parseInt(formData.penaltyAwayScore) : null,
+        penaltyWinnerId: formData.decidedByPenalties ? (formData.penaltyWinnerId || null) : null,
         homeLineup: formData.homeLineup || [],
         awayLineup: formData.awayLineup || [],
         events: formData.events || []
@@ -273,6 +291,10 @@ const AdminFixtures = () => {
       seasonId: '',
       groupId: '',
       stage: '',
+      decidedByPenalties: false,
+      penaltyHomeScore: '',
+      penaltyAwayScore: '',
+      penaltyWinnerId: '',
       homeLineup: [],
       awayLineup: [],
       events: []
@@ -305,6 +327,10 @@ const AdminFixtures = () => {
       seasonId: fixture.seasonId || '',
       groupId: fixture.groupId || '',
       stage: fixture.stage || '',
+      decidedByPenalties: Boolean(fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined),
+      penaltyHomeScore: fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined ? fixture.penaltyHomeScore : '',
+      penaltyAwayScore: fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined ? fixture.penaltyAwayScore : '',
+      penaltyWinnerId: fixture.penaltyWinnerId || '',
       homeLineup: fixture.homeLineup || [],
       awayLineup: fixture.awayLineup || [],
       events: fixture.events || []
@@ -343,8 +369,13 @@ const AdminFixtures = () => {
         seasonId: formData.seasonId || null,
         groupId: formData.groupId || null,
         stage: formData.stage || null,
+        decidedByPenalties: formData.decidedByPenalties || false,
+        penaltyHomeScore: formData.decidedByPenalties && formData.penaltyHomeScore !== '' ? parseInt(formData.penaltyHomeScore) : null,
+        penaltyAwayScore: formData.decidedByPenalties && formData.penaltyAwayScore !== '' ? parseInt(formData.penaltyAwayScore) : null,
+        penaltyWinnerId: formData.decidedByPenalties ? (formData.penaltyWinnerId || null) : null,
         homeLineup: formData.homeLineup || [],
-        awayLineup: formData.awayLineup || [],        events: formData.events || []
+        awayLineup: formData.awayLineup || [],
+        events: formData.events || []
       };
       
       await updateFixture(editingId, updates);
@@ -408,6 +439,11 @@ const AdminFixtures = () => {
       })
     };
   };
+
+  const isKnockoutStage = (() => {
+    const stage = (formData.stage || '').toLowerCase();
+    return stage.includes('knock') || stage.includes('quarter') || stage.includes('semi') || stage.includes('final');
+  })();
 
   return (
     <AdminPageLayout
@@ -701,6 +737,71 @@ const AdminFixtures = () => {
                     placeholder="0"
                     min="0"
                   />
+                </div>
+
+                {/* Penalties (Knockout) */}
+                <div className="md:col-span-2 space-y-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white flex items-center gap-2">
+                        {t('adminFixtures.penalties') || 'Penalties'}
+                        {isKnockoutStage && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-200">Knockout</span>}
+                      </p>
+                      <p className="text-xs text-gray-400">Use when full-time is a draw and decided by shootout.</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.decidedByPenalties}
+                        onChange={(e) => handlePenaltyToggle(e.target.checked)}
+                        className="accent-brand-purple w-4 h-4"
+                      />
+                      <span>{t('adminFixtures.decidedByPenalties') || 'Decided by penalties'}</span>
+                    </label>
+                  </div>
+
+                  {formData.decidedByPenalties && (
+                    <div className="grid md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">{t('adminFixtures.homePens') || 'Home pens'}</label>
+                        <input
+                          type="number"
+                          name="penaltyHomeScore"
+                          value={formData.penaltyHomeScore}
+                          onChange={handleInputChange}
+                          className="input-field w-full"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">{t('adminFixtures.awayPens') || 'Away pens'}</label>
+                        <input
+                          type="number"
+                          name="penaltyAwayScore"
+                          value={formData.penaltyAwayScore}
+                          onChange={handleInputChange}
+                          className="input-field w-full"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-300 mb-1">{t('adminFixtures.penaltyWinner') || 'Penalty winner'}</label>
+                        <select
+                          name="penaltyWinnerId"
+                          value={formData.penaltyWinnerId}
+                          onChange={handleInputChange}
+                          className="input-field w-full"
+                        >
+                          <option value="">{t('adminFixtures.selectWinner') || 'Select winner'}</option>
+                          {formData.homeTeam && <option value={formData.homeTeam}>{teams.find(t => t.id === formData.homeTeam)?.name || t('adminFixtures.homeTeam')}</option>}
+                          {formData.awayTeam && <option value={formData.awayTeam}>{teams.find(t => t.id === formData.awayTeam)?.name || t('adminFixtures.awayTeam')}</option>}
+                        </select>
+                        <p className="text-[11px] text-gray-500 mt-1">Only required when the match finished level in normal time.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

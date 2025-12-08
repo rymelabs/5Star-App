@@ -189,6 +189,7 @@ const FixtureDetail = () => {
   const fixtureComments = comments[`fixture_${id}`] || [];
   const isLiveMatch = isFixtureLive(fixture);
   const isCompleted = fixture.status === 'completed';
+  const showPenalties = isCompleted && fixture.penaltyHomeScore !== undefined && fixture.penaltyHomeScore !== null && fixture.penaltyAwayScore !== undefined && fixture.penaltyAwayScore !== null;
 
   const TabButton = ({ id, label, icon: Icon }) => (
     <button
@@ -309,6 +310,12 @@ const FixtureDetail = () => {
               ) : (
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-md shadow-inner">
                   <span className="text-xl sm:text-2xl font-bold text-gray-500 tracking-widest">VS</span>
+                </div>
+              )}
+
+              {showPenalties && (
+                <div className="mt-2 text-xs text-purple-200 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+                  {t('match.penalties') || 'Penalties'}: {fixture.penaltyHomeScore}-{fixture.penaltyAwayScore}
                 </div>
               )}
             </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { newsCollection, commentsCollection, appSettingsCollection } from '../firebase/firestore';
+import useCachedState from '../hooks/useCachedState';
 
 export const NewsContext = createContext(null);
 
@@ -14,11 +15,11 @@ export const useNews = () => {
 export const useOptionalNews = () => useContext(NewsContext);
 
 export const NewsProvider = ({ children }) => {
-  const [allArticles, setAllArticles] = useState([]);
+  const [allArticles, setAllArticles] = useCachedState('news:allArticles', []);
   const [comments, setComments] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newsSettings, setNewsSettings] = useState({ allowAdminNews: false });
+  const [newsSettings, setNewsSettings] = useCachedState('news:settings', { allowAdminNews: false });
 
   useEffect(() => {
     loadArticles();

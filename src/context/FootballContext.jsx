@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection, leaguesCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
+import useCachedState from '../hooks/useCachedState';
 
 const FootballContext = createContext();
 
@@ -14,17 +15,17 @@ export const useFootball = () => {
 
 export const FootballProvider = ({ children }) => {
   const { user } = useAuth();
-  const [teams, setTeams] = useState([]);
-  const [fixtures, setFixtures] = useState([]);
-  const [leagueTable, setLeagueTable] = useState([]);
-  const [leagues, setLeagues] = useState([]);
-  const [leagueSettings, setLeagueSettings] = useState({
+  const [teams, setTeams] = useCachedState('football:teams', []);
+  const [fixtures, setFixtures] = useCachedState('football:fixtures', []);
+  const [leagueTable, setLeagueTable] = useCachedState('football:leagueTable', []);
+  const [leagues, setLeagues] = useCachedState('football:leagues', []);
+  const [leagueSettings, setLeagueSettings] = useCachedState('football:leagueSettings', {
     qualifiedPosition: 4,
     relegationPosition: 18,
     totalTeams: 20
   });
-  const [activeSeason, setActiveSeason] = useState(null);
-  const [seasons, setSeasons] = useState([]);
+  const [activeSeason, setActiveSeason] = useCachedState('football:activeSeason', null);
+  const [seasons, setSeasons] = useCachedState('football:seasons', []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -38,6 +39,25 @@ export const FootballProvider = ({ children }) => {
     ownerId,
     ownerName
   });
+
+  const resolveWinner = (payload = {}, existingFixture = null) => {
+    const homeScore = payload.homeScore ?? existingFixture?.homeScore;
+    const awayScore = payload.awayScore ?? existingFixture?.awayScore;
+    const penHome = payload.penaltyHomeScore ?? existingFixture?.penaltyHomeScore;
+    const penAway = payload.penaltyAwayScore ?? existingFixture?.penaltyAwayScore;
+
+    if (payload.status !== 'completed' && existingFixture?.status !== 'completed') return null;
+
+    if (homeScore > awayScore) return payload.homeTeamId || existingFixture?.homeTeamId || null;
+    if (awayScore > homeScore) return payload.awayTeamId || existingFixture?.awayTeamId || null;
+
+    if (payload.decidedByPenalties && penHome != null && penAway != null) {
+      if (penHome > penAway) return payload.homeTeamId || existingFixture?.homeTeamId || null;
+      if (penAway > penHome) return payload.awayTeamId || existingFixture?.awayTeamId || null;
+    }
+
+    return null;
+  };
 
   // Load initial data
   useEffect(() => {
@@ -330,8 +350,18 @@ export const FootballProvider = ({ children }) => {
     }
 
     try {
-      const fixturePayload = applyOwnerMetadata(fixtureData);
-      const fixtureId = await fixturesCollection.add(fixturePayload);
+      const fixturePayload = applyOwnerMetadata({
+        ...fixtureData,
+        decidedByPenalties: Boolean(fixtureData.decidedByPenalties),
+        penaltyHomeScore: fixtureData.decidedByPenalties ? fixtureData.penaltyHomeScore ?? null : null,
+        penaltyAwayScore: fixtureData.decidedByPenalties ? fixtureData.penaltyAwayScore ?? null : null,
+        penaltyWinnerId: fixtureData.decidedByPenalties ? fixtureData.penaltyWinnerId || null : null,
+      });
+
+      const winnerId = resolveWinner(fixturePayload);
+      const payloadWithWinner = { ...fixturePayload, winnerId };
+
+      const fixtureId = await fixturesCollection.add(payloadWithWinner);
       
       // Find the team data
       const homeTeam = teams.find(t => t.id === fixturePayload.homeTeamId);
@@ -339,7 +369,7 @@ export const FootballProvider = ({ children }) => {
       
       const newFixture = { 
         id: fixtureId, 
-        ...fixturePayload,
+        ...payloadWithWinner,
         homeTeam: homeTeam || { id: fixturePayload.homeTeamId, name: 'Unknown Team', logo: '' },
         awayTeam: awayTeam || { id: fixturePayload.awayTeamId, name: 'Unknown Team', logo: '' },
         dateTime: new Date(fixturePayload.dateTime)
@@ -380,13 +410,24 @@ export const FootballProvider = ({ children }) => {
       const isNowCompleted = updates.status === 'completed';
       const statusChangedToLive = fixture?.status !== 'live' && updates.status === 'live';
       
+      const normalizedUpdates = {
+        ...updates,
+        decidedByPenalties: Boolean(updates.decidedByPenalties),
+        penaltyHomeScore: updates.decidedByPenalties ? updates.penaltyHomeScore ?? null : null,
+        penaltyAwayScore: updates.decidedByPenalties ? updates.penaltyAwayScore ?? null : null,
+        penaltyWinnerId: updates.decidedByPenalties ? updates.penaltyWinnerId || null : null,
+      };
+
+      const winnerId = resolveWinner(normalizedUpdates, fixture);
+
       const updatePayload = (isAdmin && !isSuperAdmin)
         ? {
-            ...updates,
+            ...normalizedUpdates,
+            winnerId,
             ownerId: fixture?.ownerId || ownerId,
             ownerName: fixture?.ownerName || ownerName
           }
-        : updates;
+        : { ...normalizedUpdates, winnerId };
 
       await fixturesCollection.update(fixtureId, updatePayload);
       setFixtures(prev => prev.map(f => 

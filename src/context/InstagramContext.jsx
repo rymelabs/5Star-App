@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { fetchInstagramPosts, getInstagramSettings } from '../firebase/instagram';
+import useCachedState from '../hooks/useCachedState';
 
 const InstagramContext = createContext();
 
@@ -12,8 +13,8 @@ export const useInstagram = () => {
 };
 
 export const InstagramProvider = ({ children }) => {
-  const [posts, setPosts] = useState([]);
-  const [settings, setSettings] = useState(null);
+  const [posts, setPosts] = useCachedState('instagram:posts', []);
+  const [settings, setSettings] = useCachedState('instagram:settings', null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
