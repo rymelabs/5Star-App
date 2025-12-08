@@ -12,6 +12,7 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
   const timeLabel = formatTime(fixture.dateTime);
   const isCompleted = fixture.status === 'completed';
   const isLive = isFixtureLive(fixture);
+  const showPenalties = isCompleted && fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined;
 
   return (
     <div
@@ -67,6 +68,11 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
             </div>
           ) : (
             <span className="text-[11px] text-gray-500 font-medium">vs</span>
+          )}
+          {showPenalties && (
+            <div className="text-[10px] text-purple-200 text-center leading-tight mt-0.5">
+              Pens {fixture.penaltyHomeScore}-{fixture.penaltyAwayScore}
+            </div>
           )}
         </div>
 

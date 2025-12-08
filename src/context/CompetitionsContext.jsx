@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { competitionsCollection, adminActivityCollection } from '../firebase/firestore';
+import useCachedState from '../hooks/useCachedState';
 import { useAuth } from './AuthContext';
 
 const CompetitionsContext = createContext();
@@ -14,7 +15,7 @@ export const useCompetitions = () => {
 
 export const CompetitionsProvider = ({ children }) => {
   const { user } = useAuth();
-  const [competitions, setCompetitions] = useState([]);
+  const [competitions, setCompetitions] = useCachedState('competitions:list', []);
   const [loading, setLoading] = useState(true);
   const ownerId = user?.uid || null;
   const ownerName = user?.displayName || user?.name || user?.email || 'Unknown Admin';
