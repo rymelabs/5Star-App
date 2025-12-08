@@ -196,15 +196,14 @@ const AdminDashboard = () => {
       path: '/admin/seasons',
       color: 'text-primary-400',
       count: '-',
-    user?.isSuperAdmin ? {
-    {
+    },
+    ...(user?.isSuperAdmin ? [{
       title: t('pages.admin.leaguesManagement'),
       description: t('pages.admin.leaguesManagementDesc'),
       icon: Trophy,
       path: '/admin/leagues',
       color: 'text-green-400',
-    } : null,
-    },
+    }] : []),
     {
       title: t('pages.admin.teamsManagement'),
       description: t('pages.admin.teamsManagementDesc'),
@@ -219,7 +218,7 @@ const AdminDashboard = () => {
       icon: Inbox,
       path: '/admin/submissions',
       color: 'text-green-400',
-      count: '-'
+      count: '-',
     },
     {
       title: t('pages.admin.fixturesManagement'),
@@ -237,14 +236,14 @@ const AdminDashboard = () => {
       color: 'text-purple-400',
       count: articles.length,
     },
-    user?.isSuperAdmin ? {
+    ...(user?.isSuperAdmin ? [{
       title: t('pages.admin.notificationsManagement'),
       description: t('pages.admin.notificationsManagementDesc'),
       icon: Bell,
       path: '/admin/notifications',
       color: 'text-cyan-400',
       count: '-',
-    } : null,
+    }] : []),
     {
       title: t('pages.admin.leagueSettings'),
       description: t('pages.admin.leagueSettingsDesc'),
