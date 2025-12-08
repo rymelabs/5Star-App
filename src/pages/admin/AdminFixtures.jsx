@@ -747,7 +747,7 @@ const AdminFixtures = () => {
                         {t('adminFixtures.penalties') || 'Penalties'}
                         {isKnockoutStage && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-200">Knockout</span>}
                       </p>
-                      <p className="text-xs text-gray-400">Use when full-time is a draw and decided by shootout.</p>
+                      <p className="text-xs text-gray-400">{t('adminFixtures.penaltiesHint') || 'Use when full-time is a draw and decided by shootout.'}</p>
                     </div>
                     <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
                       <input
@@ -798,7 +798,7 @@ const AdminFixtures = () => {
                           {formData.homeTeam && <option value={formData.homeTeam}>{teams.find(t => t.id === formData.homeTeam)?.name || t('adminFixtures.homeTeam')}</option>}
                           {formData.awayTeam && <option value={formData.awayTeam}>{teams.find(t => t.id === formData.awayTeam)?.name || t('adminFixtures.awayTeam')}</option>}
                         </select>
-                        <p className="text-[11px] text-gray-500 mt-1">Only required when the match finished level in normal time.</p>
+                        <p className="text-[11px] text-gray-500 mt-1">{t('adminFixtures.penaltyWinnerHint') || 'Only required when the match finished level in normal time.'}</p>
                       </div>
                     </div>
                   )}
