@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Bell, Send, Trash2, Users, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { getFirebaseDb } from '../../firebase/config';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import Toast from '../../components/Toast';
@@ -9,6 +10,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +40,10 @@ const AdminNotifications = () => {
   ];
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (user?.isSuperAdmin) {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const fetchNotifications = async () => {
     try {
@@ -91,10 +95,12 @@ const AdminNotifications = () => {
       const adminNotificationData = {
         title: formData.title.trim(),
         message: formData.message.trim(),
+        body: formData.message.trim(),
         type: formData.type,
         priority: formData.priority,
         createdAt: serverTimestamp(),
         active: true,
+        isGlobal: true,
         viewCount: 0,
         dismissCount: 0,
       };
@@ -158,6 +164,10 @@ const AdminNotifications = () => {
     };
     return badges[priority] || badges.normal;
   };
+
+  if (!user?.isSuperAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="pb-6">
