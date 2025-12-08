@@ -196,14 +196,14 @@ const AdminDashboard = () => {
       path: '/admin/seasons',
       color: 'text-primary-400',
       count: '-',
-    },
+    user?.isSuperAdmin ? {
     {
       title: t('pages.admin.leaguesManagement'),
       description: t('pages.admin.leaguesManagementDesc'),
       icon: Trophy,
       path: '/admin/leagues',
       color: 'text-green-400',
-      count: '-',
+    } : null,
     },
     {
       title: t('pages.admin.teamsManagement'),
@@ -237,14 +237,14 @@ const AdminDashboard = () => {
       color: 'text-purple-400',
       count: articles.length,
     },
-    {
+    user?.isSuperAdmin ? {
       title: t('pages.admin.notificationsManagement'),
       description: t('pages.admin.notificationsManagementDesc'),
       icon: Bell,
       path: '/admin/notifications',
       color: 'text-cyan-400',
       count: '-',
-    },
+    } : null,
     {
       title: t('pages.admin.leagueSettings'),
       description: t('pages.admin.leagueSettingsDesc'),
@@ -371,7 +371,7 @@ const AdminDashboard = () => {
           </div>
           
           <div className="bg-white/5 backdrop-blur-sm border border-white/5 divide-y divide-white/5 rounded-2xl overflow-hidden">
-            {managementSections.map((section, index) => (
+            {managementSections.filter(Boolean).map((section, index) => (
               <button
                 key={index}
                 onClick={() => navigate(section.path)}

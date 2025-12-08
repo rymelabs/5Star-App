@@ -16,8 +16,8 @@ const NotificationInbox = () => {
   const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const { 
-    inboxNotifications, 
-    unreadCount, 
+    inboxNotifications = [], 
+    unreadCount = 0, 
     loadNotifications,
     markAsRead,
     markAllAsRead,
@@ -27,7 +27,7 @@ const NotificationInbox = () => {
   
   const [adminNotifications, setAdminNotifications] = useState([]);
   const [loadingAdmin, setLoadingAdmin] = useState(true);
-  const placeholderStorageKey = currentUser ? `notifications-placeholder:${currentUser.uid}` : null;
+  const placeholderStorageKey = currentUser ? `notifications-placeholder:${currentUser.uid}` : 'notifications-placeholder:guest';
   const [hasSeenPlaceholder, setHasSeenPlaceholder] = useState(false);
   const pageMotionProps = {
     initial: { opacity: 0, y: 24 },
@@ -61,8 +61,8 @@ const NotificationInbox = () => {
   useEffect(() => {
     if (currentUser) {
       loadNotifications({ limit: 100 });
-      fetchAdminNotifications();
     }
+    fetchAdminNotifications();
   }, [currentUser, loadNotifications]);
 
   const fetchAdminNotifications = async () => {
@@ -121,7 +121,7 @@ const NotificationInbox = () => {
       acknowledgePlaceholder();
       return;
     }
-    if (!notification.read && !notification.isAdminNotification && !notification.isPlaceholder) {
+    if (currentUser && !notification.read && !notification.isAdminNotification && !notification.isPlaceholder) {
       await markAsRead(notification.id);
     }
     if (notification.data?.url) {
@@ -146,26 +146,27 @@ const NotificationInbox = () => {
       case 'upcoming_match_reminder':
         return <Calendar className="w-5 h-5 text-blue-400" />;
       case 'match_live':
-        return <div className="relative"><div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping absolute top-0 right-0" /><Trophy className="w-5 h-5 text-red-400" /></div>;
+        return (
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping absolute top-0 right-0" />
+            <Trophy className="w-5 h-5 text-red-400" />
+          </div>
+        );
       case 'score_update':
-      case 'match_finished':
-        return <Trophy className="w-5 h-5 text-yellow-400" />;
-      case 'article_published':
-        return <Info className="w-5 h-5 text-purple-400" />;
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-orange-400" />;
-      case 'success':
         return <CheckCircle2 className="w-5 h-5 text-green-400" />;
       case 'announcement':
-      case 'update':
-      case 'event':
-        return <Megaphone className="w-5 h-5 text-brand-purple" />;
+      case 'admin_announcement':
+        return <Megaphone className="w-5 h-5 text-purple-400" />;
+      case 'team_update':
+      case 'info':
+        return <Info className="w-5 h-5 text-blue-400" />;
+      case 'warning':
+        return <AlertTriangle className="w-5 h-5 text-amber-400" />;
       default:
         return <Bell className="w-5 h-5 text-gray-400" />;
     }
   };
 
-  // Merge, sort, and group notifications
   const groupedNotifications = useMemo(() => {
     const all = [
       ...adminNotifications.map(n => ({
@@ -212,28 +213,6 @@ const NotificationInbox = () => {
   }, [adminNotifications, inboxNotifications, placeholderNotification, hasSeenPlaceholder]);
 
   const hasNotifications = Object.values(groupedNotifications).some(group => group.length > 0);
-
-  if (!currentUser) {
-    return (
-      <motion.div {...pageMotionProps} className="min-h-screen bg-app flex items-center justify-center p-6">
-        <SurfaceCard className="w-full max-w-md text-center py-12 px-6">
-          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Bell className="w-10 h-10 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-3">{t('common.signInRequired')}</h2>
-          <p className="text-gray-400 mb-8 leading-relaxed">
-            {t('notifications.signInToView')}
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="w-full py-3.5 rounded-xl bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold transition-all shadow-lg shadow-brand-purple/25"
-          >
-            {t('notifications.signIn')}
-          </button>
-        </SurfaceCard>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div {...pageMotionProps} className="relative min-h-screen bg-app">

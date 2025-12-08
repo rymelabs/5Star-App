@@ -112,6 +112,12 @@ const AppContent = () => {
       : <Navigate to="/" replace />
   );
 
+  const requireSuperAdminElement = (element) => (
+    user?.isSuperAdmin
+      ? element
+      : <Navigate to="/" replace />
+  );
+
   const routedContent = (
     <React.Suspense fallback={
       <div className="p-6 text-center">
@@ -145,7 +151,7 @@ const AppContent = () => {
           <Route path="/profile-setup" element={requireAuthElement(<ProfileSetup />)} />
           <Route path="/profile" element={requireAuthElement(<Profile />)} />
           <Route path="/settings" element={requireAuthElement(<Settings />)} />
-          <Route path="/notifications" element={requireAuthElement(<NotificationInbox />)} />
+          <Route path="/notifications" element={<NotificationInbox />} />
           
           {/* Admin Routes - Only accessible to admins */}
           <Route path="/admin" element={requireAdminElement(<AdminDashboard />)} />
@@ -166,7 +172,7 @@ const AppContent = () => {
           <Route path="/admin/seasons/:seasonId/edit" element={requireAdminElement(<EditSeason />)} />
           <Route path="/admin/seasons/:seasonId" element={requireAdminElement(<SeasonDetail />)} />
           <Route path="/admin/instagram" element={requireAdminElement(<InstagramSettings />)} />
-          <Route path="/admin/notifications" element={requireAdminElement(<AdminNotifications />)} />
+          <Route path="/admin/notifications" element={requireSuperAdminElement(<AdminNotifications />)} />
           <Route path="/admin/stats" element={requireAdminElement(<AdminStats />)} />
           <Route path="/admin/advanced-settings" element={requireAdminElement(<AdvancedSettings />)} />
           <Route path="/admin/recycle-bin" element={requireAdminElement(<RecycleBin />)} />

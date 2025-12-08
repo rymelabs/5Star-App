@@ -45,7 +45,7 @@ const Fixtures = () => {
 
   const [activeTab, setActiveTab] = useState('fixtures');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedSeasonId, setSelectedSeasonId] = useState(activeSeason?.id || 'all');
+  const [selectedSeasonId, setSelectedSeasonId] = useState('all');
   const [selectedTableSeasonId, setSelectedTableSeasonId] = useState(activeSeason?.id || null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'group'
@@ -80,7 +80,6 @@ const Fixtures = () => {
 
   useEffect(() => {
     if (activeSeason?.id) {
-      setSelectedSeasonId((prev) => (prev === 'all' || !prev ? activeSeason.id : prev));
       setSelectedTableSeasonId((prev) => prev || activeSeason.id);
     }
   }, [activeSeason?.id]);
