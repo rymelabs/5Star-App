@@ -105,7 +105,7 @@ const ArticleDetail = () => {
       </div>
 
       {/* Article Header */}
-      <div className="px-4 py-6">
+      <div className="px-6 sm:px-8 lg:px-12 py-6">
         <div className="mb-4">
           <span className="px-3 py-1 bg-primary-600 text-white text-sm font-medium rounded-full">
             {article.category}
@@ -150,7 +150,7 @@ const ArticleDetail = () => {
       </div>
 
       {/* Article Content */}
-      <div className="px-4 mb-8">
+      <div className="px-6 sm:px-8 lg:px-12 mb-8">
         <div className="prose prose-invert prose-lg max-w-none">
           {article.content.split('\n\n').map((paragraph, index) => (
             <p key={index} className="text-gray-300 leading-relaxed mb-4">
@@ -177,7 +177,7 @@ const ArticleDetail = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="px-4 mb-8">
+      <div className="px-6 sm:px-8 lg:px-12 mb-8">
         <div className="flex items-center justify-center space-x-6 py-4 border-y border-dark-700">
           <button
             onClick={handleLike}
