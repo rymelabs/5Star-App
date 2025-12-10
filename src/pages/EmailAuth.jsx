@@ -80,7 +80,6 @@ const EmailAuth = () => {
       }
       
     } catch (error) {
-      console.error('Auth error:', error);
       
       if (error.message.includes('invalid-credential')) {
         setError('Invalid credentials. Please check your email and password.');

@@ -64,7 +64,6 @@ export const teamsCollection = {
         id: doc.id
       }));
     } catch (error) {
-      console.error('Error fetching teams:', error);
       throw error;
     }
   },
@@ -103,7 +102,6 @@ export const teamsCollection = {
         hasMore: querySnapshot.docs.length === pageSize
       };
     } catch (error) {
-      console.error('Error fetching paginated teams:', error);
       throw error;
     }
   },
@@ -122,7 +120,6 @@ export const teamsCollection = {
       const latest = toMillis(docData.updatedAt) || toMillis(docData.createdAt);
       return latest || null;
     } catch (error) {
-      console.error('Error fetching latest team timestamp:', error);
       return null;
     }
   },
@@ -135,7 +132,6 @@ export const teamsCollection = {
       const snapshot = await getDoc(teamRef);
       return snapshot.exists() ? snapshot : null;
     } catch (error) {
-      console.error('Error fetching team snapshot:', error);
       return null;
     }
   },
@@ -153,7 +149,6 @@ export const teamsCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding team:', error);
       throw error;
     }
   },
@@ -190,7 +185,6 @@ export const teamsCollection = {
       await batch.commit();
       return true;
     } catch (error) {
-      console.error('Error bulk adding teams:', error);
       throw error;
     }
   },
@@ -210,7 +204,6 @@ export const teamsCollection = {
         return;
       } catch (updateErr) {
         // If the error indicates the document wasn't found, we'll try fallbacks
-        console.warn('Initial update failed, attempting fallback lookup for team:', teamId, updateErr.message || updateErr);
       }
 
       // Fallback: attempt to find the team by teamId field (string or numeric) or slug
@@ -241,7 +234,6 @@ export const teamsCollection = {
       err.code = 'not-found';
       throw err;
     } catch (error) {
-      console.error('Error updating team:', error);
       throw error;
     }
   },
@@ -252,11 +244,8 @@ export const teamsCollection = {
       const database = checkFirebaseInit();
       // Ensure teamId is a string
       const id = String(teamId);
-      console.log('🗑️ Deleting team with ID:', id, 'Type:', typeof id);
       await deleteDoc(doc(database, 'teams', id));
-      console.log('✅ Team document deleted successfully');
     } catch (error) {
-      console.error('Error deleting team:', error);
       throw error;
     }
   },
@@ -277,7 +266,6 @@ export const teamsCollection = {
       
       // Check if already following
       if (currentFollowers.includes(userId)) {
-        console.log('User already follows this team');
         return;
       }
 
@@ -288,7 +276,6 @@ export const teamsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error following team:', error);
       throw error;
     }
   },
@@ -309,7 +296,6 @@ export const teamsCollection = {
       
       // Check if not following
       if (!currentFollowers.includes(userId)) {
-        console.log('User does not follow this team');
         return;
       }
 
@@ -321,7 +307,6 @@ export const teamsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error unfollowing team:', error);
       throw error;
     }
   }
@@ -368,10 +353,8 @@ export const teamsCollection = {
         return { id: d.id, ...d.data() };
       }
 
-      console.warn(`Team not found with ID/teamId/slug: ${idOrKey}`);
       return null;
     } catch (error) {
-      console.error('Error fetching team by id:', error);
       throw error;
     }
   }
@@ -400,7 +383,6 @@ export const teamsCollection = {
       await setDoc(docRef, teamData);
       return docRef.id;
     } catch (error) {
-      console.error('Error creating team from submission:', error);
       throw error;
     }
   }
@@ -425,7 +407,6 @@ export const submissionsCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding submission:', error);
       throw error;
     }
   },
@@ -452,7 +433,6 @@ export const submissionsCollection = {
       await batch.commit();
       return uid;
     } catch (error) {
-      console.error('Error adding submission with email index:', error);
       throw error;
     }
   },
@@ -465,7 +445,6 @@ export const submissionsCollection = {
       const snap = await getDoc(docRef);
       return snap.exists();
     } catch (error) {
-      console.error('Error checking submission existence:', error);
       throw error;
     }
   },
@@ -477,7 +456,6 @@ export const submissionsCollection = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (error) {
-      console.error('Error fetching pending submissions:', error);
       throw error;
     }
   },
@@ -489,7 +467,6 @@ export const submissionsCollection = {
       await updateDoc(subRef, { status: 'approved', approvedAt: serverTimestamp(), approvedBy, updatedAt: serverTimestamp() });
       return true;
     } catch (error) {
-      console.error('Error approving submission:', error);
       throw error;
     }
   },
@@ -501,7 +478,6 @@ export const submissionsCollection = {
       await updateDoc(subRef, { status: 'rejected', rejectedAt: serverTimestamp(), rejectReason: reason, updatedAt: serverTimestamp() });
       return true;
     } catch (error) {
-      console.error('Error rejecting submission:', error);
       throw error;
     }
   }
@@ -517,7 +493,6 @@ export const usersCollection = {
       if (!snap.exists()) return null;
       return { id: snap.id, ...snap.data() };
     } catch (error) {
-      console.error('Error fetching user by id:', error);
       throw error;
     }
   }
@@ -537,7 +512,6 @@ export const fixturesCollection = {
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
-      console.error('Error fetching fixtures:', error);
       throw error;
     }
   },
@@ -578,7 +552,6 @@ export const fixturesCollection = {
         hasMore: querySnapshot.docs.length === pageSize
       };
     } catch (error) {
-      console.error('Error fetching paginated fixtures:', error);
       throw error;
     }
   },
@@ -599,7 +572,6 @@ export const fixturesCollection = {
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
-      console.error('Error fetching fixtures by season:', error);
       throw error;
     }
   },
@@ -621,7 +593,6 @@ export const fixturesCollection = {
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
-      console.error('Error fetching fixtures by group:', error);
       throw error;
     }
   },
@@ -643,7 +614,6 @@ export const fixturesCollection = {
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
-      console.error('Error fetching fixtures by stage:', error);
       throw error;
     }
   },
@@ -666,7 +636,6 @@ export const fixturesCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding fixture:', error);
       throw error;
     }
   },
@@ -681,7 +650,6 @@ export const fixturesCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating fixture:', error);
       throw error;
     }
   },
@@ -736,7 +704,6 @@ export const fixturesCollection = {
 
       return { likes: updatedLikes, isLiked: !isLiked };
     } catch (error) {
-      console.error('Error toggling fixture like:', error);
       throw error;
     }
   },
@@ -774,7 +741,6 @@ export const fixturesCollection = {
 
       return { predictions, userPrediction: prediction };
     } catch (error) {
-      console.error('Error updating prediction:', error);
       throw error;
     }
   },
@@ -797,7 +763,6 @@ export const fixturesCollection = {
       await batch.commit();
       return querySnapshot.docs.length; // Return count of deleted fixtures
     } catch (error) {
-      console.error('Error deleting fixtures by season:', error);
       throw error;
     }
   },
@@ -824,7 +789,6 @@ export const fixturesCollection = {
       await batch.commit();
       return deletedCount;
     } catch (error) {
-      console.error('Error cleaning up broken fixtures:', error);
       throw error;
     }
   }
@@ -861,7 +825,6 @@ export const newsCollection = {
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(mapArticleDoc);
     } catch (error) {
-      console.error('Error fetching articles:', error);
       throw error;
     }
   },
@@ -880,7 +843,6 @@ export const newsCollection = {
       const latest = toMillis(data.updatedAt) || toMillis(data.publishedAt) || toMillis(data.createdAt);
       return latest || null;
     } catch (error) {
-      console.error('Error fetching latest article timestamp:', error);
       return null;
     }
   },
@@ -893,7 +855,6 @@ export const newsCollection = {
       const snapshot = await getDoc(articleRef);
       return snapshot.exists() ? snapshot : null;
     } catch (error) {
-      console.error('Error fetching article snapshot:', error);
       return null;
     }
   },
@@ -931,7 +892,6 @@ export const newsCollection = {
         hasMore: querySnapshot.docs.length === pageSize
       };
     } catch (error) {
-      console.error('Error fetching paginated articles:', error);
       throw error;
     }
   },
@@ -947,10 +907,8 @@ export const newsCollection = {
         return mapArticleDoc(docSnap);
       }
       
-      console.warn(`Article not found with ID: ${articleId}`);
       return null;
     } catch (error) {
-      console.error('Error fetching article:', error);
       throw error;
     }
   },
@@ -970,7 +928,6 @@ export const newsCollection = {
       }
       
       // If not found by slug, try by document ID (for old articles without slugs)
-      console.log(`Article not found with slug "${slugOrId}", trying by document ID...`);
       try {
         const docRef = doc(database, 'articles', slugOrId);
         const docSnap = await getDoc(docRef);
@@ -980,13 +937,10 @@ export const newsCollection = {
         }
       } catch {
         // If it's not a valid document ID, just continue
-        console.log('Not a valid document ID either');
       }
       
-      console.warn(`Article not found with slug or ID: ${slugOrId}`);
       return null;
     } catch (error) {
-      console.error('Error fetching article:', error);
       throw error;
     }
   },
@@ -1036,7 +990,6 @@ export const newsCollection = {
       const docRef = await addDoc(collection(database, 'articles'), baseData);
       return docRef.id;
     } catch (error) {
-      console.error('Error adding article:', error);
       throw error;
     }
   },
@@ -1052,7 +1005,6 @@ export const newsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating article:', error);
       throw error;
     }
   },
@@ -1065,29 +1017,22 @@ export const newsCollection = {
       const articleIdStr = String(articleId);
       const docRef = doc(database, 'articles', articleIdStr);
       
-      console.log('Attempting to delete article:', articleIdStr, '(original:', articleId, ')');
       
       // Verify article exists before deleting
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
-        console.warn('Article already deleted or does not exist:', articleIdStr);
         return; // Don't throw error, just return
       }
       
       // Delete the document
       await deleteDoc(docRef);
-      console.log('Article deleted successfully:', articleIdStr);
       
       // Verify deletion
       const verifySnap = await getDoc(docRef);
       if (verifySnap.exists()) {
         throw new Error('Article deletion verification failed - document still exists');
       }
-      console.log('Article deletion verified:', articleIdStr);
     } catch (error) {
-      console.error('Error deleting article:', articleId, error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
       throw error;
     }
   },
@@ -1132,7 +1077,6 @@ export const newsCollection = {
         likes: newLikes
       };
     } catch (error) {
-      console.error('Error toggling like:', error);
       throw error;
     }
   },
@@ -1148,7 +1092,6 @@ export const newsCollection = {
       const articleSnap = await getDoc(articleRef);
       
       if (!articleSnap.exists()) {
-        console.warn('Article not found for view increment:', articleIdStr);
         return;
       }
       
@@ -1161,7 +1104,6 @@ export const newsCollection = {
       
       return currentViews + 1;
     } catch (error) {
-      console.error('Error incrementing view count:', error);
       // Don't throw - view tracking shouldn't break the app
     }
   }
@@ -1186,7 +1128,6 @@ export const commentsCollection = {
         createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
       }));
     } catch (error) {
-      console.error('Error fetching comments:', error);
       throw error;
     }
   },
@@ -1203,7 +1144,6 @@ export const commentsCollection = {
       const querySnapshot = await getDocs(q);
       return querySnapshot.size;
     } catch (error) {
-      console.error('Error fetching comment count:', error);
       return 0;
     }
   },
@@ -1219,7 +1159,6 @@ export const commentsCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding comment:', error);
       throw error;
     }
   },
@@ -1260,7 +1199,6 @@ export const leagueTableCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching league table:', error);
       throw error;
     }
   },
@@ -1275,7 +1213,6 @@ export const leagueTableCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating league table:', error);
       throw error;
     }
   }
@@ -1293,7 +1230,6 @@ export const appSettingsCollection = {
       }
       return { allowAdminNews: false };
     } catch (error) {
-      console.error('Error fetching news settings:', error);
       return { allowAdminNews: false };
     }
   },
@@ -1307,7 +1243,6 @@ export const appSettingsCollection = {
         updatedAt: serverTimestamp()
       }, { merge: true });
     } catch (error) {
-      console.error('Error updating news settings:', error);
       throw error;
     }
   }
@@ -1325,7 +1260,6 @@ export const adminActivityCollection = {
       });
       return activityRef.id;
     } catch (error) {
-      console.error('Error logging admin activity:', error);
       throw error;
     }
   },
@@ -1346,7 +1280,6 @@ export const adminActivityCollection = {
         createdAt: doc.data().createdAt?.toDate?.() || new Date()
       }));
     } catch (error) {
-      console.error('Error fetching admin activities:', error);
       throw error;
     }
   },
@@ -1382,7 +1315,6 @@ export const competitionsCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching competitions:', error);
       throw error;
     }
   },
@@ -1400,7 +1332,6 @@ export const competitionsCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding competition:', error);
       throw error;
     }
   },
@@ -1415,7 +1346,6 @@ export const competitionsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating competition:', error);
       throw error;
     }
   },
@@ -1426,7 +1356,6 @@ export const competitionsCollection = {
       const database = checkFirebaseInit();
       await deleteDoc(doc(database, 'competitions', competitionId));
     } catch (error) {
-      console.error('Error deleting competition:', error);
       throw error;
     }
   },
@@ -1465,7 +1394,6 @@ export const leagueSettingsCollection = {
         };
       }
     } catch (error) {
-      console.error('Error fetching league settings:', error);
       // Return defaults on error
       return {
         qualifiedPosition: 4,
@@ -1485,7 +1413,6 @@ export const leagueSettingsCollection = {
         updatedAt: serverTimestamp()
       }, { merge: true });
     } catch (error) {
-      console.error('Error saving league settings:', error);
       throw error;
     }
   },
@@ -1521,7 +1448,6 @@ export const seasonsCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching seasons:', error);
       throw error;
     }
   },
@@ -1536,7 +1462,6 @@ export const seasonsCollection = {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching season:', error);
       throw error;
     }
   },
@@ -1557,7 +1482,6 @@ export const seasonsCollection = {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching active season:', error);
       throw error;
     }
   },
@@ -1595,7 +1519,6 @@ export const seasonsCollection = {
       const docRef = await addDoc(collection(database, 'seasons'), season);
       return docRef.id;
     } catch (error) {
-      console.error('Error creating season:', error);
       throw error;
     }
   },
@@ -1609,7 +1532,6 @@ export const seasonsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating season:', error);
       throw error;
     }
   },
@@ -1644,7 +1566,6 @@ export const seasonsCollection = {
       
       await batch.commit();
     } catch (error) {
-      console.error('Error setting active season:', error);
       throw error;
     }
   },
@@ -1655,7 +1576,6 @@ export const seasonsCollection = {
       const database = checkFirebaseInit();
       await deleteDoc(doc(database, 'seasons', seasonId));
     } catch (error) {
-      console.error('Error deleting season:', error);
       throw error;
     }
   },
@@ -1687,7 +1607,6 @@ export const seasonsCollection = {
         return groupId;
       }
     } catch (error) {
-      console.error('Error adding group:', error);
       throw error;
     }
   },
@@ -1718,7 +1637,6 @@ export const seasonsCollection = {
         }
       }
     } catch (error) {
-      console.error('Error updating group:', error);
       throw error;
     }
   },
@@ -1784,7 +1702,6 @@ export const seasonsCollection = {
       
       return fixtures;
     } catch (error) {
-      console.error('Error generating group fixtures:', error);
       throw error;
     }
   },
@@ -1855,7 +1772,6 @@ export const seasonsCollection = {
       
       return knockoutRounds;
     } catch (error) {
-      console.error('Error seeding knockout stage:', error);
       throw error;
     }
   },
@@ -1886,7 +1802,6 @@ export const playersCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching players:', error);
       throw error;
     }
   },
@@ -1906,7 +1821,6 @@ export const playersCollection = {
         ...playerDoc.data()
       };
     } catch (error) {
-      console.error('Error fetching player:', error);
       throw error;
     }
   },
@@ -1927,7 +1841,6 @@ export const playersCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching team players:', error);
       throw error;
     }
   },
@@ -1943,7 +1856,6 @@ export const playersCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error creating player:', error);
       throw error;
     }
   },
@@ -1957,7 +1869,6 @@ export const playersCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating player:', error);
       throw error;
     }
   },
@@ -1968,7 +1879,6 @@ export const playersCollection = {
       const database = checkFirebaseInit();
       await deleteDoc(doc(database, 'players', playerId));
     } catch (error) {
-      console.error('Error deleting player:', error);
       throw error;
     }
   },
@@ -2032,7 +1942,6 @@ export const playersCollection = {
       
       return stats;
     } catch (error) {
-      console.error('Error fetching player stats:', error);
       throw error;
     }
   }
@@ -2050,7 +1959,6 @@ export const leaguesCollection = {
         ...doc.data()
       }));
     } catch (error) {
-      console.error('Error fetching leagues:', error);
       throw error;
     }
   },
@@ -2065,7 +1973,6 @@ export const leaguesCollection = {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching league:', error);
       throw error;
     }
   },
@@ -2083,7 +1990,6 @@ export const leaguesCollection = {
       });
       return docRef.id;
     } catch (error) {
-      console.error('Error adding league:', error);
       throw error;
     }
   },
@@ -2097,7 +2003,6 @@ export const leaguesCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating league:', error);
       throw error;
     }
   },
@@ -2108,7 +2013,6 @@ export const leaguesCollection = {
       const database = checkFirebaseInit();
       await deleteDoc(doc(database, 'leagues', leagueId));
     } catch (error) {
-      console.error('Error deleting league:', error);
       throw error;
     }
   },

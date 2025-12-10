@@ -16,7 +16,6 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      console.log('👤 User already logged in, redirecting...');
       navigate('/', { replace: true });
     }
   }, [user, navigate]);
@@ -40,19 +39,15 @@ const Login = () => {
 
     try {
       setLoading(true);
-      console.log('🔄 Attempting login...');
       
       const userData = await login(formData.email, formData.password);
-      console.log('✅ Login successful, user data:', userData);
       
       // Small delay to ensure auth state updates
       setTimeout(() => {
-        console.log('🔄 Navigating to home page...');
         navigate('/', { replace: true });
       }, 100);
       
     } catch (error) {
-      console.error('❌ Login error:', error);
       
       // More specific error messages
       if (error.message.includes('invalid-credential')) {

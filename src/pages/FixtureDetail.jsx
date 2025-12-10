@@ -71,7 +71,7 @@ const FixtureDetail = () => {
           const reminders = JSON.parse(savedReminders);
           setHasCalendarReminder(reminders.includes(id));
         } catch (error) {
-          console.error('Error parsing calendar reminders:', error);
+          setHasCalendarReminder(false);
         }
       }
     }
@@ -98,7 +98,7 @@ const FixtureDetail = () => {
       });
       setNewComment('');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      showError(t('common.error'), t('common.retry'));
     } finally {
       setIsCommenting(false);
     }
@@ -125,7 +125,6 @@ const FixtureDetail = () => {
       await fixturesCollection.updatePrediction(id, user.uid, prediction);
       showSuccess(`You predicted: ${prediction === 'home' ? fixture.homeTeam?.name : prediction === 'away' ? fixture.awayTeam?.name : 'Draw'}`);
     } catch (error) {
-      console.error('Error saving prediction:', error);
       showError('Failed to save prediction');
       setUserPrediction(userPrediction);
     }
@@ -147,7 +146,7 @@ const FixtureDetail = () => {
     } catch (error) {
       setIsLiked(previousLiked);
       setLikes(previousLikes);
-      console.error('Error liking fixture:', error);
+      showError(t('common.error'), t('common.retry'));
     } finally {
       setIsLiking(false);
     }
@@ -166,7 +165,7 @@ const FixtureDetail = () => {
           try {
             reminders = JSON.parse(savedReminders);
           } catch (error) {
-            console.error('Error parsing calendar reminders:', error);
+            reminders = [];
           }
         }
         if (!reminders.includes(id)) {
@@ -179,14 +178,9 @@ const FixtureDetail = () => {
         showError(t('pages.fixtureDetail.failedToAdd'), t('pages.fixtureDetail.failedToAddDesc'));
       }
     } catch (error) {
-      console.error('Error adding to calendar:', error);
       showError(t('common.error'), t('pages.fixtureDetail.calendarError'));
     }
   };
-
-  useEffect(() => {
-    console.log('FixtureDetail: Redesign Loaded', { id, fixture });
-  }, [id, fixture]);
 
   if (!fixture) {
     return (

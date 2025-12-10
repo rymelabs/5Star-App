@@ -37,7 +37,6 @@ export const settingsCollection = {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching user settings:', error);
       throw error;
     }
   },
@@ -71,12 +70,9 @@ export const settingsCollection = {
         });
       }
     } catch (error) {
-      console.error('Error saving user settings:', error);
       
       // Provide more helpful error messages
       if (error.code === 'permission-denied') {
-        console.error('❌ Firestore permission denied. Please update Firestore security rules.');
-        console.error('📋 See FIRESTORE_RULES_UPDATE.md for instructions.');
         error.message = 'Firestore permissions not configured. Settings will be saved locally.';
       }
       
@@ -100,7 +96,6 @@ export const settingsCollection = {
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating user settings:', error);
       throw error;
     }
   },

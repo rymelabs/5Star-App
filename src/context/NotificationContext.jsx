@@ -40,7 +40,6 @@ export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
     // Return default context instead of throwing - handles edge cases during HMR
-    console.warn('useNotification called outside NotificationProvider, using defaults');
     return defaultNotificationContext;
   }
   return context;
@@ -152,7 +151,6 @@ export const NotificationProvider = ({ children }) => {
         setInboxNotifications(result.notifications);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
     }
   }, [currentUser]);
 
@@ -166,7 +164,6 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(result.count);
       }
     } catch (error) {
-      console.error('Error loading unread count:', error);
     }
   }, [currentUser]);
 
@@ -180,7 +177,6 @@ export const NotificationProvider = ({ children }) => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   }, []);
 
@@ -196,7 +192,6 @@ export const NotificationProvider = ({ children }) => {
         showSuccess('Success', 'All notifications marked as read');
       }
     } catch (error) {
-      console.error('Error marking all as read:', error);
       showError('Error', 'Failed to mark notifications as read');
     }
   }, [currentUser, showSuccess, showError]);
@@ -222,7 +217,6 @@ export const NotificationProvider = ({ children }) => {
 
     // Set up foreground message listener
     const unsubscribe = onForegroundMessage((notification) => {
-      console.log('📬 Foreground notification received:', notification);
       
       // Show toast notification
       addNotification({

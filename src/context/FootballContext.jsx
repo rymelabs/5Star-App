@@ -63,7 +63,6 @@ export const FootballProvider = ({ children }) => {
   useEffect(() => {
     // Check if Firebase is initialized
     if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
-      console.warn('🔥 Firebase not configured - using mock data');
       setLoading(false);
       setError('Firebase configuration missing. Please set up your .env file.');
       return;
@@ -88,10 +87,8 @@ export const FootballProvider = ({ children }) => {
           
           // Log warning if teams are not found
           if (!homeTeam) {
-            console.warn(`⚠️ Home team not found for fixture ${fixture.id}. Team ID: ${fixture.homeTeamId}`);
           }
           if (!awayTeam) {
-            console.warn(`⚠️ Away team not found for fixture ${fixture.id}. Team ID: ${fixture.awayTeamId}`);
           }
           
           return {
@@ -105,7 +102,6 @@ export const FootballProvider = ({ children }) => {
 
       return () => unsubscribe();
     } catch (error) {
-      console.error('Error setting up fixtures listener:', error);
     }
   }, [teams]); // Re-run when teams change
 
@@ -129,8 +125,6 @@ export const FootballProvider = ({ children }) => {
       setLeagues(leaguesData);
       
       // Debug: Log available team IDs
-      console.log('📋 Available Teams:', teamsData.map(t => ({ id: t.id, name: t.name })));
-      console.log(`📊 Total Teams: ${teamsData.length}`);
       
       // Populate fixtures with team data
       const populatedFixtures = fixturesData.map(fixture => {
@@ -139,10 +133,8 @@ export const FootballProvider = ({ children }) => {
         
         // Log warning if teams are not found
         if (!homeTeam) {
-          console.warn(`⚠️ Home team not found for fixture ${fixture.id}. Team ID: ${fixture.homeTeamId}`);
         }
         if (!awayTeam) {
-          console.warn(`⚠️ Away team not found for fixture ${fixture.id}. Team ID: ${fixture.awayTeamId}`);
         }
         
         return {
@@ -155,7 +147,6 @@ export const FootballProvider = ({ children }) => {
       setFixtures(populatedFixtures);
       setLeagueTable(leagueData);
     } catch (error) {
-      console.error('Error loading data:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -187,7 +178,6 @@ export const FootballProvider = ({ children }) => {
       
       return newTeam;
     } catch (error) {
-      console.error('Error adding team:', error);
       throw error;
     }
   };
@@ -204,7 +194,6 @@ export const FootballProvider = ({ children }) => {
       const updatedTeams = await teamsCollection.getAll();
       setTeams(updatedTeams);
     } catch (error) {
-      console.error('Error bulk adding teams:', error);
       throw error;
     }
   };
@@ -238,31 +227,24 @@ export const FootballProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Error updating team:', error);
       throw error;
     }
   };
 
   const deleteTeam = async (teamId) => {
     try {
-      console.log('🔄 Starting team deletion:', teamId, 'Type:', typeof teamId);
       
       // Ensure teamId is a string
       const id = String(teamId);
-      console.log('🔄 Converted ID:', id, 'Type:', typeof id);
       
       const team = teams.find(t => t.id === id || t.id === teamId);
-      console.log('📋 Team found:', team?.name);
       
       await teamsCollection.delete(id);
-      console.log('✅ Team deleted from Firestore');
       
       setTeams(prev => prev.filter(team => team.id !== id && team.id !== teamId));
-      console.log('✅ Team removed from local state');
       
       // Log activity
       if (user) {
-        console.log('📝 Logging admin activity...');
         await adminActivityCollection.log({
           action: 'delete',
           type: 'team',
@@ -271,13 +253,8 @@ export const FootballProvider = ({ children }) => {
           userId: user.uid,
           userName: user.displayName || user.email
         });
-        console.log('✅ Activity logged');
       }
     } catch (error) {
-      console.error('❌ Error in deleteTeam:', error);
-      console.error('Error type:', error.constructor.name);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
       throw error;
     }
   };
@@ -288,7 +265,6 @@ export const FootballProvider = ({ children }) => {
         throw new Error('You must be signed in to follow teams');
       }
 
-      console.log('👥 Following team:', teamId);
       await teamsCollection.follow(teamId, user.uid);
       
       // Update local state
@@ -306,9 +282,7 @@ export const FootballProvider = ({ children }) => {
         return team;
       }));
       
-      console.log('✅ Team followed successfully');
     } catch (error) {
-      console.error('❌ Error following team:', error);
       throw error;
     }
   };
@@ -319,7 +293,6 @@ export const FootballProvider = ({ children }) => {
         throw new Error('You must be signed in to unfollow teams');
       }
 
-      console.log('👥 Unfollowing team:', teamId);
       await teamsCollection.unfollow(teamId, user.uid);
       
       // Update local state
@@ -337,9 +310,7 @@ export const FootballProvider = ({ children }) => {
         return team;
       }));
       
-      console.log('✅ Team unfollowed successfully');
     } catch (error) {
-      console.error('❌ Error unfollowing team:', error);
       throw error;
     }
   };
@@ -398,7 +369,6 @@ export const FootballProvider = ({ children }) => {
       
       return newFixture;
     } catch (error) {
-      console.error('Error adding fixture:', error);
       throw error;
     }
   };
@@ -476,7 +446,6 @@ export const FootballProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Error updating fixture:', error);
       throw error;
     }
   };
@@ -551,7 +520,6 @@ export const FootballProvider = ({ children }) => {
       if (updatedActiveSeason) setActiveSeason(updatedActiveSeason);
       
     } catch (error) {
-      console.error('Error updating season standings:', error);
     }
   };
 
@@ -631,7 +599,6 @@ export const FootballProvider = ({ children }) => {
       if (updatedActiveSeason) setActiveSeason(updatedActiveSeason);
       
     } catch (error) {
-      console.error('Error recalculating group standings:', error);
     }
   };
 
@@ -642,7 +609,6 @@ export const FootballProvider = ({ children }) => {
         team.id === teamId ? { ...team, ...stats } : team
       ).sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference)));
     } catch (error) {
-      console.error('Error updating league table:', error);
       throw error;
     }
   };
@@ -652,7 +618,6 @@ export const FootballProvider = ({ children }) => {
       await leagueSettingsCollection.save(settings);
       setLeagueSettings(settings);
     } catch (error) {
-      console.error('Error updating league settings:', error);
       throw error;
     }
   };
@@ -674,7 +639,6 @@ export const FootballProvider = ({ children }) => {
       // Reload fixtures to show season-specific fixtures
       await loadInitialData();
     } catch (error) {
-      console.error('Error setting active season:', error);
       throw error;
     }
   };
@@ -711,7 +675,6 @@ export const FootballProvider = ({ children }) => {
         setActiveSeason(prev => ({ ...prev, groups: updatedGroups }));
       }
     } catch (error) {
-      console.error('Error updating group standings:', error);
       throw error;
     }
   };
@@ -723,7 +686,6 @@ export const FootballProvider = ({ children }) => {
       setLeagues(leaguesData);
       return leaguesData;
     } catch (error) {
-      console.error('Error fetching leagues:', error);
       throw error;
     }
   };
@@ -739,7 +701,6 @@ export const FootballProvider = ({ children }) => {
       await fetchLeagues(); // Refresh leagues
       return leagueId;
     } catch (error) {
-      console.error('Error adding league:', error);
       throw error;
     }
   };
@@ -758,7 +719,6 @@ export const FootballProvider = ({ children }) => {
       await leaguesCollection.update(leagueId, updatePayload);
       await fetchLeagues(); // Refresh leagues
     } catch (error) {
-      console.error('Error updating league:', error);
       throw error;
     }
   };
@@ -768,7 +728,6 @@ export const FootballProvider = ({ children }) => {
       await leaguesCollection.delete(leagueId);
       await fetchLeagues(); // Refresh leagues
     } catch (error) {
-      console.error('Error deleting league:', error);
       throw error;
     }
   };

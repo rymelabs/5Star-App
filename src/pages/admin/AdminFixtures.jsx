@@ -169,7 +169,6 @@ const AdminFixtures = () => {
         events: formData.events || []
       };
       
-  console.log('Submitting fixture:', fixtureData);
   await addFixture(fixtureData);
       
       // Reset form
@@ -185,7 +184,6 @@ const AdminFixtures = () => {
       });
       setShowAddForm(false);
     } catch (error) {
-      console.error('Error adding fixture:', error);
       showToast(t('adminFixtures.addFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
@@ -383,7 +381,6 @@ const AdminFixtures = () => {
       // Reset form
       handleCancel();
     } catch (error) {
-      console.error('Error updating fixture:', error);
       showToast(t('adminFixtures.updateFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
@@ -408,7 +405,6 @@ const AdminFixtures = () => {
       showToast(`${fixtureName} moved to recycle bin`, 'success');
       setConfirmDelete({ isOpen: false, fixture: null });
     } catch (error) {
-      console.error('Error deleting fixture:', error);
       showToast(t('adminFixtures.deleteFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);

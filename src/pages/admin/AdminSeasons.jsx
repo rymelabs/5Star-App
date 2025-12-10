@@ -45,7 +45,6 @@ const AdminSeasons = () => {
       const filtered = isSuperAdmin ? data : data.filter(season => season.ownerId === user?.uid);
       setSeasons(filtered);
     } catch (error) {
-      console.error('Error loading seasons:', error);
       showToast('Failed to load seasons', 'error');
     } finally {
       setLoading(false);
@@ -65,7 +64,6 @@ const AdminSeasons = () => {
       showToast('Season activated successfully!', 'success');
       loadSeasons();
     } catch (error) {
-      console.error('Error activating season:', error);
       showToast('Failed to activate season', 'error');
     }
   };
@@ -82,7 +80,6 @@ const AdminSeasons = () => {
       showToast(`"${confirmDelete.season.name}" moved to recycle bin`, 'success');
       loadSeasons();
     } catch (error) {
-      console.error('Error deleting season:', error);
       showToast('Failed to delete season', 'error');
     } finally {
       setConfirmDelete({ isOpen: false, season: null });

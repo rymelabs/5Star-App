@@ -16,7 +16,6 @@ class PhoneAuthErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('PhoneAuth Error Boundary caught an error:', error, errorInfo);
   }
 
   render() {
@@ -62,12 +61,10 @@ const PhoneAuth = () => {
   // Setup reCAPTCHA by calling the Firebase auth function (which handles it properly)
   const setupRecaptcha = async () => {
     try {
-      console.log('🔧 Setting up reCAPTCHA via Firebase auth...');
       
       // Check if container exists
       const container = document.getElementById('recaptcha-container');
       if (!container) {
-        console.error('❌ reCAPTCHA container not found');
         setError('reCAPTCHA container missing. Please refresh the page.');
         return;
       }
@@ -77,10 +74,8 @@ const PhoneAuth = () => {
       
       // First, let's check if Firebase is properly initialized
       const { auth } = await import('../firebase/config');
-      console.log('🔧 Firebase auth object:', !!auth);
       
       if (!auth) {
-        console.error('❌ Firebase auth not initialized');
         setError('Firebase not configured. Please check your environment variables.');
         return;
       }
@@ -92,7 +87,6 @@ const PhoneAuth = () => {
             window.recaptchaVerifier.clear();
           }
         } catch (e) {
-          console.log('⚠️ Error clearing previous reCAPTCHA:', e);
         }
         window.recaptchaVerifier = null;
       }
@@ -100,24 +94,20 @@ const PhoneAuth = () => {
       // Import and create RecaptchaVerifier with proper error handling
       const { RecaptchaVerifier } = await import('firebase/auth');
       
-      console.log('🔧 Creating RecaptchaVerifier with proper auth object...');
       
       // Create RecaptchaVerifier with explicit parameters
       const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'normal',
         theme: 'light',
         callback: (response) => {
-          console.log('✅ reCAPTCHA solved:', response);
           setRecaptchaReady(true);
           setError(''); // Clear any previous errors
         },
         'expired-callback': () => {
-          console.log('⚠️ reCAPTCHA expired');
           setRecaptchaReady(false);
           setError('reCAPTCHA expired. Please try again.');
         },
         'error-callback': (error) => {
-          console.error('❌ reCAPTCHA callback error:', error);
           setRecaptchaReady(false);
           setError('reCAPTCHA error. Please refresh the page and try again.');
         }
@@ -126,24 +116,19 @@ const PhoneAuth = () => {
       // Store globally for cleanup
       window.recaptchaVerifier = recaptchaVerifier;
 
-      console.log('🔧 Rendering reCAPTCHA widget...');
       
       // Render the reCAPTCHA
       await recaptchaVerifier.render();
-      console.log('✅ reCAPTCHA rendered successfully');
       
       // Clear any setup messages
       setError('');
       
     } catch (error) {
-      console.error('❌ Error setting up reCAPTCHA:', error);
-      console.error('❌ Full error object:', error);
       
       let errorMessage = 'Failed to load security verification. ';
       
       if (error.code === 'auth/argument-error') {
         errorMessage += 'Firebase configuration issue. Please check your setup.';
-        console.error('❌ Argument error - check Firebase auth initialization');
       } else if (error.code === 'auth/unauthorized-domain') {
         errorMessage += 'Domain not authorized. Please check Firebase Console settings.';
       } else if (error.message && error.message.includes('network')) {
@@ -158,7 +143,6 @@ const PhoneAuth = () => {
 
   // Setup reCAPTCHA automatically when component mounts
   useEffect(() => {
-    console.log('🎯 PhoneAuth component mounted');
     
     // Let's not auto-setup reCAPTCHA, wait for user to click button
     // This avoids the argument error on component mount
@@ -174,7 +158,6 @@ const PhoneAuth = () => {
           }
           window.recaptchaVerifier = null;
         } catch (e) {
-          console.log('⚠️ Error cleaning up reCAPTCHA:', e);
           // Force cleanup
           window.recaptchaVerifier = null;
         }
@@ -192,7 +175,6 @@ const PhoneAuth = () => {
         }
         window.recaptchaVerifier = null;
       } catch (e) {
-        console.log('⚠️ Error clearing reCAPTCHA:', e);
         window.recaptchaVerifier = null;
       }
     }
@@ -213,7 +195,6 @@ const PhoneAuth = () => {
     e.preventDefault();
     setError('');
 
-    console.log('📱 Phone submit started');
 
     if (!formData.phoneNumber) {
       setError('Please enter your phone number');
@@ -229,12 +210,9 @@ const PhoneAuth = () => {
 
     // Check Firebase configuration before proceeding
     try {
-      console.log('🔧 Checking Firebase configuration...');
       
       // Import and check Firebase config
       const { auth } = await import('../firebase/config');
-      console.log('🔧 Firebase auth object:', auth);
-      console.log('🔧 Environment variables:', {
         API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'SET' : 'MISSING',
         AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'SET' : 'MISSING',
         PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'SET' : 'MISSING',
@@ -246,11 +224,9 @@ const PhoneAuth = () => {
       }
       
       setLoading(true);
-      console.log('🔄 Starting phone authentication (will setup reCAPTCHA automatically)...');
       
       // Check if reCAPTCHA container exists before proceeding
       const container = document.getElementById('recaptcha-container');
-      console.log('🔧 Checking reCAPTCHA container:', {
         exists: !!container,
         element: container,
         innerHTML: container?.innerHTML,
@@ -266,13 +242,9 @@ const PhoneAuth = () => {
       
       const confirmation = await signInWithPhone(formData.phoneNumber);
       
-      console.log('✅ Phone authentication successful, received confirmation:', !!confirmation);
       setConfirmationResult(confirmation);
       setStep('verification');
-      console.log('✅ Step changed to verification');
     } catch (error) {
-      console.error('❌ Phone auth error caught in component:', error);
-      console.error('❌ Error details:', {
         message: error.message,
         code: error.code,
         name: error.name,
@@ -301,10 +273,8 @@ const PhoneAuth = () => {
       }
       
       setError(errorMessage);
-      console.log('❌ Error set:', errorMessage);
     } finally {
       setLoading(false);
-      console.log('🔄 Loading state reset');
     }
   };  const handleVerificationSubmit = async (e) => {
     e.preventDefault();
@@ -325,7 +295,6 @@ const PhoneAuth = () => {
         navigate('/', { replace: true });
       }
     } catch (error) {
-      console.error('Verification error:', error);
       setError('Invalid verification code. Please try again.');
     } finally {
       setLoading(false);
@@ -346,7 +315,6 @@ const PhoneAuth = () => {
       const confirmation = await signInWithPhone(formData.phoneNumber);
       setConfirmationResult(confirmation);
     } catch (error) {
-      console.error('Resend code error:', error);
       
       let errorMessage = 'Failed to resend verification code. Please try again.';
       
@@ -362,8 +330,6 @@ const PhoneAuth = () => {
     }
   };
 
-  console.log('🎨 PhoneAuth rendering - step:', step, 'loading:', loading, 'error:', error);
-  console.log('🔧 Environment check on render:', {
     NODE_ENV: import.meta.env.MODE,
     FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'LOADED' : 'MISSING',
     FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -375,13 +341,11 @@ const PhoneAuth = () => {
     const testFirebase = async () => {
       try {
         const { auth } = await import('../firebase/config');
-        console.log('🔥 Firebase test on render:', {
           authExists: !!auth,
           authApp: auth?.app?.name || 'NO_APP',
           authConfig: auth?.app?.options?.projectId || 'NO_PROJECT_ID'
         });
       } catch (error) {
-        console.error('🔥 Firebase import error:', error);
       }
     };
     testFirebase();

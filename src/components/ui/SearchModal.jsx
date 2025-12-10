@@ -191,7 +191,6 @@ const SearchModal = ({ isOpen = true, onClose }) => {
       setResults(searchResults.slice(0, 15));
       
     } catch (error) {
-      console.error('Search error:', error);
       setResults([]);
     }
   }, [teams, fixtures, articles, competitions, seasons]);
@@ -220,7 +219,6 @@ const SearchModal = ({ isOpen = true, onClose }) => {
         break;
       case 'player':
         // Could navigate to player profile if implemented
-        console.log('Player selected:', result.data);
         break;
       case 'fixture':
         navigate(`/fixtures/${result.id}`);
@@ -230,13 +228,11 @@ const SearchModal = ({ isOpen = true, onClose }) => {
         break;
       case 'competition':
         // Could navigate to competition page if implemented
-        console.log('Competition selected:', result.data);
         break;
       case 'season':
         navigate(`/seasons/${result.id}`);
         break;
       default:
-        console.log('Unknown result type:', result.type);
     }
     
     onClose();

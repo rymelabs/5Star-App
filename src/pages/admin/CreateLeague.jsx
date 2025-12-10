@@ -66,7 +66,6 @@ const CreateLeague = () => {
       await leaguesCollection.add(payload);
       navigate('/admin/leagues');
     } catch (error) {
-      console.error('Error creating league:', error);
   alert(t('createLeague.createFailed'));
     } finally {
       setSaving(false);

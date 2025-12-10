@@ -35,7 +35,6 @@ const AuthLanding = () => {
         navigate('/', { replace: true });
       }
     } catch (error) {
-      console.error('Google sign-in error:', error);
       setError('Failed to sign in with Google. Please try again.');
     } finally {
       setLoading(false);
@@ -50,7 +49,6 @@ const AuthLanding = () => {
       // Anonymous users always go to profile setup
       navigate('/profile-setup');
     } catch (error) {
-      console.error('Anonymous sign-in error:', error);
       setError('Failed to sign in anonymously. Please try again.');
     } finally {
       setLoading(false);

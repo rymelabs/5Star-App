@@ -31,7 +31,6 @@ export const NewsProvider = ({ children }) => {
         const settings = await appSettingsCollection.getNewsSettings();
         setNewsSettings(settings || { allowAdminNews: false });
       } catch (settingsError) {
-        console.error('Error loading news settings:', settingsError);
       }
     };
 
@@ -53,7 +52,6 @@ export const NewsProvider = ({ children }) => {
       );
       setAllArticles(articlesWithCounts);
     } catch (loadError) {
-      console.error('Error loading articles:', loadError);
       setError(loadError.message);
     } finally {
       setLoading(false);
@@ -64,7 +62,6 @@ export const NewsProvider = ({ children }) => {
     try {
       return await newsCollection.getById(articleId);
     } catch (articleError) {
-      console.error('Error getting article:', articleError);
       throw articleError;
     }
   };
@@ -73,7 +70,6 @@ export const NewsProvider = ({ children }) => {
     try {
       return await newsCollection.getBySlug(slug);
     } catch (slugError) {
-      console.error('Error getting article by slug:', slugError);
       throw slugError;
     }
   };
@@ -86,7 +82,6 @@ export const NewsProvider = ({ children }) => {
       setAllArticles(prev => [enrichedArticle, ...prev]);
       return enrichedArticle;
     } catch (addError) {
-      console.error('Error adding article:', addError);
       throw addError;
     }
   };
@@ -100,7 +95,6 @@ export const NewsProvider = ({ children }) => {
       }));
       return itemComments;
     } catch (commentsError) {
-      console.error('Error getting comments:', commentsError);
       throw commentsError;
     }
   };
@@ -137,7 +131,6 @@ export const NewsProvider = ({ children }) => {
 
       return newComment;
     } catch (commentError) {
-      console.error('Error adding comment:', commentError);
       throw commentError;
     }
   };
@@ -156,7 +149,6 @@ export const NewsProvider = ({ children }) => {
       }));
       return { ...updatedArticle, commentCount };
     } catch (updateError) {
-      console.error('Error updating article:', updateError);
       throw updateError;
     }
   };
@@ -168,7 +160,6 @@ export const NewsProvider = ({ children }) => {
       setAllArticles(prev => prev.filter(article => String(article.id) !== articleIdStr));
       return true;
     } catch (deleteError) {
-      console.error('Error deleting article:', deleteError);
       throw deleteError;
     }
   };
@@ -189,7 +180,6 @@ export const NewsProvider = ({ children }) => {
       ));
       return result;
     } catch (likeError) {
-      console.error('Error toggling like:', likeError);
       throw likeError;
     }
   };
@@ -206,7 +196,6 @@ export const NewsProvider = ({ children }) => {
       }
       return newViewCount;
     } catch (viewError) {
-      console.error('Error incrementing view count:', viewError);
     }
   };
 
@@ -234,7 +223,6 @@ export const NewsProvider = ({ children }) => {
       }));
       return { ...updatedArticle, commentCount };
     } catch (approveError) {
-      console.error('Error approving article:', approveError);
       throw approveError;
     }
   };
@@ -264,7 +252,6 @@ export const NewsProvider = ({ children }) => {
       }));
       return { ...updatedArticle, commentCount };
     } catch (rejectError) {
-      console.error('Error rejecting article:', rejectError);
       throw rejectError;
     }
   };
@@ -276,7 +263,6 @@ export const NewsProvider = ({ children }) => {
       setNewsSettings(newSettings);
       return newSettings;
     } catch (settingsError) {
-      console.error('Error updating news settings:', settingsError);
       throw settingsError;
     }
   };

@@ -144,7 +144,6 @@ const SubmitTeam = () => {
       const emailKey = authEmail ? authEmail.replaceAll('@', '-').replaceAll('.', '-') : null;
 
       // Debug log payload (helps diagnose rule rejections)
-      console.debug('Submitting payload:', payload, 'docId:', docId, 'emailKey:', emailKey);
 
       try {
         if (emailKey) {
@@ -165,7 +164,6 @@ const SubmitTeam = () => {
       }
       navigate('/');
     } catch (err) {
-      console.error('SubmitTeam error:', err);
       setError('Failed to submit team. Please try again later.');
     } finally {
       setLoading(false);
@@ -212,7 +210,6 @@ const SubmitTeam = () => {
           setDuplicateWarning(null);
         }
       } catch (err) {
-        console.warn('Duplicate check failed', err);
         setDuplicateWarning(null);
       }
 

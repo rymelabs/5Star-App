@@ -19,10 +19,8 @@ export const analyticsService = {
       return { id: snap.id, ...snap.data() };
     } catch (error) {
       if (error?.code === 'permission-denied') {
-        console.warn('analyticsService.getDailyByDate permission denied');
         return null;
       }
-      console.error('analyticsService.getDailyByDate error', error);
       throw error;
     }
   },
@@ -37,10 +35,8 @@ export const analyticsService = {
       return snaps.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (error) {
       if (error?.code === 'permission-denied') {
-        console.warn('analyticsService.listRecentDaily permission denied');
         return [];
       }
-      console.error('analyticsService.listRecentDaily error', error);
       throw error;
     }
   }

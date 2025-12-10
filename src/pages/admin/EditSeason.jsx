@@ -80,7 +80,6 @@ const EditSeason = () => {
       
       setLoading(false);
     } catch (error) {
-      console.error('Error loading season:', error);
       showToast('Failed to load season', 'error');
       setLoading(false);
     }
@@ -186,7 +185,6 @@ const EditSeason = () => {
         navigate(`/admin/seasons/${seasonId}`);
       }, 1000);
     } catch (error) {
-      console.error('Error updating season:', error);
       showToast('Failed to update season. Please try again.', 'error');
     } finally {
       setSaving(false);

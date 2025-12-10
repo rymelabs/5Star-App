@@ -73,7 +73,6 @@ const EditTeam = () => {
       setSelectedLogoFile(null);
       setLogoPreviewUrl(null);
     } else {
-      console.warn('EditTeam: Team not found for param', teamId, 'Available:', teams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })).slice(0, 20));
       showError('Team Not Found', 'The team you are trying to edit does not exist.');
       navigate('/admin/teams');
     }
@@ -268,7 +267,6 @@ const EditTeam = () => {
           const safeName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'team_logo';
           logoUrl = await uploadImage(selectedLogoFile, 'teams', `${safeName}_${Date.now()}`);
         } catch (uploadError) {
-          console.error('Logo upload failed:', uploadError);
           showError('Image Upload Failed', uploadError.message || 'Unable to upload logo image. Please try again.');
           setUploadingLogo(false);
           setLoading(false);
@@ -285,7 +283,6 @@ const EditTeam = () => {
         updatedAt: new Date().toISOString()
       };
 
-      console.debug('EditTeam: updating team with param teamId=', teamId, 'prepared payload players length=', (updatedTeam.players || []).length, 'sample players=', (updatedTeam.players || []).slice(0,3));
       await updateTeam(teamId, updatedTeam);
       showSuccess('Team Updated', `${updatedTeam.name} has been updated successfully`);
       setSelectedLogoFile(null);
@@ -293,7 +290,6 @@ const EditTeam = () => {
       setLogoPreviewUrl(null);
       navigate('/admin/teams');
     } catch (error) {
-      console.error('Error updating team:', error);
       showError('Update Failed', error.message || 'Failed to update team');
     } finally {
       setLoading(false);

@@ -38,10 +38,8 @@ export const saveFCMToken = async (userId, token, deviceInfo = {}) => {
       lastUsed: serverTimestamp()
     });
 
-    console.log('✅ FCM token saved:', token);
     return { success: true };
   } catch (error) {
-    console.error('❌ Error saving FCM token:', error);
     return { success: false, error: error.message };
   }
 };
@@ -56,10 +54,8 @@ export const removeFCMToken = async (token) => {
     const tokenDoc = doc(db, FCM_TOKENS_COLLECTION, token);
     await deleteDoc(tokenDoc);
     
-    console.log('✅ FCM token removed:', token);
     return { success: true };
   } catch (error) {
-    console.error('❌ Error removing FCM token:', error);
     return { success: false, error: error.message };
   }
 };
@@ -81,10 +77,8 @@ export const getUserFCMTokens = async (userId) => {
       ...doc.data()
     }));
 
-    console.log(`✅ Found ${tokens.length} FCM tokens for user:`, userId);
     return { success: true, tokens };
   } catch (error) {
-    console.error('❌ Error getting user FCM tokens:', error);
     return { success: false, error: error.message, tokens: [] };
   }
 };
@@ -106,10 +100,8 @@ export const removeAllUserFCMTokens = async (userId) => {
     );
 
     await Promise.all(deletePromises);
-    console.log(`✅ Removed ${result.tokens.length} FCM tokens for user:`, userId);
     return { success: true, count: result.tokens.length };
   } catch (error) {
-    console.error('❌ Error removing user FCM tokens:', error);
     return { success: false, error: error.message };
   }
 };

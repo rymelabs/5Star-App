@@ -82,7 +82,6 @@ const AdminDashboard = () => {
       setRecentActivities(filtered);
       setShowAllActivities(true);
     } catch (error) {
-      console.error('Error loading more activities:', error);
     } finally {
       setLoadingMore(false);
     }

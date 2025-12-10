@@ -74,7 +74,6 @@ const SeasonDetail = () => {
       const data = await seasonsCollection.getById(seasonId);
       setSeason(data);
     } catch (error) {
-      console.error('Error loading season:', error);
       showToast('Failed to load season', 'error');
     } finally {
       setLoading(false);
@@ -99,7 +98,6 @@ const SeasonDetail = () => {
       
       setSeasonFixtures(populatedFixtures);
     } catch (error) {
-      console.error('Error loading season fixtures:', error);
     }
   };
 
@@ -129,7 +127,6 @@ const SeasonDetail = () => {
 
       showToast(`Generated ${fixtures.length} fixtures successfully!`, 'success');
     } catch (error) {
-      console.error('Error generating fixtures:', error);
       showToast('Failed to generate fixtures', 'error');
     }
   };
@@ -143,7 +140,6 @@ const SeasonDetail = () => {
       const deletedCount = await fixturesCollection.deleteBySeason(seasonId);
       showToast(`Deleted ${deletedCount} fixtures successfully!`, 'success');
     } catch (error) {
-      console.error('Error deleting fixtures:', error);
       showToast('Failed to delete fixtures', 'error');
     }
   };
@@ -157,7 +153,6 @@ const SeasonDetail = () => {
       const deletedCount = await fixturesCollection.cleanupBrokenFixtures();
       showToast(`Cleaned up ${deletedCount} broken fixtures!`, 'success');
     } catch (error) {
-      console.error('Error cleaning up fixtures:', error);
       showToast('Failed to cleanup fixtures', 'error');
     }
   };
@@ -185,7 +180,6 @@ const SeasonDetail = () => {
 
       showToast(`✅ Deleted ${deletedCount} old fixtures and generated ${fixtures.length} new fixtures!`, 'success');
     } catch (error) {
-      console.error('Error regenerating fixtures:', error);
       showToast('Failed to regenerate fixtures', 'error');
     }
   };
@@ -201,7 +195,6 @@ const SeasonDetail = () => {
       showToast('Knockout stage seeded successfully!', 'success');
       loadSeason(); // Reload to show updated knockout rounds
     } catch (error) {
-      console.error('Error seeding knockout:', error);
       showToast('Failed to seed knockout stage', 'error');
     }
   };
@@ -212,7 +205,6 @@ const SeasonDetail = () => {
       showToast('Season activated successfully!', 'success');
       loadSeason();
     } catch (error) {
-      console.error('Error activating season:', error);
       showToast('Failed to activate season', 'error');
     }
   };

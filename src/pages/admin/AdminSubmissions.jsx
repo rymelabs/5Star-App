@@ -36,7 +36,6 @@ const AdminSubmissions = () => {
       }));
       setSubs(withUsers);
     } catch (err) {
-      console.error('Error loading submissions:', err);
       showError('Unable to fetch submissions', err.message || 'Please try again');
     } finally {
       setLoading(false);
@@ -56,7 +55,6 @@ const AdminSubmissions = () => {
       showSuccess('Submission approved', `${submission.name} created`);
       await loadPending();
     } catch (err) {
-      console.error('Approve failed:', err);
       showError('Approve failed', err.message || 'See console');
     } finally {
       setLoading(false);
@@ -71,7 +69,6 @@ const AdminSubmissions = () => {
       showSuccess('Submission rejected', submission.name);
       await loadPending();
     } catch (err) {
-      console.error('Reject failed:', err);
       showError('Reject failed', err.message || 'See console');
     } finally {
       setLoading(false);

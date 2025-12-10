@@ -48,7 +48,6 @@ const CreateSeason = () => {
       const teams = await teamsCollection.getAll();
       setAllTeams(teams);
     } catch (error) {
-      console.error('Error loading teams:', error);
     }
   };
 
@@ -174,7 +173,6 @@ const CreateSeason = () => {
         navigate(`/admin/seasons/${seasonId}`);
       }, 1500);
     } catch (error) {
-      console.error('Error creating season:', error);
       showToast(t('createSeason.createFailed'), 'error');
     } finally {
       setLoading(false);

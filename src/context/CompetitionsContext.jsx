@@ -65,7 +65,6 @@ export const CompetitionsProvider = ({ children }) => {
       
       return competitionId;
     } catch (error) {
-      console.error('Error adding competition:', error);
       throw error;
     }
   };
@@ -87,7 +86,6 @@ export const CompetitionsProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Error updating competition:', error);
       throw error;
     }
   };
@@ -109,7 +107,6 @@ export const CompetitionsProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Error deleting competition:', error);
       throw error;
     }
   };

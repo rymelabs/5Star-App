@@ -60,7 +60,6 @@ const AdminNotifications = () => {
       
       setNotifications(notificationsList);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       showToast(t('adminNotifications.failedLoad'), 'error');
     } finally {
       setLoading(false);
@@ -118,7 +117,6 @@ const AdminNotifications = () => {
       showToast(t('adminNotifications.sendSuccess'), 'success');
       fetchNotifications();
     } catch (error) {
-      console.error('Error sending notification:', error);
       showToast(t('adminNotifications.sendFailed'), 'error');
     } finally {
       setSending(false);
@@ -138,7 +136,6 @@ const AdminNotifications = () => {
       showToast(t('adminNotifications.deleteSuccess'), 'success');
       fetchNotifications();
     } catch (error) {
-      console.error('Error deleting notification:', error);
       showToast(t('adminNotifications.deleteFailed'), 'error');
     } finally {
       setConfirmDelete({ isOpen: false, notification: null });

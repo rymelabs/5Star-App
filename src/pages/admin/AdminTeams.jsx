@@ -276,7 +276,6 @@ const AdminTeams = () => {
       setShowAddForm(false);
       setEditingTeam(null);
     } catch (error) {
-      console.error('Error saving team:', error);
       showError(t('common.error'), t('pages.adminTeams.failedToSaveTeam'));
     } finally {
       setLoading(false);
@@ -292,25 +291,13 @@ const AdminTeams = () => {
     const team = confirmDelete.team;
     if (!team) return;
 
-    console.log('🔐 Current user:', user);
-    console.log('🔐 User role:', user?.role);
-    console.log('🎯 Team to delete:', team);
-    console.log('🆔 Team ID:', team.id, 'Type:', typeof team.id);
 
     try {
       setLoading(true);
-      console.log('🗑️ Moving team to recycle bin:', team.id, team.name);
       await softDeleteTeam(team);
       showSuccess(t('pages.adminTeams.teamDeleted'), t('pages.adminTeams.teamDeletedDesc').replace('{name}', team.name) + ' (Moved to Recycle Bin)');
       setConfirmDelete({ isOpen: false, team: null });
     } catch (error) {
-      console.error('❌ Error deleting team:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
-      
       let errorMessage = t('pages.adminTeams.failedToDeleteTeam') + ' ';
       if (error.code === 'permission-denied') {
         errorMessage += t('pages.adminTeams.noDeletePermission').replace('{role}', user?.role || 'unknown');

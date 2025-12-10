@@ -117,7 +117,6 @@ export const downloadFixtureCalendar = (fixture) => {
     
     return true;
   } catch (error) {
-    console.error('Error downloading calendar event:', error);
     return false;
   }
 };
@@ -174,7 +173,7 @@ export const addMultipleFixturesToCalendar = async (fixtures) => {
       const success = await addFixtureToCalendar(fixture);
       if (success) successCount++;
     } catch (error) {
-      console.error('Error adding fixture to calendar:', fixture.id, error);
+      /* ignore calendar add errors */
     }
   }
   

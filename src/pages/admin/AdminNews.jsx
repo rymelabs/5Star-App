@@ -159,7 +159,6 @@ const AdminNews = () => {
           const safeSlug = slug || formData.title.replace(/\s+/g, '-').toLowerCase();
           headerImageUrl = await uploadImage(selectedImageFile, 'articles', `${safeSlug}_${Date.now()}`);
         } catch (uploadError) {
-          console.error('Error uploading article image:', uploadError);
           const message = uploadError.message || 'Failed to upload image';
           setImageError(message);
           showToast(message, 'error');
@@ -216,7 +215,6 @@ const AdminNews = () => {
         showToast(t('adminNews.submittedForApproval'), 'success');
       }
     } catch (error) {
-      console.error('Error adding article:', error);
       showToast(t('adminNews.addFailed'), 'error');
     } finally {
       setLoading(false);
@@ -237,7 +235,6 @@ const AdminNews = () => {
         showToast(t('adminNews.articleNotFound') || 'Article not found', 'error');
       }
     } catch (error) {
-      console.error('AdminNews: Failed to delete article:', error);
       const errorMsg = error?.code === 'permission-denied'
         ? t('adminNews.permissionDenied')
         : error?.message || t('adminNews.deleteFailed');
@@ -267,7 +264,6 @@ const AdminNews = () => {
       await approveArticle(article.id, { userId: user?.uid, userName: authorName });
       showToast(t('adminNews.approveSuccess'), 'success');
     } catch (error) {
-      console.error('Error approving article:', error);
       showToast(t('adminNews.approveFailed'), 'error');
     }
   };
@@ -279,7 +275,6 @@ const AdminNews = () => {
       await rejectArticle(article.id, { userId: user?.uid, userName: authorName, reason });
       showToast(t('adminNews.rejectSuccess'), 'success');
     } catch (error) {
-      console.error('Error rejecting article:', error);
       showToast(t('adminNews.rejectFailed'), 'error');
     }
   };
@@ -294,7 +289,6 @@ const AdminNews = () => {
         'success'
       );
     } catch (error) {
-      console.error('Error updating news settings:', error);
       showToast(t('adminNews.newsSettingsUpdateFailed'), 'error');
     } finally {
       setSettingsSaving(false);

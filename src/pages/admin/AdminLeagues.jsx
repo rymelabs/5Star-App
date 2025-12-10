@@ -46,7 +46,6 @@ const AdminLeagues = () => {
         : data.filter(league => league.ownerId === user?.uid);
       setLeagues(filtered.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (error) {
-      console.error('Error loading leagues:', error);
       showToast(t('adminLeagues.failedLoad'), 'error');
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ const AdminLeagues = () => {
       showToast(`"${league.name}" moved to recycle bin`, 'success');
       loadLeagues();
     } catch (error) {
-      console.error('Error deleting league:', error);
       showToast(t('adminLeagues.deleteFailed'), 'error');
     }
   };

@@ -31,7 +31,6 @@ const InstagramSettings = () => {
         setSettings(settingsData);
         setInitialSettings(settingsData);
       } catch (error) {
-        console.error('Error loading settings:', error);
         setMessage({ type: 'error', text: 'Failed to load settings' });
       } finally {
         setLoading(false);
@@ -60,7 +59,6 @@ const InstagramSettings = () => {
       // Clear message after 3 seconds
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      console.error('Error saving Instagram settings:', error);
       setMessage({ type: 'error', text: 'Failed to save Instagram settings' });
     } finally {
       setSaving(false);
