@@ -1,0 +1,889 @@
+/**
+ * NewsArticle Page Styles
+ * 
+ * This stylesheet is specifically for the NewsArticle page and is not bound 
+ * by any global styling rules. All styles use high specificity to ensure 
+ * they override any global CSS.
+ */
+
+/* ============================================
+   PAGE CONTAINER
+   ============================================ */
+.news-article-page {
+  min-height: 100vh;
+  background: var(--color-background, #0a0a0a);
+  padding-bottom: 6rem;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.news-hero {
+  position: relative;
+  height: 50vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.news-hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-hero-placeholder {
+  position: absolute;
+  inset: 0;
+  background: rgba(139, 92, 246, 0.2); /* brand-purple/20 */
+}
+
+.news-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--color-background, #0a0a0a), rgba(10, 10, 10, 0.6), transparent);
+}
+
+.news-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.news-hero-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  z-index: 20;
+}
+
+/* ============================================
+   ARTICLE META (Category, Date, Title, Author)
+   ============================================ */
+.news-meta-container {
+  width: 100%;
+  max-width: 56rem; /* max-w-4xl */
+  margin: 0 auto 1.5rem auto;
+}
+
+.news-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.news-category-badge {
+  padding: 0.25rem 0.75rem;
+  background: var(--color-brand-purple, #8b5cf6);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 14px -3px rgba(139, 92, 246, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.news-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.news-date-badge svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ============================================
+   HEADLINE / TITLE
+   ============================================ */
+.news-headline {
+  font-family: 'Bebas Neue', Impact, 'Arial Black', sans-serif;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .news-headline {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .news-headline {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .news-headline {
+    font-size: 3.5rem;
+  }
+}
+
+/* ============================================
+   AUTHOR INFO
+   ============================================ */
+.news-author-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.news-author-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.news-author-avatar svg {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+.news-content-wrapper {
+  width: 100%;
+  margin: 0 auto;
+  padding-left: 13px;
+  padding-right: 13px;
+  margin-top: -1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .news-content-wrapper {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .news-content-wrapper {
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+}
+
+/* ============================================
+   ARTICLE EXCERPT / SUMMARY
+   ============================================ */
+.news-article-excerpt,
+p.news-article-excerpt,
+.news-article-excerpt p,
+.news-article-excerpt span,
+div .news-article-excerpt {
+  font-size: 2.1rem !important;
+  line-height: 1.6 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+@media (min-width: 640px) {
+  .news-article-excerpt,
+  p.news-article-excerpt,
+  .news-article-excerpt p,
+  .news-article-excerpt span,
+  div .news-article-excerpt {
+    font-size: 2.4rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .news-article-excerpt,
+  p.news-article-excerpt,
+  .news-article-excerpt p,
+  .news-article-excerpt span,
+  div .news-article-excerpt {
+    font-size: 1.38rem !important;
+  }
+}
+
+/* ============================================
+   ARTICLE BODY CONTENT
+   ============================================ */
+.news-body,
+.news-body p,
+.news-body span,
+.news-body div {
+  font-size: 0.75rem !important;
+  line-height: 1.75 !important;
+  color: rgba(243, 244, 246, 1) !important; /* text-gray-100 */
+  white-space: pre-wrap !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+@media (min-width: 640px) {
+  .news-body,
+  .news-body p,
+  .news-body span,
+  .news-body div {
+    font-size: 1.45rem !important;
+  }
+}
+
+/* Prose overrides for article body */
+.news-body-prose {
+  width: 100%;
+  max-width: none;
+}
+
+.news-body-prose h1,
+.news-body-prose h2,
+.news-body-prose h3,
+.news-body-prose h4,
+.news-body-prose h5,
+.news-body-prose h6 {
+  color: white;
+}
+
+.news-body-prose p {
+  color: rgba(229, 231, 235, 1); /* text-gray-200 */
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.news-body-prose a {
+  color: var(--color-brand-purple, #8b5cf6);
+}
+
+.news-body-prose strong {
+  color: white;
+}
+
+.news-body-prose blockquote {
+  border-left-color: var(--color-brand-purple, #8b5cf6);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* ============================================
+   ACTION BAR (Like, Comments, Share)
+   ============================================ */
+.news-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.news-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-action-btn-default {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(156, 163, 175, 1); /* text-gray-400 */
+}
+
+.news-action-btn-default:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.news-action-btn-liked {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.news-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.news-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: var(--color-brand-purple, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 14px -3px rgba(139, 92, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .news-share-btn {
+    padding: 0.375rem 1rem;
+  }
+}
+
+.news-share-btn:hover {
+  background: rgba(139, 92, 246, 0.9);
+}
+
+/* ============================================
+   SHARE MENU DROPDOWN
+   ============================================ */
+.news-share-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.5rem;
+  background: var(--color-elevated, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  min-width: 200px;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.news-share-menu-header {
+  font-size: 0.75rem;
+  color: rgba(156, 163, 175, 1);
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-share-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: rgba(209, 213, 219, 1);
+  transition: all 0.15s ease;
+}
+
+.news-share-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.news-share-menu-item svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.news-share-menu-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 0.25rem 0;
+}
+
+/* ============================================
+   COMMENTS SECTION
+   ============================================ */
+.news-comments-section {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.5rem;
+}
+
+.news-comments-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.news-comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.news-comments-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.news-comments-count {
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(156, 163, 175, 1);
+}
+
+/* ============================================
+   COMMENT FORM
+   ============================================ */
+.news-comment-form {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.news-comment-form-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(to right, var(--color-brand-purple, #8b5cf6), #2563eb);
+  border-radius: 1rem;
+  opacity: 0.2;
+  filter: blur(4px);
+  transition: opacity 0.5s ease;
+}
+
+.news-comment-form:focus-within .news-comment-form-glow {
+  opacity: 1;
+}
+
+.news-comment-form-inner {
+  position: relative;
+  background: var(--color-elevated, #1a1a1a);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.news-comment-form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.news-comment-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-brand-purple, #8b5cf6), #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.news-comment-avatar span {
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.news-comment-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+  resize: none;
+  min-height: 70px;
+  outline: none;
+}
+
+@media (min-width: 640px) {
+  .news-comment-textarea {
+    font-size: 1rem;
+  }
+}
+
+.news-comment-textarea::placeholder {
+  color: rgba(107, 114, 128, 1);
+}
+
+.news-comment-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-comment-form-hint {
+  font-size: 0.6875rem;
+  color: rgba(107, 114, 128, 1);
+}
+
+.news-comment-submit-btn {
+  padding: 0.5rem 1.25rem;
+  background: white;
+  color: black;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.news-comment-submit-btn:hover {
+  background: rgba(229, 231, 235, 1);
+}
+
+.news-comment-submit-btn:disabled {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(107, 114, 128, 1);
+}
+
+/* ============================================
+   SIGN IN PROMPT
+   ============================================ */
+.news-signin-prompt {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.news-signin-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+}
+
+.news-signin-content {
+  position: relative;
+  z-index: 10;
+}
+
+.news-signin-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.news-signin-text {
+  color: rgba(156, 163, 175, 1);
+  margin-bottom: 1.25rem;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.875rem;
+}
+
+.news-signin-btn {
+  padding: 0.625rem 1.75rem;
+  background: white;
+  color: black;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px -3px rgba(255, 255, 255, 0.15);
+}
+
+.news-signin-btn:hover {
+  background: rgba(229, 231, 235, 1);
+}
+
+/* ============================================
+   COMMENTS LIST
+   ============================================ */
+.news-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.news-comments-empty {
+  text-align: center;
+  padding: 3rem 0;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+.news-comments-empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto 0.75rem auto;
+  color: rgba(75, 85, 99, 1);
+}
+
+.news-comments-empty-title {
+  color: rgba(156, 163, 175, 1);
+  font-size: 1rem;
+}
+
+.news-comments-empty-subtitle {
+  color: rgba(75, 85, 99, 1);
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   INDIVIDUAL COMMENT
+   ============================================ */
+.news-comment {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.news-comment-wrapper {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.news-comment-user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.news-comment-user-avatar svg {
+  width: 1rem;
+  height: 1rem;
+  color: rgba(156, 163, 175, 1);
+}
+
+.news-comment-content {
+  flex: 1;
+}
+
+.news-comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.news-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.news-comment-author {
+  font-weight: 700;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.news-comment-author:hover {
+  color: var(--color-brand-purple, #8b5cf6);
+}
+
+.news-comment-dot {
+  font-size: 0.75rem;
+  color: rgba(107, 114, 128, 1);
+}
+
+.news-comment-time {
+  font-size: 0.75rem;
+  color: rgba(107, 114, 128, 1);
+}
+
+.news-comment-body {
+  color: rgba(209, 213, 219, 1);
+  font-size: 0.875rem;
+  line-height: 1.625;
+  white-space: pre-wrap;
+  margin-bottom: 0.625rem;
+}
+
+.news-comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.news-comment-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgba(107, 114, 128, 1);
+  transition: color 0.15s ease;
+}
+
+.news-comment-action-btn:hover {
+  color: white;
+}
+
+.news-comment-action-btn:hover svg {
+  color: rgb(239, 68, 68);
+}
+
+.news-comment-action-btn svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: color 0.15s ease;
+}
+
+.news-comment-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin-top: 1.25rem;
+  margin-left: 3rem;
+}
+
+/* ============================================
+   LOADING SKELETON
+   ============================================ */
+.news-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.news-skeleton-hero {
+  height: 50vh;
+  width: 100%;
+  background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.2), rgba(37, 99, 235, 0.2));
+}
+
+.news-skeleton-bar {
+  height: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem;
+}
+
+.news-skeleton-bar-sm {
+  height: 0.75rem;
+}
+
+.news-skeleton-bar-lg {
+  height: 1.5rem;
+}
+
+.news-skeleton-circle {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   ERROR STATE
+   ============================================ */
+.news-error-page {
+  min-height: 100vh;
+  background: var(--color-background, #0a0a0a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.news-error-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.news-error-icon svg {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(239, 68, 68);
+}
+
+.news-error-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.news-error-text {
+  color: rgba(156, 163, 175, 1);
+  margin-bottom: 1.5rem;
+}
+
+.news-error-btn {
+  padding: 0.5rem 1.5rem;
+  background: var(--color-brand-purple, #8b5cf6);
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 500;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.news-text-shadow {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.news-backdrop-blur {
+  backdrop-filter: blur(12px);
+}
+
+.news-glass {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
