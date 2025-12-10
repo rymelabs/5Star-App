@@ -7,6 +7,7 @@ import NewsExcerpt from './NewsExcerpt';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
 import { getRelativeTime } from '../utils/dateUtils';
+import { trackArticleView } from '../utils/analytics';
 
 // NewsArticle-specific styles (not bound by global styling)
 import './newsstyle.css';
@@ -50,6 +51,10 @@ const NewsArticle = () => {
     if (article?.id) {
       // Increment view count
       incrementArticleView(article.id);
+      
+      // Track article view for analytics
+      const wordCount = article.content ? article.content.split(/\s+/).length : 0;
+      trackArticleView(article.id, article.category, wordCount);
       
       // Load comments using the article's document ID
       getCommentsForItem('article', article.id);

@@ -9,6 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { fixturesCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
 import { addFixtureToCalendar } from '../utils/calendar';
+import { trackFixtureView, trackPenaltiesView } from '../utils/analytics';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 
 const FixtureDetail = () => {
@@ -45,6 +46,19 @@ const FixtureDetail = () => {
     if (foundFixture) {
       setLikes(foundFixture.likes || 0);
       setIsLiked(foundFixture.likedBy?.includes(user?.uid) || false);
+      
+      // Track fixture view
+      trackFixtureView(
+        foundFixture.id,
+        foundFixture.competition || foundFixture.league,
+        foundFixture.stage || 'regular',
+        foundFixture.status || 'scheduled'
+      );
+      
+      // Track penalties view if applicable
+      if (foundFixture.penalties && (foundFixture.penalties.home?.length > 0 || foundFixture.penalties.away?.length > 0)) {
+        trackPenaltiesView(foundFixture.id);
+      }
       
       // Load predictions
       const fixtureVotes = foundFixture.predictions || { home: 0, draw: 0, away: 0 };
