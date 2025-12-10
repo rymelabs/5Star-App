@@ -119,9 +119,9 @@ h4, h5, h6 {
 
 /* Content and body text - 10px */
 .text-sm,
-p:not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body):not(.news-excerpt),
-span:not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body),
-div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base):not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body):not(.news-body-prose):not(.news-article-page):not(.news-content-wrapper) {
+p:not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body):not(.news-article-excerpt),
+span:not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body):not(.news-article-excerpt),
+div:not(.text-xs):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-base):not(.fixture-score):not(.fixture-score-vs):not(.fixture-detail-score):not(.fixture-detail-divider):not(.news-body):not(.news-body-prose):not(.news-article-page):not(.news-content-wrapper):not(.news-article-excerpt) {
   font-size: 10px !important;
 }
 
