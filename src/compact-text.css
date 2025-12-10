@@ -360,6 +360,36 @@ nav a, nav button {
   letter-spacing: -0.01em !important;
 }
 
+/* News article excerpt/summary */
+.news-article-excerpt {
+  font-size: 0.98rem !important;
+  line-height: 1.6 !important;
+}
+
+p.news-article-excerpt.news-article-excerpt {
+  font-size: 0.98rem !important;
+}
+
+@media (min-width: 640px) {
+  .news-article-excerpt {
+    font-size: 1.1rem !important;
+  }
+
+  p.news-article-excerpt.news-article-excerpt {
+    font-size: 1.1rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .news-article-excerpt {
+    font-size: 1.23rem !important;
+  }
+
+  p.news-article-excerpt.news-article-excerpt {
+    font-size: 1.23rem !important;
+  }
+}
+
 /* League table specific */
 .league-table th {
   font-size: 9px !important;

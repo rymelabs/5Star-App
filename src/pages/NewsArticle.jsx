@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, MessageCircle, Heart, Share2, Link2, X, Clock, ChevronRight } from 'lucide-react';
 import BackButton from '../components/ui/BackButton';
 import SurfaceCard from '../components/ui/SurfaceCard';
+import NewsExcerpt from './NewsExcerpt';
 import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
 import { getRelativeTime } from '../utils/dateUtils';
@@ -355,10 +356,13 @@ const NewsArticle = () => {
           <BackButton className="bg-black/20 backdrop-blur-md border-white/10 text-white hover:bg-black/40" />
         </div>
 
-        {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 pb-24 sm:pb-28 max-w-7xl mx-auto">
-          <div className="max-w-4xl">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
+        {/* Hero Content removed; details now placed below image */}
+      </div>
+
+      {/* Main Content */}
+        <div className="w-full mx-auto px-[13px] sm:px-[20px] lg:px-[36px] -mt-6 relative z-10">
+          <div className="w-full max-w-4xl mx-auto mb-6 space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="px-3 py-1 bg-brand-purple text-white text-xs font-bold rounded-lg shadow-lg shadow-brand-purple/20 uppercase tracking-wider">
                 {article.category}
               </span>
@@ -367,12 +371,10 @@ const NewsArticle = () => {
                 {getRelativeTime(article.publishedAt)}
               </span>
             </div>
-            
-            <h1 className="news-hero-title text-white mb-4 text-shadow-lg tracking-tight">
+            <h1 className="news-hero-title text-white text-shadow-lg tracking-tight">
               {article.title}
             </h1>
-
-            <div className="flex items-center gap-4 text-sm font-medium text-white/80">
+            <div className="flex items-center gap-3 text-sm font-medium text-white/80">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-brand-purple/20 flex items-center justify-center border border-white/10 backdrop-blur-md">
                   <User className="w-4 h-4 text-white" />
@@ -381,20 +383,11 @@ const NewsArticle = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-        <div className="w-full mx-auto px-[13px] sm:px-[20px] lg:px-[36px] -mt-16 relative z-10">
           <div className="w-full">
           {/* Article Body */}
           <div className="w-full">
             <SurfaceCard padding="none" className="!bg-transparent !border-none !shadow-none px-[13px] sm:px-[20px] lg:px-[36px] py-[22px] md:py-[36px] mb-0 rounded-none border-x-0 w-full">
-              {article.excerpt && (
-                <p className="w-full news-summary text-white/90 leading-relaxed mb-8 font-medium border-l-4 border-brand-purple pl-4">
-                  {article.excerpt}
-                </p>
-              )}
+              {article.excerpt && <NewsExcerpt text={article.excerpt} />}
               
               <div className="w-full prose prose-invert prose-xl max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand-purple prose-strong:text-white prose-blockquote:border-brand-purple prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg">
                 <div className="whitespace-pre-wrap font-sans w-full text-lg sm:text-xl leading-8 text-gray-100">
