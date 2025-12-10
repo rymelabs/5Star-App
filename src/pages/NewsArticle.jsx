@@ -385,13 +385,13 @@ const NewsArticle = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 -mt-16 relative z-10">
+        <div className="w-full mx-auto px-[13px] sm:px-[20px] lg:px-[36px] -mt-16 relative z-10">
           <div className="w-full">
           {/* Article Body */}
           <div className="w-full">
-              <SurfaceCard padding="none" className="!bg-transparent !border-none !shadow-none px-4 sm:px-6 lg:px-10 py-6 md:py-10 mb-0 rounded-none border-x-0 w-full">
+            <SurfaceCard padding="none" className="!bg-transparent !border-none !shadow-none px-[13px] sm:px-[20px] lg:px-[36px] py-[22px] md:py-[36px] mb-0 rounded-none border-x-0 w-full">
               {article.excerpt && (
-                <p className="w-full text-xl text-white/90 leading-relaxed mb-8 font-medium border-l-4 border-brand-purple pl-4">
+                <p className="w-full news-summary text-white/90 leading-relaxed mb-8 font-medium border-l-4 border-brand-purple pl-4">
                   {article.excerpt}
                 </p>
               )}
