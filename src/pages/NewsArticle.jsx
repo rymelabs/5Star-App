@@ -8,6 +8,9 @@ import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
 import { getRelativeTime } from '../utils/dateUtils';
 
+// NewsArticle-specific styles (not bound by global styling)
+import './newsstyle.css';
+
 const NewsArticle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -389,8 +392,8 @@ const NewsArticle = () => {
             <SurfaceCard padding="none" className="!bg-transparent !border-none !shadow-none px-[13px] sm:px-[20px] lg:px-[36px] py-[22px] md:py-[36px] mb-0 rounded-none border-x-0 w-full">
               {article.excerpt && <NewsExcerpt text={article.excerpt} />}
               
-              <div className="w-full prose prose-invert prose-xl max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand-purple prose-strong:text-white prose-blockquote:border-brand-purple prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg news-article-content">
-                <div className="whitespace-pre-wrap font-sans w-full leading-8 text-gray-100">
+              <div className="news-body-prose">
+                <div className="news-body">
                   {article.content}
                 </div>
               </div>
