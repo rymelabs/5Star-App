@@ -120,7 +120,6 @@ const Profile = () => {
         setUserCommentsCount(commentsCount);
         setArticlesReadCount(articlesRead);
       } catch (err) {
-        console.error('Error loading user stats', err);
       } finally {
         if (mounted) setStatsLoading(false);
       }

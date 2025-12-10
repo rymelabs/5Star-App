@@ -4,7 +4,6 @@ const safeParse = (value) => {
   try {
     return JSON.parse(value);
   } catch (error) {
-    console.warn('Cache parse error:', error);
     return null;
   }
 };
@@ -17,7 +16,6 @@ export const getCachedItem = (key, fallback = null) => {
     const parsed = safeParse(raw);
     return parsed ?? fallback;
   } catch (error) {
-    console.warn('Unable to access cache:', error);
     return fallback;
   }
 };
@@ -28,7 +26,6 @@ export const setCachedItem = (key, value) => {
     const payload = JSON.stringify({ ...value, cachedAt: Date.now() });
     window.localStorage.setItem(key, payload);
   } catch (error) {
-    console.warn('Unable to persist cache:', error);
   }
 };
 
@@ -37,6 +34,5 @@ export const removeCachedItem = (key) => {
   try {
     window.localStorage.removeItem(key);
   } catch (error) {
-    console.warn('Unable to remove cache item:', error);
   }
 };

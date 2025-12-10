@@ -52,14 +52,12 @@ const AdminStats = () => {
         const users = await (usersCollection.getAll ? usersCollection.getAll() : []);
         notifCount = users.filter(u => u?.settings?.notifications?.teamFollowing || u?.notifications?.teamFollowing).length;
       } catch (error) {
-        console.warn('users fetch failed', error);
       }
 
       let teams = [];
       try {
         teams = await (teamsCollection.getAll?.() || []);
       } catch (error) {
-        console.warn('teams fetch failed', error);
       }
 
       let comments = 0;
@@ -67,7 +65,6 @@ const AdminStats = () => {
         const articles = await (newsCollection.getAll?.() || []);
         comments = articles.reduce((sum, article) => sum + (article.commentsCount || 0), 0);
       } catch (error) {
-        console.warn('articles fetch failed', error);
       }
 
       if (!mountedRef.current) return;
@@ -83,7 +80,6 @@ const AdminStats = () => {
         await loadFromCollections();
       }
     } catch (error) {
-      console.error('Error loading stats page', error);
       if (mountedRef.current) {
         setErrorMessage(
           isPermissionError(error)

@@ -50,7 +50,6 @@ const EditNews = () => {
           setImageError('');
         }
       } catch (error) {
-        console.error('EditNews: Failed to load article', error);
       } finally {
         setLoading(false);
       }
@@ -133,7 +132,6 @@ const EditNews = () => {
           const safeSlug = slug || formData.title.replace(/\s+/g, '-').toLowerCase();
           headerImageUrl = await uploadImage(selectedImageFile, 'articles', `${safeSlug}_${Date.now()}`);
         } catch (uploadError) {
-          console.error('EditNews: Failed to upload image', uploadError);
           setImageError(uploadError.message || 'Failed to upload image');
           setUploadingImage(false);
           return;
@@ -160,7 +158,6 @@ const EditNews = () => {
       setImageError('');
       navigate('/admin/news');
     } catch (error) {
-      console.error('EditNews: Failed to save article', error);
     } finally {
       setSaving(false);
     }

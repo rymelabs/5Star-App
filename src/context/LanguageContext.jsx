@@ -25,7 +25,6 @@ export const LanguageProvider = ({ children }) => {
         const translationModule = await import(`../locales/${language}.json`);
         setTranslations(translationModule.default);
       } catch (error) {
-        console.error(`Failed to load translations for ${language}:`, error);
         // Fallback to English if translation fails
         if (language !== 'en') {
           const fallback = await import('../locales/en.json');

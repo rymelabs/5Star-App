@@ -95,7 +95,6 @@ const NotificationInbox = () => {
       
       setAdminNotifications(notificationsList);
     } catch (error) {
-      console.error('Error fetching admin notifications:', error);
     } finally {
       setLoadingAdmin(false);
     }

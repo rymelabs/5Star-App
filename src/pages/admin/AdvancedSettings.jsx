@@ -124,7 +124,6 @@ const AdvancedSettings = () => {
             window.location.reload();
           }, 1500);
         } catch (error) {
-          console.error(`Error deleting ${dataType}:`, error);
           setToast({
             type: 'error',
             message: t('advancedSettings.deleteFailed').replace('{type}', label.toLowerCase()).replace('{error}', error.message),

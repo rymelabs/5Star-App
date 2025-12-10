@@ -34,14 +34,12 @@ export const InstagramProvider = ({ children }) => {
           const instagramPosts = await fetchInstagramPosts(12);
           setPosts(instagramPosts);
         } catch (err) {
-          console.log('Could not fetch Instagram posts, using fallback display');
           setPosts([]);
         }
       } else {
         setPosts([]);
       }
     } catch (err) {
-      console.error('Error loading Instagram data:', err);
       setError(err.message);
       setPosts([]);
       setSettings({ enabled: false, username: '' });

@@ -80,7 +80,6 @@ const AdminLeagueSettings = () => {
       });
       showToast(t('adminLeagueSettings.updateSuccess'), 'success');
     } catch (error) {
-      console.error('Error updating settings:', error);
       showToast(t('adminLeagueSettings.updateFailed'), 'error');
     } finally {
       setSaving(false);

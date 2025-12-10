@@ -55,9 +55,7 @@ const NotificationModal = ({ userId, onClose }) => {
         });
       
       setNotifications(notificationsList);
-      console.log('Fetched notifications:', notificationsList.length, notificationsList);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -73,7 +71,6 @@ const NotificationModal = ({ userId, onClose }) => {
         viewCount: increment(1),
       });
     } catch (error) {
-      console.error('Error tracking view:', error);
     }
   };
 
@@ -87,7 +84,6 @@ const NotificationModal = ({ userId, onClose }) => {
         dismissCount: increment(1),
       });
     } catch (error) {
-      console.error('Error tracking dismiss:', error);
     }
   };
 

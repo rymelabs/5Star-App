@@ -39,13 +39,6 @@ export const registerUser = async (email, password, userData) => {
 
     await setDoc(doc(db, 'users', user.uid), userDoc);
 
-    console.log('✅ User registered successfully:', {
-      uid: user.uid,
-      email: user.email,
-      name: userData.name,
-      role: userData.role || 'user'
-    });
-
     return {
       uid: user.uid,
       email: user.email,
@@ -54,7 +47,6 @@ export const registerUser = async (email, password, userData) => {
       profileCompleted: false
     };
   } catch (error) {
-    console.error('❌ Registration error:', error);
     
     // Provide more user-friendly error messages
     let errorMessage = error.message;
@@ -73,7 +65,6 @@ export const registerUser = async (email, password, userData) => {
 // Login user (unchanged but with better logging)
 export const loginUser = async (email, password) => {
   try {
-    console.log('🔐 Attempting login for:', email);
     
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -99,11 +90,9 @@ export const loginUser = async (email, password) => {
       };
     }
 
-    console.log('✅ Login successful:', userData);
     return userData;
     
   } catch (error) {
-    console.error('❌ Login error:', error);
     
     // Provide more user-friendly error messages
     let errorMessage = error.message;
@@ -125,9 +114,7 @@ export const loginUser = async (email, password) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
-    console.log('✅ User logged out successfully');
   } catch (error) {
-    console.error('❌ Logout error:', error);
     throw new Error(error.message);
   }
 };
@@ -137,7 +124,6 @@ export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, async (user) => {
     if (user) {
       // User is signed in
-      console.log('👤 User state changed - signed in:', user.email);
       
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
@@ -158,7 +144,6 @@ export const onAuthStateChange = (callback) => {
       }
     } else {
       // User is signed out
-      console.log('👤 User state changed - signed out');
       callback(null);
     }
   });
@@ -200,7 +185,6 @@ export const signInWithGoogle = async () => {
       profileCompleted: userData.profileCompleted || false
     };
   } catch (error) {
-    console.error('❌ Google sign-in error:', error);
     throw error;
   }
 };
@@ -221,7 +205,6 @@ export const signInAnonymous = async () => {
       profileCompleted: false // Anonymous users never complete profile
     };
   } catch (error) {
-    console.error('❌ Anonymous sign-in error:', error);
     throw error;
   }
 };
@@ -266,7 +249,6 @@ export const updateUserProfile = async (updates) => {
       ...updateData
     };
   } catch (error) {
-    console.error('❌ Profile update error:', error);
     throw error;
   }
 };

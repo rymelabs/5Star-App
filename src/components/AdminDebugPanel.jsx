@@ -39,7 +39,6 @@ const AdminDebugPanel = () => {
       }
     } catch (err) {
       setError('Error fetching from Firestore: ' + err.message);
-      console.error('Firestore check error:', err);
     } finally {
       setChecking(false);
     }
@@ -52,7 +51,6 @@ const AdminDebugPanel = () => {
   }, [user?.uid]);
 
   const forceRefresh = () => {
-    console.log('🔄 Forcing page reload...');
     // Clear any cached data
     const keysToRemove = Object.keys(localStorage).filter(key => 
       key.toLowerCase().includes('auth') || 
@@ -60,7 +58,6 @@ const AdminDebugPanel = () => {
       key.toLowerCase().includes('firebase')
     );
     keysToRemove.forEach(key => {
-      console.log('   Clearing:', key);
       localStorage.removeItem(key);
     });
     
@@ -169,7 +166,6 @@ const AdminDebugPanel = () => {
         
         {user?.uid && (
           <a
-            href={`https://console.firebase.google.com/project/starsapp-e27d1/firestore/data/users/${user.uid}`}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold text-center"
@@ -180,13 +176,8 @@ const AdminDebugPanel = () => {
         
         <button
           onClick={() => {
-            console.log('=== FULL DEBUG INFO ===');
-            console.log('Auth Context User:', user);
-            console.log('Firestore Data:', firestoreData);
-            console.log('localStorage keys:', Object.keys(localStorage).filter(k => 
               k.includes('auth') || k.includes('user') || k.includes('firebase')
             ));
-            console.log('======================');
             alert('Debug info logged to console (F12)');
           }}
           className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"

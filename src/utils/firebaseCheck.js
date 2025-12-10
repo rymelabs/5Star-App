@@ -11,15 +11,9 @@ export const validateFirebaseConfig = () => {
   const missing = requiredEnvVars.filter(varName => !import.meta.env[varName]);
   
   if (missing.length > 0) {
-    console.error('❌ Missing Firebase environment variables:', missing);
-    console.error('Please add these to your .env file:');
-    missing.forEach(varName => {
-      console.error(`${varName}=your-value-here`);
-    });
     return false;
   }
   
-  console.log('✅ All Firebase environment variables are set');
   return true;
 };
 

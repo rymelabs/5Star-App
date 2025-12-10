@@ -23,11 +23,6 @@ const Latest = () => {
 
   useEffect(() => {
     // Show notification modal for authenticated users on home page
-    console.log('Latest page: Checking notifications modal', { 
-      hasUser: !!user, 
-      userId: user?.uid 
-    });
-    
     if (user && user.uid) {
       // Check for new notifications by comparing with last seen timestamp
       const checkForNewNotifications = async () => {
@@ -56,25 +51,12 @@ const Latest = () => {
             }))
             .filter(notif => !dismissedIds.includes(notif.id));
           
-          console.log('Latest page: Found notifications', { 
-            total: notifications.length,
-            lastSeenTimestamp 
-          });
-          
           if (notifications.length > 0) {
             // Check if there are new notifications since last check
             const latestNotificationTime = notifications[0].createdAt?.toMillis?.() || 0;
             const shouldShow = !lastSeenTimestamp || latestNotificationTime > parseInt(lastSeenTimestamp);
-            
-            console.log('Latest page: Should show modal?', { 
-              shouldShow,
-              latestNotificationTime,
-              lastSeenTimestamp 
-            });
-            
             if (shouldShow) {
               setTimeout(() => {
-                console.log('Latest page: Showing notification modal now');
                 setShowNotificationModal(true);
                 // Update last check timestamp to latest notification time
                 sessionStorage.setItem('lastNotificationCheck', latestNotificationTime.toString());
@@ -82,7 +64,7 @@ const Latest = () => {
             }
           }
         } catch (error) {
-          console.error('Error checking notifications:', error);
+          /* ignore notification check errors */
         }
       };
       
@@ -95,12 +77,6 @@ const Latest = () => {
   const footballContext = useFootball();
   const instagramContext = useInstagram();
 
-  useEffect(() => {
-    if (!newsContext) {
-      console.warn('Latest page: Rendering without NewsProvider context');
-    }
-  }, [newsContext]);
-  
   // Safely extract values with fallbacks
   const articles = newsContext?.articles || [];
   const fixtures = footballContext?.fixtures || [];
@@ -309,7 +285,7 @@ const Latest = () => {
       {/* Competition Header */}
       <div className="flex items-center gap-2 px-2">
         <Trophy className="w-5 h-5 text-brand-purple" />
-        <h2 className="text-xl font-bold text-white">{group.name}</h2>
+        <h2 className="text-[13px] sm:text-xl font-bold text-white leading-tight">{group.name}</h2>
         {group.isActiveSeason && (
           <PillChip label="Active Season" size="sm" variant="solid" tone="primary" />
         )}

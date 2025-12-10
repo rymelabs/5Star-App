@@ -55,7 +55,6 @@ const EditLeague = () => {
         navigate('/admin/leagues');
       }
     } catch (error) {
-      console.error('Error loading league:', error);
       showToast(t('editLeague.failedLoad'), 'error');
       navigate('/admin/leagues');
     } finally {
@@ -100,7 +99,6 @@ const EditLeague = () => {
       await leaguesCollection.update(id, payload);
       navigate('/admin/leagues');
     } catch (error) {
-      console.error('Error updating league:', error);
       showToast(t('editLeague.updateFailed'), 'error');
     } finally {
       setSaving(false);

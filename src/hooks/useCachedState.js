@@ -13,7 +13,6 @@ const readFromCache = (key, defaultValue) => {
       return JSON.parse(raw);
     }
   } catch (error) {
-    console.warn(`Failed to parse cached value for ${key}:`, error);
   }
 
   return typeof defaultValue === 'function' ? defaultValue() : defaultValue;
@@ -24,7 +23,6 @@ const writeToCache = (key, value) => {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.warn(`Failed to persist cached value for ${key}:`, error);
   }
 };
 

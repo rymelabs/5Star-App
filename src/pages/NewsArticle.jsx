@@ -76,7 +76,6 @@ const NewsArticle = () => {
         setError('Article not found');
       }
     } catch (error) {
-      console.error('Error loading article:', error);
       setError('Failed to load article');
     } finally {
       setLoading(false);
@@ -96,7 +95,7 @@ const NewsArticle = () => {
       });
       setNewComment('');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      setError('Failed to add comment');
     } finally {
       setIsCommenting(false);
     }
@@ -117,7 +116,7 @@ const NewsArticle = () => {
           : (prev.likedBy || []).filter(id => id !== user.uid)
       }));
     } catch (error) {
-      console.error('Error toggling like:', error);
+      setError('Failed to update like');
     } finally {
       setIsLiking(false);
     }
@@ -185,13 +184,12 @@ const NewsArticle = () => {
       }
       setShowShareMenu(false);
     } catch (error) {
-      console.error('Error sharing:', error);
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(articleUrl);
         alert('Link copied to clipboard!');
       } catch (clipboardError) {
-        console.error('Clipboard error:', clipboardError);
+        alert('Unable to share or copy link right now.');
       }
     }
   };

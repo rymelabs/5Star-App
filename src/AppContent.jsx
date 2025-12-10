@@ -36,7 +36,6 @@ const withLazyErrorLogging = (label, importer) => React.lazy(async () => {
   try {
     return await importer();
   } catch (error) {
-    console.error(`❌ Failed to load ${label}:`, error);
     return { default: () => <div>{`${label} not available`}</div> };
   }
 });
@@ -87,7 +86,6 @@ const AppContent = () => {
     loading = auth.loading;
     isAuthenticated = auth.isAuthenticated;
   } catch (error) {
-    console.error('❌ Error accessing AuthContext:', error);
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
@@ -111,7 +109,6 @@ const AppContent = () => {
     return <LoadingScreen message="Loading" />;
   }
 
-  console.log('🔍 AppContent - Current user state:', user ? `Logged in as ${user.email}` : 'Not logged in');
 
   const authStandaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
   const isAuthStandalone = authStandaloneRoutes.some((path) => location.pathname.startsWith(path));

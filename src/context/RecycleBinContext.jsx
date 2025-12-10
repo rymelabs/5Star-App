@@ -76,7 +76,7 @@ export const RecycleBinProvider = ({ children }) => {
 
       setRecycleBinItems(items);
     } catch (error) {
-      console.error('Error loading recycle bin items:', error);
+      setRecycleBinItems([]);
     } finally {
       setLoading(false);
     }
@@ -123,11 +123,10 @@ export const RecycleBinProvider = ({ children }) => {
 
         if (hasExpired) {
           await batch.commit();
-          console.log('🗑️ Expired recycle bin items permanently deleted');
           loadRecycleBinItems(); // Refresh the list
         }
       } catch (error) {
-        console.error('Error cleaning up expired recycle bin items:', error);
+        /* ignore cleanup failures */
       }
     };
 
@@ -172,14 +171,11 @@ export const RecycleBinProvider = ({ children }) => {
       // Delete from original collection
       await deleteDoc(doc(database, collectionName, item.id));
 
-      console.log(`✅ ${itemType} moved to recycle bin:`, item.name || item.title || item.id);
-
       // Refresh recycle bin
       loadRecycleBinItems();
 
       return recycleBinId;
     } catch (error) {
-      console.error(`Error moving ${itemType} to recycle bin:`, error);
       throw error;
     }
   };
@@ -230,14 +226,11 @@ export const RecycleBinProvider = ({ children }) => {
       // Delete from recycle bin
       await deleteDoc(recycleBinDocRef);
 
-      console.log(`✅ ${itemType} restored from recycle bin:`, originalItem.name || originalItem.title || originalId);
-
       // Refresh recycle bin
       loadRecycleBinItems();
 
       return originalId;
     } catch (error) {
-      console.error('Error restoring item from recycle bin:', error);
       throw error;
     }
   };
@@ -267,12 +260,9 @@ export const RecycleBinProvider = ({ children }) => {
       // Permanently delete
       await deleteDoc(recycleBinDocRef);
 
-      console.log(`🗑️ Item permanently deleted:`, data.name || data.title || recycleBinId);
-
       // Refresh recycle bin
       loadRecycleBinItems();
     } catch (error) {
-      console.error('Error permanently deleting item:', error);
       throw error;
     }
   };
@@ -303,12 +293,9 @@ export const RecycleBinProvider = ({ children }) => {
 
       await batch.commit();
 
-      console.log('🗑️ Recycle bin emptied');
-
       // Refresh recycle bin
       loadRecycleBinItems();
     } catch (error) {
-      console.error('Error emptying recycle bin:', error);
       throw error;
     }
   };

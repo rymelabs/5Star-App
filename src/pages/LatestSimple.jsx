@@ -16,7 +16,6 @@ const LatestSimple = () => {
     const newsContext = useNews();
     articles = newsContext?.articles || [];
   } catch (error) {
-    console.error('Error accessing NewsContext:', error);
   }
   
   try {
@@ -24,7 +23,6 @@ const LatestSimple = () => {
     fixtures = footballContext?.fixtures || [];
     leagueTable = footballContext?.leagueTable || [];
   } catch (error) {
-    console.error('Error accessing FootballContext:', error);
   }
 
   return (

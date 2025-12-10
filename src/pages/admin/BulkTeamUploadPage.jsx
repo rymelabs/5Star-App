@@ -15,7 +15,6 @@ const BulkTeamUploadPage = () => {
       showSuccess('Bulk upload successful', `Uploaded ${teams.length} teams`);
       navigate('/admin/teams');
     } catch (err) {
-      console.error('Bulk upload failed on page:', err);
       showError('Bulk upload failed', err?.message || 'See console for details');
     }
   };

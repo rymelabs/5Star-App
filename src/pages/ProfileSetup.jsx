@@ -52,7 +52,6 @@ const ProfileSetup = () => {
       // For anonymous users, they can set up profile each time
       navigate('/', { replace: true });
     } catch (error) {
-      console.error('Profile update error:', error);
       setError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);

@@ -52,7 +52,6 @@ export const uploadImage = async (file, folder = 'images', fileName = null) => {
 
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading image:', error);
 
     // Provide more helpful error messages
     if (error.code === 'storage/unauthorized') {
@@ -94,8 +93,7 @@ export const deleteImage = async (imageUrl) => {
     const storageRef = ref(storage, path);
     await deleteObject(storageRef);
   } catch (error) {
-    console.error('Error deleting image:', error);
-    // Don't throw error for deletion failures as it's not critical
+    /* ignore deletion failures */
   }
 };
 

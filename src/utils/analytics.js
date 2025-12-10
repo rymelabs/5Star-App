@@ -61,7 +61,8 @@ export const initAnalytics = (measurementId) => {
     queue = [];
   };
   script.onerror = () => {
-    console.warn('Failed to load Google Analytics');
+    ready = false;
+    queue = [];
   };
   document.head.appendChild(script);
 };

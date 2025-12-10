@@ -37,14 +37,12 @@ export const getUpcomingFixturesForTeam = (allFixtures, teamId, daysAhead = 30) 
 export const addCalendarRemindersForTeam = async (teamId, allFixtures, notificationSettings = {}) => {
   // Check if user has enabled upcoming match notifications
   if (!notificationSettings.upcomingMatches) {
-    console.log('⏭️ Upcoming match notifications disabled, skipping calendar sync');
     return 0;
   }
 
   const upcomingFixtures = getUpcomingFixturesForTeam(allFixtures, teamId);
   
   if (upcomingFixtures.length === 0) {
-    console.log('📅 No upcoming fixtures found for team:', teamId);
     return 0;
   }
 
@@ -54,7 +52,6 @@ export const addCalendarRemindersForTeam = async (teamId, allFixtures, notificat
   for (const fixture of upcomingFixtures) {
     // Skip if already added to calendar
     if (calendarReminders.includes(fixture.id)) {
-      console.log('⏭️ Fixture already in calendar:', fixture.id);
       continue;
     }
 
@@ -63,14 +60,12 @@ export const addCalendarRemindersForTeam = async (teamId, allFixtures, notificat
       if (success) {
         saveCalendarReminder(fixture.id);
         addedCount++;
-        console.log('✅ Added fixture to calendar:', fixture.id);
       }
     } catch (error) {
-      console.error('❌ Error adding fixture to calendar:', fixture.id, error);
+      /* ignore calendar add failures */
     }
   }
 
-  console.log(`📅 Added ${addedCount} fixtures to calendar for team ${teamId}`);
   return addedCount;
 };
 
@@ -91,8 +86,6 @@ export const removeCalendarRemindersForTeam = (teamId, allFixtures) => {
   
   const updatedReminders = calendarReminders.filter(id => !fixtureIds.includes(id));
   localStorage.setItem('calendarReminders', JSON.stringify(updatedReminders));
-  
-  console.log(`🗑️ Removed tracking for ${fixtureIds.length} fixtures for team ${teamId}`);
 };
 
 /**
@@ -104,7 +97,6 @@ export const getCalendarReminders = () => {
     const saved = localStorage.getItem('calendarReminders');
     return saved ? JSON.parse(saved) : [];
   } catch (error) {
-    console.error('Error getting calendar reminders:', error);
     return [];
   }
 };
@@ -121,7 +113,7 @@ export const saveCalendarReminder = (fixtureId) => {
       localStorage.setItem('calendarReminders', JSON.stringify(reminders));
     }
   } catch (error) {
-    console.error('Error saving calendar reminder:', error);
+    /* ignore storage failures */
   }
 };
 
@@ -134,7 +126,6 @@ export const saveCalendarReminder = (fixtureId) => {
  */
 export const syncCalendarForFollowedTeams = async (followedTeamIds, allFixtures, notificationSettings) => {
   if (!notificationSettings.upcomingMatches || !notificationSettings.teamFollowing) {
-    console.log('⏭️ Team notifications disabled, skipping calendar sync');
     return 0;
   }
 

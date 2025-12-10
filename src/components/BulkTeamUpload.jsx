@@ -241,7 +241,6 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       const data = XLSX.utils.sheet_to_json(worksheet);
       return data;
     } catch (e) {
-      console.error('Excel parsing error:', e);
       return null;
     }
   };

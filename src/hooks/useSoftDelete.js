@@ -18,7 +18,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting team:', error);
       throw error;
     }
   };
@@ -32,7 +31,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting fixture:', error);
       throw error;
     }
   };
@@ -46,7 +44,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting article:', error);
       throw error;
     }
   };
@@ -60,7 +57,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting season:', error);
       throw error;
     }
   };
@@ -74,7 +70,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting league:', error);
       throw error;
     }
   };
@@ -88,7 +83,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting competition:', error);
       throw error;
     }
   };
@@ -102,7 +96,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error soft-deleting league table:', error);
       throw error;
     }
   };
@@ -116,7 +109,6 @@ export const useSoftDelete = () => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error(`Error soft-deleting ${itemType}:`, error);
       throw error;
     }
   };

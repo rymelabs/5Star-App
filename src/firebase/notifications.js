@@ -41,11 +41,9 @@ export const createNotification = async (userId, notificationData) => {
     };
 
     const docRef = await addDoc(notificationsRef, notification);
-    console.log('✅ Notification created:', docRef.id);
     
     return { success: true, id: docRef.id };
   } catch (error) {
-    console.error('❌ Error creating notification:', error);
     return { success: false, error: error.message };
   }
 };
@@ -88,10 +86,8 @@ export const getUserNotifications = async (userId, options = {}) => {
       createdAt: doc.data().createdAt?.toDate?.() || null
     }));
 
-    console.log(`✅ Retrieved ${notifications.length} notifications for user:`, userId);
     return { success: true, notifications };
   } catch (error) {
-    console.error('❌ Error getting notifications:', error);
     return { success: false, error: error.message, notifications: [] };
   }
 };
@@ -110,10 +106,8 @@ export const markNotificationAsRead = async (notificationId) => {
       readAt: serverTimestamp()
     });
 
-    console.log('✅ Notification marked as read:', notificationId);
     return { success: true };
   } catch (error) {
-    console.error('❌ Error marking notification as read:', error);
     return { success: false, error: error.message };
   }
 };
@@ -135,7 +129,6 @@ export const markAllNotificationsAsRead = async (userId) => {
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
-      console.log('✅ No unread notifications to mark');
       return { success: true, count: 0 };
     }
 
@@ -148,10 +141,8 @@ export const markAllNotificationsAsRead = async (userId) => {
     });
 
     await batch.commit();
-    console.log(`✅ Marked ${snapshot.size} notifications as read`);
     return { success: true, count: snapshot.size };
   } catch (error) {
-    console.error('❌ Error marking all notifications as read:', error);
     return { success: false, error: error.message };
   }
 };
@@ -166,10 +157,8 @@ export const deleteNotification = async (notificationId) => {
     const notificationDoc = doc(db, NOTIFICATIONS_COLLECTION, notificationId);
     await deleteDoc(notificationDoc);
     
-    console.log('✅ Notification deleted:', notificationId);
     return { success: true };
   } catch (error) {
-    console.error('❌ Error deleting notification:', error);
     return { success: false, error: error.message };
   }
 };
@@ -189,10 +178,8 @@ export const getUnreadCount = async (userId) => {
     );
 
     const snapshot = await getDocs(q);
-    console.log(`✅ Unread count for user ${userId}: ${snapshot.size}`);
     return { success: true, count: snapshot.size };
   } catch (error) {
-    console.error('❌ Error getting unread count:', error);
     return { success: false, error: error.message, count: 0 };
   }
 };
@@ -210,7 +197,6 @@ export const deleteAllUserNotifications = async (userId) => {
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
-      console.log('✅ No notifications to delete');
       return { success: true, count: 0 };
     }
 
@@ -220,10 +206,8 @@ export const deleteAllUserNotifications = async (userId) => {
     });
 
     await batch.commit();
-    console.log(`✅ Deleted ${snapshot.size} notifications`);
     return { success: true, count: snapshot.size };
   } catch (error) {
-    console.error('❌ Error deleting all notifications:', error);
     return { success: false, error: error.message };
   }
 };

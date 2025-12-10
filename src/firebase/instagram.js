@@ -18,7 +18,6 @@ export const getInstagramSettings = async () => {
       username: '',
     };
   } catch (error) {
-    console.error('Error fetching Instagram settings:', error);
     throw error;
   }
 };
@@ -36,7 +35,6 @@ export const saveInstagramSettings = async (settings) => {
     
     return true;
   } catch (error) {
-    console.error('Error saving Instagram settings:', error);
     throw error;
   }
 };
@@ -49,7 +47,6 @@ export const fetchInstagramPosts = async (limit = 12) => {
     const settings = await getInstagramSettings();
     
     if (!settings.enabled || !settings.username) {
-      console.log('Instagram is disabled or no username available');
       return [];
     }
     
@@ -60,7 +57,6 @@ export const fetchInstagramPosts = async (limit = 12) => {
     // 2. Official Instagram Basic Display API with access token
     // 3. Third-party service (EmbedSocial, Juicer, SnapWidget)
     
-    console.log('Instagram post fetching is not available from browser. Showing profile link only.');
     return [];
     
     /* 
@@ -73,7 +69,6 @@ export const fetchInstagramPosts = async (limit = 12) => {
     });
     
     if (!response.ok) {
-      console.log('Unable to fetch Instagram posts, will show profile link only');
       return [];
     }
     
@@ -93,7 +88,6 @@ export const fetchInstagramPosts = async (limit = 12) => {
     }));
     */
   } catch (error) {
-    console.log('Instagram integration showing profile link only (client-side fetching not supported)');
     // Return empty array - will show profile link fallback
     return [];
   }

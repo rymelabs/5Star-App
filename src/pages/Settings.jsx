@@ -82,12 +82,11 @@ const Settings = () => {
                 changeLanguage(savedLang);
               }
             } catch (error) {
-              console.error('Error parsing localStorage settings:', error);
+              showToast('Failed to read saved settings', 'error');
             }
           }
         }
       } catch (error) {
-        console.error('Error loading settings:', error);
         showToast('Failed to load settings', 'error');
       } finally {
         setLoading(false);
@@ -114,7 +113,6 @@ const Settings = () => {
           localStorage.setItem('userSettings', JSON.stringify(settings));
         }
       } catch (error) {
-        console.error('Error saving settings:', error);
         if (error.code === 'permission-denied' || error.message.includes('permissions')) {
           localStorage.setItem('userSettings', JSON.stringify(settings));
           showToast('Settings saved locally (sync temporarily unavailable)', 'error');

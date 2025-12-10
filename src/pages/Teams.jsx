@@ -125,7 +125,6 @@ const Teams = () => {
       cachedCursorIdRef.current = lastDocId;
       persistTeamsCache(sanitizedTeams, hasMore, lastDocId);
     } catch (error) {
-      console.error('Error loading initial teams:', error);
       setInitialLoaded(true);
     }
   }, [itemsPerPage, persistTeamsCache]);
@@ -153,7 +152,7 @@ const Teams = () => {
         }
         await loadInitialTeams();
       } catch (error) {
-        console.error('Error validating teams cache:', error);
+        /* ignore cache freshness errors */
       }
     };
 
@@ -193,7 +192,7 @@ const Teams = () => {
       setTeamsLastDoc(lastDoc);
       setHasMoreTeams(hasMore);
     } catch (error) {
-      console.error('Error loading more teams:', error);
+      /* ignore pagination errors */
     } finally {
       setLoadingMore(false);
     }
@@ -254,7 +253,7 @@ const Teams = () => {
             const parsed = JSON.parse(savedSettings);
             notificationSettings = parsed.notifications || notificationSettings;
           } catch (error) {
-            console.error('Error parsing settings:', error);
+            /* ignore invalid settings in localStorage */
           }
         }
         
@@ -275,7 +274,6 @@ const Teams = () => {
         }
       }
     } catch (error) {
-      console.error('Error toggling follow:', error);
       showError('Error', error.message || 'Failed to update follow status');
     } finally {
       setFollowingLoading(prev => ({ ...prev, [team.id]: false }));

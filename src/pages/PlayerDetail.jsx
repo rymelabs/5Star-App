@@ -69,7 +69,6 @@ const PlayerDetail = () => {
       setStats(playerStats);
 
     } catch (err) {
-      console.error('Error loading player:', err);
       setError('Failed to load player data');
     } finally {
       setLoading(false);

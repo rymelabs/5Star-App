@@ -84,7 +84,6 @@ const TeamDetail = () => {
         const fetched = await teamsCollection.getById(id);
         if (mounted) {
           if (!fetched) {
-            console.warn('TeamDetail: teamsCollection.getById returned null for id:', id);
             setRemoteTeam(null);
           } else {
             // normalize id to doc id
@@ -92,7 +91,6 @@ const TeamDetail = () => {
           }
         }
       } catch (err) {
-        console.error('TeamDetail: error fetching team by id fallback:', err);
         setRemoteTeam(null);
       }
     };
@@ -146,7 +144,6 @@ const TeamDetail = () => {
         showSuccess('Following', `You're now following ${team.name}! You'll receive notifications about their matches and news.`);
       }
     } catch (error) {
-      console.error('Error toggling follow:', error);
       showError('Error', error.message || 'Failed to update follow status');
     } finally {
       setFollowLoading(false);

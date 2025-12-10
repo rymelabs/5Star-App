@@ -107,7 +107,6 @@ const News = () => {
         const count = await commentsCollection.getCountForItem('article', article.id);
         return { ...article, commentCount: count };
       } catch (err) {
-        console.error('Error fetching comment count for article', article.id, err);
         return { ...article, commentCount: article.commentCount || 0 };
       }
     }));
@@ -126,7 +125,6 @@ const News = () => {
       cachedCursorIdRef.current = lastDocId;
       persistNewsCache(sanitizedArticles, hasMore, lastDocId);
     } catch (error) {
-      console.error('Error loading initial articles:', error);
       setInitialLoaded(true);
     }
   }, [enhanceWithCommentCounts, persistNewsCache]);
@@ -154,7 +152,6 @@ const News = () => {
         }
         await loadInitialArticles();
       } catch (error) {
-        console.error('Error validating news cache:', error);
       }
     };
 
@@ -195,7 +192,6 @@ const News = () => {
       setNewsLastDoc(lastDoc);
       setHasMoreNews(hasMore);
     } catch (error) {
-      console.error('Error loading more articles:', error);
     } finally {
       setLoadingMore(false);
     }
