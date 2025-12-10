@@ -2,9 +2,16 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { navItems } from './navItems';
+import { trackNavClick } from '../utils/analytics';
 
 const BottomNavigation = () => {
   const { t } = useLanguage();
+
+  const handleNavClick = (path) => {
+    // Extract the nav target from path (e.g., '/fixtures' -> 'fixtures')
+    const target = path.replace('/', '') || 'home';
+    trackNavClick(target);
+  };
   
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 pb-4 px-4">
@@ -14,6 +21,7 @@ const BottomNavigation = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => handleNavClick(item.path)}
               className={({ isActive }) =>
                 `nav-item group ${isActive ? 'active' : ''}`
               }

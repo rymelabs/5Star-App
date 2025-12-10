@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import AuthBackground from '../components/AuthBackground';
+import { trackAuthEvent } from '../utils/analytics';
 
 const EmailAuth = () => {
   const [isSignUp, setIsSignUp] = useState(true);
@@ -51,6 +52,7 @@ const EmailAuth = () => {
       setLoading(true);
       
       if (isSignUp) {
+        trackAuthEvent('signup_start');
         const userData = {
           email: formData.email,
           password: formData.password,
@@ -58,6 +60,7 @@ const EmailAuth = () => {
           role: 'user'
         };
         const result = await register(userData);
+        trackAuthEvent('signup_success');
         // Only redirect to profile setup if profile is not completed
         if (!result.profileCompleted) {
           navigate('/profile-setup');
@@ -65,7 +68,9 @@ const EmailAuth = () => {
           navigate('/', { replace: true });
         }
       } else {
+        trackAuthEvent('login_start');
         const result = await login(formData.email, formData.password);
+        trackAuthEvent('login_success');
         // Check if user has completed profile setup
         if (result && !result.profileCompleted && !result.isAnonymous) {
           navigate('/profile-setup');

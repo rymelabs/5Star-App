@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNews } from '../context/NewsContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
+import { trackTeamView, trackTeamFollow } from '../utils/analytics';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -110,6 +111,13 @@ const TeamDetail = () => {
     }
   }, [team, user]);
 
+  // Track team view
+  useEffect(() => {
+    if (team) {
+      trackTeamView(team.id, 'direct', isFollowing);
+    }
+  }, [team?.id]);
+
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
     if (!requireAuth()) {
@@ -123,13 +131,18 @@ const TeamDetail = () => {
 
     try {
       setFollowLoading(true);
+      // Hash user ID for analytics (first 8 chars of UID)
+      const userIdHash = user.uid ? user.uid.substring(0, 8) : 'anonymous';
+      
       if (isFollowing) {
         await unfollowTeam(team.id);
         setIsFollowing(false);
+        trackTeamFollow(team.id, userIdHash, false);
         showSuccess('Unfollowed', `You unfollowed ${team.name}`);
       } else {
         await followTeam(team.id);
         setIsFollowing(true);
+        trackTeamFollow(team.id, userIdHash, true);
         showSuccess('Following', `You're now following ${team.name}! You'll receive notifications about their matches and news.`);
       }
     } catch (error) {

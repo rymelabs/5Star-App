@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoadingScreen from './components/ui/LoadingScreen';
+import ConsentBanner from './components/ConsentBanner';
+import usePageTracking from './hooks/usePageTracking';
+import { initAnalytics, getConsentStatus } from './utils/analytics';
 import Latest from './pages/Latest';
 import Fixtures from './pages/Fixtures';
 import FixtureDetail from './pages/FixtureDetail';
@@ -62,6 +65,19 @@ const RecycleBin = withLazyErrorLogging('Recycle Bin', () => import('./pages/adm
 
 const AppContent = () => {
   const location = useLocation();
+  
+  // Initialize analytics if user has already consented
+  useEffect(() => {
+    if (getConsentStatus() === 'granted') {
+      const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+      if (measurementId) {
+        initAnalytics(measurementId);
+      }
+    }
+  }, []);
+
+  // Track page views
+  usePageTracking();
   
   // Add error handling for context
   let user, loading, isAuthenticated;
@@ -192,10 +208,20 @@ const AppContent = () => {
   );
 
   if (isAuthStandalone) {
-    return routedContent;
+    return (
+      <>
+        {routedContent}
+        <ConsentBanner />
+      </>
+    );
   }
 
-  return <Layout>{routedContent}</Layout>;
+  return (
+    <>
+      <Layout>{routedContent}</Layout>
+      <ConsentBanner />
+    </>
+  );
 };
 
 export default AppContent;
