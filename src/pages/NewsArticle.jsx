@@ -368,7 +368,7 @@ const NewsArticle = () => {
               </span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4 text-shadow-lg">
+            <h1 className="news-hero-title text-white mb-4 text-shadow-lg tracking-tight">
               {article.title}
             </h1>
 
@@ -385,7 +385,7 @@ const NewsArticle = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full mx-auto px-0 sm:px-4 md:px-6 -mt-16 relative z-10">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 -mt-16 relative z-10">
           <div className="w-full">
           {/* Article Body */}
           <div className="w-full">
@@ -396,8 +396,8 @@ const NewsArticle = () => {
                 </p>
               )}
               
-              <div className="w-full prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-a:text-brand-purple prose-strong:text-white prose-blockquote:border-brand-purple prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg">
-                <div className="whitespace-pre-wrap font-sans w-full">
+              <div className="w-full prose prose-invert prose-xl max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand-purple prose-strong:text-white prose-blockquote:border-brand-purple prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg">
+                <div className="whitespace-pre-wrap font-sans w-full text-lg sm:text-xl leading-8 text-gray-100">
                   {article.content}
                 </div>
               </div>
