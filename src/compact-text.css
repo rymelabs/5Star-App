@@ -366,6 +366,24 @@ nav a, nav button {
   line-height: 1.6 !important;
 }
 
+/* News article main content body */
+.news-article-content,
+.news-article-content p,
+.news-article-content span,
+.news-article-content div {
+  font-size: 1.1rem !important;
+  line-height: 1.75 !important;
+}
+
+@media (min-width: 640px) {
+  .news-article-content,
+  .news-article-content p,
+  .news-article-content span,
+  .news-article-content div {
+    font-size: 1.21rem !important;
+  }
+}
+
 p.news-article-excerpt.news-article-excerpt {
   font-size: 0.98rem !important;
 }
