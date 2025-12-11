@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection, leaguesCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 import useCachedState from '../hooks/useCachedState';
@@ -29,6 +29,10 @@ export const FootballProvider = ({ children }) => {
   const [seasons, setSeasons] = useCachedState('football:seasons', []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Ref to always have latest teams for real-time listener
+  const teamsRef = useRef(teams);
+  useEffect(() => { teamsRef.current = teams; }, [teams]);
 
   const ownerId = user?.uid || null;
   const ownerName = user?.displayName || user?.name || user?.email || 'Unknown Admin';
@@ -74,34 +78,29 @@ export const FootballProvider = ({ children }) => {
 
   // Real-time fixtures updates
   useEffect(() => {
-    // Skip real-time updates if Firebase not configured or teams not yet loaded
+    // Skip real-time updates if Firebase not configured
     if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
       return;
     }
-    if (!teams || teams.length === 0) {
-      return;
-    }
 
-    try {
-      const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
-        // Populate fixtures with team data from current teams state
-        const populatedFixtures = updatedFixtures.map(fixture => {
-          const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
-          const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
-          
-          return {
-            ...fixture,
-            homeTeam: homeTeam || { id: fixture.homeTeamId, name: `Unknown Team (${fixture.homeTeamId?.substring(0, 8) || 'no ID'})`, logo: '' },
-            awayTeam: awayTeam || { id: fixture.awayTeamId, name: `Unknown Team (${fixture.awayTeamId?.substring(0, 8) || 'no ID'})`, logo: '' }
-          };
-        });
-        setFixtures(populatedFixtures);
+    const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
+      // Use ref to get latest teams (avoid stale closure)
+      const currentTeams = teamsRef.current || [];
+      const populatedFixtures = updatedFixtures.map(fixture => {
+        const homeTeam = currentTeams.find(t => t.id === fixture.homeTeamId);
+        const awayTeam = currentTeams.find(t => t.id === fixture.awayTeamId);
+        
+        return {
+          ...fixture,
+          homeTeam: homeTeam || { id: fixture.homeTeamId, name: `Unknown Team (${fixture.homeTeamId?.substring(0, 8) || 'no ID'})`, logo: '' },
+          awayTeam: awayTeam || { id: fixture.awayTeamId, name: `Unknown Team (${fixture.awayTeamId?.substring(0, 8) || 'no ID'})`, logo: '' }
+        };
       });
+      setFixtures(populatedFixtures);
+    });
 
-      return () => unsubscribe();
-    } catch (error) {
-    }
-  }, [teams]); // Re-run when teams change
+    return () => unsubscribe();
+  }, []); // Run once on mount; teamsRef keeps it up to date
 
   const loadInitialData = async () => {
     try {
