@@ -97,19 +97,45 @@ const Latest = () => {
     const now = new Date();
     const competitionsMap = new Map();
 
-    // Helper to find logo for a season or league
-    const findLogo = (seasonId, competitionName) => {
+    // Helper to find logo and details for a season or league
+    const findCompetitionDetails = (seasonId, leagueId, competitionName) => {
       // First try to find from seasons
-      const season = seasons.find(s => s.id === seasonId);
-      if (season?.logo) return season.logo;
+      if (seasonId) {
+        const season = seasons.find(s => s.id === seasonId);
+        if (season) {
+          return { 
+            id: season.id, 
+            logo: season.logo || null, 
+            type: 'season' 
+          };
+        }
+      }
       
-      // Then try to find from leagues by name match
+      // Then try to find from leagues
+      if (leagueId) {
+        const league = leagues.find(l => l.id === leagueId);
+        if (league) {
+          return { 
+            id: league.id, 
+            logo: league.logo || null, 
+            type: 'league' 
+          };
+        }
+      }
+      
+      // Try to find by name match
       const league = leagues.find(l => 
         l.name?.toLowerCase() === competitionName?.toLowerCase()
       );
-      if (league?.logo) return league.logo;
+      if (league) {
+        return { 
+          id: league.id, 
+          logo: league.logo || null, 
+          type: 'league' 
+        };
+      }
       
-      return null;
+      return { id: null, logo: null, type: null };
     };
 
     // Process all fixtures and group by competition/season
@@ -119,12 +145,14 @@ const Latest = () => {
       const groupKey = seasonName || compName;
 
       if (!competitionsMap.has(groupKey)) {
-        // Find logo for this group
-        const logo = findLogo(fixture.seasonId, compName);
+        // Find details for this group
+        const details = findCompetitionDetails(fixture.seasonId, fixture.leagueId, compName);
         
         competitionsMap.set(groupKey, {
           name: groupKey,
-          logo: logo,
+          logo: details.logo,
+          competitionId: details.id,
+          competitionType: details.type,
           isActiveSeason: !!seasonName,
           competition: compName,
           upcomingFixtures: [],
@@ -300,11 +328,21 @@ const Latest = () => {
     )
   );
 
+  // Handle competition click
+  const handleCompetitionClick = (group) => {
+    if (group.competitionId && group.competitionType) {
+      navigate(`/competitions/${group.competitionType}/${group.competitionId}`);
+    }
+  };
+
   // Competition Group Component
   const CompetitionGroup = ({ group }) => (
     <section className="space-y-4">
       {/* Competition Header */}
-      <div className="flex items-center gap-2 px-2">
+      <div 
+        className={`flex items-center gap-2 px-2 ${group.competitionId ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+        onClick={() => handleCompetitionClick(group)}
+      >
         {group.logo ? (
           <img 
             src={group.logo} 
@@ -323,6 +361,9 @@ const Latest = () => {
         <h2 className="text-[13px] sm:text-xl font-bold text-white leading-tight">{group.name}</h2>
         {group.isActiveSeason && (
           <PillChip label="Active Season" size="sm" variant="solid" tone="primary" />
+        )}
+        {group.competitionId && (
+          <ChevronRight className="w-4 h-4 text-gray-500 ml-auto" />
         )}
       </div>
 
