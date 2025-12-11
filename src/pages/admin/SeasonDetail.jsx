@@ -11,7 +11,10 @@ import {
   TrendingUp,
   Target,
   Eye,
-  Clock
+  Clock,
+  Plus,
+  X,
+  Save
 } from 'lucide-react';
 import { seasonsCollection, fixturesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
@@ -29,6 +32,26 @@ const SeasonDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('groups'); // groups, knockout, fixtures
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  
+  // Manual fixture creation state
+  const [showFixtureModal, setShowFixtureModal] = useState(false);
+  const [fixtureForm, setFixtureForm] = useState({
+    homeTeamId: '',
+    awayTeamId: '',
+    groupId: '',
+    stage: 'group',
+    dateTime: '',
+    venue: ''
+  });
+  const [savingFixture, setSavingFixture] = useState(false);
+  
+  // Manual knockout round creation state
+  const [showKnockoutModal, setShowKnockoutModal] = useState(false);
+  const [knockoutForm, setKnockoutForm] = useState({
+    roundName: '',
+    matches: [{ homeTeamId: '', awayTeamId: '' }]
+  });
+  const [savingKnockout, setSavingKnockout] = useState(false);
 
   const isAdmin = user?.isAdmin;
 
@@ -218,6 +241,140 @@ const SeasonDetail = () => {
       console.error('Error toggling season active state:', error);
       showToast('Failed to update season', 'error');
     }
+  };
+
+  // Get all teams in this season (from groups)
+  const seasonTeams = useMemo(() => {
+    if (!season?.groups) return [];
+    return season.groups.flatMap(g => g.teams || []);
+  }, [season]);
+
+  // Manual fixture creation handler
+  const handleCreateFixture = async () => {
+    if (!fixtureForm.homeTeamId || !fixtureForm.awayTeamId) {
+      showToast('Please select both home and away teams', 'error');
+      return;
+    }
+    if (fixtureForm.homeTeamId === fixtureForm.awayTeamId) {
+      showToast('Home and away teams must be different', 'error');
+      return;
+    }
+
+    try {
+      setSavingFixture(true);
+      const homeTeam = seasonTeams.find(t => t.id === fixtureForm.homeTeamId);
+      const awayTeam = seasonTeams.find(t => t.id === fixtureForm.awayTeamId);
+      const group = season.groups?.find(g => g.id === fixtureForm.groupId);
+
+      const fixtureData = {
+        seasonId: seasonId, // Explicitly set the season ID
+        seasonName: season.name || null,
+        homeTeamId: fixtureForm.homeTeamId,
+        awayTeamId: fixtureForm.awayTeamId,
+        homeTeam: homeTeam || null,
+        awayTeam: awayTeam || null,
+        groupId: fixtureForm.groupId || null,
+        groupName: group?.name || null,
+        stage: fixtureForm.stage,
+        dateTime: fixtureForm.dateTime ? new Date(fixtureForm.dateTime).toISOString() : new Date().toISOString(),
+        venue: fixtureForm.venue || null,
+        status: 'upcoming',
+        homeScore: null,
+        awayScore: null,
+        createdAt: new Date(),
+        createdManually: true
+      };
+
+      console.log('Creating fixture with data:', fixtureData);
+      await fixturesCollection.add(fixtureData);
+
+      showToast('Fixture created successfully!', 'success');
+      setShowFixtureModal(false);
+      setFixtureForm({ homeTeamId: '', awayTeamId: '', groupId: '', stage: 'group', dateTime: '', venue: '' });
+    } catch (error) {
+      console.error('Error creating fixture:', error);
+      showToast('Failed to create fixture', 'error');
+    } finally {
+      setSavingFixture(false);
+    }
+  };
+
+  // Manual knockout round creation handler
+  const handleCreateKnockoutRound = async () => {
+    if (!knockoutForm.roundName.trim()) {
+      showToast('Please enter a round name', 'error');
+      return;
+    }
+
+    const validMatches = knockoutForm.matches.filter(m => m.homeTeamId && m.awayTeamId && m.homeTeamId !== m.awayTeamId);
+    if (validMatches.length === 0) {
+      showToast('Please add at least one valid match', 'error');
+      return;
+    }
+
+    try {
+      setSavingKnockout(true);
+      
+      const existingRounds = season.knockoutConfig?.rounds || [];
+      const nextRoundNumber = existingRounds.length + 1;
+
+      const newRound = {
+        roundNumber: nextRoundNumber,
+        name: knockoutForm.roundName.trim(),
+        completed: false,
+        matches: validMatches.map((match, idx) => {
+          const homeTeam = seasonTeams.find(t => t.id === match.homeTeamId);
+          const awayTeam = seasonTeams.find(t => t.id === match.awayTeamId);
+          return {
+            matchNumber: idx + 1,
+            homeTeam: { teamId: match.homeTeamId, team: homeTeam || null },
+            awayTeam: { teamId: match.awayTeamId, team: awayTeam || null }
+          };
+        })
+      };
+
+      await seasonsCollection.update(seasonId, {
+        knockoutConfig: {
+          ...season.knockoutConfig,
+          rounds: [...existingRounds, newRound]
+        }
+      });
+
+      showToast('Knockout round created successfully!', 'success');
+      setShowKnockoutModal(false);
+      setKnockoutForm({ roundName: '', matches: [{ homeTeamId: '', awayTeamId: '' }] });
+      loadSeason();
+    } catch (error) {
+      console.error('Error creating knockout round:', error);
+      showToast('Failed to create knockout round', 'error');
+    } finally {
+      setSavingKnockout(false);
+    }
+  };
+
+  // Add match to knockout form
+  const addKnockoutMatch = () => {
+    setKnockoutForm(prev => ({
+      ...prev,
+      matches: [...prev.matches, { homeTeamId: '', awayTeamId: '' }]
+    }));
+  };
+
+  // Remove match from knockout form
+  const removeKnockoutMatch = (index) => {
+    if (knockoutForm.matches.length <= 1) return;
+    setKnockoutForm(prev => ({
+      ...prev,
+      matches: prev.matches.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update knockout match team
+  const updateKnockoutMatch = (index, side, teamId) => {
+    setKnockoutForm(prev => ({
+      ...prev,
+      matches: prev.matches.map((m, i) => i === index ? { ...m, [side]: teamId } : m)
+    }));
   };
 
   if (!isAdmin) {
@@ -567,6 +724,18 @@ const SeasonDetail = () => {
 
       {activeTab === 'knockout' && (
         <div className="card p-3 sm:p-4">
+          {/* Header with Add Button */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Knockout Rounds</h3>
+            <button
+              onClick={() => setShowKnockoutModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/10 text-primary-400 border border-primary-500/30 rounded-lg hover:bg-primary-500/20 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Round</span>
+            </button>
+          </div>
+          
           {season.knockoutConfig?.rounds && season.knockoutConfig.rounds.length > 0 ? (
             <div className="space-y-4">
               {season.knockoutConfig.rounds.map((round) => (
@@ -607,14 +776,23 @@ const SeasonDetail = () => {
               <Trophy className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-600" />
               <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Knockout Stage Not Set</h3>
               <p className="text-sm text-gray-400 mb-6 px-4">
-                Seed the knockout stage once group stage results are available
+                Seed automatically from group results or create rounds manually
               </p>
-              <button
-                onClick={handleSeedKnockout}
-                className="btn-primary text-sm sm:text-base"
-              >
-                Seed Knockout Stage
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={handleSeedKnockout}
+                  className="btn-primary text-sm sm:text-base"
+                >
+                  Seed Knockout Stage
+                </button>
+                <button
+                  onClick={() => setShowKnockoutModal(true)}
+                  className="px-4 py-2 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Manually
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -622,14 +800,41 @@ const SeasonDetail = () => {
 
       {activeTab === 'fixtures' && (
         <div className="space-y-4">
+          {/* Header with Add Button */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Fixtures ({seasonFixtures.length})</h3>
+            <button
+              onClick={() => setShowFixtureModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Fixture</span>
+            </button>
+          </div>
+          
           {seasonFixtures.length === 0 ? (
             <div className="card p-3 sm:p-4">
               <div className="text-center py-6 sm:py-8">
                 <Calendar className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-gray-600" />
                 <h3 className="text-sm sm:text-base font-semibold text-white mb-2">No Fixtures Yet</h3>
-                <p className="text-xs sm:text-sm text-gray-400 px-4">
-                  Generate fixtures to see them here
+                <p className="text-xs sm:text-sm text-gray-400 px-4 mb-4">
+                  Generate fixtures automatically or create them manually
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handleGenerateFixtures}
+                    className="btn-primary text-sm"
+                  >
+                    Generate All Fixtures
+                  </button>
+                  <button
+                    onClick={() => setShowFixtureModal(true)}
+                    className="px-4 py-2 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Manually
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -758,6 +963,248 @@ const SeasonDetail = () => {
               })()}
             </>
           )}
+        </div>
+      )}
+
+      {/* Manual Fixture Creation Modal */}
+      {showFixtureModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">Create Fixture</h2>
+              <button
+                onClick={() => setShowFixtureModal(false)}
+                className="p-1 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Stage Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Stage</label>
+                <select
+                  value={fixtureForm.stage}
+                  onChange={(e) => setFixtureForm(prev => ({ ...prev, stage: e.target.value }))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                >
+                  <option value="group">Group Stage</option>
+                  <option value="knockout">Knockout</option>
+                  <option value="final">Final</option>
+                </select>
+              </div>
+
+              {/* Group Selection (only for group stage) */}
+              {fixtureForm.stage === 'group' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Group</label>
+                  <select
+                    value={fixtureForm.groupId}
+                    onChange={(e) => setFixtureForm(prev => ({ ...prev, groupId: e.target.value }))}
+                    className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="">Select Group</option>
+                    {season.groups?.map(group => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Home Team */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Home Team</label>
+                <select
+                  value={fixtureForm.homeTeamId}
+                  onChange={(e) => setFixtureForm(prev => ({ ...prev, homeTeamId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                >
+                  <option value="">Select Home Team</option>
+                  {seasonTeams.map(team => (
+                    <option key={team.id} value={team.id}>{team.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Away Team */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Away Team</label>
+                <select
+                  value={fixtureForm.awayTeamId}
+                  onChange={(e) => setFixtureForm(prev => ({ ...prev, awayTeamId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                >
+                  <option value="">Select Away Team</option>
+                  {seasonTeams.map(team => (
+                    <option key={team.id} value={team.id} disabled={team.id === fixtureForm.homeTeamId}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date & Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Date & Time (Optional)</label>
+                <input
+                  type="datetime-local"
+                  value={fixtureForm.dateTime}
+                  onChange={(e) => setFixtureForm(prev => ({ ...prev, dateTime: e.target.value }))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                />
+              </div>
+
+              {/* Venue */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Venue (Optional)</label>
+                <input
+                  type="text"
+                  value={fixtureForm.venue}
+                  onChange={(e) => setFixtureForm(prev => ({ ...prev, venue: e.target.value }))}
+                  placeholder="e.g., Stadium Name"
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-4 border-t border-white/10">
+              <button
+                onClick={() => setShowFixtureModal(false)}
+                className="flex-1 px-4 py-2 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateFixture}
+                disabled={savingFixture}
+                className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingFixture ? (
+                  <span className="animate-spin">⏳</span>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Create
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Knockout Round Creation Modal */}
+      {showKnockoutModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-800 rounded-xl border border-white/10 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">Create Knockout Round</h2>
+              <button
+                onClick={() => setShowKnockoutModal(false)}
+                className="p-1 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Round Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Round Name</label>
+                <input
+                  type="text"
+                  value={knockoutForm.roundName}
+                  onChange={(e) => setKnockoutForm(prev => ({ ...prev, roundName: e.target.value }))}
+                  placeholder="e.g., Quarter Finals, Semi Finals"
+                  className="w-full px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                />
+              </div>
+
+              {/* Matches */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">Matches</label>
+                  <button
+                    onClick={addKnockoutMatch}
+                    className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Match
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {knockoutForm.matches.map((match, index) => (
+                    <div key={index} className="p-3 bg-dark-700/50 rounded-lg border border-white/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-400">Match {index + 1}</span>
+                        {knockoutForm.matches.length > 1 && (
+                          <button
+                            onClick={() => removeKnockoutMatch(index)}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                        <select
+                          value={match.homeTeamId}
+                          onChange={(e) => updateKnockoutMatch(index, 'homeTeamId', e.target.value)}
+                          className="w-full px-2 py-1.5 bg-dark-800 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Home Team</option>
+                          {seasonTeams.map(team => (
+                            <option key={team.id} value={team.id}>{team.name}</option>
+                          ))}
+                        </select>
+                        
+                        <span className="text-gray-500 text-xs px-1">vs</span>
+                        
+                        <select
+                          value={match.awayTeamId}
+                          onChange={(e) => updateKnockoutMatch(index, 'awayTeamId', e.target.value)}
+                          className="w-full px-2 py-1.5 bg-dark-800 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Away Team</option>
+                          {seasonTeams.map(team => (
+                            <option key={team.id} value={team.id} disabled={team.id === match.homeTeamId}>
+                              {team.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-4 border-t border-white/10">
+              <button
+                onClick={() => setShowKnockoutModal(false)}
+                className="flex-1 px-4 py-2 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateKnockoutRound}
+                disabled={savingKnockout}
+                className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingKnockout ? (
+                  <span className="animate-spin">⏳</span>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Create Round
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
