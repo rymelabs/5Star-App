@@ -12,6 +12,7 @@ import {
   Loader
 } from 'lucide-react';
 import { seasonsCollection, teamsCollection } from '../../firebase/firestore';
+import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 import { useAuth } from '../../context/AuthContext';
 
 const EditSeason = () => {
@@ -36,6 +37,9 @@ const EditSeason = () => {
   });
 
   const [groups, setGroups] = useState([]);
+  const [knockoutRounds, setKnockoutRounds] = useState([]);
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
   const [originalSeason, setOriginalSeason] = useState(null);
 
   const isAdmin = user?.isAdmin;
@@ -70,13 +74,18 @@ const EditSeason = () => {
         matchesPerRound: season.knockoutConfig?.matchesPerRound || 2,
         qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2,
         ownerId: season.ownerId || null,
-        ownerName: season.ownerName || 'Unknown Admin'
+        ownerName: season.ownerName || 'Unknown Admin',
+        logo: season.logo || null
       });
+
+      setLogoPreview(season.logo || '');
 
       // Populate groups
       if (season.groups && season.groups.length > 0) {
         setGroups(season.groups);
       }
+
+      setKnockoutRounds(season.knockoutConfig?.rounds || []);
       
       setLoading(false);
     } catch (error) {
@@ -102,6 +111,17 @@ const EditSeason = () => {
       ...prev,
       [name]: numValue
     }));
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    const { isValid, error } = validateImageFile(file);
+    if (!isValid) {
+      showToast(error || 'Invalid image file', 'error');
+      return;
+    }
+    setSelectedLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   const updateGroupName = (groupId, name) => {
@@ -143,6 +163,73 @@ const EditSeason = () => {
     return allTeams.filter(t => !isTeamAssigned(t.id));
   };
 
+  const getAllSeasonTeams = () => groups.flatMap(g => g.teams || []);
+
+  const addRound = () => {
+    const nextNumber = (knockoutRounds?.length || 0) + 1;
+    const roundName = nextNumber === 1 ? 'Round of 16' : nextNumber === 2 ? 'Quarter Finals' : `Round ${nextNumber}`;
+    setKnockoutRounds(prev => ([
+      ...prev,
+      {
+        roundNumber: nextNumber,
+        name: roundName,
+        matches: [],
+        completed: false
+      }
+    ]));
+  };
+
+  const renameRound = (roundNumber, name) => {
+    setKnockoutRounds(prev => prev.map(r => r.roundNumber === roundNumber ? { ...r, name } : r));
+  };
+
+  const removeRound = (roundNumber) => {
+    setKnockoutRounds(prev => prev.filter(r => r.roundNumber !== roundNumber));
+  };
+
+  const addMatchToRound = (roundNumber) => {
+    setKnockoutRounds(prev => prev.map(round => {
+      if (round.roundNumber !== roundNumber) return round;
+      const matchNumber = (round.matches?.length || 0) + 1;
+      return {
+        ...round,
+        matches: [...(round.matches || []), {
+          matchNumber,
+          homeTeam: null,
+          awayTeam: null
+        }]
+      };
+    }));
+  };
+
+  const updateMatchTeam = (roundNumber, matchNumber, side, teamId) => {
+    const team = getAllSeasonTeams().find(t => t.id === teamId);
+    setKnockoutRounds(prev => prev.map(round => {
+      if (round.roundNumber !== roundNumber) return round;
+      return {
+        ...round,
+        matches: round.matches.map(match => {
+          if (match.matchNumber !== matchNumber) return match;
+          const payload = { teamId: team?.id || teamId, team: team || null };
+          return {
+            ...match,
+            [side]: payload
+          };
+        })
+      };
+    }));
+  };
+
+  const removeMatch = (roundNumber, matchNumber) => {
+    setKnockoutRounds(prev => prev.map(round => {
+      if (round.roundNumber !== roundNumber) return round;
+      return {
+        ...round,
+        matches: round.matches.filter(m => m.matchNumber !== matchNumber)
+      };
+    }));
+  };
+
   const handleSubmit = async () => {
     // Validate
     if (!formData.name.trim()) {
@@ -160,6 +247,12 @@ const EditSeason = () => {
     try {
       setSaving(true);
 
+      let logoUrl = formData.logo || originalSeason?.logo || null;
+      if (selectedLogoFile) {
+        const safeName = (formData.name || 'season').replace(/[^a-zA-Z0-9]/g, '_');
+        logoUrl = await uploadImage(selectedLogoFile, 'seasons', `${safeName}_${Date.now()}`);
+      }
+
       const seasonOwnerId = originalSeason?.ownerId || formData.ownerId || user?.uid || null;
       const seasonOwnerName = originalSeason?.ownerName || formData.ownerName || user?.displayName || user?.name || user?.email || 'Unknown Admin';
 
@@ -171,8 +264,10 @@ const EditSeason = () => {
         groups: groups,
         knockoutConfig: {
           matchesPerRound: formData.matchesPerRound,
-          qualifiersPerGroup: formData.qualifiersPerGroup
+          qualifiersPerGroup: formData.qualifiersPerGroup,
+          rounds: knockoutRounds
         },
+        logo: logoUrl,
         ownerId: seasonOwnerId,
         ownerName: seasonOwnerName,
         updatedAt: new Date()
@@ -293,6 +388,28 @@ const EditSeason = () => {
                   className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                   placeholder="e.g., Spring Championship 2024"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Season Logo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="w-full text-sm text-gray-300 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-500/20 file:text-primary-100 hover:file:bg-primary-500/30"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">JPEG/PNG/WebP, max 5MB. Trophy emoji will be used if no logo.</p>
+                </div>
+                <div className="flex justify-end">
+                  <div className="w-16 h-16 rounded-lg bg-dark-700 border border-white/10 flex items-center justify-center overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Season logo preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-lg">🏆</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -547,6 +664,101 @@ const EditSeason = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Knockout Editor */}
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Knockout Bracket</h2>
+              <button
+                type="button"
+                onClick={addRound}
+                className="px-3 py-1.5 rounded-lg bg-white/5 text-xs font-semibold text-white hover:bg-white/10 border border-white/10"
+              >
+                + Add Round
+              </button>
+            </div>
+
+            {knockoutRounds.length === 0 && (
+              <p className="text-sm text-gray-400">No knockout rounds yet. Add one to start defining fixtures.</p>
+            )}
+
+            <div className="space-y-4">
+              {knockoutRounds.map((round) => (
+                <div key={round.roundNumber} className="border border-white/10 rounded-lg p-3 sm:p-4 bg-white/[0.02] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={round.name}
+                        onChange={(e) => renameRound(round.roundNumber, e.target.value)}
+                        className="bg-dark-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
+                      />
+                      <span className="text-xs text-gray-500">Round #{round.roundNumber}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => addMatchToRound(round.roundNumber)}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 text-xs font-semibold text-white hover:bg-white/10 border border-white/10"
+                      >
+                        + Add Match
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeRound(round.roundNumber)}
+                        className="px-3 py-1.5 rounded-lg bg-red-500/10 text-xs font-semibold text-red-300 hover:bg-red-500/20 border border-red-500/30"
+                      >
+                        Remove Round
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(round.matches || []).map((match) => (
+                      <div key={match.matchNumber} className="bg-dark-700/60 border border-white/10 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <span className="px-2 py-1 bg-white/5 rounded-full text-white font-semibold">Match {match.matchNumber}</span>
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                          <select
+                            value={match.homeTeam?.teamId || match.homeTeam?.id || ''}
+                            onChange={(e) => updateMatchTeam(round.roundNumber, match.matchNumber, 'homeTeam', e.target.value)}
+                            className="bg-dark-800 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none"
+                          >
+                            <option value="">Home team...</option>
+                            {getAllSeasonTeams().map(team => (
+                              <option key={team.id} value={team.id}>{team.name}</option>
+                            ))}
+                          </select>
+                          <div className="text-center text-xs text-gray-500">vs</div>
+                          <select
+                            value={match.awayTeam?.teamId || match.awayTeam?.id || ''}
+                            onChange={(e) => updateMatchTeam(round.roundNumber, match.matchNumber, 'awayTeam', e.target.value)}
+                            className="bg-dark-800 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none"
+                          >
+                            <option value="">Away team...</option>
+                            {getAllSeasonTeams().map(team => (
+                              <option key={team.id} value={team.id}>{team.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeMatch(round.roundNumber, match.matchNumber)}
+                          className="text-xs text-red-300 hover:text-red-200"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {(round.matches || []).length === 0 && (
+                      <p className="text-xs text-gray-500">No matches added. Add matches to define this round.</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

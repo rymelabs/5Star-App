@@ -1486,6 +1486,22 @@ export const seasonsCollection = {
     }
   },
 
+  // Get all active seasons (supports multiple active at once)
+  getActiveList: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'seasons'),
+        where('isActive', '==', true),
+        orderBy('updatedAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Create a new season
   create: async (seasonData) => {
     try {
@@ -1499,6 +1515,7 @@ export const seasonsCollection = {
         status: 'upcoming', // upcoming, ongoing, completed
         ownerId: seasonData.ownerId || null,
         ownerName: seasonData.ownerName || null,
+        logo: seasonData.logo || null,
         
         // Group stage configuration
         numberOfGroups: seasonData.numberOfGroups || 4,
@@ -1536,35 +1553,15 @@ export const seasonsCollection = {
     }
   },
 
-  // Set a season as active (deactivates all others)
-  setActive: async (seasonId, ownerId = null) => {
+  // Set or clear active state for a single season (non-exclusive)
+  setActive: async (seasonId, isActive = true) => {
     try {
       const database = checkFirebaseInit();
-      const batch = writeBatch(database);
-      
-      // Get all seasons
-      let seasonsSnapshot;
-      if (ownerId) {
-        const seasonsRef = collection(database, 'seasons');
-        const ownerQuery = query(seasonsRef, where('ownerId', '==', ownerId));
-        seasonsSnapshot = await getDocs(ownerQuery);
-      } else {
-        seasonsSnapshot = await getDocs(collection(database, 'seasons'));
-      }
-      
-      // Deactivate all seasons
-      seasonsSnapshot.docs.forEach((seasonDoc) => {
-        batch.update(seasonDoc.ref, { isActive: false });
-      });
-      
-      // Activate the selected season
-      batch.update(doc(database, 'seasons', seasonId), { 
-        isActive: true,
-        status: 'ongoing',
+      await updateDoc(doc(database, 'seasons', seasonId), {
+        isActive,
+        status: isActive ? 'ongoing' : 'upcoming',
         updatedAt: serverTimestamp()
       });
-      
-      await batch.commit();
     } catch (error) {
       throw error;
     }

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { seasonsCollection } from '../../firebase/firestore';
 import { teamsCollection } from '../../firebase/firestore';
+import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -36,6 +37,8 @@ const CreateSeason = () => {
   });
 
   const [groups, setGroups] = useState([]);
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
 
   const isAdmin = user?.isAdmin;
 
@@ -68,6 +71,17 @@ const CreateSeason = () => {
       ...prev,
       [name]: numValue
     }));
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    const { isValid, error } = validateImageFile(file);
+    if (!isValid) {
+      showToast(error || t('createSeason.invalidLogo') || 'Invalid logo', 'error');
+      return;
+    }
+    setSelectedLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   const initializeGroups = () => {
@@ -132,6 +146,11 @@ const CreateSeason = () => {
 
     try {
       setLoading(true);
+      let logoUrl = null;
+      if (selectedLogoFile) {
+        const safeName = (formData.name || 'season').replace(/[^a-zA-Z0-9]/g, '_');
+        logoUrl = await uploadImage(selectedLogoFile, 'seasons', `${safeName}_${Date.now()}`);
+      }
       
       const seasonData = {
         name: formData.name.trim(),
@@ -140,6 +159,7 @@ const CreateSeason = () => {
         teamsPerGroup: parseInt(formData.teamsPerGroup, 10),
         ownerId: user?.uid || null,
         ownerName: user?.displayName || user?.name || user?.email || 'Unknown Admin',
+        logo: logoUrl,
         groups: groups.map(g => ({
           id: g.id,
           name: g.name,
@@ -223,6 +243,28 @@ const CreateSeason = () => {
       </div>
 
       {/* Progress Steps */}
+
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('createSeason.seasonLogo') || 'Season Logo'}</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="w-full text-sm text-gray-300 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-500/20 file:text-primary-100 hover:file:bg-primary-500/30"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">JPEG/PNG/WebP, max 5MB. Trophy emoji is used if no logo.</p>
+                </div>
+                <div className="flex justify-end">
+                  <div className="w-16 h-16 rounded-lg bg-dark-700 border border-white/10 flex items-center justify-center overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Season logo preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-lg">🏆</span>
+                    )}
+                  </div>
+                </div>
+              </div>
       <div className="flex items-center justify-between mb-8 max-w-2xl mx-auto">
         {[1, 2, 3].map((s) => (
           <React.Fragment key={s}>

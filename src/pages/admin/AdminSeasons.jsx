@@ -58,13 +58,13 @@ const AdminSeasons = () => {
     }, 3000);
   };
 
-  const handleSetActive = async (seasonId) => {
+  const handleSetActive = async (seasonId, isActive = true) => {
     try {
-      await seasonsCollection.setActive(seasonId);
-      showToast('Season activated successfully!', 'success');
+      await seasonsCollection.setActive(seasonId, isActive);
+      showToast(isActive ? 'Season activated successfully!' : 'Season deactivated.', 'success');
       loadSeasons();
     } catch (error) {
-      showToast('Failed to activate season', 'error');
+      showToast('Failed to update season active state', 'error');
     }
   };
 
@@ -149,15 +149,17 @@ const AdminSeasons = () => {
                   <p className="text-[11px] text-white/60 mt-1">Owner: {season.ownerName || 'Unknown'}</p>
                 </div>
                 <div className="flex items-center gap-1 self-start">
-                  {!season.isActive && (
-                    <button
-                      onClick={() => handleSetActive(season.id)}
-                      className="p-1.5 sm:p-1.5 rounded-md border border-green-400/40 text-green-100 hover:bg-green-500/15"
-                      title="Set active"
-                    >
-                      <Play className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleSetActive(season.id, !season.isActive)}
+                    className={`p-1.5 sm:p-1.5 rounded-md border ${
+                      season.isActive
+                        ? 'border-amber-400/40 text-amber-100 hover:bg-amber-500/15'
+                        : 'border-green-400/40 text-green-100 hover:bg-green-500/15'
+                    }`}
+                    title={season.isActive ? 'Deactivate' : 'Activate'}
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                  </button>
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}`)}
                     className="p-1.5 rounded-md border border-blue-400/40 text-blue-100 hover:bg-blue-500/15"

@@ -1,12 +1,24 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar } from 'lucide-react';
+import { Calendar, Trophy } from 'lucide-react';
 import { useFootball } from '../../../context/FootballContext';
 import NewTeamAvatar from '../../NewTeamAvatar';
 import { formatDate, formatTime } from '../../../utils/dateUtils';
 
 const UpcomingFixturesWidget = () => {
-  const { fixtures } = useFootball();
+  const { fixtures, seasons = [], leagues = [] } = useFootball();
+
+  const getCompetitionInfo = (fixture) => {
+    if (fixture.leagueId) {
+      const league = leagues.find(l => l.id === fixture.leagueId);
+      if (league) return { name: league.name, logo: league.logo };
+    }
+    if (fixture.seasonId) {
+      const season = seasons.find(s => s.id === fixture.seasonId);
+      if (season) return { name: season.name, logo: season.logo || season.badge || null };
+    }
+    return { name: fixture.competition || 'League', logo: null };
+  };
 
   const upcomingFixtures = useMemo(() => {
     if (!fixtures) return [];
@@ -40,12 +52,27 @@ const UpcomingFixturesWidget = () => {
             to={`/fixtures/${fixture.id}`}
             className="block p-2 rounded-xl hover:bg-white/5 transition-colors group"
           >
+            {(() => {
+              const comp = getCompetitionInfo(fixture);
+              return (
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {comp.logo ? (
+                      <img src={comp.logo} alt={comp.name} className="w-5 h-5 object-contain" />
+                    ) : (
+                      <Trophy className="w-4 h-4 text-brand-purple" />
+                    )}
+                    <span className="text-[10px] font-semibold text-gray-300 truncate">
+                      {comp.name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] text-gray-500 font-medium">
                 {formatDate(fixture.dateTime)} • {formatTime(fixture.dateTime)}
-              </span>
-              <span className="text-[10px] text-brand-purple/80 font-bold px-1.5 py-0.5 bg-brand-purple/10 rounded">
-                {fixture.competition || 'League'}
               </span>
             </div>
             
