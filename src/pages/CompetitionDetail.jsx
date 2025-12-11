@@ -218,10 +218,10 @@ const CompetitionDetail = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-app pb-20"
+      className="min-h-screen pb-20"
     >
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-elevated border-b border-white/[0.06]">
+      <div className="relative overflow-hidden bg-elevated border-b border-white/[0.06] rounded-t-3xl">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-brand-purple/10 to-transparent opacity-50" />
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-purple/20 rounded-full blur-3xl" />

@@ -111,7 +111,7 @@ const AppContent = () => {
   }
 
 
-  const standaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register', '/competitions/'];
+  const standaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
   const isStandalone = standaloneRoutes.some((path) => location.pathname.startsWith(path));
 
   const requireAuthElement = (element) => (
