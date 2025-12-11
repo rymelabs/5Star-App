@@ -186,6 +186,36 @@ const CompetitionDetail = () => {
     navigate(`/teams/${teamId}`);
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: competition?.name || 'Competition',
+      text: `Check out ${competition?.name || 'this competition'} on 5Star!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        // You could add a toast notification here
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('Link copied to clipboard!');
+        } catch (clipboardError) {
+          console.error('Clipboard error:', clipboardError);
+        }
+      }
+    }
+  };
+
   if (!competition && !loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -238,7 +268,10 @@ const CompetitionDetail = () => {
             </button>
             
             <div className="flex gap-2">
-              <button className="p-2 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-all group">
+              <button 
+                onClick={handleShare}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-all group"
+              >
                 <Share2 className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </button>
             </div>
