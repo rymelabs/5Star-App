@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   Play,
+  Pause,
   Eye,
   Layers,
   RefreshCw
@@ -59,14 +60,14 @@ const AdminSeasons = () => {
     }, 3000);
   };
 
-  const handleSetActive = async (seasonId) => {
+  const handleToggleActive = async (seasonId, currentlyActive) => {
     try {
-      await seasonsCollection.setActive(seasonId);
-      showToast('Season activated successfully!', 'success');
+      await seasonsCollection.toggleActive(seasonId, !currentlyActive);
+      showToast(currentlyActive ? 'Season deactivated!' : 'Season activated!', 'success');
       loadSeasons();
     } catch (error) {
-      console.error('Error activating season:', error);
-      showToast('Failed to activate season', 'error');
+      console.error('Error toggling season active state:', error);
+      showToast('Failed to update season', 'error');
     }
   };
 
@@ -136,31 +137,43 @@ const AdminSeasons = () => {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-purple/5 via-transparent to-blue-500/10" />
             <div className="relative space-y-2.5">
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Season {season.year || '—'}</p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <h3 className="text-[13px] font-semibold text-white">{season.name}</h3>
-                    {season.isActive && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] text-primary-200 bg-primary-500/20 border border-primary-500/30">
-                        Active
-                      </span>
-                    )}
-                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] ${getStatusBadge(season.status)}`}>
-                      {season.status}
-                    </span>
+                <div className="flex items-start gap-3">
+                  {/* Season Logo */}
+                  <div className="w-10 h-10 rounded-lg bg-dark-700 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {season.logo ? (
+                      <img 
+                        src={season.logo} 
+                        alt={season.name} 
+                        className="w-full h-full object-contain"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                      />
+                    ) : null}
+                    <span className={`text-lg ${season.logo ? 'hidden' : ''}`}>🏆</span>
                   </div>
-                  <p className="text-[11px] text-white/60 mt-1">Owner: {season.ownerName || 'Unknown'}</p>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Season {season.year || '—'}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h3 className="text-[13px] font-semibold text-white">{season.name}</h3>
+                      {season.isActive && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] text-primary-200 bg-primary-500/20 border border-primary-500/30">
+                          Active
+                        </span>
+                      )}
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.25em] ${getStatusBadge(season.status)}`}>
+                        {season.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/60 mt-1">Owner: {season.ownerName || 'Unknown'}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1 self-start">
-                  {!season.isActive && (
-                    <button
-                      onClick={() => handleSetActive(season.id)}
-                      className="p-1.5 sm:p-1.5 rounded-md border border-green-400/40 text-green-100 hover:bg-green-500/15"
-                      title="Set active"
-                    >
-                      <Play className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleToggleActive(season.id, season.isActive)}
+                    className={`p-1.5 sm:p-1.5 rounded-md border ${season.isActive ? 'border-orange-400/40 text-orange-100 hover:bg-orange-500/15' : 'border-green-400/40 text-green-100 hover:bg-green-500/15'}`}
+                    title={season.isActive ? 'Deactivate' : 'Activate'}
+                  >
+                    {season.isActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  </button>
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}`)}
                     className="p-1.5 rounded-md border border-blue-400/40 text-blue-100 hover:bg-blue-500/15"

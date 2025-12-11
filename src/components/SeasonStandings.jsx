@@ -3,6 +3,7 @@ import { Trophy, Users, TrendingUp, Award, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NewTeamAvatar from './NewTeamAvatar';
 import SurfaceCard from './ui/SurfaceCard';
+import { calculateGroupStandings } from '../utils/standingsUtils';
 
 const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
   const [activeGroup, setActiveGroup] = useState(season?.groups?.[0]?.id || null);
@@ -55,136 +56,11 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
     return fixtures.filter(fixture => fixture.seasonId === season.id);
   }, [fixtures, season?.id]);
 
-  const resolveTeamById = (teamId) => {
-    if (!teamId) return null;
-    return (
-      teams.find(team => team.id === teamId) ||
-      allGroupTeams.find(team => (team.id || team.teamId) === teamId) ||
-      null
-    );
-  };
-
-  const sortStandingsList = (rows = []) => (
-    [...rows]
-      .sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
-        return b.goalsFor - a.goalsFor;
-      })
-      .map((row, index) => ({ ...row, position: index + 1 }))
-  );
-
-  // Calculate standings for the current group
+  // Calculate standings for the current group using shared utility
   const standings = useMemo(() => {
     if (!currentGroup) return [];
-
-    const currentGroupTeamIds = groupTeamIndex[currentGroup.id] || new Set();
-
-    const groupFixtures = seasonFixtures.filter((fixture) => {
-      if (fixture.status !== 'completed') return false;
-      const directGroupId = fixture.groupId || fixture.group?.id;
-      if (directGroupId && directGroupId === currentGroup.id) return true;
-      const homeId = fixture.homeTeamId || fixture.homeTeam?.id;
-      const awayId = fixture.awayTeamId || fixture.awayTeam?.id;
-      return homeId && awayId && currentGroupTeamIds.has(homeId) && currentGroupTeamIds.has(awayId);
-    });
-
-    const ensureRow = (table, teamInfo, fallbackId) => {
-      const normalizedTeam = teamInfo?.team || teamInfo;
-      const teamId = normalizedTeam?.id || fallbackId;
-      if (!teamId) return null;
-
-      if (!table[teamId]) {
-        const resolvedTeam = normalizedTeam || resolveTeamById(teamId) || { id: teamId, name: 'Unknown Team' };
-        table[teamId] = {
-          teamId,
-          team: resolvedTeam,
-          played: 0,
-          won: 0,
-          drawn: 0,
-          lost: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          goalDifference: 0,
-          points: 0,
-        };
-      }
-
-      return table[teamId];
-    };
-
-    if (!groupFixtures.length) {
-      if (currentGroup?.standings?.length) {
-        return sortStandingsList(
-          currentGroup.standings.map((standing) => ({
-            ...standing,
-            team: standing.team || resolveTeamById(standing.teamId || standing.team?.id),
-            goalDifference: standing.goalDifference ?? ((standing.goalsFor || 0) - (standing.goalsAgainst || 0)),
-          }))
-        );
-      }
-
-      return sortStandingsList(
-        (currentGroup?.teams || []).map((team, index) => ({
-          teamId: team?.id || team?.teamId,
-          team,
-          played: 0,
-          won: 0,
-          drawn: 0,
-          lost: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          goalDifference: 0,
-          points: 0,
-          position: index + 1,
-        }))
-      );
-    }
-
-    const table = {};
-    (currentGroup?.teams || []).forEach(team => ensureRow(table, team, team?.teamId));
-
-    groupFixtures.forEach((fixture) => {
-      const homeTeam = fixture.homeTeam || resolveTeamById(fixture.homeTeamId) || { id: fixture.homeTeamId };
-      const awayTeam = fixture.awayTeam || resolveTeamById(fixture.awayTeamId) || { id: fixture.awayTeamId };
-      const homeRow = ensureRow(table, homeTeam, fixture.homeTeamId);
-      const awayRow = ensureRow(table, awayTeam, fixture.awayTeamId);
-
-      if (!homeRow || !awayRow) return;
-
-      const homeScore = Number.isFinite(Number(fixture.homeScore)) ? Number(fixture.homeScore) : 0;
-      const awayScore = Number.isFinite(Number(fixture.awayScore)) ? Number(fixture.awayScore) : 0;
-
-      homeRow.played += 1;
-      awayRow.played += 1;
-      homeRow.goalsFor += homeScore;
-      homeRow.goalsAgainst += awayScore;
-      awayRow.goalsFor += awayScore;
-      awayRow.goalsAgainst += homeScore;
-
-      if (homeScore > awayScore) {
-        homeRow.won += 1;
-        homeRow.points += 3;
-        awayRow.lost += 1;
-      } else if (awayScore > homeScore) {
-        awayRow.won += 1;
-        awayRow.points += 3;
-        homeRow.lost += 1;
-      } else {
-        homeRow.drawn += 1;
-        awayRow.drawn += 1;
-        homeRow.points += 1;
-        awayRow.points += 1;
-      }
-    });
-
-    return sortStandingsList(
-      Object.values(table).map((row) => ({
-        ...row,
-        goalDifference: row.goalsFor - row.goalsAgainst,
-      }))
-    );
-  }, [currentGroup, seasonFixtures, teams, allGroupTeams, groupTeamIndex]);
+    return calculateGroupStandings(currentGroup, seasonFixtures, teams, season?.id);
+  }, [currentGroup, seasonFixtures, teams, season?.id]);
 
   const getRowStyle = (position) => {
     const qualifiers = season.knockoutConfig?.qualifiersPerGroup || 2;

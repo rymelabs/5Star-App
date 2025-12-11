@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -6,6 +6,7 @@ import {
   Users,
   Calendar,
   Play,
+  Pause,
   Edit,
   TrendingUp,
   Target,
@@ -16,6 +17,7 @@ import { seasonsCollection, fixturesCollection } from '../../firebase/firestore'
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import { calculateGroupStandings } from '../../utils/standingsUtils';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();
@@ -206,14 +208,15 @@ const SeasonDetail = () => {
     }
   };
 
-  const handleSetActive = async () => {
+  const handleToggleActive = async () => {
     try {
-      await seasonsCollection.setActive(seasonId);
-      showToast('Season activated successfully!', 'success');
+      const newActiveState = !season.isActive;
+      await seasonsCollection.toggleActive(seasonId, newActiveState);
+      showToast(newActiveState ? 'Season activated!' : 'Season deactivated!', 'success');
       loadSeason();
     } catch (error) {
-      console.error('Error activating season:', error);
-      showToast('Failed to activate season', 'error');
+      console.error('Error toggling season active state:', error);
+      showToast('Failed to update season', 'error');
     }
   };
 
@@ -283,6 +286,18 @@ const SeasonDetail = () => {
             >
               <ArrowLeft className="w-5 h-5 text-gray-400" />
             </button>
+            {/* Season Logo */}
+            <div className="w-12 h-12 rounded-lg bg-dark-700 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 mr-3">
+              {season.logo ? (
+                <img 
+                  src={season.logo} 
+                  alt={season.name} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                />
+              ) : null}
+              <span className={`text-xl ${season.logo ? 'hidden' : ''}`}>🏆</span>
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
                 <h1 className="admin-header truncate">{season.name}</h1>
@@ -303,15 +318,13 @@ const SeasonDetail = () => {
         </div>
         
         <div className="flex flex-wrap gap-2">
-          {!season.isActive && (
-            <button
-              onClick={handleSetActive}
-              className="flex-1 sm:flex-none px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors flex items-center justify-center space-x-2"
-            >
-              <Play className="w-4 h-4" />
-              <span className="text-sm">Activate</span>
-            </button>
-          )}
+          <button
+            onClick={handleToggleActive}
+            className={`flex-1 sm:flex-none px-4 py-2 border rounded-lg transition-colors flex items-center justify-center space-x-2 ${season.isActive ? 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20' : 'bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20'}`}
+          >
+            {season.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            <span className="text-sm">{season.isActive ? 'Deactivate' : 'Activate'}</span>
+          </button>
           <button
             onClick={() => navigate(`/admin/seasons/${seasonId}/edit`)}
             className="flex-1 sm:flex-none px-4 py-2 bg-accent-500/10 text-accent-400 border border-accent-500/30 rounded-lg hover:bg-accent-500/20 transition-colors flex items-center justify-center space-x-2"
@@ -473,12 +486,16 @@ const SeasonDetail = () => {
       {/* Tab Content */}
       {activeTab === 'groups' && (
         <div className="space-y-4">
-          {season.groups?.map((group) => (
+          {season.groups?.map((group) => {
+            // Compute standings from fixtures using shared utility
+            const computedStandings = calculateGroupStandings(group, seasonFixtures, teams, season.id);
+            
+            return (
             <div key={group.id} className="card p-3 sm:p-4">
               <h3 className="text-sm sm:text-base font-semibold text-white mb-3 truncate">{group.name}</h3>
               
               {/* Group Standings */}
-              {group.standings && group.standings.length > 0 ? (
+              {computedStandings.length > 0 ? (
                 <div className="overflow-x-auto -mx-4 sm:mx-0">
                   <div className="inline-block min-w-full align-middle">
                     <table className="min-w-full">
@@ -490,16 +507,16 @@ const SeasonDetail = () => {
                           <th className="text-center py-2 px-1 sm:px-2">W</th>
                           <th className="text-center py-2 px-1 sm:px-2">D</th>
                           <th className="text-center py-2 px-1 sm:px-2">L</th>
+                          <th className="text-center py-2 px-1 sm:px-2">GF</th>
+                          <th className="text-center py-2 px-1 sm:px-2">GA</th>
                           <th className="text-center py-2 px-1 sm:px-2">GD</th>
                           <th className="text-center py-2 px-1 sm:px-2">Pts</th>
                         </tr>
                       </thead>
                       <tbody className="text-xs sm:text-sm">
-                        {group.standings
-                          .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
-                          .map((standing, index) => (
+                        {computedStandings.map((standing) => (
                             <tr key={standing.teamId} className="border-b border-gray-700/50">
-                              <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{index + 1}</td>
+                              <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{standing.position}</td>
                               <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
                                 <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0 max-w-[140px] sm:max-w-[200px]">
                                   {standing.team?.logo && (
@@ -519,7 +536,13 @@ const SeasonDetail = () => {
                               <td className="text-center text-gray-300 px-1 sm:px-2">{standing.won}</td>
                               <td className="text-center text-gray-300 px-1 sm:px-2">{standing.drawn}</td>
                               <td className="text-center text-gray-300 px-1 sm:px-2">{standing.lost}</td>
-                              <td className="text-center text-gray-300 px-1 sm:px-2">
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.goalsFor}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.goalsAgainst}</td>
+                              <td className={`text-center px-1 sm:px-2 font-medium ${
+                                standing.goalDifference > 0 ? 'text-green-400' : 
+                                standing.goalDifference < 0 ? 'text-red-400' : 
+                                'text-gray-400'
+                              }`}>
                                 {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
                               </td>
                               <td className="text-center font-semibold text-white px-1 sm:px-2">{standing.points}</td>
@@ -531,14 +554,14 @@ const SeasonDetail = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-sm text-gray-400">No standings available yet</p>
+                  <p className="text-sm text-gray-400">No teams in this group yet</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Standings will be calculated from match results
+                    Add teams to this group to see standings
                   </p>
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
       )}
 
