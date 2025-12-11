@@ -26,7 +26,8 @@ const getInitial = (name) => {
 const NewTeamAvatar = ({ team, name = '', size = 48, className = '' }) => {
   const [imgError, setImgError] = useState(false);
   const teamName = team?.name || name;
-  const teamLogo = team?.logo || team?.profilePicture || '';
+  // Normalize team logo: check multiple possible property names
+  const teamLogo = team?.logo || team?.profilePicture || team?.image || team?.imageUrl || team?.logoUrl || team?.crest || team?.badge || '';
   const initial = getInitial(teamName);
   const sizePx = sizeToPixels(size);
   const fontSize = Math.max(14, Math.floor(sizePx * 0.55));
