@@ -72,15 +72,13 @@ export const FootballProvider = ({ children }) => {
     loadInitialData();
   }, []);
 
-  const resolveTeamById = (teamId, list = teams) => {
-    if (!teamId) return null;
-    return list.find(t => t.id === teamId || t.teamId === teamId) || null;
-  };
-
   // Real-time fixtures updates
   useEffect(() => {
-    // Skip real-time updates if Firebase not configured
+    // Skip real-time updates if Firebase not configured or teams not yet loaded
     if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      return;
+    }
+    if (!teams || teams.length === 0) {
       return;
     }
 
@@ -88,14 +86,8 @@ export const FootballProvider = ({ children }) => {
       const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
         // Populate fixtures with team data from current teams state
         const populatedFixtures = updatedFixtures.map(fixture => {
-          const homeTeam = resolveTeamById(fixture.homeTeamId);
-          const awayTeam = resolveTeamById(fixture.awayTeamId);
-          
-          // Log warning if teams are not found
-          if (!homeTeam) {
-          }
-          if (!awayTeam) {
-          }
+          const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
+          const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
           
           return {
             ...fixture,
@@ -134,17 +126,9 @@ export const FootballProvider = ({ children }) => {
       // Debug: Log available team IDs
       
       // Populate fixtures with team data
-      const resolveTeamInitial = (teamId) => teamsData.find(t => t.id === teamId || t.teamId === teamId) || null;
-
       const populatedFixtures = fixturesData.map(fixture => {
-        const homeTeam = resolveTeamInitial(fixture.homeTeamId);
-        const awayTeam = resolveTeamInitial(fixture.awayTeamId);
-        
-        // Log warning if teams are not found
-        if (!homeTeam) {
-        }
-        if (!awayTeam) {
-        }
+        const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
+        const awayTeam = teamsData.find(t => t.id === fixture.awayTeamId);
         
         return {
           ...fixture,
