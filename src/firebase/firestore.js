@@ -652,13 +652,25 @@ export const fixturesCollection = {
   add: async (fixtureData) => {
     try {
       const database = checkFirebaseInit();
+      
+      // Handle dateTime - ensure it's a valid Date or null
+      let dateTimeValue = null;
+      if (fixtureData.dateTime) {
+        const parsedDate = new Date(fixtureData.dateTime);
+        if (!isNaN(parsedDate.getTime())) {
+          dateTimeValue = parsedDate;
+        }
+      }
+      
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
         ownerId: fixtureData.ownerId || null,
         ownerName: fixtureData.ownerName || null,
-        dateTime: new Date(fixtureData.dateTime),
+        dateTime: dateTimeValue || new Date(), // Default to now if no valid date
         seasonId: fixtureData.seasonId || null,
+        seasonName: fixtureData.seasonName || null,
         groupId: fixtureData.groupId || null,
+        groupName: fixtureData.groupName || null,
         stage: fixtureData.stage || null, // 'group' or 'knockout'
         round: fixtureData.round || null, // For knockout: 'quarter-final', 'semi-final', 'final'
         createdAt: serverTimestamp(),
