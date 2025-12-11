@@ -65,11 +65,12 @@ export const calculateGroupStandings = (group, allFixtures = [], allTeams = [], 
   // Helper to ensure a team row exists in the table
   const ensureRow = (table, teamInfo, fallbackId) => {
     const normalizedTeam = teamInfo?.team || teamInfo;
-    const teamId = normalizedTeam?.id || fallbackId;
+    const teamId = normalizedTeam?.id || normalizedTeam?.teamId || fallbackId;
     if (!teamId) return null;
 
     if (!table[teamId]) {
-      const resolvedTeam = normalizedTeam || resolveTeamById(teamId) || { id: teamId, name: 'Unknown Team' };
+      // Always try to resolve from allTeams first to get full team data (including logo)
+      const resolvedTeam = resolveTeamById(teamId) || normalizedTeam || { id: teamId, name: 'Unknown Team' };
       table[teamId] = {
         teamId,
         team: resolvedTeam,
@@ -120,7 +121,12 @@ export const calculateGroupStandings = (group, allFixtures = [], allTeams = [], 
   const table = {};
 
   // Initialize rows for all group teams
-  (group.teams || []).forEach(team => ensureRow(table, team, team?.teamId));
+  (group.teams || []).forEach(team => {
+    const teamId = team?.id || team?.teamId;
+    if (teamId) {
+      ensureRow(table, team, teamId);
+    }
+  });
 
   // Process each fixture
   groupFixtures.forEach((fixture) => {
