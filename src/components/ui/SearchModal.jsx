@@ -7,14 +7,15 @@ import { useCompetitions } from '../../context/CompetitionsContext';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
-const SearchModal = ({ isOpen = true, onClose }) => {
+// Inner component that uses the contexts
+const SearchModalContent = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  const { articles } = useNews();
-  const { fixtures, teams, seasons } = useFootball();
-  const { competitions } = useCompetitions();
+  const { articles = [] } = useNews() || {};
+  const { fixtures = [], teams = [], seasons = [] } = useFootball() || {};
+  const { competitions = [] } = useCompetitions() || {};
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -411,5 +412,35 @@ const SearchModal = ({ isOpen = true, onClose }) => {
     </AnimatePresence>
   );
 };
+
+// Error boundary wrapper for HMR resilience
+class SearchModalErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('SearchModal error (likely HMR):', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Return null when there's an error - modal just won't show
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
+const SearchModal = (props) => (
+  <SearchModalErrorBoundary>
+    <SearchModalContent {...props} />
+  </SearchModalErrorBoundary>
+);
 
 export default SearchModal;

@@ -1541,7 +1541,7 @@ export const seasonsCollection = {
     }
   },
 
-  // Get active season
+  // Get active season (returns first active, for backward compat)
   getActive: async () => {
     try {
       const database = checkFirebaseInit();
@@ -1558,6 +1558,26 @@ export const seasonsCollection = {
       return null;
     } catch (error) {
       console.error('Error fetching active season:', error);
+      throw error;
+    }
+  },
+
+  // Get all active seasons (supports multiple active)
+  getActiveList: async () => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'seasons'),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error fetching active seasons list:', error);
       throw error;
     }
   },
@@ -1614,8 +1634,27 @@ export const seasonsCollection = {
     }
   },
 
-  // Set a season as active (deactivates all others)
-  setActive: async (seasonId, ownerId = null) => {
+  // Toggle a season's active state (does NOT affect other seasons)
+  toggleActive: async (seasonId, isActive) => {
+    try {
+      const database = checkFirebaseInit();
+      const updates = {
+        isActive,
+        updatedAt: serverTimestamp()
+      };
+      // If activating, also set status to ongoing
+      if (isActive) {
+        updates.status = 'ongoing';
+      }
+      await updateDoc(doc(database, 'seasons', seasonId), updates);
+    } catch (error) {
+      console.error('Error toggling season active state:', error);
+      throw error;
+    }
+  },
+
+  // Set a season as active (deactivates all others) - legacy/exclusive mode
+  setExclusiveActive: async (seasonId, ownerId = null) => {
     try {
       const database = checkFirebaseInit();
       const batch = writeBatch(database);
@@ -1644,9 +1683,15 @@ export const seasonsCollection = {
       
       await batch.commit();
     } catch (error) {
-      console.error('Error setting active season:', error);
+      console.error('Error setting exclusive active season:', error);
       throw error;
     }
+  },
+
+  // Alias for backward compatibility
+  setActive: async (seasonId, ownerId = null) => {
+    // Delegate to toggleActive for non-exclusive behavior
+    return seasonsCollection.toggleActive(seasonId, true);
   },
 
   // Delete a season

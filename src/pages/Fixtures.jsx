@@ -58,7 +58,7 @@ const Fixtures = () => {
     }
     if (fixture.seasonId) {
       const season = seasons.find(s => s.id === fixture.seasonId);
-      if (season) return { id: season.id, name: season.name, logo: null, type: 'season' };
+      if (season) return { id: season.id, name: season.name, logo: season.logo || null, type: 'season' };
     }
     return { id: 'unknown', name: 'Unknown Competition', logo: null, type: 'unknown' };
   };
