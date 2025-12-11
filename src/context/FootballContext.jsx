@@ -25,6 +25,7 @@ export const FootballProvider = ({ children }) => {
     totalTeams: 20
   });
   const [activeSeason, setActiveSeason] = useCachedState('football:activeSeason', null);
+  const [activeSeasons, setActiveSeasons] = useCachedState('football:activeSeasons', []);
   const [seasons, setSeasons] = useCachedState('football:seasons', []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -108,19 +109,20 @@ export const FootballProvider = ({ children }) => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [teamsData, fixturesData, leagueData, settingsData, activeSeasonData, seasonsData, leaguesData] = await Promise.all([
+      const [teamsData, fixturesData, leagueData, settingsData, activeSeasonsData, seasonsData, leaguesData] = await Promise.all([
         teamsCollection.getAll(),
         fixturesCollection.getAll(),
         leagueTableCollection.getCurrent(),
         leagueSettingsCollection.get(),
-        seasonsCollection.getActive(),
+        seasonsCollection.getActiveList(),
         seasonsCollection.getAll(),
         leaguesCollection.getAll()
       ]);
 
       setTeams(teamsData);
       setLeagueSettings(settingsData);
-      setActiveSeason(activeSeasonData);
+      setActiveSeasons(activeSeasonsData || []);
+      setActiveSeason(activeSeasonsData?.[0] || null);
       setSeasons(seasonsData);
       setLeagues(leaguesData);
       
@@ -623,21 +625,17 @@ export const FootballProvider = ({ children }) => {
   };
 
   // Season management functions
-  const setActiveSeasonById = async (seasonId) => {
+  const setSeasonActiveState = async (seasonId, isActive = true) => {
     try {
-      const targetSeason = seasons.find(s => s.id === seasonId) || null;
-      const seasonOwnerId = targetSeason?.ownerId || ownerId || null;
+      await seasonsCollection.setActive(seasonId, isActive);
+      const [updatedSeasons, updatedActiveList] = await Promise.all([
+        seasonsCollection.getAll(),
+        seasonsCollection.getActiveList()
+      ]);
 
-      await seasonsCollection.setActive(seasonId, seasonOwnerId);
-      const updatedSeason = await seasonsCollection.getById(seasonId);
-      setActiveSeason(updatedSeason);
-      
-      // Reload seasons to update their active status
-      const updatedSeasons = await seasonsCollection.getAll();
       setSeasons(updatedSeasons);
-      
-      // Reload fixtures to show season-specific fixtures
-      await loadInitialData();
+      setActiveSeasons(updatedActiveList || []);
+      setActiveSeason((updatedActiveList || [])[0] || null);
     } catch (error) {
       throw error;
     }
@@ -775,6 +773,7 @@ export const FootballProvider = ({ children }) => {
     leagues,
     ownedLeagues,
     activeSeason,
+    activeSeasons,
     seasons,
     ownedSeasons,
     loading,
@@ -795,7 +794,7 @@ export const FootballProvider = ({ children }) => {
     addLeague,
     updateLeague,
     deleteLeague,
-    setActiveSeasonById,
+    setSeasonActiveState,
     getSeasonFixtures,
     getGroupStandings,
     updateGroupStandings,
