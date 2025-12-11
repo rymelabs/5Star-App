@@ -20,6 +20,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Stats from './pages/Stats';
+import CompetitionDetail from './pages/CompetitionDetail';
 import AuthLanding from './pages/AuthLanding';
 import EmailAuth from './pages/EmailAuth';
 import ProfileSetup from './pages/ProfileSetup';
@@ -110,8 +111,8 @@ const AppContent = () => {
   }
 
 
-  const authStandaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
-  const isAuthStandalone = authStandaloneRoutes.some((path) => location.pathname.startsWith(path));
+  const standaloneRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register', '/competitions/'];
+  const isStandalone = standaloneRoutes.some((path) => location.pathname.startsWith(path));
 
   const requireAuthElement = (element) => (
     isAuthenticated
@@ -149,6 +150,7 @@ const AppContent = () => {
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsArticle />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/competitions/:type/:id" element={<CompetitionDetail />} />
           
           {/* About page - accessible to all users */}
           <Route path="/about" element={<About />} />
@@ -204,7 +206,7 @@ const AppContent = () => {
     </React.Suspense>
   );
 
-  if (isAuthStandalone) {
+  if (isStandalone) {
     return (
       <>
         {routedContent}

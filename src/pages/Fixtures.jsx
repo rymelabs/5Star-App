@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Filter, Trophy, ArrowUpDown, Radio, CheckCircle2, Clock } from 'lucide-react';
+import { Calendar, Filter, Trophy, ArrowUpDown, Radio, CheckCircle2, Clock, ChevronRight } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDate, isToday, getMatchDayLabel } from '../utils/dateUtils';
@@ -16,15 +16,23 @@ import NewTeamAvatar from '../components/NewTeamAvatar';
 const LAST_RESULTS_HIGHLIGHT = 3;
 const RECENT_RESULTS_LIMIT = 6;
 
-const CompetitionGroup = ({ group, onFixtureClick }) => (
+const CompetitionGroup = ({ group, onFixtureClick, onCompetitionClick }) => (
   <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden mb-3 last:mb-0">
-    <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] border-b border-white/[0.04]">
+    <div 
+      className={`flex items-center gap-2 px-4 py-2 bg-white/[0.02] border-b border-white/[0.04] ${
+        group.info.id !== 'unknown' ? 'cursor-pointer hover:bg-white/[0.04] transition-colors' : ''
+      }`}
+      onClick={() => group.info.id !== 'unknown' && onCompetitionClick?.(group.info)}
+    >
       {group.info.logo ? (
         <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
       ) : (
         <Trophy className="w-3.5 h-3.5 text-brand-purple" />
       )}
-      <h4 className="text-[9px] font-bold text-white/80 uppercase tracking-wider">{group.info.name}</h4>
+      <h4 className="text-[9px] font-bold text-white/80 uppercase tracking-wider flex-1">{group.info.name}</h4>
+      {group.info.id !== 'unknown' && (
+        <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+      )}
     </div>
     <div>
       {group.fixtures.map((fixture) => (
@@ -299,6 +307,12 @@ const Fixtures = () => {
   const hasGroupData = Boolean(groupViewSeason?.groups?.length);
 
   const handleFixtureClick = (fixture) => navigate(`/fixtures/${fixture.id}`);
+  
+  const handleCompetitionClick = (info) => {
+    if (info.id && info.type && info.type !== 'unknown') {
+      navigate(`/competitions/${info.type}/${info.id}`);
+    }
+  };
 
   const renderFixtureCard = (fixture) => (
     <CompactFixtureRow
@@ -509,7 +523,7 @@ const Fixtures = () => {
                   </div>
                   <div className="space-y-2">
                     {groupFixturesByCompetition(liveFixtures).map((group) => (
-                      <CompetitionGroup key={group.info.id} group={group} onFixtureClick={handleFixtureClick} />
+                      <CompetitionGroup key={group.info.id} group={group} onFixtureClick={handleFixtureClick} onCompetitionClick={handleCompetitionClick} />
                     ))}
                   </div>
                 </section>
@@ -546,7 +560,7 @@ const Fixtures = () => {
 
                       <div className="space-y-3 px-0 sm:px-2">
                         {groupFixturesByCompetition(group.fixtures).map((compGroup) => (
-                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} />
+                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} onCompetitionClick={handleCompetitionClick} />
                         ))}
                       </div>
                     </div>
@@ -582,7 +596,7 @@ const Fixtures = () => {
 
                       <div className="space-y-3 px-0 sm:px-2">
                         {groupFixturesByCompetition(dateGroup.fixtures).map((compGroup) => (
-                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} />
+                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} onCompetitionClick={handleCompetitionClick} />
                         ))}
                       </div>
                     </div>
