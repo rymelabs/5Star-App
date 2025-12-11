@@ -82,6 +82,8 @@ const Latest = () => {
   const fixtures = footballContext?.fixtures || [];
   const leagueTable = footballContext?.leagueTable || [];
   const activeSeason = footballContext?.activeSeason || null;
+  const seasons = footballContext?.seasons || [];
+  const leagues = footballContext?.leagues || [];
   const instagramPosts = instagramContext?.posts || [];
   const instagramSettings = instagramContext?.settings || null;
 
@@ -95,6 +97,21 @@ const Latest = () => {
     const now = new Date();
     const competitionsMap = new Map();
 
+    // Helper to find logo for a season or league
+    const findLogo = (seasonId, competitionName) => {
+      // First try to find from seasons
+      const season = seasons.find(s => s.id === seasonId);
+      if (season?.logo) return season.logo;
+      
+      // Then try to find from leagues by name match
+      const league = leagues.find(l => 
+        l.name?.toLowerCase() === competitionName?.toLowerCase()
+      );
+      if (league?.logo) return league.logo;
+      
+      return null;
+    };
+
     // Process all fixtures and group by competition/season
     fixtures.forEach(fixture => {
       const compName = fixture.competition || 'General Fixtures';
@@ -102,8 +119,12 @@ const Latest = () => {
       const groupKey = seasonName || compName;
 
       if (!competitionsMap.has(groupKey)) {
+        // Find logo for this group
+        const logo = findLogo(fixture.seasonId, compName);
+        
         competitionsMap.set(groupKey, {
           name: groupKey,
+          logo: logo,
           isActiveSeason: !!seasonName,
           competition: compName,
           upcomingFixtures: [],
@@ -175,7 +196,7 @@ const Latest = () => {
         if (!a.isActiveSeason && b.isActiveSeason) return 1;
         return a.name.localeCompare(b.name);
       });
-  }, [fixtures, activeSeason]);
+  }, [fixtures, activeSeason, seasons, leagues]);
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
@@ -284,7 +305,21 @@ const Latest = () => {
     <section className="space-y-4">
       {/* Competition Header */}
       <div className="flex items-center gap-2 px-2">
-        <Trophy className="w-5 h-5 text-brand-purple" />
+        {group.logo ? (
+          <img 
+            src={group.logo} 
+            alt={group.name} 
+            className="w-5 h-5 object-contain rounded"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+        ) : null}
+        <Trophy 
+          className="w-5 h-5 text-brand-purple" 
+          style={{ display: group.logo ? 'none' : 'block' }}
+        />
         <h2 className="text-[13px] sm:text-xl font-bold text-white leading-tight">{group.name}</h2>
         {group.isActiveSeason && (
           <PillChip label="Active Season" size="sm" variant="solid" tone="primary" />
