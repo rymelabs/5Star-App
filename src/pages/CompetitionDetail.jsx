@@ -158,11 +158,11 @@ const CompetitionDetail = () => {
     const completedFixtures = competitionFixtures.filter(f => f.status === 'completed');
     
     competition.groups.forEach(group => {
-      standings[group.id] = calculateGroupStandings(group, completedFixtures);
+      standings[group.id] = calculateGroupStandings(group, completedFixtures, teams, id);
     });
     
     return standings;
-  }, [type, competition, competitionFixtures]);
+  }, [type, competition, competitionFixtures, teams, id]);
 
   // Separate fixtures by status
   const { upcomingFixtures, recentResults } = useMemo(() => {
@@ -349,8 +349,8 @@ const CompetitionDetail = () => {
                       { label: 'Fixtures', value: stats.totalFixtures, icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-400/10' },
                       { label: 'Completed', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
                       { label: 'Goals', value: stats.totalGoals, icon: Target, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-                    ].map((stat, i) => (
-                      <div key={i} className="bg-elevated-soft border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors group">
+                    ].map((stat) => (
+                      <div key={stat.label} className="bg-elevated-soft border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors group">
                         <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                           <stat.icon className={`w-5 h-5 ${stat.color}`} />
                         </div>
@@ -614,10 +614,10 @@ const CompetitionDetail = () => {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
-                            {groupStandings?.[group.id]?.map((team, index) => (
+                            {groupStandings?.[group.id]?.map((standing, index) => (
                               <tr 
-                                key={team.id}
-                                onClick={() => handleTeamClick(team.id)}
+                                key={standing.teamId || standing.team?.id}
+                                onClick={() => handleTeamClick(standing.teamId || standing.team?.id)}
                                 className="hover:bg-white/[0.02] cursor-pointer transition-colors group"
                               >
                                 <td className="px-4 py-3">
@@ -629,24 +629,24 @@ const CompetitionDetail = () => {
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-3">
-                                    <NewTeamAvatar team={team} size={24} />
+                                    <NewTeamAvatar team={standing.team} size={24} />
                                     <span className="text-white font-medium truncate max-w-[140px] sm:max-w-xs group-hover:text-brand-purple transition-colors">
-                                      {team.name}
+                                      {standing.team?.name || 'Unknown Team'}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-2 py-3 text-center text-gray-400">{team.played}</td>
-                                <td className="px-2 py-3 text-center text-gray-400">{team.won}</td>
-                                <td className="px-2 py-3 text-center text-gray-400">{team.drawn}</td>
-                                <td className="px-2 py-3 text-center text-gray-400">{team.lost}</td>
-                                <td className="px-2 py-3 text-center text-gray-400 hidden sm:table-cell">{team.goalsFor}</td>
-                                <td className="px-2 py-3 text-center text-gray-400 hidden sm:table-cell">{team.goalsAgainst}</td>
+                                <td className="px-2 py-3 text-center text-gray-400">{standing.played}</td>
+                                <td className="px-2 py-3 text-center text-gray-400">{standing.won}</td>
+                                <td className="px-2 py-3 text-center text-gray-400">{standing.drawn}</td>
+                                <td className="px-2 py-3 text-center text-gray-400">{standing.lost}</td>
+                                <td className="px-2 py-3 text-center text-gray-400 hidden sm:table-cell">{standing.goalsFor}</td>
+                                <td className="px-2 py-3 text-center text-gray-400 hidden sm:table-cell">{standing.goalsAgainst}</td>
                                 <td className="px-2 py-3 text-center font-medium">
-                                  <span className={team.goalDifference > 0 ? 'text-emerald-400' : team.goalDifference < 0 ? 'text-red-400' : 'text-gray-400'}>
-                                    {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                                  <span className={standing.goalDifference > 0 ? 'text-emerald-400' : standing.goalDifference < 0 ? 'text-red-400' : 'text-gray-400'}>
+                                    {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-center font-bold text-white bg-white/[0.02]">{team.points}</td>
+                                <td className="px-4 py-3 text-center font-bold text-white bg-white/[0.02]">{standing.points}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -683,7 +683,7 @@ const CompetitionDetail = () => {
                           
                           return (
                             <div 
-                              key={matchIndex}
+                              key={`${round.name}-match-${matchIndex}`}
                               className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg hover:bg-white/[0.04] transition-colors"
                             >
                               <div className="flex items-center gap-3 flex-1 w-full sm:w-auto mb-2 sm:mb-0">
