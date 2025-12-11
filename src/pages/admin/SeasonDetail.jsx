@@ -16,7 +16,6 @@ import { seasonsCollection, fixturesCollection } from '../../firebase/firestore'
 import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import SeasonStandings from '../../components/SeasonStandings';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();
@@ -75,6 +74,7 @@ const SeasonDetail = () => {
       const data = await seasonsCollection.getById(seasonId);
       setSeason(data);
     } catch (error) {
+      console.error('Error loading season:', error);
       showToast('Failed to load season', 'error');
     } finally {
       setLoading(false);
@@ -99,6 +99,7 @@ const SeasonDetail = () => {
       
       setSeasonFixtures(populatedFixtures);
     } catch (error) {
+      console.error('Error loading season fixtures:', error);
     }
   };
 
@@ -128,6 +129,7 @@ const SeasonDetail = () => {
 
       showToast(`Generated ${fixtures.length} fixtures successfully!`, 'success');
     } catch (error) {
+      console.error('Error generating fixtures:', error);
       showToast('Failed to generate fixtures', 'error');
     }
   };
@@ -141,6 +143,7 @@ const SeasonDetail = () => {
       const deletedCount = await fixturesCollection.deleteBySeason(seasonId);
       showToast(`Deleted ${deletedCount} fixtures successfully!`, 'success');
     } catch (error) {
+      console.error('Error deleting fixtures:', error);
       showToast('Failed to delete fixtures', 'error');
     }
   };
@@ -154,6 +157,7 @@ const SeasonDetail = () => {
       const deletedCount = await fixturesCollection.cleanupBrokenFixtures();
       showToast(`Cleaned up ${deletedCount} broken fixtures!`, 'success');
     } catch (error) {
+      console.error('Error cleaning up fixtures:', error);
       showToast('Failed to cleanup fixtures', 'error');
     }
   };
@@ -181,6 +185,7 @@ const SeasonDetail = () => {
 
       showToast(`✅ Deleted ${deletedCount} old fixtures and generated ${fixtures.length} new fixtures!`, 'success');
     } catch (error) {
+      console.error('Error regenerating fixtures:', error);
       showToast('Failed to regenerate fixtures', 'error');
     }
   };
@@ -196,17 +201,19 @@ const SeasonDetail = () => {
       showToast('Knockout stage seeded successfully!', 'success');
       loadSeason(); // Reload to show updated knockout rounds
     } catch (error) {
+      console.error('Error seeding knockout:', error);
       showToast('Failed to seed knockout stage', 'error');
     }
   };
 
-  const handleSetActive = async (isActive = true) => {
+  const handleSetActive = async () => {
     try {
-      await seasonsCollection.setActive(seasonId, isActive);
-      showToast(isActive ? 'Season activated successfully!' : 'Season deactivated.', 'success');
+      await seasonsCollection.setActive(seasonId);
+      showToast('Season activated successfully!', 'success');
       loadSeason();
     } catch (error) {
-      showToast('Failed to update season active state', 'error');
+      console.error('Error activating season:', error);
+      showToast('Failed to activate season', 'error');
     }
   };
 
@@ -296,17 +303,15 @@ const SeasonDetail = () => {
         </div>
         
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => handleSetActive(!season.isActive)}
-            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 ${
-              season.isActive
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20'
-                : 'bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20'
-            }`}
-          >
-            <Play className="w-4 h-4" />
-            <span className="text-sm">{season.isActive ? 'Deactivate' : 'Activate'}</span>
-          </button>
+          {!season.isActive && (
+            <button
+              onClick={handleSetActive}
+              className="flex-1 sm:flex-none px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors flex items-center justify-center space-x-2"
+            >
+              <Play className="w-4 h-4" />
+              <span className="text-sm">Activate</span>
+            </button>
+          )}
           <button
             onClick={() => navigate(`/admin/seasons/${seasonId}/edit`)}
             className="flex-1 sm:flex-none px-4 py-2 bg-accent-500/10 text-accent-400 border border-accent-500/30 rounded-lg hover:bg-accent-500/20 transition-colors flex items-center justify-center space-x-2"
@@ -468,7 +473,72 @@ const SeasonDetail = () => {
       {/* Tab Content */}
       {activeTab === 'groups' && (
         <div className="space-y-4">
-          <SeasonStandings season={season} teams={teams} fixtures={seasonFixtures} />
+          {season.groups?.map((group) => (
+            <div key={group.id} className="card p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-semibold text-white mb-3 truncate">{group.name}</h3>
+              
+              {/* Group Standings */}
+              {group.standings && group.standings.length > 0 ? (
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="inline-block min-w-full align-middle">
+                    <table className="min-w-full">
+                      <thead className="text-xs text-gray-400 uppercase border-b border-gray-700">
+                        <tr>
+                          <th className="text-left py-2 px-2 sm:px-0 sticky left-0 bg-dark-700 sm:bg-transparent z-10">Pos</th>
+                          <th className="text-left py-2 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10 min-w-[120px] sm:min-w-0">Team</th>
+                          <th className="text-center py-2 px-1 sm:px-2">P</th>
+                          <th className="text-center py-2 px-1 sm:px-2">W</th>
+                          <th className="text-center py-2 px-1 sm:px-2">D</th>
+                          <th className="text-center py-2 px-1 sm:px-2">L</th>
+                          <th className="text-center py-2 px-1 sm:px-2">GD</th>
+                          <th className="text-center py-2 px-1 sm:px-2">Pts</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs sm:text-sm">
+                        {group.standings
+                          .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
+                          .map((standing, index) => (
+                            <tr key={standing.teamId} className="border-b border-gray-700/50">
+                              <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{index + 1}</td>
+                              <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
+                                <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0 max-w-[140px] sm:max-w-[200px]">
+                                  {standing.team?.logo && (
+                                    <img
+                                      src={standing.team?.logo}
+                                      alt={standing.team?.name}
+                                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                                      onError={(e) => e.target.style.display = 'none'}
+                                    />
+                                  )}
+                                  <span className="text-white truncate" title={standing.team?.name}>
+                                    {standing.team?.name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.played}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.won}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.drawn}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">{standing.lost}</td>
+                              <td className="text-center text-gray-300 px-1 sm:px-2">
+                                {standing.goalDifference > 0 ? '+' : ''}{standing.goalDifference}
+                              </td>
+                              <td className="text-center font-semibold text-white px-1 sm:px-2">{standing.points}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-400">No standings available yet</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standings will be calculated from match results
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

@@ -45,6 +45,7 @@ const AdminSeasons = () => {
       const filtered = isSuperAdmin ? data : data.filter(season => season.ownerId === user?.uid);
       setSeasons(filtered);
     } catch (error) {
+      console.error('Error loading seasons:', error);
       showToast('Failed to load seasons', 'error');
     } finally {
       setLoading(false);
@@ -58,13 +59,14 @@ const AdminSeasons = () => {
     }, 3000);
   };
 
-  const handleSetActive = async (seasonId, isActive = true) => {
+  const handleSetActive = async (seasonId) => {
     try {
-      await seasonsCollection.setActive(seasonId, isActive);
-      showToast(isActive ? 'Season activated successfully!' : 'Season deactivated.', 'success');
+      await seasonsCollection.setActive(seasonId);
+      showToast('Season activated successfully!', 'success');
       loadSeasons();
     } catch (error) {
-      showToast('Failed to update season active state', 'error');
+      console.error('Error activating season:', error);
+      showToast('Failed to activate season', 'error');
     }
   };
 
@@ -80,6 +82,7 @@ const AdminSeasons = () => {
       showToast(`"${confirmDelete.season.name}" moved to recycle bin`, 'success');
       loadSeasons();
     } catch (error) {
+      console.error('Error deleting season:', error);
       showToast('Failed to delete season', 'error');
     } finally {
       setConfirmDelete({ isOpen: false, season: null });
@@ -149,17 +152,15 @@ const AdminSeasons = () => {
                   <p className="text-[11px] text-white/60 mt-1">Owner: {season.ownerName || 'Unknown'}</p>
                 </div>
                 <div className="flex items-center gap-1 self-start">
-                  <button
-                    onClick={() => handleSetActive(season.id, !season.isActive)}
-                    className={`p-1.5 sm:p-1.5 rounded-md border ${
-                      season.isActive
-                        ? 'border-amber-400/40 text-amber-100 hover:bg-amber-500/15'
-                        : 'border-green-400/40 text-green-100 hover:bg-green-500/15'
-                    }`}
-                    title={season.isActive ? 'Deactivate' : 'Activate'}
-                  >
-                    <Play className="w-3.5 h-3.5" />
-                  </button>
+                  {!season.isActive && (
+                    <button
+                      onClick={() => handleSetActive(season.id)}
+                      className="p-1.5 sm:p-1.5 rounded-md border border-green-400/40 text-green-100 hover:bg-green-500/15"
+                      title="Set active"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate(`/admin/seasons/${season.id}`)}
                     className="p-1.5 rounded-md border border-blue-400/40 text-blue-100 hover:bg-blue-500/15"
