@@ -72,6 +72,11 @@ export const FootballProvider = ({ children }) => {
     loadInitialData();
   }, []);
 
+  const resolveTeamById = (teamId, list = teams) => {
+    if (!teamId) return null;
+    return list.find(t => t.id === teamId || t.teamId === teamId) || null;
+  };
+
   // Real-time fixtures updates
   useEffect(() => {
     // Skip real-time updates if Firebase not configured
@@ -83,8 +88,8 @@ export const FootballProvider = ({ children }) => {
       const unsubscribe = fixturesCollection.onSnapshot((updatedFixtures) => {
         // Populate fixtures with team data from current teams state
         const populatedFixtures = updatedFixtures.map(fixture => {
-          const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
-          const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+          const homeTeam = resolveTeamById(fixture.homeTeamId);
+          const awayTeam = resolveTeamById(fixture.awayTeamId);
           
           // Log warning if teams are not found
           if (!homeTeam) {
@@ -129,9 +134,11 @@ export const FootballProvider = ({ children }) => {
       // Debug: Log available team IDs
       
       // Populate fixtures with team data
+      const resolveTeamInitial = (teamId) => teamsData.find(t => t.id === teamId || t.teamId === teamId) || null;
+
       const populatedFixtures = fixturesData.map(fixture => {
-        const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
-        const awayTeam = teamsData.find(t => t.id === fixture.awayTeamId);
+        const homeTeam = resolveTeamInitial(fixture.homeTeamId);
+        const awayTeam = resolveTeamInitial(fixture.awayTeamId);
         
         // Log warning if teams are not found
         if (!homeTeam) {
