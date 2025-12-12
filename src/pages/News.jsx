@@ -311,8 +311,8 @@ const News = () => {
       </div>
 
       {/* Search & Filter */}
-      <div className="px-4 sticky top-[60px] z-20 mb-6 pb-4 sm:pb-0">
-        <div className="flex gap-2.5">
+      <div className="px-4 sticky top-[60px] z-50 mb-6 pb-4 sm:pb-0">
+        <div className="flex gap-2.5 w-full sm:max-w-xs lg:max-w-[240px] sm:ml-auto">
           <div className="relative group flex-1">
             <div className="absolute inset-0 bg-brand-purple/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative">
@@ -322,14 +322,14 @@ const News = () => {
                 placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-2.5 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-full text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
+                className="w-full pl-11 pr-4 py-2 sm:py-2 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-full text-sm sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
               />
             </div>
           </div>
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-3 py-2.5 rounded-full text-sm font-medium border transition-all flex items-center justify-center ${
+            className={`px-3 py-2 rounded-full text-sm font-medium border transition-all flex items-center justify-center ${
               showFilters 
                 ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
                 : 'bg-elevated/80 backdrop-blur-xl text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
