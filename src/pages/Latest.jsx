@@ -419,7 +419,7 @@ const Latest = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-8 pb-8 md:pb-4"
     >
       <header className="px-4 space-y-1">
         <h1 className="page-header flex items-center gap-3">

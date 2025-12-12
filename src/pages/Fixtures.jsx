@@ -328,7 +328,7 @@ const Fixtures = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 pb-8 md:pb-4"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4">

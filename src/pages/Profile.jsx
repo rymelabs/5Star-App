@@ -132,7 +132,7 @@ const Profile = () => {
   }, [user]);
 
   return (
-    <>
+    <div className="pb-8 md:pb-4">
       {/* Hero Header */}
       <div className="relative h-48 w-full overflow-hidden">
         {/* Background Pattern Only - No Color */}
@@ -400,7 +400,7 @@ const Profile = () => {
           <p className="text-[10px] text-white/20 font-medium tracking-[0.2em] uppercase">Fivescores Profile</p>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
