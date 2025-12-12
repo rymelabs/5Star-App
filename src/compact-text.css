@@ -202,29 +202,10 @@ table td {
   font-size: 9px !important;
 }
 
-/* === News page scoped reset to counter global compacting === */
-.news-compact-reset .news-card-title {
-  font-size: 15px !important;
-  line-height: 1.25 !important;
-  font-weight: 700 !important;
-}
-
-.news-compact-reset .news-card-body {
-  font-size: 11px !important;
-  line-height: 1.45 !important;
-}
-
-.news-compact-reset .news-card-meta,
-.news-compact-reset .news-card-meta span,
-.news-compact-reset .news-card-meta svg {
-  font-size: 11px !important;
-  line-height: 1.4 !important;
-}
-
-.news-compact-reset .news-card {
-  border-radius: 18px !important;
-  border-width: 1px !important;
-}
+/* === News page scoped reset to counter global compacting ===
+   Keep this block empty/minimal: News cards are styled with Tailwind
+   in `src/pages/News.jsx` and `src/pages/Latest.jsx`.
+*/
 
 /* List items */
 li {
@@ -341,14 +322,9 @@ nav a, nav button {
   font-size: 9px !important;
 }
 
-/* News card specific */
-.news-card h3 {
-  font-size: 11px !important;
-}
-
-.news-card p {
-  font-size: 9px !important;
-}
+/* News card specific
+   Avoid global `!important` overrides so per-page styling can win.
+*/
 
 /* News article header - centralised from NewsArticle.jsx */
 .news-article-header {

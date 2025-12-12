@@ -278,7 +278,7 @@ const Latest = () => {
                     tone="primary" 
                     className="mb-2"
                   />
-                  <h3 className="font-semibold text-white text-base sm:text-lg leading-tight line-clamp-2">
+                  <h3 className="font-bold text-white text-lg sm:text-2xl leading-tight line-clamp-2">
                     {latestNews[0].title}
                   </h3>
                 </div>
@@ -303,9 +303,9 @@ const Latest = () => {
                   <div
                     key={article.id}
                     onClick={() => handleNewsClick(article)}
-                    className="flex gap-3 p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
+                    className="flex gap-3 p-2 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
                   >
-                    <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
                       <img
                         src={article.image}
                         alt={article.title}
@@ -313,10 +313,10 @@ const Latest = () => {
                       />
                     </div>
                     <div className="flex-1 flex flex-col justify-center">
-                      <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2 mb-1">
+                      <h4 className="font-semibold text-white text-sm sm:text-base line-clamp-2 mb-0.5">
                         {article.title}
                       </h4>
-                      <span className="text-[11px] text-gray-500">{formatDate(article.publishedAt)}</span>
+                      <span className="text-xs text-gray-500">{formatDate(article.publishedAt)}</span>
                     </div>
                   </div>
                 ))}

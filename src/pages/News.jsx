@@ -364,7 +364,7 @@ const News = () => {
         {featuredArticle && !searchQuery && categoryFilter === 'all' && (
           <div 
             onClick={() => handleArticleClick(featuredArticle)}
-            className="group relative aspect-[16/10] sm:aspect-[21/9] rounded-3xl overflow-hidden cursor-pointer border border-white/5 shadow-2xl"
+            className="group relative aspect-[16/10] sm:aspect-[21/9] rounded-none overflow-hidden cursor-pointer bg-[#0c0c0f] border-t border-b border-white/10 shadow-2xl"
           >
             <img
               src={featuredArticle.image}
@@ -416,13 +416,13 @@ const News = () => {
           {remainingArticles.map((article) => (
             <SurfaceCard
               key={article.id}
-              className="group p-0 overflow-hidden h-full flex flex-col bg-elevated/30 hover:bg-elevated/50 transition-all duration-300 border-white/5 news-card"
+              className="group p-0 overflow-hidden h-full flex flex-col bg-elevated/30 hover:bg-elevated/50 transition-all duration-300 border-white/5 rounded-none news-card"
               interactive
               onClick={() => handleArticleClick(article)}
             >
               <div className="flex flex-row sm:flex-col h-full">
                 {/* Image Section */}
-                <div className="relative w-[120px] sm:w-full aspect-[1/1] sm:aspect-[16/9] overflow-hidden shrink-0">
+                <div className="relative w-[128px] sm:w-full aspect-[1/1] sm:aspect-[16/9] overflow-hidden shrink-0">
                   <img
                     src={article.image}
                     alt={article.title}
@@ -436,13 +436,13 @@ const News = () => {
                 </div>
                 
                 {/* Content Section */}
-                <div className="p-3 flex flex-col flex-1 min-w-0">
+                <div className="p-2 flex flex-col flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/60 mb-1.5 news-card-meta">
                     <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>{getRelativeTime(article.publishedAt)}</span>
                   </div>
                   
-                  <h3 className="news-card-title text-sm sm:text-base font-semibold text-white mb-1.5 line-clamp-2 leading-snug group-hover:text-brand-purple transition-colors">
+                  <h3 className="news-card-title text-sm sm:text-base font-semibold text-white mb-0.5 line-clamp-2 leading-snug group-hover:text-brand-purple transition-colors">
                     {article.title}
                   </h3>
                   
