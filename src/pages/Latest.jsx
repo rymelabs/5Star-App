@@ -261,7 +261,7 @@ const Latest = () => {
             <SurfaceCard 
               interactive 
               onClick={() => handleNewsClick(latestNews[0])}
-              className="p-0 overflow-hidden group rounded-2xl"
+              className="p-0 overflow-hidden group rounded-none"
             >
               <div className="relative h-40 sm:h-48 w-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
@@ -297,8 +297,8 @@ const Latest = () => {
 
           {/* Secondary Articles */}
           {latestNews.length > 1 && (
-            <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
-              <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
+            <div className="bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
+              <SurfaceCard className="rounded-none bg-[#0c0c0f] overflow-hidden border-l-0 border-r-0 border-t border-b border-white/10">
                 {latestNews.slice(1).map((article) => (
                   <div
                     key={article.id}
