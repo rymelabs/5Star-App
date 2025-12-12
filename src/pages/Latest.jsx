@@ -305,7 +305,7 @@ const Latest = () => {
                     onClick={() => handleNewsClick(article)}
                     className="flex gap-3 p-2 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
                   >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-none overflow-hidden bg-gray-800">
                       <img
                         src={article.image}
                         alt={article.title}
