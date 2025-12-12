@@ -286,7 +286,7 @@ const News = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background pb-24"
+      className="min-h-screen bg-background pb-32 md:pb-24"
     >
       {/* Header with Filter */}
       <div className="px-4 pb-4 flex items-center justify-between">

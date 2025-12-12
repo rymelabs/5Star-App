@@ -344,7 +344,7 @@ const Teams = () => {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="min-h-screen pb-24 relative overflow-hidden">
+      <div className="min-h-screen pb-32 md:pb-24 relative overflow-hidden">
         {/* Background Ambient Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-96 blur-[120px] rounded-full pointer-events-none" />
 

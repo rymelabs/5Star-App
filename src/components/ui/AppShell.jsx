@@ -21,7 +21,7 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
       {/* Main Content Area */}
       <main 
         ref={ref}
-        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar pt-6 ${bottomNav ? 'pb-32' : 'pb-8 lg:pb-24'}`}
+        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar pt-6 ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
       >
         {children}
       </main>
