@@ -26,19 +26,15 @@
   
   html {
     @apply scroll-smooth;
-    overflow-y: scroll;
+    overflow: hidden;
     height: 100%;
-    scrollbar-width: thin;
-    scrollbar-color: #444 #222;
   }
   
   html::-webkit-scrollbar {
-    width: 8px;
-    background: #222;
+    display: none;
   }
   html::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 4px;
+    display: none;
   }
   
   body {
@@ -54,19 +50,15 @@
     -moz-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    overflow-y: scroll;
+    overflow: hidden;
     height: 100%;
-    scrollbar-width: thin;
-    scrollbar-color: #444 #222;
   }
   
   body::-webkit-scrollbar {
-    width: 8px;
-    background: #222;
+    display: none;
   }
   body::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 4px;
+    display: none;
   }
 }
 
