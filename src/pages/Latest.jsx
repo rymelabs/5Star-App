@@ -297,30 +297,28 @@ const Latest = () => {
 
           {/* Secondary Articles */}
           {latestNews.length > 1 && (
-            <div className="bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
-              <SurfaceCard className="rounded-none bg-[#0c0c0f] overflow-hidden border-l-0 border-r-0 border-t border-b border-white/10">
-                {latestNews.slice(1).map((article) => (
-                  <div
-                    key={article.id}
-                    onClick={() => handleNewsClick(article)}
-                    className="flex gap-3 p-2 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer"
-                  >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-none overflow-hidden bg-gray-800">
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center">
-                      <h4 className="font-semibold text-white text-sm sm:text-base line-clamp-2 mb-0.5">
-                        {article.title}
-                      </h4>
-                      <span className="text-xs text-gray-500">{formatDate(article.publishedAt)}</span>
-                    </div>
+            <div className="bg-[#0c0c0f] border-t border-b border-white/10">
+              {latestNews.slice(1).map((article, index) => (
+                <div
+                  key={article.id}
+                  onClick={() => handleNewsClick(article)}
+                  className={`flex gap-3 p-3 hover:bg-white/5 transition-colors cursor-pointer ${index < latestNews.length - 2 ? 'border-b border-white/10' : ''}`}
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden bg-gray-800">
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ))}
-              </SurfaceCard>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <h4 className="font-semibold text-white text-sm sm:text-base line-clamp-2 mb-0.5">
+                      {article.title}
+                    </h4>
+                    <span className="text-xs text-gray-500">{formatDate(article.publishedAt)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
