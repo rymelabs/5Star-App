@@ -6,7 +6,7 @@ import { useOptionalNews } from '../context/NewsContext';
 import { useFootball } from '../context/FootballContext';
 import { useInstagram } from '../context/InstagramContext';
 import { useLanguage } from '../context/LanguageContext';
-import { ChevronRight, Calendar, Trophy, Instagram, Target, TrendingUp, Award } from 'lucide-react';
+import { ChevronRight, Calendar, Trophy, Instagram, TrendingUp, Award } from 'lucide-react';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
 import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
@@ -156,8 +156,7 @@ const Latest = () => {
           isActiveSeason: !!seasonName,
           competition: compName,
           upcomingFixtures: [],
-          recentResults: [],
-          topScoringTeams: new Map()
+          recentResults: []
         });
       }
 
@@ -167,29 +166,6 @@ const Latest = () => {
       // Categorize fixtures
       if (fixture.status === 'completed') {
         group.recentResults.push(fixture);
-        
-        // Calculate top scoring teams
-        const processTeam = (team, score) => {
-          if (!team?.id) return;
-          const scoreNum = Number(score);
-          if (isNaN(scoreNum)) return;
-
-          if (!group.topScoringTeams.has(team.id)) {
-            group.topScoringTeams.set(team.id, {
-              id: team.id,
-              name: team.name,
-              logo: team.logo,
-              goals: 0,
-              matches: 0
-            });
-          }
-          const entry = group.topScoringTeams.get(team.id);
-          entry.matches += 1;
-          entry.goals += scoreNum;
-        };
-
-        processTeam(fixture.homeTeam, fixture.homeScore);
-        processTeam(fixture.awayTeam, fixture.awayScore);
       } else if (fixtureDate > now) {
         group.upcomingFixtures.push(fixture);
       }
@@ -206,17 +182,11 @@ const Latest = () => {
         group.recentResults.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
         group.recentResults = group.recentResults.slice(0, 6);
 
-        // Convert and sort top scoring teams, limit to 3
-        group.topScoringTeams = Array.from(group.topScoringTeams.values())
-          .sort((a, b) => b.goals - a.goals)
-          .slice(0, 3);
-
         return group;
       })
       .filter(group => 
         group.upcomingFixtures.length > 0 || 
-        group.recentResults.length > 0 || 
-        group.topScoringTeams.length > 0
+        group.recentResults.length > 0
       )
       .sort((a, b) => {
         // Active season first
@@ -412,50 +382,6 @@ const Latest = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Top Scoring Teams */}
-      {group.topScoringTeams.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-2">
-            <Target className="w-4 h-4 text-yellow-500" />
-            <h3 className="text-sm font-bold text-white/90 tracking-wide">Top Scorers</h3>
-          </div>
-          
-          <div className="rounded-2xl bg-gradient-to-r from-brand-purple/20 via-indigo-500/20 to-sky-400/20 p-[1px]">
-            <SurfaceCard className="rounded-[22px] bg-[#0c0c0f] overflow-hidden">
-              {group.topScoringTeams.map((stat, index) => (
-                <div
-                  key={stat.id}
-                  className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`font-bold w-5 text-center ${
-                      index === 0 ? 'text-yellow-400' : 
-                      index === 1 ? 'text-gray-300' : 
-                      index === 2 ? 'text-amber-600' : 'text-gray-500'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <NewTeamAvatar team={{ id: stat.id, name: stat.name, logo: stat.logo }} size={32} />
-                    <div>
-                      <div className="font-semibold text-sm text-white group-hover:text-brand-purple transition-colors">
-                        {stat.name}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {stat.matches} {stat.matches === 1 ? 'match' : 'matches'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-lg font-bold text-brand-purple">{stat.goals}</span>
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">Goals</span>
-                  </div>
-                </div>
-              ))}
-            </SurfaceCard>
           </div>
         </div>
       )}

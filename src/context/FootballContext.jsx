@@ -131,10 +131,6 @@ export const FootballProvider = ({ children }) => {
       setSeasons(seasonsData);
       setLeagues(leaguesData);
       
-      // Debug: Log available team IDs
-      console.log('📋 Available Teams:', teamsData.map(t => ({ id: t.id, name: t.name })));
-      console.log(`📊 Total Teams: ${teamsData.length}`);
-      
       // Populate fixtures with team data
       const populatedFixtures = fixturesData.map(fixture => {
         const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
@@ -248,24 +244,17 @@ export const FootballProvider = ({ children }) => {
 
   const deleteTeam = async (teamId) => {
     try {
-      console.log('🔄 Starting team deletion:', teamId, 'Type:', typeof teamId);
-      
       // Ensure teamId is a string
       const id = String(teamId);
-      console.log('🔄 Converted ID:', id, 'Type:', typeof id);
       
       const team = teams.find(t => t.id === id || t.id === teamId);
-      console.log('📋 Team found:', team?.name);
       
       await teamsCollection.delete(id);
-      console.log('✅ Team deleted from Firestore');
       
       setTeams(prev => prev.filter(team => team.id !== id && team.id !== teamId));
-      console.log('✅ Team removed from local state');
       
       // Log activity
       if (user) {
-        console.log('📝 Logging admin activity...');
         await adminActivityCollection.log({
           action: 'delete',
           type: 'team',
@@ -274,7 +263,6 @@ export const FootballProvider = ({ children }) => {
           userId: user.uid,
           userName: user.displayName || user.email
         });
-        console.log('✅ Activity logged');
       }
     } catch (error) {
       console.error('❌ Error in deleteTeam:', error);
@@ -291,7 +279,6 @@ export const FootballProvider = ({ children }) => {
         throw new Error('You must be signed in to follow teams');
       }
 
-      console.log('👥 Following team:', teamId);
       await teamsCollection.follow(teamId, user.uid);
       
       // Update local state
@@ -308,10 +295,8 @@ export const FootballProvider = ({ children }) => {
         }
         return team;
       }));
-      
-      console.log('✅ Team followed successfully');
     } catch (error) {
-      console.error('❌ Error following team:', error);
+      console.error('Error following team:', error);
       throw error;
     }
   };
@@ -322,7 +307,6 @@ export const FootballProvider = ({ children }) => {
         throw new Error('You must be signed in to unfollow teams');
       }
 
-      console.log('👥 Unfollowing team:', teamId);
       await teamsCollection.unfollow(teamId, user.uid);
       
       // Update local state
@@ -339,10 +323,8 @@ export const FootballProvider = ({ children }) => {
         }
         return team;
       }));
-      
-      console.log('✅ Team unfollowed successfully');
     } catch (error) {
-      console.error('❌ Error unfollowing team:', error);
+      console.error('Error unfollowing team:', error);
       throw error;
     }
   };
