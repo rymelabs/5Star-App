@@ -311,7 +311,7 @@ const News = () => {
       </div>
 
       {/* Search & Filter */}
-      <div className="px-4 sticky top-[60px] z-20 mb-6">
+      <div className="px-4 sticky top-[60px] z-20 mb-6 pb-4 sm:pb-0">
         <div className="flex gap-2.5">
           <div className="relative group flex-1">
             <div className="absolute inset-0 bg-brand-purple/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -359,118 +359,112 @@ const News = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 mt-4 sm:mt-0">
         {/* Featured Article */}
         {featuredArticle && !searchQuery && categoryFilter === 'all' && (
-          <div 
+          <SurfaceCard
+            interactive
             onClick={() => handleArticleClick(featuredArticle)}
-            className="group relative aspect-[16/10] sm:aspect-[21/9] rounded-none overflow-hidden cursor-pointer bg-[#0c0c0f] border-t border-b border-white/10 shadow-2xl"
+            className="p-0 overflow-hidden group rounded-none bg-[#0c0c0f] border-l-0 border-r-0 border-t border-b border-white/10"
           >
-            <img
-              src={featuredArticle.image}
-              alt={featuredArticle.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-            
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="px-3 py-1 bg-brand-purple text-white text-xs font-bold rounded-lg shadow-lg shadow-brand-purple/20 uppercase tracking-wider">
-                  {featuredArticle.category}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
-                  <Clock className="w-3.5 h-3.5" />
-                  {getRelativeTime(featuredArticle.publishedAt)}
-                </span>
-              </div>
-              
-              <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 leading-tight group-hover:text-brand-purple-light transition-colors">
-                {featuredArticle.title}
-              </h2>
-              
-              <p className="text-white/70 text-sm sm:text-base line-clamp-2 mb-4 max-w-2xl">
-                {featuredArticle.excerpt || featuredArticle.summary}
-              </p>
-
-              <div className="flex items-center gap-4 text-xs sm:text-sm font-medium text-white/60">
-                <div className="flex items-center gap-1.5">
-                  <User className="w-4 h-4" />
-                  {featuredArticle.author}
+            <div className="relative h-44 sm:h-56 w-full overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+              <img
+                src={featuredArticle.image}
+                alt={featuredArticle.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-20">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2.5 py-1 bg-brand-purple text-white text-[11px] font-bold rounded-lg shadow-lg shadow-brand-purple/20 uppercase tracking-wider">
+                    {featuredArticle.category}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[11px] text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                    <Clock className="w-3.5 h-3.5" />
+                    {getRelativeTime(featuredArticle.publishedAt)}
+                  </span>
                 </div>
-                <div className="w-1 h-1 rounded-full bg-white/20" />
-                <div className="flex items-center gap-1.5">
-                  <MessageCircle className="w-4 h-4" />
-                  {featuredArticle.commentCount || 0}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Heart className="w-4 h-4" />
-                  {featuredArticle.likes || 0}
-                </div>
+                <h2 className="font-bold text-white text-lg sm:text-2xl leading-tight line-clamp-2">
+                  {featuredArticle.title}
+                </h2>
               </div>
             </div>
-          </div>
+
+            <div className="p-3 sm:p-4">
+              <p className="text-white/60 text-xs sm:text-sm line-clamp-2 mb-2">
+                {truncateText(featuredArticle.excerpt || featuredArticle.summary, 120)}
+              </p>
+              <div className="flex items-center justify-between text-[11px] sm:text-xs text-white/50">
+                <span className="truncate">{featuredArticle.author}</span>
+                <span className="text-brand-purple font-semibold">Read Article</span>
+              </div>
+            </div>
+          </SurfaceCard>
         )}
 
         {/* Article List */}
-        <div className="news-compact-reset grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {remainingArticles.map((article) => (
-            <SurfaceCard
-              key={article.id}
-              className="group p-0 overflow-hidden h-full flex flex-col bg-elevated/30 hover:bg-elevated/50 transition-all duration-300 border-white/5 rounded-none news-card"
-              interactive
-              onClick={() => handleArticleClick(article)}
-            >
-              <div className="flex flex-row sm:flex-col h-full">
-                {/* Image Section */}
-                <div className="relative w-[128px] sm:w-full aspect-[1/1] sm:aspect-[16/9] overflow-hidden shrink-0">
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-                    <span className="px-1.5 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 text-white text-[8px] font-bold rounded-md uppercase tracking-wider">
-                      {article.category}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Content Section */}
-                <div className="p-2 flex flex-col flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/60 mb-1.5 news-card-meta">
-                    <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    <span>{getRelativeTime(article.publishedAt)}</span>
-                  </div>
-                  
-                  <h3 className="news-card-title text-sm sm:text-base font-semibold text-white mb-0.5 line-clamp-2 leading-snug group-hover:text-brand-purple transition-colors">
-                    {article.title}
-                  </h3>
-                  
-                  <p className="hidden sm:block text-white/60 text-[11px] sm:text-xs line-clamp-2 mb-3 flex-1 news-card-body">
-                    {truncateText(article.excerpt || article.summary, 80)}
-                  </p>
-                  
-                  <div className="flex items-center justify-between pt-2 mt-auto sm:border-t sm:border-white/5">
-                    <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-white/70 news-card-meta">
-                      <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                      <span className="truncate max-w-[80px]">{article.author}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 text-[11px] text-white/50 ml-auto sm:ml-0 news-card-meta">
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span>{article.commentCount || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span>{article.likes || 0}</span>
-                      </div>
+        <div className="news-compact-reset">
+          {/* Mobile: flat feed rows. Desktop: keep grid feel via wrapping */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 sm:gap-4">
+            {remainingArticles.map((article) => (
+              <SurfaceCard
+                key={article.id}
+                className="group p-0 overflow-hidden h-full flex flex-col bg-[#0c0c0f] sm:bg-elevated/30 sm:hover:bg-elevated/50 transition-colors border-0 sm:border sm:border-white/5 rounded-none news-card"
+                interactive
+                onClick={() => handleArticleClick(article)}
+              >
+                <div className="flex flex-row sm:flex-col h-full border-b border-white/5 sm:border-b-0">
+                  {/* Image Section */}
+                  <div className="relative w-16 h-16 sm:w-full sm:h-auto sm:aspect-[16/9] overflow-hidden shrink-0 rounded-lg sm:rounded-none bg-gray-800">
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+                      <span className="px-1.5 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 text-white text-[8px] font-bold rounded-md uppercase tracking-wider">
+                        {article.category}
+                      </span>
                     </div>
                   </div>
+
+                  {/* Content Section */}
+                  <div className="p-2 sm:p-3 flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/60 mb-1 news-card-meta">
+                      <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <span>{getRelativeTime(article.publishedAt)}</span>
+                    </div>
+
+                    <h3 className="news-card-title font-semibold text-white text-sm sm:text-base line-clamp-2 mb-0.5 leading-snug group-hover:text-brand-purple transition-colors">
+                      {article.title}
+                    </h3>
+
+                    <p className="hidden sm:block text-white/60 text-[11px] sm:text-xs line-clamp-2 mb-3 flex-1 news-card-body">
+                      {truncateText(article.excerpt || article.summary, 80)}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-2 mt-auto sm:border-t sm:border-white/5">
+                      <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-white/70 news-card-meta">
+                        <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        <span className="truncate max-w-[80px]">{article.author}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px] text-white/50 ml-auto sm:ml-0 news-card-meta">
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span>{article.commentCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span>{article.likes || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </SurfaceCard>
-          ))}
+              </SurfaceCard>
+            ))}
+          </div>
         </div>
 
         {/* Empty State */}
