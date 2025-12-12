@@ -64,7 +64,6 @@ const News = () => {
   const navigate = useNavigate();
   const { articles } = useNews();
   const { t } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   
@@ -205,45 +204,32 @@ const News = () => {
     if (observerRef.current) observerRef.current.disconnect();
     
     observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreNews && !searchQuery && categoryFilter === 'all') {
+      if (entries[0].isIntersecting && hasMoreNews && categoryFilter === 'all') {
         loadMoreArticles();
       }
     });
     
     if (node) observerRef.current.observe(node);
-  }, [loadingMore, hasMoreNews, searchQuery, categoryFilter, loadMoreArticles]);
+  }, [loadingMore, hasMoreNews, categoryFilter, loadMoreArticles]);
 
   // Get unique categories - use both context articles and paginated articles
   const categories = useMemo(() => {
-    const allArticles = searchQuery || categoryFilter !== 'all' ? articles : paginatedArticles;
+    const allArticles = categoryFilter !== 'all' ? articles : paginatedArticles;
     const cats = [...new Set(allArticles.map(article => article.category))];
     return ['all', ...cats];
-  }, [articles, paginatedArticles, searchQuery, categoryFilter]);
+  }, [articles, paginatedArticles, categoryFilter]);
 
   // Filter articles - use context articles for filtering, paginated for normal view
   const filteredArticles = useMemo(() => {
-    // If user is searching or filtering, use context articles (already loaded)
-    if (searchQuery.trim() || categoryFilter !== 'all') {
-      let filtered = articles;
-
-      if (searchQuery.trim()) {
-        filtered = filtered.filter(article =>
-          article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (article.excerpt || article.summary || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (article.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-
-      if (categoryFilter !== 'all') {
-        filtered = filtered.filter(article => article.category === categoryFilter);
-      }
-
+    // If user is filtering by category, use context articles (already loaded)
+    if (categoryFilter !== 'all') {
+      let filtered = articles.filter(article => article.category === categoryFilter);
       return filtered.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
     }
     
     // Otherwise, use paginated articles
     return paginatedArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-  }, [articles, paginatedArticles, searchQuery, categoryFilter]);
+  }, [articles, paginatedArticles, categoryFilter]);
 
   if (!initialLoaded) {
     return (
@@ -302,45 +288,28 @@ const News = () => {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background pb-24"
     >
-      {/* Header */}
-      <div className="px-4 pb-4">
+      {/* Header with Filter */}
+      <div className="px-4 pb-4 flex items-center justify-between">
         <h1 className="page-header flex items-center gap-3">
           <Newspaper className="w-6 h-6 text-brand-purple" />
           {t('pages.news.title')}
         </h1>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`px-3 py-2 rounded-full text-sm font-medium border transition-all flex items-center gap-2 ${
+            showFilters 
+              ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
+              : 'bg-elevated/80 backdrop-blur-xl text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <Filter className="w-4 h-4" />
+          <span className="text-xs">{t('common.filter') || 'Filter'}</span>
+        </button>
       </div>
 
-      {/* Search & Filter */}
-      <div className="px-4 sticky top-[60px] z-50 mb-6 pb-4 sm:pb-0">
-        <div className="flex gap-2.5 w-full sm:max-w-xs lg:max-w-[240px] sm:ml-auto">
-          <div className="relative group flex-1">
-            <div className="absolute inset-0 bg-brand-purple/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-purple transition-colors" />
-              <input
-                type="text"
-                placeholder={`${t('common.search')} ${t('pages.news.title').toLowerCase()}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2 sm:py-2 bg-elevated/80 backdrop-blur-xl border border-white/10 rounded-full text-sm sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-purple/50 focus:ring-1 focus:ring-brand-purple/50 transition-all shadow-lg"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-3 py-2 rounded-full text-sm font-medium border transition-all flex items-center justify-center ${
-              showFilters 
-                ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
-                : 'bg-elevated/80 backdrop-blur-xl text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+      {/* Filters */}
+      <div className="px-4 mb-6">
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="flex flex-wrap gap-2 p-1">
             {categories.map((category) => (
               <button
@@ -361,7 +330,7 @@ const News = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 mt-4 sm:mt-0">
         {/* Featured Article */}
-        {featuredArticle && !searchQuery && categoryFilter === 'all' && (
+        {featuredArticle && categoryFilter === 'all' && (
           <SurfaceCard
             interactive
             onClick={() => handleArticleClick(featuredArticle)}
@@ -471,17 +440,17 @@ const News = () => {
         {remainingArticles.length === 0 && !featuredArticle && (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-white/20" />
+              <Newspaper className="w-8 h-8 text-white/20" />
             </div>
             <h3 className="text-lg font-bold text-white mb-2">{t('pages.news.noArticlesFound')}</h3>
             <p className="text-white/40">
-              {searchQuery ? `No results for "${searchQuery}"` : 'Try adjusting your filters'}
+              {categoryFilter !== 'all' ? 'Try adjusting your filters' : 'No articles available'}
             </p>
           </div>
         )}
 
         {/* Load More */}
-        {!searchQuery && categoryFilter === 'all' && hasMoreNews && (
+        {categoryFilter === 'all' && hasMoreNews && (
           <div ref={loadMoreRef} className="py-8 flex justify-center">
             {loadingMore ? (
               <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
