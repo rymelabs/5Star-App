@@ -285,7 +285,6 @@ const SeasonDetail = () => {
         createdManually: true
       };
 
-      console.log('Creating fixture with data:', fixtureData);
       await fixturesCollection.add(fixtureData);
 
       showToast('Fixture created successfully!', 'success');

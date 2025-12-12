@@ -252,9 +252,7 @@ export const teamsCollection = {
       const database = checkFirebaseInit();
       // Ensure teamId is a string
       const id = String(teamId);
-      console.log('🗑️ Deleting team with ID:', id, 'Type:', typeof id);
       await deleteDoc(doc(database, 'teams', id));
-      console.log('✅ Team document deleted successfully');
     } catch (error) {
       console.error('Error deleting team:', error);
       throw error;
@@ -277,7 +275,6 @@ export const teamsCollection = {
       
       // Check if already following
       if (currentFollowers.includes(userId)) {
-        console.log('User already follows this team');
         return;
       }
 
@@ -309,7 +306,6 @@ export const teamsCollection = {
       
       // Check if not following
       if (!currentFollowers.includes(userId)) {
-        console.log('User does not follow this team');
         return;
       }
 
@@ -982,7 +978,6 @@ export const newsCollection = {
       }
       
       // If not found by slug, try by document ID (for old articles without slugs)
-      console.log(`Article not found with slug "${slugOrId}", trying by document ID...`);
       try {
         const docRef = doc(database, 'articles', slugOrId);
         const docSnap = await getDoc(docRef);
@@ -992,7 +987,6 @@ export const newsCollection = {
         }
       } catch {
         // If it's not a valid document ID, just continue
-        console.log('Not a valid document ID either');
       }
       
       console.warn(`Article not found with slug or ID: ${slugOrId}`);
@@ -1077,8 +1071,6 @@ export const newsCollection = {
       const articleIdStr = String(articleId);
       const docRef = doc(database, 'articles', articleIdStr);
       
-      console.log('Attempting to delete article:', articleIdStr, '(original:', articleId, ')');
-      
       // Verify article exists before deleting
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
@@ -1088,14 +1080,12 @@ export const newsCollection = {
       
       // Delete the document
       await deleteDoc(docRef);
-      console.log('Article deleted successfully:', articleIdStr);
       
       // Verify deletion
       const verifySnap = await getDoc(docRef);
       if (verifySnap.exists()) {
         throw new Error('Article deletion verification failed - document still exists');
       }
-      console.log('Article deletion verified:', articleIdStr);
     } catch (error) {
       console.error('Error deleting article:', articleId, error);
       console.error('Error code:', error.code);
