@@ -1,7 +1,7 @@
 # Environment variables
 .env
 
-# Dependencies
+# Dependency directories
 node_modules/
 
 # Build output
@@ -26,9 +26,6 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Dependency directories
-node_modules/
-
 # Optional npm cache directory
 .npm
 
@@ -40,9 +37,6 @@ node_modules/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
 
 # IDE files
 .vscode/
