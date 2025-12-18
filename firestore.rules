@@ -170,6 +170,13 @@ service cloud.firestore {
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
     }
+
+    // Push test documents - users can create a test request for themselves
+    match /pushTests/{testId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // No updates/deletes from clients
+    }
     
     // Admin Notifications collection - Public read, admin write, users can update view/dismiss counts
     match /adminNotifications/{notificationId} {
