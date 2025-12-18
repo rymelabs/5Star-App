@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { usePageCache } from '../hooks/usePageCache';
 import Header from './ui/Header';
 import BottomNav from './ui/BottomNav';
 import AppShell from './ui/AppShell';
@@ -17,6 +18,9 @@ const Layout = ({ children }) => {
   const { t } = useLanguage();
   const scrollContainerRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  // Page caching hook
+  usePageCache();
 
   const authHiddenRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
   const hideChrome = authHiddenRoutes.some((path) => location.pathname.startsWith(path));

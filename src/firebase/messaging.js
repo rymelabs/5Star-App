@@ -93,10 +93,10 @@ export const requestNotificationPermission = async () => {
 
     // Register service worker first
     try {
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         scope: '/'
       });
-      
+
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
     } catch (swError) {
@@ -140,7 +140,8 @@ export const requestNotificationPermission = async () => {
       };
     }
 
-    const token = await getToken(messaging, { vapidKey });
+    const serviceWorkerRegistration = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
     
     if (token) {
       return { success: true, token, isDevMode: false };
@@ -195,8 +196,8 @@ export const onForegroundMessage = async (callback) => {
     const notificationData = {
       title: payload.notification?.title || 'New Notification',
       body: payload.notification?.body || '',
-      icon: payload.notification?.icon || '/Fivescores logo.svg',
-      badge: payload.notification?.badge || '/Fivescores logo.svg',
+      icon: payload.notification?.icon || '/icons/icon-192.png',
+      badge: payload.notification?.badge || '/icons/icon-192.png',
       data: payload.data || {},
       timestamp: new Date().toISOString()
     };

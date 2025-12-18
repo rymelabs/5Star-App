@@ -31,22 +31,56 @@ async function getUserSettings(userId) {
   try {
     const settingsDoc = await db.collection("userSettings").doc(userId).get();
     if (settingsDoc.exists) {
-      return settingsDoc.data();
+      return normalizeUserSettings(settingsDoc.data());
     }
     // Return default settings if none exist
-    return {
-      teamFollowing: true,
-      upcomingMatches: true,
-      liveMatches: true,
-      matchResults: true,
-      teamNews: true,
-      emailNotifications: true,
-      pushNotifications: true,
-    };
+    return normalizeUserSettings(null);
   } catch (error) {
     logger.error("Error getting user settings:", error);
     return null;
   }
+}
+
+function normalizeUserSettings(raw) {
+  const defaults = {
+    teamFollowing: true,
+    upcomingMatches: true,
+    liveMatches: true,
+    matchResults: true,
+    teamNews: true,
+    emailNotifications: false,
+    pushNotifications: true,
+  };
+
+  if (!raw || typeof raw !== 'object') return defaults;
+
+  // New client schema: { notifications: { push, email, teamFollowing, upcomingMatches, liveMatches, matchResults, teamNews, matchUpdates, newsAlerts } }
+  if (raw.notifications && typeof raw.notifications === 'object') {
+    const n = raw.notifications;
+    const matchUpdatesFallback = typeof n.matchUpdates === 'boolean' ? n.matchUpdates : true;
+    const teamNewsFallback = typeof n.newsAlerts === 'boolean' ? n.newsAlerts : true;
+
+    return {
+      teamFollowing: typeof n.teamFollowing === 'boolean' ? n.teamFollowing : defaults.teamFollowing,
+      upcomingMatches: typeof n.upcomingMatches === 'boolean' ? n.upcomingMatches : matchUpdatesFallback,
+      liveMatches: typeof n.liveMatches === 'boolean' ? n.liveMatches : matchUpdatesFallback,
+      matchResults: typeof n.matchResults === 'boolean' ? n.matchResults : matchUpdatesFallback,
+      teamNews: typeof n.teamNews === 'boolean' ? n.teamNews : teamNewsFallback,
+      emailNotifications: typeof n.email === 'boolean' ? n.email : defaults.emailNotifications,
+      pushNotifications: typeof n.push === 'boolean' ? n.push : defaults.pushNotifications,
+    };
+  }
+
+  // Legacy schema: flat booleans
+  return {
+    teamFollowing: typeof raw.teamFollowing === 'boolean' ? raw.teamFollowing : defaults.teamFollowing,
+    upcomingMatches: typeof raw.upcomingMatches === 'boolean' ? raw.upcomingMatches : defaults.upcomingMatches,
+    liveMatches: typeof raw.liveMatches === 'boolean' ? raw.liveMatches : defaults.liveMatches,
+    matchResults: typeof raw.matchResults === 'boolean' ? raw.matchResults : defaults.matchResults,
+    teamNews: typeof raw.teamNews === 'boolean' ? raw.teamNews : defaults.teamNews,
+    emailNotifications: typeof raw.emailNotifications === 'boolean' ? raw.emailNotifications : defaults.emailNotifications,
+    pushNotifications: typeof raw.pushNotifications === 'boolean' ? raw.pushNotifications : defaults.pushNotifications,
+  };
 }
 
 /**
@@ -103,14 +137,27 @@ async function sendPushNotification(userId, notification) {
       return {success: false, reason: "no_tokens"};
     }
 
+    const baseUrl = process.env.APP_URL || "https://your-app-url.com";
+    const safeData = stringifyFcmData(notification.data || {});
+
+    const relativeUrl = safeData.url || safeData.link || "/";
+    const link = new URL(relativeUrl, baseUrl).toString();
+    const icon = new URL(notification.icon || "/icons/icon-192.png", baseUrl).toString();
+
     const message = {
-      notification: {
-        title: notification.title,
-        body: notification.body,
-        imageUrl: notification.icon,
+      tokens,
+      data: safeData,
+      webpush: {
+        notification: {
+          title: notification.title,
+          body: notification.body,
+          icon,
+          badge: icon,
+        },
+        fcmOptions: {
+          link,
+        },
       },
-      data: notification.data || {},
-      tokens: tokens,
     };
 
     const response = await messaging.sendEachForMulticast(message);
@@ -136,6 +183,16 @@ async function sendPushNotification(userId, notification) {
     logger.error("Error sending push notification:", error);
     return {success: false, error: error.message};
   }
+}
+
+function stringifyFcmData(data) {
+  const out = {};
+  if (!data || typeof data !== 'object') return out;
+  for (const [key, value] of Object.entries(data)) {
+    if (value === undefined) continue;
+    out[key] = typeof value === 'string' ? value : JSON.stringify(value);
+  }
+  return out;
 }
 
 /**
@@ -285,7 +342,7 @@ async function createAndSendNotification(userId, notificationData, settingKey) {
     }
 
     // Check specific setting
-    if (settingKey && !settings[settingKey]) {
+    if (settingKey && settings[settingKey] === false) {
       logger.info(`${settingKey} disabled for user ${userId}`);
       return;
     }
@@ -318,6 +375,49 @@ async function createAndSendNotification(userId, notificationData, settingKey) {
     logger.error("Error creating and sending notification:", error);
   }
 }
+
+// ============================================================================
+// CLOUD FUNCTIONS - TEST PUSH NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Firestore-triggered test push.
+ * Create: pushTests/{id} with fields:
+ *   - userId (string, required)
+ *   - title (string, optional)
+ *   - body (string, optional)
+ *   - url (string, optional)
+ */
+exports.onPushTestCreated = onDocumentCreated("pushTests/{testId}", async (event) => {
+  const test = event.data.data();
+  const testId = event.params.testId;
+
+  try {
+    const userId = test.userId;
+    if (!userId) {
+      logger.warn(`pushTests/${testId} missing userId`);
+      return;
+    }
+
+    const notification = {
+      type: "push_test",
+      title: (test.title || "🔔 Push Test").toString().slice(0, 100),
+      body: (test.body || "If you see this, push notifications work.").toString().slice(0, 200),
+      icon: "/icons/icon-192.png",
+      data: {
+        type: "push_test",
+        url: (test.url || "/settings").toString(),
+        testId,
+      },
+      actionUrl: `${process.env.APP_URL || "https://your-app-url.com"}${(test.url || "/settings").toString()}`,
+    };
+
+    await createAndSendNotification(userId, notification, null);
+    logger.info(`Test push sent for pushTests/${testId} to user ${userId}`);
+  } catch (error) {
+    logger.error(`Error in onPushTestCreated (pushTests/${testId}):`, error);
+  }
+});
 
 // ============================================================================
 // CLOUD FUNCTIONS - FIXTURE NOTIFICATIONS

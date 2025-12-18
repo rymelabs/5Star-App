@@ -219,22 +219,37 @@ export const NotificationProvider = ({ children }) => {
     loadNotifications({ limit: 50 });
     loadUnreadCount();
 
-    // Set up foreground message listener
-    const unsubscribe = onForegroundMessage((notification) => {
-      
-      // Show toast notification
-      addNotification({
-        type: 'info',
-        title: notification.title,
-        message: notification.body,
-      });
+    // Set up foreground message listener (async)
+    let unsubscribe = null;
+    let cancelled = false;
 
-      // Reload notifications and count
-      loadNotifications({ limit: 50 });
-      loadUnreadCount();
-    });
+    (async () => {
+      try {
+        const maybeUnsub = await onForegroundMessage((notification) => {
+          // Show toast notification
+          addNotification({
+            type: 'info',
+            title: notification.title,
+            message: notification.body,
+          });
+
+          // Reload notifications and count
+          loadNotifications({ limit: 50 });
+          loadUnreadCount();
+        });
+
+        if (!cancelled) {
+          unsubscribe = typeof maybeUnsub === 'function' ? maybeUnsub : null;
+        } else if (typeof maybeUnsub === 'function') {
+          maybeUnsub();
+        }
+      } catch (_error) {
+        // Silent: foreground messaging may be unsupported on some platforms
+      }
+    })();
 
     return () => {
+      cancelled = true;
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
