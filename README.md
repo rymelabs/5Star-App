@@ -81,15 +81,6 @@ npm run dev
 npm run build
 ```
 
-## 🔑 Demo Accounts
-
-### User Account
-- **Email**: demo@example.com
-- **Password**: demo123
-
-### Admin Account
-- **Email**: admin@example.com
-- **Password**: admin123
 
 ## 📱 App Structure
 
