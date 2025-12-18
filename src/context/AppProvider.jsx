@@ -7,6 +7,7 @@ import { CompetitionsProvider } from './CompetitionsContext';
 import { InstagramProvider } from './InstagramContext';
 import { LanguageProvider } from './LanguageContext';
 import { RecycleBinProvider } from './RecycleBinContext';
+import { PwaInstallProvider } from './PwaInstallContext';
 
 // Combined provider component
 export const AppProvider = ({ children }) => {
@@ -19,7 +20,9 @@ export const AppProvider = ({ children }) => {
               <InstagramProvider>
                 <RecycleBinProvider>
                   <NotificationProvider>
-                    {children}
+                    <PwaInstallProvider>
+                      {children}
+                    </PwaInstallProvider>
                   </NotificationProvider>
                 </RecycleBinProvider>
               </InstagramProvider>

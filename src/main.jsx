@@ -13,12 +13,9 @@ createRoot(document.getElementById('root')).render(
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
+    // Use the Firebase Messaging service worker as the single controlling SW.
+    // This avoids scope conflicts between multiple SWs and ensures background
+    // notifications work consistently.
+    navigator.serviceWorker.register('/firebase-messaging-sw.js');
   });
 }

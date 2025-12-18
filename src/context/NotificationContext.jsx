@@ -121,8 +121,12 @@ export const NotificationProvider = ({ children }) => {
       setFcmToken(result.token);
       setPermissionGranted(true);
       
-      // Save token to Firestore
-      await saveFCMToken(currentUser.uid, result.token);
+      // Save token to Firestore only for real (non-dev) tokens.
+      // In dev/unsupported environments we intentionally return a dummy token
+      // to keep UI preferences working, but we should not store it server-side.
+      if (!result.isDevMode) {
+        await saveFCMToken(currentUser.uid, result.token);
+      }
       
       // Show appropriate success message
       if (result.isDevMode) {
