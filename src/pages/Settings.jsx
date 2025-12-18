@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePwaInstall } from '../context/PwaInstallContext';
 import { settingsCollection } from '../firebase/settings';
 import {
   ArrowLeft,
@@ -26,6 +27,7 @@ const Settings = () => {
   const { user, logout } = useAuth();
   const { unreadCount, permissionGranted, requestPermission } = useNotification();
   const { language: currentLanguage, changeLanguage, availableLanguages, t } = useLanguage();
+  const { isInstalled, promptInstall } = usePwaInstall();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -52,10 +54,6 @@ const Settings = () => {
     exit: { opacity: 0, y: -24 },
     transition: { duration: 0.3, ease: 'easeOut' },
   };
-
-  // PWA Install state
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -100,31 +98,6 @@ const Settings = () => {
 
     loadSettings();
   }, [user?.uid, isAuthenticatedUser]);
-
-  // PWA Install event listener
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      console.log('Before install prompt event fired');
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    const handleAppInstalled = () => {
-      console.log('App installed successfully');
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-      showToast('App installed successfully!', 'success');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -300,23 +273,30 @@ const Settings = () => {
   };
 
   const handleInstallApp = async () => {
-    if (!deferredPrompt) {
-      showToast('Installation not available. Try accessing via localhost or refresh the page.', 'error');
-      return;
-    }
-
     try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
+      const result = await promptInstall();
+
+      if (result.status === 'accepted') {
         showToast('App installed successfully!', 'success');
-      } else {
-        showToast('App installation cancelled', 'error');
+        return;
       }
-      
-      setDeferredPrompt(null);
-      setIsInstallable(false);
+
+      if (result.status === 'dismissed') {
+        showToast('App installation cancelled', 'error');
+        return;
+      }
+
+      if (result.status === 'ios') {
+        showToast('On iPhone/iPad: tap Share → Add to Home Screen', 'success');
+        return;
+      }
+
+      if (result.status === 'already-installed') {
+        showToast('App is already installed', 'success');
+        return;
+      }
+
+      showToast('Install prompt not available yet. Use your browser menu → Add to Home screen.', 'error');
     } catch (error) {
       showToast('Failed to install app', 'error');
       console.error('Install prompt error:', error);
@@ -332,9 +312,9 @@ const Settings = () => {
           label: 'Install App',
           description: 'Add fivescores to your home screen for a better experience',
           type: 'button',
-          buttonLabel: 'Install on Device',
+          buttonLabel: isInstalled ? 'Installed' : 'Install on Device',
           onClick: handleInstallApp,
-          disabled: !isInstallable,
+          disabled: isInstalled,
         },
       ],
     },
