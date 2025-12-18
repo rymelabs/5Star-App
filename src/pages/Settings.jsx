@@ -753,7 +753,7 @@ const Settings = () => {
       </div>
 
       {toast.show && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-[slideInUp_0.3s_ease-out] w-full max-w-xs px-4">
+        <div className="fixed bottom-40 left-1/2 transform -translate-x-1/2 z-[60] animate-[slideInUp_0.3s_ease-out] w-full max-w-xs px-4">
           <div
             className={`rounded-2xl px-4 py-3 shadow-2xl backdrop-blur-md border border-white/10 flex items-center gap-3 ${
               toast.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
