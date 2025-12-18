@@ -6,6 +6,8 @@ import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePwaInstall } from '../context/PwaInstallContext';
 import { settingsCollection } from '../firebase/settings';
+import { getFirebaseDb } from '../firebase/config';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import {
   ArrowLeft,
   Bell,
@@ -303,6 +305,32 @@ const Settings = () => {
     }
   };
 
+  const handleSendTestPush = async () => {
+    if (!user?.uid) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
+
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      showToast('Enable notifications first', 'error');
+      return;
+    }
+
+    try {
+      const db = getFirebaseDb();
+      await addDoc(collection(db, 'pushTests'), {
+        userId: user.uid,
+        title: '🔔 Push Test',
+        body: 'If you see this, push notifications work.',
+        url: '/settings',
+        createdAt: serverTimestamp(),
+      });
+      showToast('Test push requested. Check your notifications.', 'success');
+    } catch (error) {
+      showToast(error?.message || 'Failed to request test push', 'error');
+    }
+  };
+
   const settingSections = [
     {
       title: 'Install Now',
@@ -337,6 +365,14 @@ const Settings = () => {
           buttonLabel: permissionGranted ? t('pages.settings.enabled') : t('pages.settings.enable'),
           onClick: () => !permissionGranted && setShowPermissionModal(true),
           disabled: permissionGranted,
+        },
+        {
+          label: 'Send Test Push',
+          description: 'Sends a test notification to this device',
+          type: 'button',
+          buttonLabel: 'Send Test Push',
+          onClick: handleSendTestPush,
+          disabled: !permissionGranted,
         },
         {
           label: t('pages.settings.pushNotifications'),
