@@ -17,6 +17,7 @@ import {
   Check,
   Inbox,
   MoreHorizontal,
+  Download,
 } from 'lucide-react';
 import NotificationPermissionModal from '../components/NotificationPermissionModal';
 
@@ -51,6 +52,10 @@ const Settings = () => {
     exit: { opacity: 0, y: -24 },
     transition: { duration: 0.3, ease: 'easeOut' },
   };
+
+  // PWA Install state
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -95,6 +100,31 @@ const Settings = () => {
 
     loadSettings();
   }, [user?.uid, isAuthenticatedUser]);
+
+  // PWA Install event listener
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('Before install prompt event fired');
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    const handleAppInstalled = () => {
+      console.log('App installed successfully');
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+      showToast('App installed successfully!', 'success');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -269,7 +299,45 @@ const Settings = () => {
     }, 500);
   };
 
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      showToast('Installation not available. Try accessing via localhost or refresh the page.', 'error');
+      return;
+    }
+
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        showToast('App installed successfully!', 'success');
+      } else {
+        showToast('App installation cancelled', 'error');
+      }
+      
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    } catch (error) {
+      showToast('Failed to install app', 'error');
+      console.error('Install prompt error:', error);
+    }
+  };
+
   const settingSections = [
+    {
+      title: 'Install Now',
+      icon: Download,
+      items: [
+        {
+          label: 'Install App',
+          description: 'Add fivescores to your home screen for a better experience',
+          type: 'button',
+          buttonLabel: 'Install on Device',
+          onClick: handleInstallApp,
+          disabled: !isInstallable,
+        },
+      ],
+    },
     {
       title: t('pages.settings.notifications'),
       icon: Bell,
