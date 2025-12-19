@@ -12,6 +12,7 @@ const ArticleDetail = () => {
   const { user } = useAuth();
   
   const [article, setArticle] = useState(null);
+  const [imageRatio, setImageRatio] = useState(null);
   const imageAspectRatioEffective = '2 / 1';
   const [comment, setComment] = useState('');
   const [isLiked, setIsLiked] = useState(false);
@@ -73,6 +74,10 @@ const ArticleDetail = () => {
       </div>
     );
   }
+
+  const imageFitClass = imageRatio !== null && imageRatio >= 1
+    ? 'object-cover object-top'
+    : 'object-contain object-center';
 
   const imageAspectRatioEffective = imageAspectRatio
     ? Math.max(imageAspectRatio, 4 / 3)
@@ -150,12 +155,18 @@ const ArticleDetail = () => {
           src={article.image}
           alt=""
           aria-hidden="true"
-          className="w-full h-full object-cover blur-xl scale-110 opacity-40"
+          className="w-full h-full object-cover object-top blur-xl scale-110 opacity-40"
         />
         <img
           src={article.image}
           alt={article.title}
-          className="w-full h-full object-contain -mt-full"
+          className={`w-full h-full ${imageFitClass} -mt-full`}
+          onLoad={(e) => {
+            const { naturalWidth, naturalHeight } = e.currentTarget;
+            if (naturalWidth > 0 && naturalHeight > 0) {
+              setImageRatio(naturalWidth / naturalHeight);
+            }
+          }}
         />
       </div>
 
