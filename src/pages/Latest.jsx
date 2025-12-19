@@ -179,6 +179,15 @@ const Latest = () => {
     if (!fixtures || fixtures.length === 0) return [];
 
     const now = new Date();
+    const getLocalDateKey = (dateInput) => {
+      const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    const todayKey = getLocalDateKey(now);
     const competitionsMap = new Map();
 
     // Process all fixtures and group by competition/season
@@ -223,6 +232,8 @@ const Latest = () => {
 
         // Sort results by date (most recent first), limit to 6
         group.recentResults.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+        group.hasTodayResults = group.recentResults.some((fixture) => getLocalDateKey(fixture.dateTime) === todayKey);
+        group.latestResultTime = new Date(group.recentResults[0]?.dateTime || 0).getTime();
         group.recentResults = group.recentResults.slice(0, 6);
 
         return group;
@@ -235,9 +246,34 @@ const Latest = () => {
         // Active season first
         if (a.isActiveSeason && !b.isActiveSeason) return -1;
         if (!a.isActiveSeason && b.isActiveSeason) return 1;
+
+        // Then prioritize groups that have results today
+        if (a.hasTodayResults && !b.hasTodayResults) return -1;
+        if (!a.hasTodayResults && b.hasTodayResults) return 1;
+
+        // Then show the most recent result groups first
+        if (a.latestResultTime !== b.latestResultTime) return b.latestResultTime - a.latestResultTime;
+
+        // Then prioritize groups that actually have results
+        const aHasResults = a.recentResults.length > 0;
+        const bHasResults = b.recentResults.length > 0;
+        if (aHasResults && !bHasResults) return -1;
+        if (!aHasResults && bHasResults) return 1;
+
         return a.name.localeCompare(b.name);
       });
   }, [fixtures, activeSeason, getCompetitionDetails]);
+
+  const groupedContentRecentFirst = React.useMemo(() => {
+    const threshold = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = groupedContent.filter(
+      (group) => group.hasTodayResults || (group.latestResultTime && group.latestResultTime >= threshold)
+    );
+    const older = groupedContent.filter(
+      (group) => !group.hasTodayResults && (!group.latestResultTime || group.latestResultTime < threshold)
+    );
+    return { recent, older };
+  }, [groupedContent]);
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
@@ -530,11 +566,16 @@ const Latest = () => {
       {/* Live Matches */}
       <LiveMatchesSection />
 
+      {/* Recent Results/Fixtures (today / last 24h) */}
+      {groupedContentRecentFirst.recent.map((group) => (
+        <CompetitionGroup key={group.name} group={group} />
+      ))}
+
       {/* Latest News */}
       <NewsSection />
 
-      {/* Grouped Content by Competition/League/Season */}
-      {groupedContent.map((group) => (
+      {/* Older Results/Fixtures (keep below news) */}
+      {groupedContentRecentFirst.older.map((group) => (
         <CompetitionGroup key={group.name} group={group} />
       ))}
 
