@@ -30,6 +30,8 @@ const NewsArticle = () => {
     loadArticle();
   }, [id]);
 
+  const heroAspectRatioEffective = '2 / 1';
+
   // Close share menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -198,26 +200,28 @@ const NewsArticle = () => {
     return (
       <div className="min-h-screen bg-background pb-24">
         {/* Hero Section Skeleton */}
-        <div className="relative h-[50vh] w-full overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-purple/20 via-blue-600/10 to-background animate-pulse" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute inset-0 bg-black/20" />
+        <div className="w-full">
+          <div className="lg:max-w-5xl lg:mx-auto lg:px-[36px]">
+            <div className="relative w-full overflow-hidden" style={{ aspectRatio: '2 / 1' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-purple/20 via-blue-600/10 to-background animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+              <div className="absolute inset-0 bg-black/20" />
 
-          {/* Navigation Skeleton */}
-          <div className="absolute top-0 left-0 right-0 p-6 z-20">
-            <div className="w-10 h-10 bg-black/20 backdrop-blur-md border border-white/10 rounded-xl animate-pulse" />
-          </div>
-
-          {/* Hero Content Skeleton */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 pb-24 sm:pb-28 max-w-7xl mx-auto">
-            <div className="max-w-4xl">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div className="w-20 h-6 bg-brand-purple/60 rounded-lg animate-pulse" />
-                <div className="w-24 h-6 bg-black/40 backdrop-blur-md rounded-lg animate-pulse" />
+              {/* Navigation Skeleton */}
+              <div className="absolute top-0 left-0 right-0 p-6 z-20">
+                <div className="w-10 h-10 bg-black/20 backdrop-blur-md border border-white/10 rounded-xl animate-pulse" />
               </div>
 
-              <div className="space-y-3 mb-4">
-                <div className="w-full h-8 bg-white/20 rounded-lg animate-pulse" />
+              {/* Hero Content Skeleton */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 pb-24 sm:pb-28 max-w-7xl mx-auto">
+                <div className="max-w-4xl">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <div className="w-20 h-6 bg-brand-purple/60 rounded-lg animate-pulse" />
+                    <div className="w-24 h-6 bg-black/40 backdrop-blur-md rounded-lg animate-pulse" />
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="w-full h-8 bg-white/20 rounded-lg animate-pulse" />
                 <div className="w-3/4 h-8 bg-white/15 rounded-lg animate-pulse" />
                 <div className="w-1/2 h-8 bg-white/10 rounded-lg animate-pulse" />
               </div>
@@ -290,6 +294,8 @@ const NewsArticle = () => {
                     <div className="w-full h-20 bg-white/5 rounded-lg animate-pulse" />
                     <div className="flex justify-end">
                       <div className="w-16 h-8 bg-white/20 rounded-full animate-pulse" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -344,25 +350,40 @@ const NewsArticle = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Hero Section */}
-      <div className="relative h-[50vh] w-full overflow-hidden">
-        {article.image ? (
-          <img
-            src={article.image}
-            alt={article.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-brand-purple/20" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-0 bg-black/20" />
-        
-        {/* Navigation */}
-        <div className="absolute top-0 left-0 right-0 p-6 z-20">
-          <BackButton className="bg-black/20 backdrop-blur-md border-white/10 text-white hover:bg-black/40" />
-        </div>
+      <div className="w-full">
+        <div className="lg:max-w-5xl lg:mx-auto lg:px-[36px]">
+          <div
+            className="relative w-full overflow-hidden"
+            style={{ aspectRatio: heroAspectRatioEffective }}
+          >
+            {article.image ? (
+              <>
+                <img
+                  src={article.image}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-40"
+                />
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="absolute inset-0 w-full h-full object-contain"
+                />
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-brand-purple/20" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            <div className="absolute inset-0 bg-black/20" />
+            
+            {/* Navigation */}
+            <div className="absolute top-0 left-0 right-0 p-6 z-20">
+              <BackButton className="bg-black/20 backdrop-blur-md border-white/10 text-white hover:bg-black/40" />
+            </div>
 
-        {/* Hero Content removed; details now placed below image */}
+            {/* Hero Content removed; details now placed below image */}
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}

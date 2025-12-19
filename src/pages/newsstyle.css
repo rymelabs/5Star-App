@@ -227,7 +227,7 @@ div .news-article-excerpt {
   .news-article-excerpt p,
   .news-article-excerpt span,
   div .news-article-excerpt {
-    font-size: 0.65rem !important;
+    font-size: 1.12rem !important;
   }
 }
 
@@ -250,7 +250,25 @@ div .news-article-excerpt {
   .news-body p,
   .news-body span,
   .news-body div {
-    font-size: 1.45rem !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .news-body,
+  .news-body p,
+  .news-body span,
+  .news-body div {
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .news-body,
+  .news-body p,
+  .news-body span,
+  .news-body div {
+    font-size: 0.95rem !important;
   }
 }
 
