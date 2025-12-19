@@ -207,6 +207,10 @@ const FixtureDetail = () => {
   const isCompleted = fixture.status === 'completed';
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== undefined && fixture.penaltyHomeScore !== null && fixture.penaltyAwayScore !== undefined && fixture.penaltyAwayScore !== null;
 
+  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
+  const homeScoreDisplay = isLiveMatch ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
+  const awayScoreDisplay = isLiveMatch ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
+
   const TabButton = ({ id, label, icon: Icon }) => (
     <button
       onClick={() => setActiveTab(id)}
@@ -316,11 +320,11 @@ const FixtureDetail = () => {
                   <div className="absolute inset-0 bg-white/5 blur-3xl rounded-full -z-10" />
                   
                   <span className="fixture-detail-score">
-                    {fixture.homeScore}
+                    {homeScoreDisplay}
                   </span>
                   <span className="fixture-detail-divider">:</span>
                   <span className="fixture-detail-score">
-                    {fixture.awayScore}
+                    {awayScoreDisplay}
                   </span>
                 </div>
               ) : (
