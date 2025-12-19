@@ -21,6 +21,7 @@ const FixtureDetail = () => {
   const { showSuccess, showError } = useNotification();
   const { t } = useLanguage();
   const [fixture, setFixture] = useState(null);
+  const [probabilityTick, setProbabilityTick] = useState(0);
   const [newComment, setNewComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const [likes, setLikes] = useState(0);
@@ -84,6 +85,16 @@ const FixtureDetail = () => {
       return () => unsubscribe();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!fixture || !isFixtureLive(fixture)) return;
+
+    const intervalId = setInterval(() => {
+      setProbabilityTick((prev) => prev + 1);
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [fixture?.id, fixture?.status]);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -189,6 +200,145 @@ const FixtureDetail = () => {
       showError(t('common.error'), t('pages.fixtureDetail.calendarError'));
     }
   };
+
+  const matchProbabilities = React.useMemo(() => {
+    if (!fixture) {
+      return {
+        home: 0.33,
+        draw: 0.34,
+        away: 0.33,
+        inputs: { homeLast5: 0, awayLast5: 0, h2hGames: 0 }
+      };
+    }
+
+    const toScoreNum = (value) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const getTeamRecentCompleted = (teamId) => {
+      if (!teamId) return [];
+      return (fixtures || [])
+        .filter(f => f?.status === 'completed')
+        .filter(f => f?.homeTeam?.id === teamId || f?.awayTeam?.id === teamId)
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+        .slice(0, 5);
+    };
+
+    const getHeadToHeadCompleted = (homeTeamId, awayTeamId) => {
+      if (!homeTeamId || !awayTeamId) return [];
+      return (fixtures || [])
+        .filter(f => f?.status === 'completed')
+        .filter(f => {
+          const h = f?.homeTeam?.id;
+          const a = f?.awayTeam?.id;
+          return (h === homeTeamId && a === awayTeamId) || (h === awayTeamId && a === homeTeamId);
+        })
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+        .slice(0, 5);
+    };
+
+    const computeForm = (teamId, matches) => {
+      if (!teamId || !matches || matches.length === 0) {
+        return { games: 0, points: 0, score: 0.5 };
+      }
+
+      let points = 0;
+      matches.forEach(m => {
+        const isHome = m?.homeTeam?.id === teamId;
+        const teamScore = toScoreNum(isHome ? m?.homeScore : m?.awayScore);
+        const oppScore = toScoreNum(isHome ? m?.awayScore : m?.homeScore);
+
+        if (teamScore > oppScore) points += 3;
+        else if (teamScore === oppScore) points += 1;
+      });
+
+      const games = matches.length;
+      const score = games > 0 ? points / (games * 3) : 0.5;
+      return { games, points, score };
+    };
+
+    const computeH2H = (teamId, matches) => {
+      if (!teamId || !matches || matches.length === 0) {
+        return { games: 0, points: 0, score: 0.5 };
+      }
+      return computeForm(teamId, matches);
+    };
+
+    const homeTeamId = fixture?.homeTeam?.id;
+    const awayTeamId = fixture?.awayTeam?.id;
+    const homeRecent = getTeamRecentCompleted(homeTeamId);
+    const awayRecent = getTeamRecentCompleted(awayTeamId);
+    const h2h = getHeadToHeadCompleted(homeTeamId, awayTeamId);
+
+    const homeForm = computeForm(homeTeamId, homeRecent);
+    const awayForm = computeForm(awayTeamId, awayRecent);
+    const homeH2H = computeH2H(homeTeamId, h2h);
+    const awayH2H = computeH2H(awayTeamId, h2h);
+
+    const formWeight = 0.7;
+    const h2hWeight = 0.3;
+    const homeAdvantage = 0.03;
+
+    const homeStrength = (formWeight * homeForm.score) + (h2hWeight * homeH2H.score);
+    const awayStrength = (formWeight * awayForm.score) + (h2hWeight * awayH2H.score);
+    let diff = (homeStrength - awayStrength) + homeAdvantage;
+
+    const isLive = isFixtureLive(fixture);
+    const liveMinuteRaw = Number(fixture?.minute);
+    const liveMinute = Number.isFinite(liveMinuteRaw)
+      ? Math.max(0, Math.min(120, liveMinuteRaw))
+      : Math.max(0, Math.min(120, Math.floor((Date.now() - new Date(fixture.dateTime).getTime()) / 60000)));
+
+    const timeProgress = Math.max(0, Math.min(1, liveMinute / 90));
+    const homeLiveScore = toScoreNum(fixture?.homeScore);
+    const awayLiveScore = toScoreNum(fixture?.awayScore);
+    const lead = homeLiveScore - awayLiveScore;
+
+    if (isLive) {
+      // Bias strength using current scoreline; stronger effect as match progresses.
+      const scoreBias = Math.max(-0.35, Math.min(0.35, lead * (0.08 + (0.18 * timeProgress))));
+      diff += scoreBias;
+    }
+
+    const sigmoid = (x) => 1 / (1 + Math.exp(-x));
+    const k = 4;
+
+    const pHomeRaw = sigmoid(k * diff);
+    const closeness = 1 - Math.min(1, Math.abs(diff) * 2);
+    let pDraw = Math.max(0.15, Math.min(0.45, 0.24 + (0.20 * closeness)));
+
+    if (isLive) {
+      // If a team is leading, draw becomes less likely as time goes on.
+      if (lead !== 0) {
+        pDraw = Math.max(0.05, pDraw - Math.min(0.15, Math.abs(lead) * 0.05 * timeProgress));
+      } else {
+        // If it's level late on, draw becomes slightly more likely.
+        pDraw = Math.min(0.55, pDraw + (0.06 * timeProgress));
+      }
+    }
+    const remaining = 1 - pDraw;
+
+    let home = pHomeRaw * remaining;
+    let away = (1 - pHomeRaw) * remaining;
+
+    const sum = home + pDraw + away;
+    if (sum > 0) {
+      home /= sum;
+      away /= sum;
+    }
+
+    return {
+      home,
+      draw: pDraw,
+      away,
+      inputs: {
+        homeLast5: homeForm.games,
+        awayLast5: awayForm.games,
+        h2hGames: h2h.length
+      }
+    };
+  }, [fixture, fixtures, probabilityTick]);
 
   if (!fixture) {
     return (
@@ -440,6 +590,61 @@ const FixtureDetail = () => {
                       <div className="text-[8px] text-white/50 mt-0.5 font-medium relative z-10">{predictions.away} votes</div>
                     )}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Match Probabilities */}
+            {!isCompleted && (
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-bold">{t('pages.fixtureDetail.matchProbabilities') || 'Match probabilities'}</h3>
+                  <div className="text-[10px] text-gray-500">
+                    {isLiveMatch
+                      ? (t('pages.fixtureDetail.matchProbabilitiesBasedOnLive') || 'Based on last 5 + head-to-head + live score')
+                      : (t('pages.fixtureDetail.matchProbabilitiesBasedOn') || 'Based on last 5 + head-to-head')}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-300 truncate">{fixture.homeTeam?.name}</span>
+                      <span className="text-white font-semibold">{Math.round(matchProbabilities.home * 100)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full bg-brand-purple"
+                        style={{ width: `${Math.round(matchProbabilities.home * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-400">{t('match.draw') || 'Draw'}</span>
+                      <span className="text-white font-semibold">{Math.round(matchProbabilities.draw * 100)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full bg-white/30"
+                        style={{ width: `${Math.round(matchProbabilities.draw * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-300 truncate">{fixture.awayTeam?.name}</span>
+                      <span className="text-white font-semibold">{Math.round(matchProbabilities.away * 100)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full bg-accent-green"
+                        style={{ width: `${Math.round(matchProbabilities.away * 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

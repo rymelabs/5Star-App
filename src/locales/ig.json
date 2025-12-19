@@ -271,7 +271,10 @@
             "posting": "Na-eziga...",
             "post": "Zipu",
             "logIn": "Banye",
-            "toComment": "iji tinye nkọwa"
+            "toComment": "iji tinye nkọwa",
+            "matchProbabilities": "Match probabilities",
+            "matchProbabilitiesBasedOn": "Based on last 5 + head-to-head",
+            "matchProbabilitiesBasedOnLive": "Based on last 5 + head-to-head + live score"
         },
         "admin": {
             "accessDenied": "Agọnarịla ohere",
