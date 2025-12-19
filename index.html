@@ -7,13 +7,77 @@
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#050816" />
     <title>fivescores</title>
     <!-- Touch/gesture prevention removed to allow pinch, double-tap zoom and normal touch scrolling. -->
+
+    <!-- Instant splash (pre-React) to prevent white flash before CSS/JS load -->
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #050816;
+      }
+
+      body {
+        background-image: radial-gradient(circle at 20% 50%, rgba(109, 40, 217, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.03) 0%, transparent 50%);
+      }
+
+      #pwa-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+        background: #050816;
+        background-image: radial-gradient(circle at 20% 50%, rgba(109, 40, 217, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.03) 0%, transparent 50%);
+        z-index: 9999;
+      }
+
+      #pwa-splash img {
+        width: 84px;
+        height: 84px;
+      }
+
+      #pwa-splash .pwa-splash-spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 9999px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: rgba(255, 255, 255, 0.75);
+        animation: pwa-splash-spin 0.9s linear infinite;
+      }
+
+      #pwa-splash.pwa-splash-hide {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease;
+      }
+
+      @keyframes pwa-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="pwa-splash" aria-hidden="true">
+      <img src="/icons/icon-192.png" alt="" />
+      <div class="pwa-splash-spinner"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

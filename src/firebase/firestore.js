@@ -519,6 +519,41 @@ export const usersCollection = {
   }
 };
 
+// User watchlist subcollection: users/{uid}/watchlist/{fixtureId}
+export const watchlistCollection = {
+  addFixture: async (userId, fixture) => {
+    if (!userId || !fixture?.id) throw new Error('Missing userId or fixture.id');
+    const database = checkFirebaseInit();
+
+    const watchlistRef = doc(database, 'users', String(userId), 'watchlist', String(fixture.id));
+    const dateTime = fixture.dateTime instanceof Date ? fixture.dateTime : (fixture.dateTime?.toDate?.() || (fixture.dateTime ? new Date(fixture.dateTime) : null));
+
+    await setDoc(
+      watchlistRef,
+      {
+        userId: String(userId),
+        fixtureId: String(fixture.id),
+        dateTime: dateTime || null,
+        homeTeamName: fixture.homeTeam?.name || fixture.homeTeamName || null,
+        awayTeamName: fixture.awayTeam?.name || fixture.awayTeamName || null,
+        competition: fixture.competition || fixture.league || null,
+        status: fixture.status || null,
+        sent30: false,
+        sent15: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  },
+
+  removeFixture: async (userId, fixtureId) => {
+    if (!userId || !fixtureId) throw new Error('Missing userId or fixtureId');
+    const database = checkFirebaseInit();
+    await deleteDoc(doc(database, 'users', String(userId), 'watchlist', String(fixtureId)));
+  },
+};
+
 // Fixtures collection functions
 export const fixturesCollection = {
   // Get all fixtures

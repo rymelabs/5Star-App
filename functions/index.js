@@ -332,11 +332,13 @@ function formatFixtureDateLabel(fixture) {
 /**
  * Create notification record and send notifications
  */
-async function createAndSendNotification(userId, notificationData, settingKey) {
+async function createAndSendNotification(userId, notificationData, settingKey, options = {}) {
   try {
     // Get user settings
     const settings = await getUserSettings(userId);
-    if (!settings || !settings.teamFollowing) {
+    const bypassTeamFollowing = options.bypassTeamFollowing === true;
+
+    if (!settings || (!bypassTeamFollowing && !settings.teamFollowing)) {
       logger.info(`Team following disabled for user ${userId}`);
       return;
     }
@@ -376,6 +378,20 @@ async function createAndSendNotification(userId, notificationData, settingKey) {
   }
 }
 
+async function getWatchlistUsersForFixture(fixtureId) {
+  if (!fixtureId) return { userIds: [], docRefs: [] };
+  const snapshot = await db.collectionGroup('watchlist').where('fixtureId', '==', String(fixtureId)).get();
+  const userIds = new Set();
+  const docRefs = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const userId = (data.userId || docSnap.ref.parent?.parent?.id || '').toString();
+    if (userId) userIds.add(userId);
+    docRefs.push(docSnap.ref);
+  });
+  return { userIds: Array.from(userIds), docRefs };
+}
+
 // ============================================================================
 // CLOUD FUNCTIONS - TEST PUSH NOTIFICATIONS
 // ============================================================================
@@ -412,10 +428,120 @@ exports.onPushTestCreated = onDocumentCreated("pushTests/{testId}", async (event
       actionUrl: `${process.env.APP_URL || "https://your-app-url.com"}${(test.url || "/settings").toString()}`,
     };
 
-    await createAndSendNotification(userId, notification, null);
+    await createAndSendNotification(userId, notification, null, { bypassTeamFollowing: true });
     logger.info(`Test push sent for pushTests/${testId} to user ${userId}`);
   } catch (error) {
     logger.error(`Error in onPushTestCreated (pushTests/${testId}):`, error);
+  }
+});
+
+// ============================================================================
+// CLOUD FUNCTIONS - WATCHLIST NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Triggered when a user adds a fixture to their watchlist.
+ * Path: users/{userId}/watchlist/{fixtureId}
+ */
+exports.onWatchlistAdded = onDocumentCreated('users/{userId}/watchlist/{fixtureId}', async (event) => {
+  const watch = event.data.data() || {};
+  const userId = event.params.userId;
+  const fixtureId = event.params.fixtureId;
+
+  try {
+    const home = (watch.homeTeamName || 'Match').toString();
+    const away = (watch.awayTeamName || '').toString();
+    const label = away ? `${home} vs ${away}` : home;
+
+    const notification = {
+      type: 'watchlist_added',
+      title: '✅ Added to watchlist',
+      body: `${label} has been added to your watchlist. You'll get reminders and live updates.`,
+      icon: '/icons/icon-192.png',
+      data: {
+        type: 'watchlist_added',
+        fixtureId: String(fixtureId),
+        url: `/fixtures/${fixtureId}`,
+      },
+      actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+    };
+
+    await createAndSendNotification(userId, notification, null, { bypassTeamFollowing: true });
+  } catch (error) {
+    logger.error('Error in onWatchlistAdded:', error);
+  }
+});
+
+/**
+ * Scheduled watchlist reminders (30 and 15 minutes before kickoff).
+ * Runs every minute to keep timing tight.
+ */
+exports.notifyWatchlistReminders = onSchedule('every 1 minutes', async () => {
+  try {
+    const now = Date.now();
+
+    const buildWindow = (minutes) => {
+      const start = new Date(now + (minutes - 1) * 60 * 1000);
+      const end = new Date(now + (minutes + 1) * 60 * 1000);
+      return {
+        start: admin.firestore.Timestamp.fromDate(start),
+        end: admin.firestore.Timestamp.fromDate(end),
+      };
+    };
+
+    const windows = [
+      { minutes: 30, sentField: 'sent30' },
+      { minutes: 15, sentField: 'sent15' },
+    ];
+
+    for (const w of windows) {
+      const { start, end } = buildWindow(w.minutes);
+
+      const snap = await db
+        .collectionGroup('watchlist')
+        .where('dateTime', '>=', start)
+        .where('dateTime', '<', end)
+        .get();
+
+      if (snap.empty) continue;
+
+      const batch = db.batch();
+      const sends = [];
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        if (data[w.sentField] === true) return;
+
+        const userId = (data.userId || docSnap.ref.parent?.parent?.id || '').toString();
+        if (!userId) return;
+
+        const home = (data.homeTeamName || 'Match').toString();
+        const away = (data.awayTeamName || '').toString();
+        const label = away ? `${home} vs ${away}` : home;
+        const fixtureId = (data.fixtureId || docSnap.id).toString();
+
+        const notification = {
+          type: 'watchlist_reminder',
+          title: `⏰ Starts in ${w.minutes} minutes`,
+          body: `${label} is starting soon.`,
+          icon: '/icons/icon-192.png',
+          data: {
+            type: 'watchlist_reminder',
+            fixtureId,
+            url: `/fixtures/${fixtureId}`,
+          },
+          actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+        };
+
+        sends.push(createAndSendNotification(userId, notification, null, { bypassTeamFollowing: true }));
+        batch.set(docSnap.ref, { [w.sentField]: true, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      });
+
+      await Promise.all(sends);
+      await batch.commit();
+    }
+  } catch (error) {
+    logger.error('Error in notifyWatchlistReminders:', error);
   }
 });
 
@@ -482,31 +608,54 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
 
   try {
     const {homeTeam, awayTeam} = await resolveFixtureTeams(afterData);
-    const allFollowers = [...new Set([
+    const followerIds = [...new Set([
       ...(homeTeam.followers || []),
       ...(awayTeam.followers || []),
     ])];
+
+    const { userIds: watchlistUserIds } = await getWatchlistUsersForFixture(fixtureId);
+    const followerSet = new Set((followerIds || []).map(String));
+    const watchlistSet = new Set((watchlistUserIds || []).map(String));
+    const allUserIds = Array.from(new Set([...followerSet, ...watchlistSet]));
     const scoreline = `${homeTeam.name} ${afterData.homeScore ?? 0} - ${afterData.awayScore ?? 0} ${awayTeam.name}`;
 
     // Check if match went live
     if (beforeData.status !== "live" && afterData.status === "live") {
       logger.info("Match went live - sending notifications");
 
-      const notificationPromises = allFollowers.map((userId) => {
-        const notification = {
-          type: "match_live",
-          title: "🔴 LIVE NOW!",
-          body: `${homeTeam.name} vs ${awayTeam.name} - Match is live!`,
-          icon: homeTeam.logo || "/Fivescores logo.svg",
-          data: {
-            fixtureId,
-            type: "match_live",
-            url: `/fixtures/${fixtureId}`,
-          },
-          actionUrl: `${process.env.APP_URL || "https://your-app-url.com"}/fixtures/${fixtureId}`,
-        };
+      const notificationPromises = allUserIds.map((userId) => {
+        const id = String(userId);
+        const isWatchlisted = watchlistSet.has(id);
 
-        return createAndSendNotification(userId, notification, "liveMatches");
+        const notification = isWatchlisted
+          ? {
+              type: 'watchlist_match_live',
+              title: '🔴 LIVE NOW!',
+              body: `${homeTeam.name} vs ${awayTeam.name} is live now.`,
+              icon: homeTeam.logo || '/icons/icon-192.png',
+              data: {
+                fixtureId,
+                type: 'watchlist_match_live',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            }
+          : {
+              type: 'match_live',
+              title: '🔴 LIVE NOW!',
+              body: `${homeTeam.name} vs ${awayTeam.name} - Match is live!`,
+              icon: homeTeam.logo || '/Fivescores logo.svg',
+              data: {
+                fixtureId,
+                type: 'match_live',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            };
+
+        return isWatchlisted
+          ? createAndSendNotification(id, notification, null, { bypassTeamFollowing: true })
+          : createAndSendNotification(id, notification, 'liveMatches');
       });
 
       await Promise.all(notificationPromises);
@@ -518,21 +667,39 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
          beforeData.awayScore !== afterData.awayScore)) {
       logger.info("Score updated - sending notifications");
 
-      const notificationPromises = allFollowers.map((userId) => {
-        const notification = {
-          type: "score_update",
-          title: "⚽ GOAL!",
-          body: scoreline,
-          icon: homeTeam.logo || "/Fivescores logo.svg",
-          data: {
-            fixtureId,
-            type: "score_update",
-            url: `/fixtures/${fixtureId}`,
-          },
-          actionUrl: `${process.env.APP_URL || "https://your-app-url.com"}/fixtures/${fixtureId}`,
-        };
+      const notificationPromises = allUserIds.map((userId) => {
+        const id = String(userId);
+        const isWatchlisted = watchlistSet.has(id);
 
-        return createAndSendNotification(userId, notification, "liveMatches");
+        const notification = isWatchlisted
+          ? {
+              type: 'watchlist_score_update',
+              title: '⚽ Score Update',
+              body: scoreline,
+              icon: homeTeam.logo || '/icons/icon-192.png',
+              data: {
+                fixtureId,
+                type: 'watchlist_score_update',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            }
+          : {
+              type: 'score_update',
+              title: '⚽ GOAL!',
+              body: scoreline,
+              icon: homeTeam.logo || '/Fivescores logo.svg',
+              data: {
+                fixtureId,
+                type: 'score_update',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            };
+
+        return isWatchlisted
+          ? createAndSendNotification(id, notification, null, { bypassTeamFollowing: true })
+          : createAndSendNotification(id, notification, 'liveMatches');
       });
 
       await Promise.all(notificationPromises);
@@ -542,21 +709,39 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
     if (beforeData.status !== "completed" && afterData.status === "completed") {
       logger.info("Match finished - sending final result notifications");
 
-      const notificationPromises = allFollowers.map((userId) => {
-        const notification = {
-          type: "match_finished",
-          title: "⚽ Full Time",
-          body: scoreline,
-          icon: homeTeam.logo || "/Fivescores logo.svg",
-          data: {
-            fixtureId,
-            type: "match_result",
-            url: `/fixtures/${fixtureId}`,
-          },
-          actionUrl: `${process.env.APP_URL || "https://your-app-url.com"}/fixtures/${fixtureId}`,
-        };
+      const notificationPromises = allUserIds.map((userId) => {
+        const id = String(userId);
+        const isWatchlisted = watchlistSet.has(id);
 
-        return createAndSendNotification(userId, notification, "matchResults");
+        const notification = isWatchlisted
+          ? {
+              type: 'watchlist_match_finished',
+              title: '⚽ Full Time',
+              body: scoreline,
+              icon: homeTeam.logo || '/icons/icon-192.png',
+              data: {
+                fixtureId,
+                type: 'watchlist_match_result',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            }
+          : {
+              type: 'match_finished',
+              title: '⚽ Full Time',
+              body: scoreline,
+              icon: homeTeam.logo || '/Fivescores logo.svg',
+              data: {
+                fixtureId,
+                type: 'match_result',
+                url: `/fixtures/${fixtureId}`,
+              },
+              actionUrl: `${process.env.APP_URL || 'https://your-app-url.com'}/fixtures/${fixtureId}`,
+            };
+
+        return isWatchlisted
+          ? createAndSendNotification(id, notification, null, { bypassTeamFollowing: true })
+          : createAndSendNotification(id, notification, 'matchResults');
       });
 
       await Promise.all(notificationPromises);

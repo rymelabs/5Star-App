@@ -6,7 +6,7 @@ import { useNews } from '../context/NewsContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import { fixturesCollection } from '../firebase/firestore';
+import { fixturesCollection, watchlistCollection } from '../firebase/firestore';
 import { isFixtureLive } from '../utils/helpers';
 import { addFixtureToCalendar } from '../utils/calendar';
 import { trackFixtureView, trackPenaltiesView } from '../utils/analytics';
@@ -154,8 +154,16 @@ const FixtureDetail = () => {
 
   const handleAddToCalendar = async () => {
     if (!fixture) return;
+
+    if (!user) {
+      showError('Sign in required', 'Please sign in to get match notifications');
+      return;
+    }
     
     try {
+      // Add to watchlist (server will send confirmation push + reminders).
+      await watchlistCollection.addFixture(user.uid, fixture);
+
       const success = await addFixtureToCalendar(fixture);
       
       if (success) {
