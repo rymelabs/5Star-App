@@ -11,6 +11,10 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
   const isLive = status === 'live' || isFixtureLive(fixture);
   const isCompleted = status === 'completed' || status === 'finished';
 
+  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
+  const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
+  const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
+
   const dateLabel = fixture.dateTime ? formatDateTime(fixture.dateTime) : '';
   const timeLabel = fixture.dateTime ? formatTime(fixture.dateTime) : '';
 
@@ -69,11 +73,11 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
             {isLive || isCompleted ? (
               <div className="flex items-center gap-3 bg-black/20 px-4 py-2 rounded-lg border border-white/5">
                 <span className={`text-2xl font-bold ${isLive ? 'text-brand-purple' : 'text-white'}`}>
-                  {fixture.homeScore ?? 0}
+                  {homeScoreDisplay}
                 </span>
                 <span className="text-gray-600 font-medium">-</span>
                 <span className={`text-2xl font-bold ${isLive ? 'text-brand-purple' : 'text-white'}`}>
-                  {fixture.awayScore ?? 0}
+                  {awayScoreDisplay}
                 </span>
               </div>
             ) : (

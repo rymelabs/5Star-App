@@ -21,6 +21,10 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
   const isCompleted = status === 'completed' || status === 'finished';
   const isRow = variant === 'row';
 
+  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
+  const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
+  const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
+
   // Format date/time using project helper
   const dateLabel = fixture.dateTime ? formatDateTime(fixture.dateTime) : '';
 
@@ -117,10 +121,10 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
               <div className={`flex items-center font-bold text-white ${
                 isRow ? 'gap-1 text-sm' : (compact ? 'gap-1 text-sm sm:text-lg' : 'gap-1.5 sm:gap-2 text-lg sm:text-2xl')
               }`}>
-                <span>{fixture.homeScore ?? 0}</span>
+                <span>{homeScoreDisplay}</span>
                 {!isRow && <span className="text-white/20">-</span>}
                 {isRow && <span className="text-white/20 text-[10px] mx-0.5">-</span>}
-                <span>{fixture.awayScore ?? 0}</span>
+                <span>{awayScoreDisplay}</span>
               </div>
             ) : (
               <span className={`font-bold text-white/20 ${
