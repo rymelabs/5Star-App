@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NewTeamAvatar from './NewTeamAvatar';
 import SurfaceCard from './ui/SurfaceCard';
 import { calculateGroupStandings } from '../utils/standingsUtils';
+import { getLiveTeamIds } from '../utils/helpers';
 
 const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
   const [activeGroup, setActiveGroup] = useState(season?.groups?.[0]?.id || null);
@@ -55,6 +56,8 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
     if (!season?.id) return [];
     return fixtures.filter(fixture => fixture.seasonId === season.id);
   }, [fixtures, season?.id]);
+
+  const liveTeamIds = useMemo(() => getLiveTeamIds(seasonFixtures), [seasonFixtures]);
 
   // Calculate standings for the current group using shared utility
   const standings = useMemo(() => {
@@ -130,6 +133,8 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
               {standings.map((standing) => {
                 const team = teams.find(t => t.id === standing.team?.id || t.id === standing.teamId);
                 const isQualifier = standing.position <= (season.knockoutConfig?.qualifiersPerGroup || 2);
+                const teamId = team?.id || standing.team?.id || standing.teamId;
+                const isTeamLive = teamId ? liveTeamIds.has(teamId) : false;
                 
                 return (
                   <tr 
@@ -151,7 +156,11 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
                           size={30} 
                           className="ring-1 ring-black/20"
                         />
-                        <span className="font-semibold text-xs sm:text-sm text-white truncate max-w-[110px] sm:max-w-[190px] group-hover:text-brand-purple transition-colors">
+                        <span
+                          className={`font-semibold text-xs sm:text-sm truncate max-w-[110px] sm:max-w-[190px] transition-colors ${
+                            isTeamLive ? 'text-red-400' : 'text-white group-hover:text-brand-purple'
+                          }`}
+                        >
                           {team?.name || standing.team?.name || 'Unknown Team'}
                         </span>
                       </div>

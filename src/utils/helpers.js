@@ -74,6 +74,24 @@ export const isFixtureLive = (fixture) => {
   return timeDiff >= 0 && timeDiff <= twoHours;
 };
 
+const getFixtureTeamIds = (fixture) => {
+  const homeId = fixture?.homeTeam?.id || fixture?.homeTeamId || fixture?.homeTeam?.teamId;
+  const awayId = fixture?.awayTeam?.id || fixture?.awayTeamId || fixture?.awayTeam?.teamId;
+  return [homeId, awayId].filter(Boolean);
+};
+
+export const getLiveTeamIds = (fixtures = []) => {
+  const liveIds = new Set();
+  if (!Array.isArray(fixtures) || fixtures.length === 0) return liveIds;
+
+  fixtures.forEach((fixture) => {
+    if (!isFixtureLive(fixture)) return;
+    getFixtureTeamIds(fixture).forEach((id) => liveIds.add(id));
+  });
+
+  return liveIds;
+};
+
 // Number utilities
 export const formatNumber = (num) => {
   if (num >= 1000000) {

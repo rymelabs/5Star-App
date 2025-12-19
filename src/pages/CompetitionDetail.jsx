@@ -18,7 +18,7 @@ import {
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDate, formatTime } from '../utils/dateUtils';
-import { abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import { abbreviateTeamName, isFixtureLive, getLiveTeamIds } from '../utils/helpers';
 import { calculateGroupStandings } from '../utils/standingsUtils';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 import SurfaceCard from '../components/ui/SurfaceCard';
@@ -163,6 +163,8 @@ const CompetitionDetail = () => {
     
     return standings;
   }, [type, competition, competitionFixtures, teams, id]);
+
+  const liveTeamIds = useMemo(() => getLiveTeamIds(competitionFixtures), [competitionFixtures]);
 
   // Separate fixtures by status
   const { upcomingFixtures, recentResults } = useMemo(() => {
@@ -647,8 +649,12 @@ const CompetitionDetail = () => {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
-                            {groupStandings?.[group.id]?.map((standing, index) => (
-                              <tr 
+                            {groupStandings?.[group.id]?.map((standing, index) => {
+                              const teamId = standing.teamId || standing.team?.id;
+                              const isTeamLive = teamId ? liveTeamIds.has(teamId) : false;
+
+                              return (
+                              <tr
                                 key={standing.teamId || standing.team?.id}
                                 onClick={() => handleTeamClick(standing.teamId || standing.team?.id)}
                                 className="hover:bg-white/[0.02] cursor-pointer transition-colors group"
@@ -663,7 +669,11 @@ const CompetitionDetail = () => {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-3">
                                     <NewTeamAvatar team={standing.team} size={24} />
-                                    <span className="text-white font-medium truncate max-w-[140px] sm:max-w-xs group-hover:text-brand-purple transition-colors">
+                                    <span
+                                      className={`font-medium truncate max-w-[140px] sm:max-w-xs transition-colors ${
+                                        isTeamLive ? 'text-red-400' : 'text-white group-hover:text-brand-purple'
+                                      }`}
+                                    >
                                       {standing.team?.name || 'Unknown Team'}
                                     </span>
                                   </div>
@@ -681,7 +691,8 @@ const CompetitionDetail = () => {
                                 </td>
                                 <td className="px-4 py-3 text-center font-bold text-white bg-white/[0.02]">{standing.points}</td>
                               </tr>
-                            ))}
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

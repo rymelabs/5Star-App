@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { calculateGroupStandings } from '../../utils/standingsUtils';
+import { getLiveTeamIds } from '../../utils/helpers';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();
@@ -52,6 +53,8 @@ const SeasonDetail = () => {
     matches: [{ homeTeamId: '', awayTeamId: '' }]
   });
   const [savingKnockout, setSavingKnockout] = useState(false);
+
+  const liveTeamIds = useMemo(() => getLiveTeamIds(seasonFixtures), [seasonFixtures]);
 
   const isAdmin = user?.isAdmin;
 
@@ -683,7 +686,10 @@ const SeasonDetail = () => {
                                       onError={(e) => e.target.style.display = 'none'}
                                     />
                                   )}
-                                  <span className="text-white truncate" title={standing.team?.name}>
+                                  <span
+                                    className={`truncate ${(standing.teamId || standing.team?.id) && liveTeamIds.has(standing.teamId || standing.team?.id) ? 'text-red-400' : 'text-white'}`}
+                                    title={standing.team?.name}
+                                  >
                                     {standing.team?.name}
                                   </span>
                                 </div>
