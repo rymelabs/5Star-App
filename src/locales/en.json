@@ -285,7 +285,10 @@
                                         "logIn":  "Log in",
                                         "toComment":  "to comment",
                                         "noEvents": "No events available",
-                                        "noStats": "No statistics available"
+                                        "noStats": "No statistics available",
+                                        "matchProbabilities": "Match probabilities",
+                                        "matchProbabilitiesBasedOn": "Based on last 5 + head-to-head",
+                                        "matchProbabilitiesBasedOnLive": "Based on last 5 + head-to-head + live score"
                                     },
                   "admin":  {
                                 "accessDenied":  "Access Denied",

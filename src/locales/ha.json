@@ -271,7 +271,10 @@
             "posting": "Ana aikawa...",
             "post": "Aika",
             "logIn": "Shiga",
-            "toComment": "don yin sharhi"
+            "toComment": "don yin sharhi",
+            "matchProbabilities": "Yiwuwar sakamakon wasa",
+            "matchProbabilitiesBasedOn": "Dangane da wasanni 5 na baya + tarihin haduwa",
+            "matchProbabilitiesBasedOnLive": "Dangane da wasanni 5 na baya + tarihin haduwa + sakamakon yanzu"
         },
         "admin": {
             "accessDenied": "An hana shiga",

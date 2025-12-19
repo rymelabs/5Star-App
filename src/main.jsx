@@ -25,6 +25,13 @@ if ('serviceWorker' in navigator) {
     // Use the Firebase Messaging service worker as the single controlling SW.
     // This avoids scope conflicts between multiple SWs and ensures background
     // notifications work consistently.
-    navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    navigator.serviceWorker.getRegistration('/')
+      .then((existing) => existing || navigator.serviceWorker.register('/firebase-messaging-sw.js'))
+      .catch((err) => {
+        // AbortError is common during dev reloads / navigation.
+        if (err?.name === 'AbortError') return;
+        // eslint-disable-next-line no-console
+        console.warn('Service worker registration failed:', err);
+      });
   });
 }

@@ -272,7 +272,10 @@
             "posting": "Ń fíránṣẹ́...",
             "post": "Fíránṣẹ́",
             "logIn": "Wọléé",
-            "toComment": "láti ṣàsọyé"
+            "toComment": "láti ṣàsọyé",
+            "matchProbabilities": "Match probabilities",
+            "matchProbabilitiesBasedOn": "Based on last 5 + head-to-head",
+            "matchProbabilitiesBasedOnLive": "Based on last 5 + head-to-head + live score"
         },
         "admin": {
             "accessDenied": "ìyè kò sí",
