@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, TrendingUp, Award } from 'lucide-react';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
-import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import { truncateText, formatScore, abbreviateTeamName, isFixtureLive, getLiveTeamIds } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
@@ -277,6 +277,8 @@ const Latest = () => {
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
+
+  const liveTeamIds = React.useMemo(() => getLiveTeamIds(fixtures), [fixtures]);
 
   const handleNewsClick = (article) => {
     if (article?.slug) {
@@ -610,7 +612,7 @@ const Latest = () => {
                     </div>
                     <NewTeamAvatar team={entry.team} size={32} />
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm text-white truncate">{entry.team.name}</div>
+                      <div className={`font-semibold text-sm truncate ${liveTeamIds.has(entry.team.id) ? 'text-red-400' : 'text-white'}`}>{entry.team.name}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs">
