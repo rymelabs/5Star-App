@@ -10,6 +10,15 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
+// Hide the pre-React splash as soon as the app mounts.
+const splash = document.getElementById('pwa-splash')
+if (splash) {
+  requestAnimationFrame(() => {
+    splash.classList.add('pwa-splash-hide')
+    window.setTimeout(() => splash.remove(), 250)
+  })
+}
+
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
