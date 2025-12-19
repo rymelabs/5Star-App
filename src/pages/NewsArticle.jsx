@@ -18,6 +18,10 @@ const NewsArticle = () => {
   const { getArticleBySlug, getCommentsForItem, addComment, subscribeToComments, comments, toggleLike, incrementArticleView } = useNews();
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
+  const [heroImageRatio, setHeroImageRatio] = useState(null);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [isImagePreviewMounted, setIsImagePreviewMounted] = useState(false);
+  const [isImagePreviewVisible, setIsImagePreviewVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
@@ -30,7 +34,56 @@ const NewsArticle = () => {
     loadArticle();
   }, [id]);
 
+  useEffect(() => {
+    setHeroImageRatio(null);
+    setIsImagePreviewOpen(false);
+    setIsImagePreviewMounted(false);
+    setIsImagePreviewVisible(false);
+  }, [article?.image]);
+
+  useEffect(() => {
+    if (!isImagePreviewOpen) return;
+    setIsImagePreviewMounted(true);
+  }, [isImagePreviewOpen]);
+
+  useEffect(() => {
+    if (!isImagePreviewMounted) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const raf = requestAnimationFrame(() => {
+      setIsImagePreviewVisible(true);
+    });
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setIsImagePreviewOpen(false);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isImagePreviewMounted]);
+
+  useEffect(() => {
+    if (isImagePreviewOpen) return;
+    if (!isImagePreviewMounted) return;
+
+    setIsImagePreviewVisible(false);
+    const timeout = setTimeout(() => {
+      setIsImagePreviewMounted(false);
+    }, 200);
+
+    return () => clearTimeout(timeout);
+  }, [isImagePreviewOpen, isImagePreviewMounted]);
+
   const heroAspectRatioEffective = '2 / 1';
+  const heroFitClass = heroImageRatio !== null && heroImageRatio >= 1
+    ? 'object-cover object-top'
+    : 'object-contain object-center';
 
   // Close share menu when clicking outside
   useEffect(() => {
@@ -362,19 +415,26 @@ const NewsArticle = () => {
                   src={article.image}
                   alt=""
                   aria-hidden="true"
-                  className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-40"
+                  className="absolute inset-0 w-full h-full object-cover object-top blur-xl scale-110 opacity-40 pointer-events-none"
                 />
                 <img
                   src={article.image}
                   alt={article.title}
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className={`absolute inset-0 w-full h-full ${heroFitClass} cursor-zoom-in pointer-events-auto`}
+                  onLoad={(e) => {
+                    const { naturalWidth, naturalHeight } = e.currentTarget;
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                      setHeroImageRatio(naturalWidth / naturalHeight);
+                    }
+                  }}
+                  onClick={() => setIsImagePreviewOpen(true)}
                 />
               </>
             ) : (
               <div className="absolute inset-0 bg-brand-purple/20" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-black/20 pointer-events-none" />
             
             {/* Navigation */}
             <div className="absolute top-0 left-0 right-0 p-6 z-20">
@@ -633,6 +693,36 @@ const NewsArticle = () => {
           </div> */}
         </div>
       </div>
+
+      {isImagePreviewMounted && article?.image && (
+        <div
+          className={`fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 ease-out ${
+            isImagePreviewVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
+          onClick={() => setIsImagePreviewOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsImagePreviewOpen(false);
+            }}
+            className="fixed top-4 right-4 z-[10000] px-3 h-10 rounded-xl bg-black/50 border border-white/10 backdrop-blur-md flex items-center justify-center gap-2 text-white hover:bg-black/70"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium">Close</span>
+          </button>
+          <img
+            src={article.image}
+            alt={article.title}
+            className="max-w-full max-h-[90vh] object-contain rounded-xl"
+          />
+        </div>
+      )}
     </div>
   );
 };
