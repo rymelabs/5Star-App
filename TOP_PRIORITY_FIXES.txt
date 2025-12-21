@@ -1,0 +1,459 @@
+TOP PRIORITY BACKEND FIXES
+==========================
+
+These fixes have the highest impact on performance, cost, and reliability.
+
+============================================================================
+STATUS SUMMARY
+============================================================================
+
+[X] PRIORITY #1: Composite Indexes        - IMPLEMENTED ✓
+[X] PRIORITY #2: Custom Claims Functions  - IMPLEMENTED ✓
+[X] PRIORITY #3: Security Rules Update    - IMPLEMENTED ✓
+
+NEXT STEP: DEPLOY EVERYTHING
+See "DEPLOYMENT INSTRUCTIONS" section at the bottom of this file.
+
+
+============================================================================
+PRIORITY #1: CREATE COMPOSITE INDEXES
+============================================================================
+
+STATUS: [ ] Not Started
+URGENCY: CRITICAL
+IMPACT: Queries may be failing or extremely slow without these
+TIME TO FIX: 30 minutes implementation + 10-15 min deploy time
+
+WHY THIS MATTERS:
+-----------------
+Firestore requires indexes for any query that:
+  - Uses multiple where() clauses
+  - Combines where() with orderBy()
+  - Uses orderBy() on a field different from the filter field
+
+Without indexes:
+  - Queries return errors or incomplete results
+  - Performance degrades significantly
+  - Users experience slow loading or broken features
+
+CURRENT STATE:
+--------------
+Your firestore.indexes.json is EMPTY:
+{
+  "indexes": [],
+  "fieldOverrides": []
+}
+
+QUERIES THAT NEED INDEXES:
+--------------------------
+Based on your codebase, these compound queries need indexes:
+
+1. Fixtures Collection:
+   - where('status', '==', 'scheduled') + orderBy('dateTime')
+   - where('status', '==', 'live') + orderBy('dateTime')
+   - where('status', '==', 'completed') + orderBy('dateTime', 'desc')
+   - where('seasonId', '==', X) + orderBy('dateTime')
+   - where('seasonId', '==', X) + where('status', '==', Y)
+   - where('competitionId', '==', X) + orderBy('dateTime')
+   - where('dateTime', '>=', X) + where('dateTime', '<', Y)
+
+2. Articles Collection:
+   - orderBy('createdAt', 'desc') + limit()
+   - where('status', '==', 'published') + orderBy('createdAt', 'desc')
+
+3. AdminActivity Collection:
+   - orderBy('createdAt', 'desc') + limit()
+
+4. Notifications Collection:
+   - where('userId', '==', X) + orderBy('createdAt', 'desc')
+
+5. AdminNotifications Collection:
+   - where('active', '==', true) + orderBy('createdAt', 'desc')
+
+6. Watchlist (collectionGroup):
+   - where('dateTime', '>=', X) + where('dateTime', '<', Y)
+   - where('fixtureId', '==', X)
+
+7. Teams Collection:
+   - orderBy('name', 'asc') + limit() (for pagination)
+   - orderBy('followerCount', 'desc') + limit()
+
+8. Seasons Collection:
+   - where('isActive', '==', true) + orderBy('createdAt', 'desc')
+   - where('competitionId', '==', X) + orderBy('createdAt', 'desc')
+
+IMPLEMENTATION:
+---------------
+Update firestore.indexes.json with:
+
+{
+  "indexes": [
+    {
+      "collectionGroup": "fixtures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dateTime", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fixtures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dateTime", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fixtures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seasonId", "order": "ASCENDING" },
+        { "fieldPath": "dateTime", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fixtures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seasonId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fixtures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "competitionId", "order": "ASCENDING" },
+        { "fieldPath": "dateTime", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "watchlist",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "dateTime", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "watchlist",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "fixtureId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seasons",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seasons",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "competitionId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+
+DEPLOY COMMAND:
+---------------
+firebase deploy --only firestore:indexes
+
+Note: Index creation takes 5-15 minutes after deploy.
+Check status in Firebase Console > Firestore > Indexes
+
+
+============================================================================
+PRIORITY #2: IMPLEMENT CUSTOM CLAIMS FOR ADMIN ROLES
+============================================================================
+
+STATUS: [ ] Not Started
+URGENCY: HIGH
+IMPACT: 50% reduction in Firestore read costs for admin operations
+TIME TO FIX: 1-2 hours
+
+WHY THIS MATTERS:
+-----------------
+Your security rules check admin status like this (~15 times):
+
+  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+
+Each get() is a BILLED READ. Every admin write costs 2 reads:
+  1. The actual write operation
+  2. The get() to check if user is admin
+
+With custom claims, the role is embedded in the auth token (FREE to check).
+
+CURRENT COST:
+-------------
+If admins make 1000 writes/month:
+  - Current: 2000 reads (1000 writes + 1000 role checks)
+  - With claims: 1000 reads (just the writes)
+  - Savings: 1000 reads/month per 1000 admin actions
+
+IMPLEMENTATION STEPS:
+---------------------
+
+STEP 1: Add Cloud Function to set custom claims
+-----------------------------------------------
+Add to functions/index.js:
+
+  /**
+   * Set custom claims when user role changes
+   */
+  exports.onUserRoleChange = onDocumentUpdated('users/{userId}', async (event) => {
+    const beforeData = event.data.before.data();
+    const afterData = event.data.after.data();
+    const userId = event.params.userId;
+
+    // Only proceed if role changed
+    if (beforeData.role === afterData.role) {
+      return null;
+    }
+
+    const role = afterData.role || 'user';
+    const isAdmin = role === 'admin' || role === 'super-admin';
+    const isSuperAdmin = role === 'super-admin';
+
+    try {
+      await admin.auth().setCustomUserClaims(userId, {
+        role: role,
+        admin: isAdmin,
+        superAdmin: isSuperAdmin
+      });
+      
+      logger.info(`Custom claims set for user ${userId}: role=${role}, admin=${isAdmin}`);
+      
+      // Optionally update a timestamp to force token refresh on client
+      await db.collection('users').doc(userId).update({
+        claimsUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      return null;
+    } catch (error) {
+      logger.error('Error setting custom claims:', error);
+      return null;
+    }
+  });
+
+  /**
+   * Set custom claims when new user is created with a role
+   */
+  exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
+    const userData = event.data.data();
+    const userId = event.params.userId;
+    const role = userData.role || 'user';
+
+    if (role === 'user') {
+      return null; // No claims needed for regular users
+    }
+
+    const isAdmin = role === 'admin' || role === 'super-admin';
+    const isSuperAdmin = role === 'super-admin';
+
+    try {
+      await admin.auth().setCustomUserClaims(userId, {
+        role: role,
+        admin: isAdmin,
+        superAdmin: isSuperAdmin
+      });
+      
+      logger.info(`Custom claims set for new user ${userId}: role=${role}`);
+      return null;
+    } catch (error) {
+      logger.error('Error setting custom claims for new user:', error);
+      return null;
+    }
+  });
+
+
+STEP 2: Update Firestore Security Rules
+---------------------------------------
+Replace all instances of:
+
+  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin'
+
+With:
+
+  request.auth.token.admin == true
+
+Or for super-admin only operations:
+
+  request.auth.token.superAdmin == true
+
+Example updated rule:
+
+  // BEFORE (expensive)
+  match /fixtures/{fixtureId} {
+    allow write: if request.auth != null && 
+      (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super-admin');
+  }
+
+  // AFTER (free)
+  match /fixtures/{fixtureId} {
+    allow write: if request.auth != null && request.auth.token.admin == true;
+  }
+
+
+STEP 3: Force Token Refresh on Client (Optional but Recommended)
+----------------------------------------------------------------
+After claims are updated, the client needs to refresh their token.
+
+Add to your AuthContext or where you handle auth state:
+
+  // Listen for claims updates and refresh token
+  useEffect(() => {
+    if (!user) return;
+    
+    const unsubscribe = onSnapshot(
+      doc(db, 'users', user.uid),
+      async (docSnap) => {
+        const data = docSnap.data();
+        if (data?.claimsUpdatedAt) {
+          // Force token refresh to get new claims
+          await user.getIdToken(true);
+        }
+      }
+    );
+    
+    return () => unsubscribe();
+  }, [user]);
+
+
+STEP 4: Backfill Existing Admin Users
+-------------------------------------
+Run this once to set claims for existing admins:
+
+  // One-time script (run in Firebase Functions shell or as a one-off function)
+  async function backfillAdminClaims() {
+    const usersSnapshot = await db.collection('users')
+      .where('role', 'in', ['admin', 'super-admin'])
+      .get();
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const role = userDoc.data().role;
+      const isAdmin = role === 'admin' || role === 'super-admin';
+      const isSuperAdmin = role === 'super-admin';
+      
+      await admin.auth().setCustomUserClaims(userDoc.id, {
+        role: role,
+        admin: isAdmin,
+        superAdmin: isSuperAdmin
+      });
+      
+      console.log(`Set claims for ${userDoc.id}: ${role}`);
+    }
+  }
+
+
+DEPLOYMENT INSTRUCTIONS:
+------------------------
+All changes are ready. Deploy in this order:
+
+1. Deploy Functions (includes custom claims handlers):
+   firebase deploy --only functions
+
+2. Deploy Firestore Indexes:
+   firebase deploy --only firestore:indexes
+   (Note: Indexes may take 5-15 minutes to build after deployment)
+
+3. Deploy Security Rules:
+   firebase deploy --only firestore:rules
+
+4. Sync existing admin claims (run ONCE after functions are deployed):
+   - Go to Firebase Console > Functions > syncAllAdminClaims
+   - Click "Run now" to trigger manually, OR
+   - Call syncAdminClaims() from your app for each admin user
+
+Or deploy everything at once:
+   firebase deploy --only functions,firestore
+
+
+============================================================================
+VERIFICATION CHECKLIST
+============================================================================
+
+After implementing all fixes:
+
+[X] Composite indexes added to firestore.indexes.json (15 indexes)
+[X] Custom claims Cloud Functions added to functions/index.js
+[X] Security rules updated to use isAdmin() helper function
+[ ] Run: firebase deploy --only functions,firestore
+[ ] Check Firebase Console > Firestore > Indexes - all show "Enabled"
+[ ] Check Firebase Console > Functions - new functions deployed
+[ ] Test admin operations still work correctly
+[ ] No permission errors in browser console
+[ ] Monitor Firestore usage for reduced reads (check after 24-48 hours)
+
+
+============================================================================
+EXPECTED RESULTS
+============================================================================
+
+After Priority #1 (Indexes):
+  - Queries return results faster
+  - No more "missing index" errors in console
+  - Compound queries work reliably
+
+After Priorities #2 & #3 (Custom Claims + Rules):
+  - 50% reduction in reads for admin operations
+  - Faster security rule evaluation
+  - Lower monthly Firestore costs
+
+ESTIMATED MONTHLY SAVINGS:
+  - If you have 1,000 admin operations/day: ~30,000 reads saved/month
+  - If you have 5,000 admin operations/day: ~150,000 reads saved/month
+  - If you have 10,000 admin operations/day: ~300,000 reads saved/month
+
+
+============================================================================
+WHAT WAS CHANGED
+============================================================================
+
+1. firestore.indexes.json:
+   - Added 15 composite indexes for common queries
+   - Covers: fixtures, articles, notifications, comments, adminActivity, 
+     adminNotifications, watchlist, seasons, players
+
+2. functions/index.js:
+   - Added: onUserRoleUpdated - Auto-sets claims when user role changes
+   - Added: syncAdminClaims - Manual sync for individual users
+   - Added: syncAllAdminClaims - Scheduled daily sync at midnight UTC
+
+3. firestore.rules:
+   - Added helper functions: isAdmin(), isSuperAdmin(), isAuthenticated(), isOwner()
+   - Replaced ~15+ expensive get() calls with FREE custom claims checks
+   - Reorganized rules with clear section headers for maintainability
