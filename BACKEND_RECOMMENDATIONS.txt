@@ -1,0 +1,138 @@
+Backend Architecture Recommendations for Fivescores
+===================================================
+
+1. DATA STRUCTURE & COLLECTIONS
+-------------------------------
+
+Core Collections:
+- fixtures - Match data with status (scheduled, live, finished), scores, timestamps
+- teams - Team profiles, logos, stats
+- competitions - Leagues/tournaments with seasons
+- seasons - Season-specific data, standings, active status
+- articles / news - News content with slugs, categories, timestamps
+- users - User profiles, roles (user, admin, super-admin), preferences
+- players - Player profiles linked to teams
+
+Supporting Collections:
+- adminActivity - Audit log for admin actions
+- analytics - Aggregated page views, engagement metrics
+- notifications - Push notification records
+- fcmTokens - Device tokens for push notifications
+- submissions - User-submitted content awaiting approval
+
+
+2. REAL-TIME UPDATES STRATEGY
+-----------------------------
+
+For live matches:
+- Use Firestore real-time listeners on fixtures with status "live"
+- Implement a Cloud Function that updates live fixture data every 30-60 seconds from an external API (if using one)
+- Consider using a dedicated liveFixtures collection for faster queries during peak times
+
+
+3. CACHING STRATEGY
+-------------------
+
+- Client-side: Cache standings, completed fixtures, and team data in localStorage (usePageCache already exists)
+- Server-side: Use Firebase Hosting CDN for static assets
+- API responses: Implement Cloud Functions with cache headers for semi-static data (standings refresh every 5-15 min)
+
+
+4. SECURITY RULES PATTERN
+-------------------------
+
+// Recommended Firestore rules pattern
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super-admin'];
+    }
+    
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Public read, admin write
+    match /fixtures/{id} { allow read; allow write: if isAdmin(); }
+    match /teams/{id} { allow read; allow write: if isAdmin(); }
+    match /competitions/{id} { allow read; allow write: if isAdmin(); }
+    
+    // User data - owner read/write, admin read
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId);
+    }
+  }
+}
+
+
+5. CLOUD FUNCTIONS (RECOMMENDED)
+--------------------------------
+
+Function                    | Trigger                      | Purpose
+----------------------------|------------------------------|----------------------------------------
+aggregateDailyAnalytics     | Scheduled (midnight)         | Compile daily stats
+onFixtureStatusChange       | Firestore trigger            | Send push notifications for goals/results
+cleanupOldNotifications     | Scheduled (weekly)           | Remove old notification records
+processTeamSubmission       | Firestore trigger            | Notify admins of new submissions
+updateStandings             | Firestore trigger on finish  | Recalculate league standings
+
+
+6. DATA SYNC & EXTERNAL APIs
+----------------------------
+
+If integrating with external football APIs:
+- Use a scheduled Cloud Function to sync fixtures daily
+- Store raw API data in a _sync subcollection for debugging
+- Implement idempotent upserts to avoid duplicates
+- Queue failed syncs for retry
+
+
+7. NOTIFICATION SYSTEM
+----------------------
+
+Flow: User Action → Firestore Write → Cloud Function → FCM Push
+                                            ↓
+                                    Store in notifications collection
+
+- Store notification preferences per user
+- Batch notifications for the same event (e.g., multiple goals)
+- Implement notification inbox with read/unread status
+
+
+8. PERFORMANCE OPTIMIZATIONS
+----------------------------
+
+- Compound indexes for common queries (fixtures by date + status, articles by category + date)
+- Denormalize team names/logos into fixtures to avoid joins
+- Pagination on all list views (20-50 items per page)
+- Aggregate documents for statistics (don't calculate on read)
+
+
+9. ADMIN WORKFLOW
+-----------------
+
+Flow: Create/Edit → Soft Delete (recycleBin) → Hard Delete after 30 days
+                          ↓
+                    Restore option
+
+- All admin actions logged to adminActivity
+- Bulk operations (team imports) use batch writes
+- Preview mode for articles before publishing
+
+
+10. RECOMMENDED FIREBASE SERVICES
+---------------------------------
+
+Service             | Use Case
+--------------------|------------------------------------------
+Firestore           | Primary database
+Firebase Auth       | User authentication (Google, phone)
+Cloud Storage       | Images, team logos, article media
+Cloud Functions     | Background processing, API integrations
+FCM                 | Push notifications
+Firebase Hosting    | Web app hosting with CDN
+Analytics           | User behavior tracking
