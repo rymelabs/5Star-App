@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   registerUser, 
   loginUser, 
@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }) => {
   const isAnonymous = authState === 'anonymous';
   const isAuthenticated = authState === 'authenticated';
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     error,
@@ -195,7 +195,7 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle: signInWithGoogleProvider,
     signInAnonymously: signInAnonymousProvider,
     updateProfile
-  };
+  }), [user, loading, error, authState, isGuest, isAnonymous, isAuthenticated]);
 
   return (
     <AuthContext.Provider value={value}>

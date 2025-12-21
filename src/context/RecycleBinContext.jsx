@@ -329,7 +329,7 @@ export const RecycleBinProvider = ({ children }) => {
     return groups;
   }, [ownedRecycleBinItems]);
 
-  const value = {
+  const value = useMemo(() => ({
     recycleBinItems: ownedRecycleBinItems,
     groupedItems,
     loading,
@@ -341,7 +341,11 @@ export const RecycleBinProvider = ({ children }) => {
     emptyRecycleBin,
     getDaysUntilExpiration,
     refreshRecycleBin: loadRecycleBinItems
-  };
+  }), [
+    ownedRecycleBinItems, groupedItems, loading, retentionDays,
+    setRetentionDays, moveToRecycleBin, restoreFromRecycleBin,
+    permanentlyDelete, emptyRecycleBin, getDaysUntilExpiration, loadRecycleBinItems
+  ]);
 
   return (
     <RecycleBinContext.Provider value={value}>

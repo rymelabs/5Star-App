@@ -282,7 +282,7 @@ export const NewsProvider = ({ children }) => {
     });
   };
 
-  const value = {
+  const value = useMemo(() => ({
     articles: publishedArticles,
     allArticles,
     comments,
@@ -303,7 +303,12 @@ export const NewsProvider = ({ children }) => {
     updateNewsSettings,
     subscribeToComments,
     refreshArticles: loadArticles
-  };
+  }), [
+    publishedArticles, allArticles, comments, loading, error, newsSettings,
+    getArticleById, getArticleBySlug, addArticle, updateArticle, deleteArticle,
+    toggleLike, incrementArticleView, getCommentsForItem, addComment,
+    approveArticle, rejectArticle, updateNewsSettings, subscribeToComments, loadArticles
+  ]);
 
   return (
     <NewsContext.Provider value={value}>

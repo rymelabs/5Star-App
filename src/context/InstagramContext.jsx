@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { fetchInstagramPosts, getInstagramSettings } from '../firebase/instagram';
 import useCachedState from '../hooks/useCachedState';
 
@@ -58,13 +58,13 @@ export const InstagramProvider = ({ children }) => {
     await loadInstagramData();
   };
 
-  const value = {
+  const value = useMemo(() => ({
     posts,
     settings,
     loading,
     error,
     refreshPosts
-  };
+  }), [posts, settings, loading, error, refreshPosts]);
 
   return (
     <InstagramContext.Provider value={value}>

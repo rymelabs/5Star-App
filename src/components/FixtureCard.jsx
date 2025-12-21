@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { MapPin } from 'lucide-react';
 import NewTeamAvatar from './NewTeamAvatar';
 import { isFixtureLive } from '../utils/helpers';
@@ -6,7 +6,7 @@ import { formatDateTime } from '../utils/dateUtils';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import FixtureCardDesktop from './ui/FixtureCardDesktop';
 
-const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, variant = 'card' }) => {
+const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, variant = 'card' }) => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   
   // Use desktop variant only if not in compact mode and on desktop screen
@@ -151,6 +151,8 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
       </div>
     </button>
   );
-};
+});
+
+FixtureCard.displayName = 'FixtureCard';
 
 export default FixtureCard;

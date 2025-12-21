@@ -7,32 +7,8 @@ import LoadingScreen from './components/ui/LoadingScreen';
 import ConsentBanner from './components/ConsentBanner';
 import usePageTracking from './hooks/usePageTracking';
 import { initAnalytics, getConsentStatus } from './utils/analytics';
-import Latest from './pages/Latest';
-import Fixtures from './pages/Fixtures';
-import FixtureDetail from './pages/FixtureDetail';
-import Teams from './pages/Teams';
-import TeamDetail from './pages/TeamDetail';
-import PlayerDetail from './pages/PlayerDetail';
-import News from './pages/News';
-import NewsArticle from './pages/NewsArticle';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Stats from './pages/Stats';
-import CompetitionDetail from './pages/CompetitionDetail';
-import AuthLanding from './pages/AuthLanding';
-import EmailAuth from './pages/EmailAuth';
-import ProfileSetup from './pages/ProfileSetup';
-import NotificationInbox from './pages/NotificationInbox';
-import About from './pages/About';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import TermsConditions from './pages/TermsConditions';
-import Licenses from './pages/Licenses';
-import SubmitTeam from './pages/SubmitTeam';
 
-// Admin components with lazy loading to avoid import errors
+// Lazy loading wrapper with error handling
 const withLazyErrorLogging = (label, importer) => React.lazy(async () => {
   try {
     return await importer();
@@ -40,6 +16,42 @@ const withLazyErrorLogging = (label, importer) => React.lazy(async () => {
     return { default: () => <div>{`${label} not available`}</div> };
   }
 });
+
+// ============================================================================
+// LAZY-LOADED USER PAGES (Critical for performance)
+// ============================================================================
+const Latest = React.lazy(() => import('./pages/Latest'));
+const Fixtures = React.lazy(() => import('./pages/Fixtures'));
+const FixtureDetail = React.lazy(() => import('./pages/FixtureDetail'));
+const Teams = React.lazy(() => import('./pages/Teams'));
+const TeamDetail = React.lazy(() => import('./pages/TeamDetail'));
+const PlayerDetail = React.lazy(() => import('./pages/PlayerDetail'));
+const News = React.lazy(() => import('./pages/News'));
+const NewsArticle = React.lazy(() => import('./pages/NewsArticle'));
+const Stats = React.lazy(() => import('./pages/Stats'));
+const CompetitionDetail = React.lazy(() => import('./pages/CompetitionDetail'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const NotificationInbox = React.lazy(() => import('./pages/NotificationInbox'));
+
+// Auth pages
+const AuthLanding = React.lazy(() => import('./pages/AuthLanding'));
+const EmailAuth = React.lazy(() => import('./pages/EmailAuth'));
+const ProfileSetup = React.lazy(() => import('./pages/ProfileSetup'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+
+// Static/Legal pages
+const About = React.lazy(() => import('./pages/About'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('./pages/TermsOfService'));
+const TermsConditions = React.lazy(() => import('./pages/TermsConditions'));
+const Licenses = React.lazy(() => import('./pages/Licenses'));
+const SubmitTeam = React.lazy(() => import('./pages/SubmitTeam'));
+
+// ============================================================================
+// LAZY-LOADED ADMIN PAGES
+// ============================================================================
 
 const AdminDashboard = withLazyErrorLogging('Admin Dashboard', () => import('./pages/admin/AdminDashboard'));
 const AdminTeams = withLazyErrorLogging('Admin Teams', () => import('./pages/admin/AdminTeams'));

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Bell } from 'lucide-react';
@@ -9,7 +9,7 @@ import SearchModal from '../ui/SearchModal';
 import ProfileModal from '../ProfileModal';
 import ChristmasLogo from '../ChristmasLogo';
 
-const Header = () => {
+const Header = memo(() => {
   const { user } = useAuth();
   const { unreadCount } = useNotification();
   const navigate = useNavigate();
@@ -116,6 +116,8 @@ const Header = () => {
       <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;
