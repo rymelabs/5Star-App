@@ -813,7 +813,7 @@ export const FootballProvider = ({ children }) => {
     });
   }, [teams, user]);
 
-  const value = {
+  const value = useMemo(() => ({
     teams,
     ownedTeams,
     followedTeams,
@@ -851,7 +851,17 @@ export const FootballProvider = ({ children }) => {
     getGroupStandings,
     updateGroupStandings,
     refreshData: loadInitialData
-  };
+  }), [
+    teams, ownedTeams, followedTeams, fixtures, ownedFixtures,
+    leagueTable, leagueSettings, leagues, ownedLeagues,
+    activeSeason, activeSeasons, seasons, ownedSeasons,
+    loading, error, isAdmin, isSuperAdmin,
+    addTeam, addBulkTeams, updateTeam, deleteTeam, followTeam, unfollowTeam,
+    addFixture, updateFixture, updateLeagueTable, updateLeagueSettings,
+    fetchLeagues, addLeague, updateLeague, deleteLeague,
+    setActiveSeasonById, toggleSeasonActive, getSeasonFixtures,
+    getGroupStandings, updateGroupStandings, loadInitialData
+  ]);
 
   return (
     <FootballContext.Provider value={value}>

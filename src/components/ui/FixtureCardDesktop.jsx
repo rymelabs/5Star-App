@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { MapPin, Bell, Share2, ChevronRight } from 'lucide-react';
 import NewTeamAvatar from '../NewTeamAvatar';
 import { isFixtureLive } from '../../utils/helpers';
 import { formatDateTime, formatTime } from '../../utils/dateUtils';
 
-const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
+const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
   const home = fixture.homeTeam || fixture.homeTeamId || {};
   const away = fixture.awayTeam || fixture.awayTeamId || {};
   const status = fixture.status || (isFixtureLive(fixture) ? 'live' : 'scheduled');
@@ -114,6 +114,8 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
       </div>
     </div>
   );
-};
+});
+
+FixtureCardDesktop.displayName = 'FixtureCardDesktop';
 
 export default FixtureCardDesktop;

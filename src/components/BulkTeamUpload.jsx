@@ -4,7 +4,9 @@ import NewTeamAvatar from './NewTeamAvatar';
 import { useFootball } from '../context/FootballContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import * as XLSX from 'xlsx';
+
+// Dynamic import for xlsx - only loaded when needed (saves ~200KB from initial bundle)
+const loadXLSX = () => import('xlsx');
 
 const BulkTeamUpload = ({ isOpen, onClose }) => {
   const [uploadMethod, setUploadMethod] = useState('csv');
@@ -57,8 +59,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     }
   ], null, 2);
 
-  const downloadTemplate = (type) => {
+  const downloadTemplate = async (type) => {
     if (type === 'xlsx') {
+      // Dynamically load xlsx library only when needed
+      const XLSX = await loadXLSX();
+      
       // Create Excel workbook
       const exampleTeams = [
         {
@@ -233,8 +238,10 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     }
   };
 
-  const parseExcelData = (arrayBuffer) => {
+  const parseExcelData = async (arrayBuffer) => {
     try {
+      // Dynamically load xlsx library only when needed
+      const XLSX = await loadXLSX();
       const workbook = XLSX.read(arrayBuffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -254,8 +261,8 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     
     if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = parseExcelData(e.target.result);
+      reader.onload = async (e) => {
+        const data = await parseExcelData(e.target.result);
         if (data) {
           setJsonData(JSON.stringify(data, null, 2));
           setUploadMethod('xlsx');

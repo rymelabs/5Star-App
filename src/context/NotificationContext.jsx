@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { Check, X, AlertCircle, Info, Bell } from 'lucide-react';
 import Toast from '../components/Toast';
 import { useAuth } from './AuthContext';
@@ -263,7 +263,14 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [currentUser, fcmToken]);
 
-  const value = {
+  const showNotification = useCallback((title, type = 'info', message) => {
+    if (type === 'success') return showSuccess(title, message);
+    if (type === 'error') return showError(title, message);
+    if (type === 'warning') return showWarning(title, message);
+    return showInfo(title, message);
+  }, [showSuccess, showError, showWarning, showInfo]);
+
+  const value = useMemo(() => ({
     // Toast notifications
     notifications,
     addNotification,
@@ -272,13 +279,7 @@ export const NotificationProvider = ({ children }) => {
     showError,
     showWarning,
     showInfo,
-    // Backwards-compatible alias
-    showNotification: (title, type = 'info', message) => {
-      if (type === 'success') return showSuccess(title, message);
-      if (type === 'error') return showError(title, message);
-      if (type === 'warning') return showWarning(title, message);
-      return showInfo(title, message);
-    },
+    showNotification,
     
     // FCM notifications
     inboxNotifications,
@@ -290,7 +291,12 @@ export const NotificationProvider = ({ children }) => {
     loadUnreadCount,
     markAsRead,
     markAllAsRead,
-  };
+  }), [
+    notifications, addNotification, removeNotification,
+    showSuccess, showError, showWarning, showInfo, showNotification,
+    inboxNotifications, unreadCount, fcmToken, permissionGranted,
+    requestPermission, loadNotifications, loadUnreadCount, markAsRead, markAllAsRead
+  ]);
 
   return (
     <NotificationContext.Provider value={value}>

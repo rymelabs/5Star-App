@@ -117,14 +117,14 @@ export const CompetitionsProvider = ({ children }) => {
     return competitions.filter(competition => competition.ownerId === ownerId);
   }, [competitions, isAdmin, isSuperAdmin, ownerId]);
 
-  const value = {
+  const value = useMemo(() => ({
     competitions,
     ownedCompetitions,
     loading,
     addCompetition,
     updateCompetition,
     deleteCompetition
-  };
+  }), [competitions, ownedCompetitions, loading, addCompetition, updateCompetition, deleteCompetition]);
 
   return (
     <CompetitionsContext.Provider value={value}>

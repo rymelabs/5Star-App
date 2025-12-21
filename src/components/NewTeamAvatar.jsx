@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 
 const sizeToPixels = (size) => {
   if (typeof size === 'number') return size;
@@ -23,7 +23,7 @@ const getInitial = (name) => {
   return trimmed.charAt(0).toUpperCase();
 };
 
-const NewTeamAvatar = ({ team, name = '', size = 48, className = '' }) => {
+const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '' }) => {
   const [imgError, setImgError] = useState(false);
   const teamName = team?.name || name;
   // Normalize team logo: check multiple possible property names
@@ -55,6 +55,8 @@ const NewTeamAvatar = ({ team, name = '', size = 48, className = '' }) => {
       )}
     </div>
   );
-};
+});
+
+NewTeamAvatar.displayName = 'NewTeamAvatar';
 
 export default NewTeamAvatar;
