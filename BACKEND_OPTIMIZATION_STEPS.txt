@@ -1,0 +1,219 @@
+BACKEND OPTIMIZATION STEPS
+==========================
+
+Priority order: REQUIRED → HIGH → MEDIUM → OPTIONAL
+
+
+============================================================================
+REQUIRED (Urgent - Do These First)
+============================================================================
+
+1. CREATE COMPOSITE INDEXES
+---------------------------
+Your firestore.indexes.json is empty. Without indexes, compound queries fail or are slow.
+
+Common queries that need indexes:
+- Fixtures by status + date: where('status', '==', 'scheduled').orderBy('dateTime')
+- Fixtures by season + date: where('seasonId', '==', X).orderBy('dateTime')
+- Articles by date: orderBy('createdAt', 'desc')
+- AdminActivity by date: orderBy('createdAt', 'desc')
+- Watchlist by dateTime: where('dateTime', '>=', X).where('dateTime', '<', Y)
+
+Action: Populate firestore.indexes.json with required composite indexes.
+
+
+2. IMPLEMENT CUSTOM CLAIMS FOR ADMIN ROLES
+------------------------------------------
+Replace expensive get() calls in security rules with Firebase Auth custom claims.
+
+Current (expensive - billed as a read):
+  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+
+Better (free - no read required):
+  request.auth.token.admin == true
+
+Requires: A Cloud Function to set custom claims when a user's role changes.
+
+Example Cloud Function:
+  exports.onUserRoleChange = onDocumentUpdated('users/{userId}', async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+    if (before.role !== after.role) {
+      await admin.auth().setCustomUserClaims(event.params.userId, {
+        admin: after.role === 'admin' || after.role === 'super-admin',
+        superAdmin: after.role === 'super-admin'
+      });
+    }
+  });
+
+
+============================================================================
+RECOMMENDED (High Priority)
+============================================================================
+
+3. REDUCE SCHEDULED FUNCTION FREQUENCY
+--------------------------------------
+Change watchlist reminders from every 1 minute to every 5 minutes.
+
+Current:
+  exports.notifyWatchlistReminders = onSchedule('every 1 minutes', ...)
+
+Better:
+  exports.notifyWatchlistReminders = onSchedule('every 5 minutes', ...)
+
+Savings: 80% reduction in function invocations (~34,500 fewer invocations/month)
+
+
+4. OPTIMIZE AGGREGATION FUNCTION
+--------------------------------
+Don't read ALL documents daily. Use counters or limit queries.
+
+Current (expensive):
+  const teamsSnapshot = await db.collection('teams').get();     // ALL teams
+  const articlesSnapshot = await db.collection('articles').get(); // ALL articles
+
+Better options:
+  Option A: Maintain counter documents
+    await db.collection('stats').doc('teamCounts').get()
+  
+  Option B: Use aggregation queries (Firestore now supports count())
+    const count = await db.collection('teams').count().get()
+  
+  Option C: Limit what you aggregate
+    const recent = await db.collection('articles').orderBy('createdAt', 'desc').limit(100).get()
+
+
+============================================================================
+RECOMMENDED (Medium Priority)
+============================================================================
+
+5. SPLIT FIRESTORE.JS INTO MODULES
+----------------------------------
+Break the 2211-line file into smaller, maintainable modules:
+
+src/firebase/
+  ├── collections/
+  │   ├── teams.js
+  │   ├── fixtures.js
+  │   ├── articles.js
+  │   ├── seasons.js
+  │   ├── competitions.js
+  │   ├── users.js
+  │   └── notifications.js
+  ├── helpers.js
+  └── index.js (re-exports)
+
+
+6. LIMIT REAL-TIME LISTENERS
+----------------------------
+Only use onSnapshot for truly real-time needs.
+
+Keep (need real-time):
+  ✅ Live fixtures during matches
+  ✅ Admin dashboard activity feed
+  ✅ Notification inbox
+
+Remove (fetch once and cache):
+  ❌ Leagues list (rarely changes)
+  ❌ Competitions list (rarely changes)
+  ❌ Settings (rarely changes)
+  ❌ Seasons list (fetch on load, refresh on demand)
+
+Implementation:
+  Replace onSnapshot with getDoc/getDocs + useCachedState for static data.
+
+
+7. ADD RATE LIMITING / SECURITY
+-------------------------------
+Firestore rules additions:
+  - Limit document creation frequency per user
+  - Add document size limits
+  - Consider Firebase App Check for API abuse prevention
+
+Example rate limit rule:
+  allow create: if request.auth != null 
+    && request.time > resource.data.lastCreated + duration.value(1, 'm');
+
+
+============================================================================
+OPTIONAL (Nice to Have)
+============================================================================
+
+8. ADD TYPESCRIPT
+-----------------
+Benefits:
+  - Better type safety
+  - Fewer runtime errors
+  - Better IDE autocomplete
+  - Self-documenting code
+
+Start with: 
+  - Rename .js to .ts files one at a time
+  - Add type definitions for Firestore documents
+
+
+9. IMPLEMENT PAGINATION EVERYWHERE
+----------------------------------
+Ensure all list fetches use limit() and cursors.
+
+Check these files for unbounded queries:
+  - src/firebase/firestore.js (getAll functions)
+  - src/context/FootballContext.jsx
+  - src/pages/admin/*.jsx
+
+Pattern to follow:
+  const PAGE_SIZE = 20;
+  const q = query(collection(db, 'items'), orderBy('date'), limit(PAGE_SIZE));
+  // For next page: startAfter(lastDoc)
+
+
+10. SET UP MONITORING
+---------------------
+A. Firebase Performance Monitoring
+   - Add to your app for client-side metrics
+   - Track slow queries and page loads
+
+B. Cloud Function Error Alerting
+   - Set up Cloud Monitoring alerts for function errors
+   - Monitor function execution time
+
+C. Cost Alerts
+   - Go to Google Cloud Console → Billing → Budgets & Alerts
+   - Set alerts at $10, $25, $50 thresholds
+   - Get notified before surprise bills
+
+
+============================================================================
+IMPLEMENTATION ORDER
+============================================================================
+
+Week 1:
+  [x] 1. Create composite indexes (deploy immediately)
+  [x] 2. Implement custom claims (requires Cloud Function + rules update)
+
+Week 2:
+  [ ] 3. Reduce scheduled function frequency
+  [ ] 4. Optimize aggregation function
+
+Week 3-4:
+  [ ] 5. Split firestore.js into modules
+  [ ] 6. Audit and reduce real-time listeners
+
+Ongoing:
+  [ ] 7-10. Security, TypeScript, pagination, monitoring
+
+
+============================================================================
+EXPECTED RESULTS
+============================================================================
+
+After implementing steps 1-4:
+  - 50% reduction in Firestore read costs
+  - 80% reduction in Cloud Function invocations
+  - Faster query performance
+  - More predictable billing
+
+After implementing steps 5-6:
+  - Better code maintainability
+  - Further 20-40% read reduction
+  - Improved app performance

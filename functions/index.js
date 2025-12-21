@@ -21,6 +21,126 @@ const emailTransporter = nodemailer.createTransport({
 });
 
 // ============================================================================
+// CUSTOM CLAIMS FOR ADMIN ROLES
+// ============================================================================
+
+/**
+ * Set custom claims when user role changes
+ * This eliminates the need for expensive get() calls in Firestore security rules
+ */
+exports.onUserRoleChange = onDocumentUpdated("users/{userId}", async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  const userId = event.params.userId;
+
+  // Only proceed if role changed
+  if (beforeData.role === afterData.role) {
+    return null;
+  }
+
+  const role = afterData.role || "user";
+  const isAdmin = role === "admin" || role === "super-admin";
+  const isSuperAdmin = role === "super-admin";
+
+  try {
+    await admin.auth().setCustomUserClaims(userId, {
+      role: role,
+      admin: isAdmin,
+      superAdmin: isSuperAdmin,
+    });
+
+    logger.info(`Custom claims set for user ${userId}: role=${role}, admin=${isAdmin}, superAdmin=${isSuperAdmin}`);
+
+    // Update a timestamp to signal the client to refresh their token
+    await db.collection("users").doc(userId).update({
+      claimsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return null;
+  } catch (error) {
+    logger.error("Error setting custom claims:", error);
+    return null;
+  }
+});
+
+/**
+ * Set custom claims when new user is created with a role
+ */
+exports.onUserCreatedSetClaims = onDocumentCreated("users/{userId}", async (event) => {
+  const userData = event.data.data();
+  const userId = event.params.userId;
+  const role = userData.role || "user";
+
+  // Skip if regular user (no claims needed)
+  if (role === "user") {
+    return null;
+  }
+
+  const isAdmin = role === "admin" || role === "super-admin";
+  const isSuperAdmin = role === "super-admin";
+
+  try {
+    await admin.auth().setCustomUserClaims(userId, {
+      role: role,
+      admin: isAdmin,
+      superAdmin: isSuperAdmin,
+    });
+
+    logger.info(`Custom claims set for new user ${userId}: role=${role}`);
+    return null;
+  } catch (error) {
+    logger.error("Error setting custom claims for new user:", error);
+    return null;
+  }
+});
+
+/**
+ * Sync all admin claims - One-time backfill for existing admin users
+ * Run this once after deploying custom claims to sync existing admins
+ * Trigger: Run manually via Firebase Console > Functions > syncAllAdminClaims
+ */
+exports.syncAllAdminClaims = onSchedule("every 24 hours", async () => {
+  logger.info("Starting sync of all admin claims...");
+
+  try {
+    // Get all admin and super-admin users
+    const adminsSnapshot = await db.collection("users")
+        .where("role", "in", ["admin", "super-admin"])
+        .get();
+
+    let synced = 0;
+    let errors = 0;
+
+    for (const doc of adminsSnapshot.docs) {
+      const userData = doc.data();
+      const userId = doc.id;
+      const role = userData.role;
+      const isAdmin = role === "admin" || role === "super-admin";
+      const isSuperAdmin = role === "super-admin";
+
+      try {
+        await admin.auth().setCustomUserClaims(userId, {
+          role: role,
+          admin: isAdmin,
+          superAdmin: isSuperAdmin,
+        });
+        synced++;
+        logger.info(`Synced claims for ${userId}: ${role}`);
+      } catch (err) {
+        errors++;
+        logger.error(`Failed to sync claims for ${userId}:`, err);
+      }
+    }
+
+    logger.info(`Admin claims sync complete. Synced: ${synced}, Errors: ${errors}`);
+    return null;
+  } catch (error) {
+    logger.error("Error syncing admin claims:", error);
+    return null;
+  }
+});
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
