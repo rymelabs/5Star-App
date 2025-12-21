@@ -15,13 +15,10 @@ export const usePageCache = () => {
       isRefresh.current = window.performance.navigation.type === 1; // TYPE_RELOAD
     }
 
-    console.log(`[PageCache] Page load - Path: ${location.pathname}, Is Refresh: ${isRefresh.current}`);
-
     // On initial load, check if we should restore from cache
     if (isInitialLoad.current && !isRefresh.current) {
       const cachedData = getCachedPage(location.pathname);
       if (cachedData) {
-        console.log(`[PageCache] Restoring cached data for ${location.pathname}:`, cachedData);
         // Restore scroll position if cached
         if (cachedData.scrollY !== undefined) {
           // Use requestAnimationFrame to ensure DOM is ready
@@ -31,7 +28,6 @@ export const usePageCache = () => {
         }
         // You can extend this to restore other page state
       } else {
-        console.log(`[PageCache] No cached data found for ${location.pathname}`);
       }
     }
 
@@ -106,7 +102,6 @@ function cacheCurrentPage(pathname, data) {
     });
 
     localStorage.setItem(PAGE_CACHE_KEY, JSON.stringify(cache));
-    console.log(`[PageCache] Cached data for ${pathname}:`, data);
   } catch (error) {
     console.warn('Failed to cache page data:', error);
   }
