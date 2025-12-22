@@ -55,7 +55,7 @@ const initializeDatabase = async () => {
     // Add sample admin user data (you'll need to create this user first)
     await setDoc(doc(db, 'users', 'admin-uid'), {
       name: 'Admin User',
-      email: 'admin@5starapp.com',
+      email: 'admin@fivescores.com',
       role: 'admin',
       createdAt: new Date().toISOString()
     });

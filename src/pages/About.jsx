@@ -32,7 +32,7 @@ const About = () => {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Fivescores</h2>
           <p className="text-gray-400 text-sm">Official App</p>
-          <p className="text-gray-500 text-xs mt-1">Version 1.0.0</p>
+          <p className="text-gray-500 text-xs mt-1">Version {import.meta.env.VITE_APP_VERSION}</p>
         </div>
 
         {/* About the App */}
