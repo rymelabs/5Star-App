@@ -3,6 +3,9 @@
 .env.local
 .env.development.local
 
+# Firebase service account key
+serviceAccountKey.json
+
 # Dependency directories
 node_modules/
 
