@@ -8,7 +8,7 @@ import { useSoftDelete } from '../../hooks/useSoftDelete';
 import AdminPageLayout from '../../components/AdminPageLayout';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
-import { uploadImage, validateImageFile } from '../../services/imageUploadService';
+import { uploadImage, validateImageFile, uploadLogoWithVariants } from '../../services/imageUploadService';
 import { Plus, Edit, Trash2, Upload, Save, X, Users, UserPlus, Shield, Goal, Image, Link } from 'lucide-react';
 
 const AdminTeams = () => {
@@ -236,12 +236,15 @@ const AdminTeams = () => {
     setLoading(true);
     try {
       let logoUrl = formData.logo;
+      let logoThumbUrl = null;
 
-      // Upload image file if selected
+      // Upload image file if selected - with thumbnail variant
       if (logoUploadMethod === 'file' && selectedLogoFile) {
         setUploadingLogo(true);
         try {
-          logoUrl = await uploadImage(selectedLogoFile, 'teams', `${formData.name.replace(/[^a-zA-Z0-9]/g, '_')}_logo`);
+          const variants = await uploadLogoWithVariants(selectedLogoFile, formData.name);
+          logoUrl = variants.logo;
+          logoThumbUrl = variants.logoThumbUrl;
           setUploadingLogo(false);
         } catch (uploadError) {
           setUploadingLogo(false);
@@ -255,6 +258,7 @@ const AdminTeams = () => {
         const updatedTeam = {
           ...formData,
           logo: (logoUrl || '').trim(),
+          ...(logoThumbUrl && { logoThumbUrl }),
         };
         await updateTeam(editingTeam.id, updatedTeam);
         showSuccess(t('pages.adminTeams.teamUpdated'), t('pages.adminTeams.teamUpdatedDesc').replace('{name}', updatedTeam.name));
@@ -263,6 +267,7 @@ const AdminTeams = () => {
         const newTeam = {
           ...formData,
           logo: (logoUrl || '').trim(),
+          ...(logoThumbUrl && { logoThumbUrl }),
         };
         await addTeam(newTeam);
         showSuccess(t('pages.adminTeams.teamAdded'), t('pages.adminTeams.teamAddedDesc').replace('{name}', newTeam.name));

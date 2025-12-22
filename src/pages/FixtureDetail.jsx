@@ -453,7 +453,8 @@ const FixtureDetail = () => {
                 <div className="absolute inset-0 bg-brand-purple/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <NewTeamAvatar 
                   team={fixture.homeTeam}
-                  size={64} 
+                  size={64}
+                  useThumbnail={false}
                   className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
                 />
               </div>
@@ -497,7 +498,8 @@ const FixtureDetail = () => {
                 <div className="absolute inset-0 bg-accent-green/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <NewTeamAvatar 
                   team={fixture.awayTeam}
-                  size={64} 
+                  size={64}
+                  useThumbnail={false}
                   className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl ring-2 ring-white/5 group-hover:scale-105 transition-transform duration-300" 
                 />
               </div>

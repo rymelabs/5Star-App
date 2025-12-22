@@ -25,7 +25,7 @@ const CompetitionGroup = ({ group, onFixtureClick, onCompetitionClick }) => (
       onClick={() => group.info.id !== 'unknown' && onCompetitionClick?.(group.info)}
     >
       {group.info.logo ? (
-        <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
+        <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" loading="lazy" decoding="async" />
       ) : (
         <Trophy className="w-3.5 h-3.5 text-brand-purple" />
       )}

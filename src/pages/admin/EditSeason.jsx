@@ -552,7 +552,7 @@ const EditSeason = () => {
                     <div key={team.id} className="flex items-center justify-between p-2 bg-dark-700 rounded-lg">
                       <div className="flex items-center space-x-2 min-w-0 flex-1">
                         {team.logo && (
-                          <img src={team.logo} alt={team.name} className="w-6 h-6 rounded flex-shrink-0" />
+                          <img src={team.logo} alt={team.name} className="w-6 h-6 rounded flex-shrink-0" loading="lazy" decoding="async" />
                         )}
                         <span className="text-sm text-white truncate">{team.name}</span>
                       </div>
@@ -654,7 +654,7 @@ const EditSeason = () => {
                         {group.teams.map(team => (
                           <div key={team.id} className="flex items-center space-x-2">
                             {team.logo && (
-                              <img src={team.logo} alt={team.name} className="w-4 h-4 rounded" />
+                              <img src={team.logo} alt={team.name} className="w-4 h-4 rounded" loading="lazy" decoding="async" />
                             )}
                             <span className="text-xs text-gray-300">{team.name}</span>
                           </div>
