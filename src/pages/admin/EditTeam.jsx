@@ -4,7 +4,7 @@ import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ArrowLeft, Save, X, Users, UserPlus, Shield, Goal, Trash2, Edit, Image, Link } from 'lucide-react';
-import { uploadImage, validateImageFile } from '../../services/imageUploadService';
+import { uploadImage, validateImageFile, uploadLogoWithVariants } from '../../services/imageUploadService';
 
 const EditTeam = () => {
   const { teamId } = useParams();
@@ -260,12 +260,15 @@ const EditTeam = () => {
     try {
       setLoading(true);
       let logoUrl = formData.logo;
+      let logoThumbUrl = null;
 
       if (logoUploadMethod === 'file' && selectedLogoFile) {
         setUploadingLogo(true);
         try {
-          const safeName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'team_logo';
-          logoUrl = await uploadImage(selectedLogoFile, 'teams', `${safeName}_${Date.now()}`);
+          // Upload with thumbnail variant
+          const variants = await uploadLogoWithVariants(selectedLogoFile, formData.name);
+          logoUrl = variants.logo;
+          logoThumbUrl = variants.logoThumbUrl;
         } catch (uploadError) {
           showError('Image Upload Failed', uploadError.message || 'Unable to upload logo image. Please try again.');
           setUploadingLogo(false);
@@ -279,6 +282,7 @@ const EditTeam = () => {
       const updatedTeam = {
         ...formData,
         logo: (logoUrl || '').trim(),
+        ...(logoThumbUrl && { logoThumbUrl }),
         name: formData.name.trim(),
         updatedAt: new Date().toISOString()
       };

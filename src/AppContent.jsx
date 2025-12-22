@@ -74,6 +74,7 @@ const BulkTeamUploadPage = withLazyErrorLogging('Bulk Upload page', () => import
 const AdminSubmissions = withLazyErrorLogging('Admin Submissions', () => import('./pages/admin/AdminSubmissions'));
 const AdminStats = withLazyErrorLogging('Admin Stats', () => import('./pages/admin/AdminStats'));
 const RecycleBin = withLazyErrorLogging('Recycle Bin', () => import('./pages/admin/RecycleBin'));
+const MigrateLogos = withLazyErrorLogging('Migrate Logos', () => import('./pages/admin/MigrateLogos'));
 
 const AppContent = () => {
   const location = useLocation();
@@ -185,6 +186,7 @@ const AppContent = () => {
           <Route path="/admin/dashboard" element={requireAdminElement(<AdminDashboard />)} />
           <Route path="/admin/teams" element={requireAdminElement(<AdminTeams />)} />
           <Route path="/admin/teams/upload" element={requireAdminElement(<BulkTeamUploadPage />)} />
+          <Route path="/admin/teams/migrate-logos" element={requireAdminElement(<MigrateLogos />)} />
           <Route path="/admin/submissions" element={requireAdminElement(<AdminSubmissions />)} />
           <Route path="/admin/teams/edit/:teamId" element={requireAdminElement(<EditTeam />)} />
           <Route path="/admin/fixtures" element={requireAdminElement(<AdminFixtures />)} />

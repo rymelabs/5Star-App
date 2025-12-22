@@ -151,7 +151,7 @@ const AdminLeagues = () => {
                 <div className="flex items-start justify-between mb-2.5">
                   <div className="flex items-center gap-2.5">
                     {league.logo ? (
-                      <img src={league.logo} alt={league.name} className="w-9 h-9 rounded-lg object-cover bg-white/5" />
+                      <img src={league.logo} alt={league.name} className="w-9 h-9 rounded-lg object-cover bg-white/5" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                         <Trophy className="w-4 h-4 text-white/40" />

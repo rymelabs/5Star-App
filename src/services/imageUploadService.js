@@ -1,6 +1,7 @@
 // Image upload utility for Firebase Storage
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '../firebase/config';
+import { generateLogoVariants, formatFileSize } from '../utils/imageResize';
 
 /**
  * Upload an image file to Firebase Storage
@@ -122,4 +123,59 @@ export const validateImageFile = (file) => {
   }
 
   return { isValid: true, error: null };
+};
+
+/**
+ * Upload a team logo with thumbnail and full-size variants
+ * @param {File} file - The original logo file
+ * @param {string} teamName - Team name for filename generation
+ * @returns {Promise<{logo: string, logoThumbUrl: string}>} - URLs for both variants
+ */
+export const uploadLogoWithVariants = async (file, teamName) => {
+  try {
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    // Generate resized variants (thumbnail: 64px, full: 256px)
+    const { thumbnail, full } = await generateLogoVariants(file);
+    
+    const storage = getFirebaseStorage();
+    const timestamp = Date.now();
+    const safeName = teamName.replace(/[^a-zA-Z0-9]/g, '_') || 'team';
+    
+    // Upload both variants in parallel
+    const thumbnailRef = ref(storage, `teams/${safeName}_${timestamp}_thumb.webp`);
+    const fullRef = ref(storage, `teams/${safeName}_${timestamp}_full.webp`);
+    
+    const metadata = {
+      contentType: 'image/webp',
+      customMetadata: {
+        'uploadedBy': 'admin-panel',
+        'uploadDate': new Date().toISOString(),
+        'originalSize': formatFileSize(file.size),
+      }
+    };
+
+    const [thumbnailSnapshot, fullSnapshot] = await Promise.all([
+      uploadBytes(thumbnailRef, thumbnail, { ...metadata, customMetadata: { ...metadata.customMetadata, variant: 'thumbnail' } }),
+      uploadBytes(fullRef, full, { ...metadata, customMetadata: { ...metadata.customMetadata, variant: 'full' } }),
+    ]);
+
+    // Get download URLs
+    const [logoThumbUrl, logo] = await Promise.all([
+      getDownloadURL(thumbnailSnapshot.ref),
+      getDownloadURL(fullSnapshot.ref),
+    ]);
+
+    return { logo, logoThumbUrl };
+  } catch (error) {
+    console.error('Logo variant upload failed:', error);
+    
+    if (error.code === 'storage/unauthorized') {
+      throw new Error('Storage access denied. Please check Firebase Storage permissions.');
+    }
+    
+    throw error;
+  }
 };

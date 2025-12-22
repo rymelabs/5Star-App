@@ -23,13 +23,20 @@ const getInitial = (name) => {
   return trimmed.charAt(0).toUpperCase();
 };
 
-const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '' }) => {
+const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '', useThumbnail = true }) => {
   const [imgError, setImgError] = useState(false);
   const teamName = team?.name || name;
   // Normalize team logo: check multiple possible property names
-  const teamLogo = team?.logo || team?.profilePicture || team?.image || team?.imageUrl || team?.logoUrl || team?.crest || team?.badge || '';
-  const initial = getInitial(teamName);
+  const teamLogoFull = team?.logo || team?.profilePicture || team?.image || team?.imageUrl || team?.logoUrl || team?.crest || team?.badge || '';
+  const teamLogoThumb = team?.logoThumbUrl || '';
+  
+  // Use thumbnail for small sizes (< 80px) if available, otherwise use full logo
+  // Falls back to full logo if thumbnail is missing
   const sizePx = sizeToPixels(size);
+  const shouldUseThumbnail = useThumbnail && sizePx <= 80 && teamLogoThumb;
+  const teamLogo = shouldUseThumbnail ? teamLogoThumb : teamLogoFull;
+  
+  const initial = getInitial(teamName);
   const fontSize = Math.max(14, Math.floor(sizePx * 0.55));
   const showImage = Boolean(teamLogo) && !imgError;
 
@@ -46,6 +53,7 @@ const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '' }) => {
           alt={teamName}
           className="w-full h-full object-cover"
           loading="lazy"
+          decoding="async"
           onError={() => setImgError(true)}
         />
       ) : (

@@ -375,7 +375,7 @@ const TeamDetail = () => {
             {/* Team Logo */}
             <div className="relative">
               <div className="absolute inset-0 bg-brand-purple/20 blur-2xl rounded-full" />
-              <NewTeamAvatar team={team} size={80} className="relative z-10 ring-4 ring-dark-900 shadow-2xl" />
+              <NewTeamAvatar team={team} size={80} useThumbnail={false} className="relative z-10 ring-4 ring-dark-900 shadow-2xl" />
             </div>
 
             {/* Team Info */}
@@ -743,7 +743,7 @@ const TeamDetail = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
                             {opponent?.logo && (
-                              <img src={opponent.logo} alt="" className="w-5 h-5 object-contain" />
+                              <img src={opponent.logo} alt="" className="w-5 h-5 object-contain" loading="lazy" decoding="async" />
                             )}
                             <span>{isHome ? 'vs' : '@'} {opponent?.name || 'TBD'}</span>
                           </div>

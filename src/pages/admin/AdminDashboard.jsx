@@ -27,7 +27,8 @@ import {
   Database,
   Bell,
   Inbox,
-  RotateCcw
+  RotateCcw,
+  ImageIcon
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -275,6 +276,14 @@ const AdminDashboard = () => {
       color: 'text-gray-400',
       count: recycleBinItems.length || 0,
     },
+    ...(user?.isSuperAdmin ? [{
+      title: 'Logo Migration Tool',
+      description: 'Generate optimized thumbnails for team logos',
+      icon: ImageIcon,
+      path: '/admin/teams/migrate-logos',
+      color: 'text-orange-400',
+      count: '-',
+    }] : []),
   ];
 
 
