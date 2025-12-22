@@ -44,6 +44,23 @@ A modern, feature-rich soccer application built with React and Vite, featuring l
 - **Icons**: Lucide React
 - **Data Storage**: LocalStorage (with future database integration ready)
 
+## 📋 Versioning Scheme
+
+This project uses semantic versioning with letter suffixes for major updates:
+
+- **Format**: `MAJOR.MINOR.PATCH[LETTER]`
+- **Major Updates**: Increment the major version number
+- **Minor Updates**: Increment the minor version number  
+- **Patch Updates**: Increment the patch version number
+- **Letter Suffixes**: Used for major feature updates within a version cycle
+  - Letters progress from 'a' to 'z' (e.g., 1.2.0a, 1.2.0b, ..., 1.2.0z)
+  - When reaching 'z', increment the preceding number (e.g., 1.2.0z → 1.3.0)
+
+**Examples**:
+- `1.2.1b` - Version 1.2.1, build b
+- `2.0.0` - Major version 2 release
+- `1.3.0a` - Version 1.3.0, first major update
+
 ## 🎨 Color Palette
 
 ```css
@@ -183,7 +200,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email support@5starapp.com or join our Discord community.
+For support, email support@fivescores.com or join our Discord community.
 
 ---
 
