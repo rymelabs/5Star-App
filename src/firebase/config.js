@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -29,6 +30,7 @@ let app = null;
 let auth = null;
 let db = null;
 let storage = null;
+let functions = null;
 
 // Only initialize Firebase if configuration is complete
 if (missingKeys.length === 0) {
@@ -40,6 +42,7 @@ if (missingKeys.length === 0) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    functions = getFunctions(app);
     
   } catch (error) {
     
@@ -103,6 +106,13 @@ export const getFirebaseStorage = () => {
   return storage;
 };
 
+export const getFirebaseFunctions = () => {
+  if (!functions) {
+    throw new Error('Firebase functions has not been initialized. Check Firebase configuration and initialization logic.');
+  }
+  return functions;
+};
+
 // Direct exports (may be null if not initialized)
-export { auth, db, storage };
+export { auth, db, storage, functions };
 export default app;

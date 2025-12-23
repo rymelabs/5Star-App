@@ -1,4 +1,4 @@
-import { Home, Calendar, Users, Newspaper, TrendingUp } from 'lucide-react';
+import { Home, Calendar, Users, Newspaper, TrendingUp, Trophy } from 'lucide-react';
 
 // Translation keys - actual labels will be translated in the component
 export const navItems = [
@@ -11,6 +11,11 @@ export const navItems = [
     path: '/fixtures',
     labelKey: 'navigation.fixtures',
     icon: Calendar,
+  },
+  {
+    path: '/afcon',
+    labelKey: 'AFCON',
+    icon: Trophy,
   },
   {
     path: '/teams',

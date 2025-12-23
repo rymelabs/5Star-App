@@ -35,6 +35,7 @@
     "navigation":  {
                        "latest":  "Latest",
                        "fixtures":  "Fixtures",
+                       "afcon":  "AFCON",
                        "teams":  "Teams",
                        "news":  "News",
                        "dashboard":  "Dashboard",

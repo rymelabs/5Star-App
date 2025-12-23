@@ -888,4 +888,12 @@
   .nav-item-glow {
     background: radial-gradient(circle at center, rgba(109, 40, 217, 0.4) 0%, transparent 70%);
   }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

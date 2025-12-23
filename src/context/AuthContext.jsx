@@ -9,7 +9,17 @@ import {
   updateUserProfile
 } from '../firebase/auth';
 
-const AuthContext = createContext();
+const AuthContext = createContext({
+  user: null,
+  authState: 'guest',
+  loading: true,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+  loginWithGoogle: async () => {},
+  loginAsGuest: async () => {},
+  updateProfile: async () => {}
+});
 
 const deriveAuthState = (rawUser) => {
   if (!rawUser) return 'guest';
@@ -35,7 +45,7 @@ const normalizeUser = (rawUser) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
