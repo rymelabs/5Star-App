@@ -986,3 +986,597 @@ exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (_event) => {
     logger.error("Error in notifyUpcomingMatches:", error);
   }
 });
+
+// ============================================================================
+// AFCON 2025 WEB SCRAPER - LIVE SCORES, FIXTURES & STANDINGS
+// Scrapes data from multiple sources with fallback to hardcoded schedule
+// ============================================================================
+
+const {onCall} = require("firebase-functions/v2/https");
+const axios = require("axios");
+const cheerio = require("cheerio");
+
+// Firestore collection for AFCON data cache
+const AFCON_COLLECTION = "afcon2025";
+
+/**
+ * Scrape live AFCON data from Google Search results
+ * This function attempts to get live scores by scraping Google's sports data
+ */
+async function scrapeGoogleAfconScores() {
+  try {
+    const response = await axios.get('https://www.google.com/search?q=afcon+2025+live+scores', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      timeout: 5000
+    });
+    
+    const $ = cheerio.load(response.data);
+    const matches = [];
+    
+    // Google sports cards have specific class patterns
+    $('[data-attrid*="match"], .imso_mh__lg-st-cn').each((i, el) => {
+      const homeTeam = $(el).find('.imso_mh__first-tn-sc, .imso_mh__tm-nm').first().text().trim();
+      const awayTeam = $(el).find('.imso_mh__second-tn-sc, .imso_mh__tm-nm').last().text().trim();
+      const homeScore = $(el).find('.imso_mh__l-tm-sc').text().trim();
+      const awayScore = $(el).find('.imso_mh__r-tm-sc').text().trim();
+      const status = $(el).find('.imso_mh__ft-mtch, .imso_mh__lg-st-txt').text().trim();
+      
+      if (homeTeam && awayTeam) {
+        matches.push({
+          homeTeam: normalizeTeamName(homeTeam),
+          awayTeam: normalizeTeamName(awayTeam),
+          homeScore: parseInt(homeScore) || null,
+          awayScore: parseInt(awayScore) || null,
+          status: status.includes('FT') ? 'FT' : status.includes('HT') ? 'HT' : status.includes('Live') ? 'LIVE' : 'NS',
+          isLive: status.toLowerCase().includes('live') || /^\d+[\'′]$/.test(status)
+        });
+      }
+    });
+    
+    return matches;
+  } catch (error) {
+    logger.warn('Google scraping failed:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Scrape AFCON data from FlashScore API (free, no auth required for basic data)
+ */
+async function scrapeFlashScoreAfcon() {
+  try {
+    // FlashScore API endpoint for Africa Cup of Nations
+    const response = await axios.get('https://flashscore.com/football/africa/africa-cup-of-nations/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+      timeout: 8000
+    });
+    
+    const $ = cheerio.load(response.data);
+    const matches = [];
+    
+    // Parse match data from page
+    $('.event__match').each((i, el) => {
+      const homeTeam = $(el).find('.event__participant--home').text().trim();
+      const awayTeam = $(el).find('.event__participant--away').text().trim();
+      const homeScore = $(el).find('.event__score--home').text().trim();
+      const awayScore = $(el).find('.event__score--away').text().trim();
+      const stage = $(el).find('.event__stage--block').text().trim();
+      
+      if (homeTeam && awayTeam) {
+        const isLive = stage.includes("'") || stage.toLowerCase().includes('live') || stage === 'HT';
+        matches.push({
+          homeTeam: normalizeTeamName(homeTeam),
+          awayTeam: normalizeTeamName(awayTeam),
+          homeScore: parseInt(homeScore) || null,
+          awayScore: parseInt(awayScore) || null,
+          status: stage.includes('Finished') ? 'FT' : isLive ? 'LIVE' : 'NS',
+          isLive
+        });
+      }
+    });
+    
+    return matches;
+  } catch (error) {
+    logger.warn('FlashScore scraping failed:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Merge scraped data with our schedule
+ * Updates scores and status from scraped data while keeping our schedule structure
+ */
+function mergeScrapedDataWithSchedule(scrapedMatches, schedule) {
+  if (!scrapedMatches || scrapedMatches.length === 0) {
+    return schedule;
+  }
+  
+  return schedule.map(match => {
+    // Find matching scraped data
+    const scraped = scrapedMatches.find(s => 
+      (normalizeTeamName(s.homeTeam) === normalizeTeamName(match.homeTeam) &&
+       normalizeTeamName(s.awayTeam) === normalizeTeamName(match.awayTeam)) ||
+      (normalizeTeamName(s.homeTeam) === normalizeTeamName(match.awayTeam) &&
+       normalizeTeamName(s.awayTeam) === normalizeTeamName(match.homeTeam))
+    );
+    
+    if (scraped) {
+      // Check if home/away are swapped
+      const isSwapped = normalizeTeamName(scraped.homeTeam) === normalizeTeamName(match.awayTeam);
+      
+      return {
+        ...match,
+        homeScore: isSwapped ? scraped.awayScore : scraped.homeScore,
+        awayScore: isSwapped ? scraped.homeScore : scraped.awayScore,
+        status: scraped.status || match.status,
+        isLive: scraped.isLive || false,
+        scrapedAt: new Date().toISOString()
+      };
+    }
+    
+    return match;
+  });
+}
+
+/**
+ * Attempt to fetch live data from multiple sources
+ */
+async function fetchLiveAfconData() {
+  // Try multiple sources in order of reliability
+  let scrapedData = [];
+  
+  // Try FlashScore first
+  scrapedData = await scrapeFlashScoreAfcon();
+  if (scrapedData.length > 0) {
+    logger.info(`Got ${scrapedData.length} matches from FlashScore`);
+    return scrapedData;
+  }
+  
+  // Try Google as fallback
+  scrapedData = await scrapeGoogleAfconScores();
+  if (scrapedData.length > 0) {
+    logger.info(`Got ${scrapedData.length} matches from Google`);
+    return scrapedData;
+  }
+  
+  logger.info('No live data from scrapers, using schedule data');
+  return [];
+}
+
+// AFCON 2025 team data with flags
+const AFCON_TEAMS = {
+  'Morocco': { flag: '🇲🇦', code: 'MAR' },
+  'Mali': { flag: '🇲🇱', code: 'MLI' },
+  'Zambia': { flag: '🇿🇲', code: 'ZAM' },
+  'Comoros': { flag: '🇰🇲', code: 'COM' },
+  'Egypt': { flag: '🇪🇬', code: 'EGY' },
+  'South Africa': { flag: '🇿🇦', code: 'RSA' },
+  'Angola': { flag: '🇦🇴', code: 'ANG' },
+  'Zimbabwe': { flag: '🇿🇼', code: 'ZIM' },
+  'Nigeria': { flag: '🇳🇬', code: 'NGA' },
+  'Tunisia': { flag: '🇹🇳', code: 'TUN' },
+  'Uganda': { flag: '🇺🇬', code: 'UGA' },
+  'Tanzania': { flag: '🇹🇿', code: 'TAN' },
+  'Senegal': { flag: '🇸🇳', code: 'SEN' },
+  'DR Congo': { flag: '🇨🇩', code: 'COD' },
+  'Benin': { flag: '🇧🇯', code: 'BEN' },
+  'Botswana': { flag: '🇧🇼', code: 'BOT' },
+  'Algeria': { flag: '🇩🇿', code: 'ALG' },
+  'Burkina Faso': { flag: '🇧🇫', code: 'BFA' },
+  'Equatorial Guinea': { flag: '🇬🇶', code: 'EQG' },
+  'Sudan': { flag: '🇸🇩', code: 'SDN' },
+  'Ivory Coast': { flag: '🇨🇮', code: 'CIV' },
+  'Cameroon': { flag: '🇨🇲', code: 'CMR' },
+  'Gabon': { flag: '🇬🇦', code: 'GAB' },
+  'Mozambique': { flag: '🇲🇿', code: 'MOZ' }
+};
+
+// AFCON 2025 Groups
+const AFCON_GROUPS = {
+  'A': ['Morocco', 'Mali', 'Zambia', 'Comoros'],
+  'B': ['Egypt', 'South Africa', 'Angola', 'Zimbabwe'],
+  'C': ['Nigeria', 'Tunisia', 'Uganda', 'Tanzania'],
+  'D': ['Senegal', 'DR Congo', 'Benin', 'Botswana'],
+  'E': ['Algeria', 'Burkina Faso', 'Equatorial Guinea', 'Sudan'],
+  'F': ['Ivory Coast', 'Cameroon', 'Gabon', 'Mozambique']
+};
+
+/**
+ * Normalize team name to match our data
+ */
+function normalizeTeamName(name) {
+  if (!name) return name;
+  const normalized = name.trim();
+  if (AFCON_TEAMS[normalized]) return normalized;
+  
+  const alternatives = {
+    'Cote d\'Ivoire': 'Ivory Coast',
+    'Côte d\'Ivoire': 'Ivory Coast',
+    'Congo DR': 'DR Congo',
+    'Dem. Rep. Congo': 'DR Congo',
+    'Democratic Republic of Congo': 'DR Congo'
+  };
+  return alternatives[normalized] || normalized;
+}
+
+/**
+ * Get team info (flag, code)
+ */
+function getTeamInfo(teamName) {
+  const normalized = normalizeTeamName(teamName);
+  return AFCON_TEAMS[normalized] || { flag: '🏳️', code: '???' };
+}
+
+/**
+ * Find which group a team belongs to
+ */
+function findTeamGroup(teamName) {
+  const normalized = normalizeTeamName(teamName);
+  for (const [group, teams] of Object.entries(AFCON_GROUPS)) {
+    if (teams.includes(normalized)) return group;
+  }
+  return null;
+}
+
+/**
+ * Check if a match is currently live based on its scheduled time
+ * A match is considered "live" if current time is within 2 hours of kickoff and status is NS
+ */
+function isMatchCurrentlyLive(match) {
+  // If already marked as live status
+  if (['LIVE', '1H', '2H', 'HT', 'ET', 'PEN'].includes(match.status)) {
+    return true;
+  }
+  
+  // If match is finished or not scheduled
+  if (['FT', 'AET', 'CANC', 'PST'].includes(match.status)) {
+    return false;
+  }
+  
+  // Check if match should be live based on time
+  const matchTime = new Date(match.date).getTime();
+  const now = Date.now();
+  const matchDuration = 2 * 60 * 60 * 1000; // 2 hours (90 min + halftime + extra)
+  
+  // Match is live if: current time is after kickoff AND within match duration
+  return now >= matchTime && now <= (matchTime + matchDuration);
+}
+
+/**
+ * Get dynamic match status based on time
+ */
+function getDynamicMatchStatus(match) {
+  if (['FT', 'AET', 'CANC', 'PST'].includes(match.status)) {
+    return match.status;
+  }
+  
+  const matchTime = new Date(match.date).getTime();
+  const now = Date.now();
+  const elapsed = now - matchTime;
+  
+  if (elapsed < 0) {
+    return 'NS'; // Not started
+  }
+  
+  const minutes = Math.floor(elapsed / 60000);
+  
+  if (minutes <= 45) {
+    return '1H';
+  } else if (minutes <= 60) {
+    return 'HT';
+  } else if (minutes <= 105) {
+    return '2H';
+  } else {
+    // Match should be finished - keep original status or mark as needing update
+    return match.status === 'NS' ? 'LIVE' : match.status;
+  }
+}
+
+/**
+ * AFCON 2025 Complete Schedule with known results
+ */
+const AFCON_2025_SCHEDULE = [
+  // GROUP A
+  { id: 'A1', group: 'A', homeTeam: 'Morocco', awayTeam: 'Comoros', date: '2025-12-21T20:00:00+01:00', venue: 'Rabat', homeScore: 2, awayScore: 0, status: 'FT' },
+  { id: 'A2', group: 'A', homeTeam: 'Mali', awayTeam: 'Zambia', date: '2025-12-22T15:00:00+01:00', venue: 'Casablanca', homeScore: 1, awayScore: 1, status: 'FT' },
+  { id: 'A3', group: 'A', homeTeam: 'Zambia', awayTeam: 'Comoros', date: '2025-12-26T18:30:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'A4', group: 'A', homeTeam: 'Morocco', awayTeam: 'Mali', date: '2025-12-26T21:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'A5', group: 'A', homeTeam: 'Zambia', awayTeam: 'Morocco', date: '2025-12-29T20:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'A6', group: 'A', homeTeam: 'Comoros', awayTeam: 'Mali', date: '2025-12-29T20:00:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  // GROUP B
+  { id: 'B1', group: 'B', homeTeam: 'South Africa', awayTeam: 'Angola', date: '2025-12-22T18:00:00+01:00', venue: 'Marrakesh', homeScore: 2, awayScore: 1, status: 'FT' },
+  { id: 'B2', group: 'B', homeTeam: 'Egypt', awayTeam: 'Zimbabwe', date: '2025-12-22T21:00:00+01:00', venue: 'Agadir', homeScore: 2, awayScore: 1, status: 'FT' },
+  { id: 'B3', group: 'B', homeTeam: 'Angola', awayTeam: 'Zimbabwe', date: '2025-12-26T13:30:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'B4', group: 'B', homeTeam: 'Egypt', awayTeam: 'South Africa', date: '2025-12-26T16:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'B5', group: 'B', homeTeam: 'Angola', awayTeam: 'Egypt', date: '2025-12-29T17:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'B6', group: 'B', homeTeam: 'Zimbabwe', awayTeam: 'South Africa', date: '2025-12-29T17:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  // GROUP C
+  { id: 'C1', group: 'C', homeTeam: 'Nigeria', awayTeam: 'Tanzania', date: '2025-12-23T18:30:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C2', group: 'C', homeTeam: 'Tunisia', awayTeam: 'Uganda', date: '2025-12-23T21:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C3', group: 'C', homeTeam: 'Uganda', awayTeam: 'Tanzania', date: '2025-12-27T18:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C4', group: 'C', homeTeam: 'Nigeria', awayTeam: 'Tunisia', date: '2025-12-27T21:00:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C5', group: 'C', homeTeam: 'Uganda', awayTeam: 'Nigeria', date: '2025-12-30T17:00:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C6', group: 'C', homeTeam: 'Tanzania', awayTeam: 'Tunisia', date: '2025-12-30T17:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  // GROUP D
+  { id: 'D1', group: 'D', homeTeam: 'DR Congo', awayTeam: 'Benin', date: '2025-12-23T13:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D2', group: 'D', homeTeam: 'Senegal', awayTeam: 'Botswana', date: '2025-12-23T16:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D3', group: 'D', homeTeam: 'Benin', awayTeam: 'Botswana', date: '2025-12-27T13:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D4', group: 'D', homeTeam: 'Senegal', awayTeam: 'DR Congo', date: '2025-12-27T16:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D5', group: 'D', homeTeam: 'Benin', awayTeam: 'Senegal', date: '2025-12-30T20:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D6', group: 'D', homeTeam: 'Botswana', awayTeam: 'DR Congo', date: '2025-12-30T20:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  // GROUP E
+  { id: 'E1', group: 'E', homeTeam: 'Burkina Faso', awayTeam: 'Equatorial Guinea', date: '2025-12-24T13:30:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'E2', group: 'E', homeTeam: 'Algeria', awayTeam: 'Sudan', date: '2025-12-24T16:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'E3', group: 'E', homeTeam: 'Equatorial Guinea', awayTeam: 'Sudan', date: '2025-12-28T16:00:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'E4', group: 'E', homeTeam: 'Algeria', awayTeam: 'Burkina Faso', date: '2025-12-28T18:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'E5', group: 'E', homeTeam: 'Equatorial Guinea', awayTeam: 'Algeria', date: '2025-12-31T17:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'E6', group: 'E', homeTeam: 'Sudan', awayTeam: 'Burkina Faso', date: '2025-12-31T17:00:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  // GROUP F
+  { id: 'F1', group: 'F', homeTeam: 'Ivory Coast', awayTeam: 'Mozambique', date: '2025-12-24T18:30:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'F2', group: 'F', homeTeam: 'Cameroon', awayTeam: 'Gabon', date: '2025-12-24T21:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'F3', group: 'F', homeTeam: 'Gabon', awayTeam: 'Mozambique', date: '2025-12-28T13:30:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'F4', group: 'F', homeTeam: 'Ivory Coast', awayTeam: 'Cameroon', date: '2025-12-28T21:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'F5', group: 'F', homeTeam: 'Gabon', awayTeam: 'Ivory Coast', date: '2025-12-31T20:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'F6', group: 'F', homeTeam: 'Mozambique', awayTeam: 'Cameroon', date: '2025-12-31T20:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  // KNOCKOUT ROUNDS (TBD teams)
+  { id: 'R16-1', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-03T17:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-2', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-03T20:00:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-3', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-04T17:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-4', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-04T20:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-5', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-05T17:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-6', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-05T20:00:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-7', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-06T17:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'R16-8', round: 'Round of 16', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-06T20:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'QF1', round: 'Quarter-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-09T17:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'QF2', round: 'Quarter-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-09T20:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'QF3', round: 'Quarter-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-10T17:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'QF4', round: 'Quarter-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-10T20:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'SF1', round: 'Semi-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-14T18:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'SF2', round: 'Semi-final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-14T21:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: '3RD', round: 'Third Place', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-17T17:00:00+01:00', venue: 'Casablanca', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'FINAL', round: 'Final', homeTeam: 'TBD', awayTeam: 'TBD', date: '2026-01-18T20:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+];
+
+/**
+ * Calculate standings from match results
+ */
+function calculateStandingsFromMatches(matches) {
+  const standings = {};
+  
+  for (const [group, teams] of Object.entries(AFCON_GROUPS)) {
+    standings[group] = teams.map(team => ({
+      team,
+      ...getTeamInfo(team),
+      played: 0, won: 0, draw: 0, lost: 0,
+      goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0
+    }));
+  }
+  
+  matches.filter(m => m.status === 'FT' && m.group).forEach(match => {
+    const group = standings[match.group];
+    if (!group) return;
+    
+    const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name;
+    const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name;
+    
+    const home = group.find(t => t.team === homeTeamName);
+    const away = group.find(t => t.team === awayTeamName);
+    if (!home || !away || match.homeScore === null) return;
+    
+    home.played++; away.played++;
+    home.goalsFor += match.homeScore;
+    home.goalsAgainst += match.awayScore;
+    away.goalsFor += match.awayScore;
+    away.goalsAgainst += match.homeScore;
+    
+    if (match.homeScore > match.awayScore) {
+      home.won++; home.points += 3; away.lost++;
+    } else if (match.homeScore < match.awayScore) {
+      away.won++; away.points += 3; home.lost++;
+    } else {
+      home.draw++; away.draw++; home.points++; away.points++;
+    }
+    
+    home.goalDiff = home.goalsFor - home.goalsAgainst;
+    away.goalDiff = away.goalsFor - away.goalsAgainst;
+  });
+  
+  for (const group of Object.values(standings)) {
+    group.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+      return b.goalsFor - a.goalsFor;
+    });
+    group.forEach((team, i) => team.position = i + 1);
+  }
+  
+  return standings;
+}
+
+/**
+ * Get AFCON 2025 data - returns fixtures, standings, and live matches
+ */
+exports.getAfconData = onCall(async (request) => {
+  try {
+    logger.info('Fetching AFCON 2025 data');
+    
+    // Check Firestore cache
+    const cacheDoc = await db.collection(AFCON_COLLECTION).doc('latest').get();
+    const cacheData = cacheDoc.exists ? cacheDoc.data() : null;
+    const cacheAge = cacheData?.updatedAt ? Date.now() - cacheData.updatedAt.toMillis() : Infinity;
+    
+    // Use cache if less than 2 minutes old, but always recalculate live status
+    if (cacheData && cacheAge < 2 * 60 * 1000) {
+      logger.info('Returning cached AFCON data with updated live status');
+      
+      // Recalculate live status from cached fixtures
+      const updatedFixtures = (cacheData.fixtures || []).map(fixture => {
+        // Find original match to check live status
+        const originalMatch = AFCON_2025_SCHEDULE.find(m => m.id === fixture.id);
+        if (!originalMatch) return fixture;
+        
+        const isLive = isMatchCurrentlyLive(originalMatch);
+        const dynamicStatus = isLive ? getDynamicMatchStatus(originalMatch) : fixture.status;
+        
+        return {
+          ...fixture,
+          status: dynamicStatus,
+          isLive: isLive
+        };
+      });
+      
+      const liveMatches = updatedFixtures.filter(f => f.isLive);
+      
+      return {
+        success: true,
+        fixtures: updatedFixtures,
+        standings: cacheData.standings || {},
+        liveMatches: liveMatches,
+        updatedAt: cacheData.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        cached: true
+      };
+    }
+    
+    // Try to fetch live data from web scrapers
+    let scrapedData = [];
+    try {
+      scrapedData = await fetchLiveAfconData();
+    } catch (e) {
+      logger.warn('Scraping failed, using schedule data:', e.message);
+    }
+    
+    // Merge scraped data with schedule
+    const mergedSchedule = mergeScrapedDataWithSchedule(scrapedData, AFCON_2025_SCHEDULE);
+    
+    // Format fixtures with dynamic live detection
+    const fixtures = mergedSchedule.map(match => {
+      const isLive = match.isLive || isMatchCurrentlyLive(match);
+      const dynamicStatus = isLive ? getDynamicMatchStatus(match) : match.status;
+      
+      return {
+        id: match.id,
+        homeTeam: { name: match.homeTeam, ...getTeamInfo(match.homeTeam) },
+        awayTeam: { name: match.awayTeam, ...getTeamInfo(match.awayTeam) },
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        date: match.date,
+        venue: match.venue,
+        group: match.group,
+        round: match.round || (match.group ? `Group ${match.group}` : null),
+        status: dynamicStatus,
+        isLive: isLive
+      };
+    });
+    
+    // Calculate standings from merged data
+    const standings = calculateStandingsFromMatches(mergedSchedule);
+    
+    // Find live matches
+    const liveMatches = fixtures.filter(f => f.isLive);
+    
+    const result = {
+      success: true,
+      fixtures,
+      standings,
+      liveMatches,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Cache the result
+    await db.collection(AFCON_COLLECTION).doc('latest').set({
+      ...result,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return result;
+    
+  } catch (error) {
+    logger.error('Error in getAfconData:', error.message);
+    
+    // Return fallback data with live detection
+    const fixtures = AFCON_2025_SCHEDULE.map(match => {
+      const isLive = isMatchCurrentlyLive(match);
+      const dynamicStatus = isLive ? getDynamicMatchStatus(match) : match.status;
+      
+      return {
+        id: match.id,
+        homeTeam: { name: match.homeTeam, ...getTeamInfo(match.homeTeam) },
+        awayTeam: { name: match.awayTeam, ...getTeamInfo(match.awayTeam) },
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        date: match.date,
+        venue: match.venue,
+        group: match.group,
+        round: match.round || (match.group ? `Group ${match.group}` : null),
+        status: dynamicStatus,
+        isLive: isLive
+      };
+    });
+    
+    const liveMatches = fixtures.filter(f => f.isLive);
+    
+    return {
+      success: true,
+      fixtures,
+      standings: calculateStandingsFromMatches(AFCON_2025_SCHEDULE),
+      liveMatches,
+      updatedAt: new Date().toISOString(),
+      error: error.message
+    };
+  }
+});
+
+/**
+ * Admin function to update a match result
+ */
+exports.updateAfconMatch = onCall(async (request) => {
+  if (!request.auth?.token?.admin) {
+    throw new Error('Admin access required');
+  }
+  
+  const { matchId, homeScore, awayScore, status } = request.data;
+  if (!matchId) throw new Error('Match ID required');
+  
+  try {
+    // Update in hardcoded schedule (for this session)
+    const match = AFCON_2025_SCHEDULE.find(m => m.id === matchId);
+    if (match) {
+      if (homeScore !== undefined) match.homeScore = homeScore;
+      if (awayScore !== undefined) match.awayScore = awayScore;
+      if (status) match.status = status;
+    }
+    
+    // Update cache
+    const fixtures = AFCON_2025_SCHEDULE.map(m => ({
+      id: m.id,
+      homeTeam: { name: m.homeTeam, ...getTeamInfo(m.homeTeam) },
+      awayTeam: { name: m.awayTeam, ...getTeamInfo(m.awayTeam) },
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      date: m.date,
+      venue: m.venue,
+      group: m.group,
+      round: m.round || (m.group ? `Group ${m.group}` : null),
+      status: m.status,
+      isLive: m.status === 'LIVE'
+    }));
+    
+    await db.collection(AFCON_COLLECTION).doc('latest').set({
+      fixtures,
+      standings: calculateStandingsFromMatches(AFCON_2025_SCHEDULE),
+      liveMatches: fixtures.filter(f => f.isLive),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return { success: true, message: 'Match updated' };
+  } catch (error) {
+    logger.error('Error updating match:', error.message);
+    throw error;
+  }
+});
