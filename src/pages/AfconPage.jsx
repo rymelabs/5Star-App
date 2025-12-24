@@ -291,7 +291,7 @@ const AfconPage = () => {
             <img 
               src="/AFCON.webp" 
               alt="AFCON 2025" 
-              className="w-24 h-24 object-contain mb-4 drop-shadow-2xl"
+              className="w-36 h-36 object-contain mb-4 drop-shadow-2xl"
             />
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-medium text-white/90 mb-3">
               <MapPin className="w-3 h-3" />
