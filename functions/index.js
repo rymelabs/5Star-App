@@ -1316,15 +1316,15 @@ const AFCON_2025_SCHEDULE = [
   { id: 'B5', group: 'B', homeTeam: 'Angola', awayTeam: 'Egypt', date: '2025-12-29T17:00:00+01:00', venue: 'Agadir', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'B6', group: 'B', homeTeam: 'Zimbabwe', awayTeam: 'South Africa', date: '2025-12-29T17:00:00+01:00', venue: 'Marrakesh', homeScore: null, awayScore: null, status: 'NS' },
   // GROUP C
-  { id: 'C1', group: 'C', homeTeam: 'Nigeria', awayTeam: 'Tanzania', date: '2025-12-23T18:30:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
-  { id: 'C2', group: 'C', homeTeam: 'Tunisia', awayTeam: 'Uganda', date: '2025-12-23T21:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'C1', group: 'C', homeTeam: 'Nigeria', awayTeam: 'Tanzania', date: '2025-12-23T18:30:00+01:00', venue: 'Fez', homeScore: 2, awayScore: 0, status: 'FT' },
+  { id: 'C2', group: 'C', homeTeam: 'Tunisia', awayTeam: 'Uganda', date: '2025-12-23T21:00:00+01:00', venue: 'Rabat', homeScore: 1, awayScore: 1, status: 'FT' },
   { id: 'C3', group: 'C', homeTeam: 'Uganda', awayTeam: 'Tanzania', date: '2025-12-27T18:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'C4', group: 'C', homeTeam: 'Nigeria', awayTeam: 'Tunisia', date: '2025-12-27T21:00:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'C5', group: 'C', homeTeam: 'Uganda', awayTeam: 'Nigeria', date: '2025-12-30T17:00:00+01:00', venue: 'Fez', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'C6', group: 'C', homeTeam: 'Tanzania', awayTeam: 'Tunisia', date: '2025-12-30T17:00:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
   // GROUP D
-  { id: 'D1', group: 'D', homeTeam: 'DR Congo', awayTeam: 'Benin', date: '2025-12-23T13:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
-  { id: 'D2', group: 'D', homeTeam: 'Senegal', awayTeam: 'Botswana', date: '2025-12-23T16:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
+  { id: 'D1', group: 'D', homeTeam: 'DR Congo', awayTeam: 'Benin', date: '2025-12-23T13:30:00+01:00', venue: 'Rabat', homeScore: 1, awayScore: 0, status: 'FT' },
+  { id: 'D2', group: 'D', homeTeam: 'Senegal', awayTeam: 'Botswana', date: '2025-12-23T16:00:00+01:00', venue: 'Tangier', homeScore: 3, awayScore: 0, status: 'FT' },
   { id: 'D3', group: 'D', homeTeam: 'Benin', awayTeam: 'Botswana', date: '2025-12-27T13:30:00+01:00', venue: 'Rabat', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'D4', group: 'D', homeTeam: 'Senegal', awayTeam: 'DR Congo', date: '2025-12-27T16:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
   { id: 'D5', group: 'D', homeTeam: 'Benin', awayTeam: 'Senegal', date: '2025-12-30T20:00:00+01:00', venue: 'Tangier', homeScore: null, awayScore: null, status: 'NS' },
@@ -1434,28 +1434,44 @@ exports.getAfconData = onCall(async (request) => {
     if (cacheData && cacheAge < 2 * 60 * 1000) {
       logger.info('Returning cached AFCON data with updated live status');
       
-      // Recalculate live status from cached fixtures
-      const updatedFixtures = (cacheData.fixtures || []).map(fixture => {
-        // Find original match to check live status
-        const originalMatch = AFCON_2025_SCHEDULE.find(m => m.id === fixture.id);
-        if (!originalMatch) return fixture;
+      // Recalculate live status from cached fixtures, but use fresh schedule data for scores
+      const updatedFixtures = AFCON_2025_SCHEDULE.map(scheduleMatch => {
+        // Check if there's cached data with live updates for this match
+        const cachedMatch = (cacheData.fixtures || []).find(f => f.id === scheduleMatch.id);
         
-        const isLive = isMatchCurrentlyLive(originalMatch);
-        const dynamicStatus = isLive ? getDynamicMatchStatus(originalMatch) : fixture.status;
+        const isLive = isMatchCurrentlyLive(scheduleMatch);
+        const dynamicStatus = isLive ? getDynamicMatchStatus(scheduleMatch) : scheduleMatch.status;
+        
+        // Use cached scores if they exist and are from live API, otherwise use schedule
+        const homeScore = cachedMatch?.homeScore ?? scheduleMatch.homeScore;
+        const awayScore = cachedMatch?.awayScore ?? scheduleMatch.awayScore;
+        const status = cachedMatch?.isLive ? (cachedMatch.elapsed ? `${cachedMatch.elapsed}'` : dynamicStatus) : (scheduleMatch.status === 'FT' ? 'FT' : dynamicStatus);
         
         return {
-          ...fixture,
-          status: dynamicStatus,
-          isLive: isLive
+          id: scheduleMatch.id,
+          homeTeam: { name: scheduleMatch.homeTeam, ...getTeamInfo(scheduleMatch.homeTeam) },
+          awayTeam: { name: scheduleMatch.awayTeam, ...getTeamInfo(scheduleMatch.awayTeam) },
+          homeScore: homeScore,
+          awayScore: awayScore,
+          elapsed: cachedMatch?.elapsed ?? null,
+          date: scheduleMatch.date,
+          venue: scheduleMatch.venue,
+          group: scheduleMatch.group,
+          round: scheduleMatch.round || (scheduleMatch.group ? `Group ${scheduleMatch.group}` : null),
+          status: status,
+          isLive: isLive || (cachedMatch?.isLive || false)
         };
       });
       
       const liveMatches = updatedFixtures.filter(f => f.isLive);
       
+      // Always recalculate standings from current schedule to ensure consistency
+      const standings = calculateStandingsFromMatches(AFCON_2025_SCHEDULE);
+      
       return {
         success: true,
         fixtures: updatedFixtures,
-        standings: cacheData.standings || {},
+        standings: standings,
         liveMatches: liveMatches,
         updatedAt: cacheData.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         cached: true
