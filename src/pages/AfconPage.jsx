@@ -125,7 +125,7 @@ const AfconPage = () => {
           {/* Home Team */}
           <div className="flex-1 flex flex-col items-center gap-3 group-hover:transform group-hover:-translate-x-1 transition-transform duration-300">
             <div className="relative">
-              <div className="text-5xl filter drop-shadow-lg">{match.homeTeam.flag}</div>
+              <div className="text-7xl flag-emoji filter drop-shadow-lg">{match.homeTeam.flag}</div>
               {isLive && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#008751] rounded-full border-2 border-[#121212]" />}
             </div>
             <span className="text-sm font-bold text-white text-center leading-tight">{match.homeTeam.name}</span>
@@ -159,7 +159,7 @@ const AfconPage = () => {
           {/* Away Team */}
           <div className="flex-1 flex flex-col items-center gap-3 group-hover:transform group-hover:translate-x-1 transition-transform duration-300">
             <div className="relative">
-              <div className="text-5xl filter drop-shadow-lg">{match.awayTeam.flag}</div>
+              <div className="text-7xl flag-emoji filter drop-shadow-lg">{match.awayTeam.flag}</div>
               {isLive && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#008751] rounded-full border-2 border-[#121212]" />}
             </div>
             <span className="text-sm font-bold text-white text-center leading-tight">{match.awayTeam.name}</span>
@@ -220,7 +220,7 @@ const AfconPage = () => {
                       {team.position}
                     </span>
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl filter drop-shadow-md transition-transform group-hover:scale-110 duration-200">{team.flag}</span>
+                      <span className="text-4xl flag-emoji-sm filter drop-shadow-md transition-transform group-hover:scale-110 duration-200">{team.flag}</span>
                       <span className={`font-semibold ${idx < 2 ? 'text-white' : 'text-gray-300'}`}>
                         {team.team}
                       </span>
