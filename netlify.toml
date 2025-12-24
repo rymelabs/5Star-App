@@ -1,4 +1,9 @@
+[build]
+  # Firebase API keys are designed to be public (security is handled by Firebase Rules)
+  # Exclude the AIza prefix pattern from secret scanning
+  environment = { SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza" }
+
 [[redirects]]
-from="/*"
-to = "/index.html"
-status = 200
+  from = "/*"
+  to = "/index.html"
+  status = 200
