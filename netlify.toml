@@ -1,7 +1,10 @@
 [build]
+  # No build command here - set in Netlify UI
+
+[build.environment]
   # Firebase API keys are designed to be public (security is handled by Firebase Rules)
-  # Exclude the AIza prefix pattern from secret scanning
-  environment = { SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza" }
+  # Disable smart detection to allow Firebase API keys (AIza prefix)
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza"
 
 [[redirects]]
   from = "/*"
