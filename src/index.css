@@ -197,6 +197,17 @@
     transform: translateY(0) scale(1);
     animation: nav-pulse 1.8s ease-in-out infinite;
   }
+
+  /* Ensure emoji flags keep intended size despite compact text overrides */
+  .flag-emoji {
+    font-size: 2.88rem !important;
+    line-height: 1 !important;
+  }
+
+  .flag-emoji-sm {
+    font-size: 1.6rem !important;
+    line-height: 1 !important;
+  }
   
   .nav-icon,
   .nav-label {
