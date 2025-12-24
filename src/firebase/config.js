@@ -4,8 +4,10 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
+const apiKeyB64 = import.meta.env.VITE_FIREBASE_API_KEY_B64 || '';
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  apiKey: apiKeyB64 ? atob(apiKeyB64) : '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
@@ -112,6 +114,9 @@ export const getFirebaseFunctions = () => {
   }
   return functions;
 };
+
+// Expose raw config (without hardcoded secrets) for service worker initialization
+export const getFirebaseClientConfig = () => ({ ...firebaseConfig });
 
 // Direct exports (may be null if not initialized)
 export { auth, db, storage, functions };

@@ -16,21 +16,26 @@ self.addEventListener('activate', (event) => {
 // Pass-through fetch handler so the SW is considered an app SW by more user agents.
 self.addEventListener('fetch', () => {});
 
-// Initialize the Firebase app in the service worker
-// Firebase web config values are not secrets; they identify the project.
-firebase.initializeApp({
-  apiKey: "AIzaSyBdtawVAtXKwyA1F8sqzNK5TbjbAHS1QYQ",
-  authDomain: "starsapp-e27d1.firebaseapp.com",
-  projectId: "starsapp-e27d1",
-  storageBucket: "starsapp-e27d1.firebasestorage.app",
-  messagingSenderId: "1062173096121",
-  appId: "1:1062173096121:web:f7fb86663e1924ff470368"
+// Firebase config will be provided at runtime from the main app (no hardcoded keys here).
+let messaging = null;
+let firebaseInitialized = false;
+
+// Receive config from the main thread and initialize lazily.
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'INIT_FIREBASE' && event.data.config && !firebaseInitialized) {
+    try {
+      firebase.initializeApp(event.data.config);
+      messaging = firebase.messaging();
+      firebaseInitialized = true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to init Firebase in SW:', err);
+    }
+  }
 });
 
-const messaging = firebase.messaging();
-
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
+// Handle background messages (only after messaging is initialized)
+const handleBackgroundMessage = (payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
   // Customize notification
@@ -48,6 +53,13 @@ messaging.onBackgroundMessage((payload) => {
 
   // Show notification
   self.registration.showNotification(notificationTitle, notificationOptions);
+};
+
+// Wire background handler when messaging becomes available
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'INIT_FIREBASE' && messaging && firebaseInitialized) {
+    messaging.onBackgroundMessage(handleBackgroundMessage);
+  }
 });
 
 // Handle notification click
