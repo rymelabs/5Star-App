@@ -4,10 +4,12 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
+// Support both base64-encoded key (for Netlify) and plain key (for local dev / Firebase Hosting)
 const apiKeyB64 = import.meta.env.VITE_FIREBASE_API_KEY_B64 || '';
+const apiKeyPlain = import.meta.env.VITE_FIREBASE_API_KEY || '';
 
 const firebaseConfig = {
-  apiKey: apiKeyB64 ? atob(apiKeyB64) : '',
+  apiKey: apiKeyB64 ? atob(apiKeyB64) : apiKeyPlain,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',

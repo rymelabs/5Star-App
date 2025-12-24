@@ -135,9 +135,9 @@ const AfconPage = () => {
           <div className="px-6 flex flex-col items-center min-w-[100px]">
             {isFinished || isLive ? (
               <div className="flex items-center gap-3 text-3xl font-black text-white tracking-tight">
-                <span>{match.homeScore}</span>
+                <span>{match.homeScore ?? 0}</span>
                 <span className="text-gray-600 text-xl">:</span>
-                <span>{match.awayScore}</span>
+                <span>{match.awayScore ?? 0}</span>
               </div>
             ) : (
               <div className="text-2xl font-bold text-white/90 tracking-tight">
