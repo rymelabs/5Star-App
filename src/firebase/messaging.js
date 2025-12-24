@@ -1,5 +1,5 @@
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import { getFirebaseApp } from './config';
+import { getFirebaseApp, getFirebaseClientConfig } from './config';
 
 let messaging = null;
 let messagingSupported = null;
@@ -93,12 +93,19 @@ export const requestNotificationPermission = async () => {
 
     // Register service worker first
     try {
-      await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         scope: '/'
       });
 
-      // Wait for service worker to be ready
-      await navigator.serviceWorker.ready;
+      // Wait for service worker to be ready and send runtime config (avoids hardcoded keys in SW)
+      const readyRegistration = await navigator.serviceWorker.ready;
+      const activeSw = readyRegistration.active || registration.active;
+      if (activeSw) {
+        activeSw.postMessage({
+          type: 'INIT_FIREBASE',
+          config: getFirebaseClientConfig(),
+        });
+      }
     } catch (swError) {
       
       // Still allow enabling for development

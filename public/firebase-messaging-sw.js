@@ -16,21 +16,26 @@ self.addEventListener('activate', (event) => {
 // Pass-through fetch handler so the SW is considered an app SW by more user agents.
 self.addEventListener('fetch', () => {});
 
-// Initialize the Firebase app in the service worker
-// Firebase web config values are not secrets; they identify the project.
-firebase.initializeApp({
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+// Firebase config will be provided at runtime from the main app (no hardcoded keys here).
+let messaging = null;
+let firebaseInitialized = false;
+
+// Receive config from the main thread and initialize lazily.
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'INIT_FIREBASE' && event.data.config && !firebaseInitialized) {
+    try {
+      firebase.initializeApp(event.data.config);
+      messaging = firebase.messaging();
+      firebaseInitialized = true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to init Firebase in SW:', err);
+    }
+  }
 });
 
-const messaging = firebase.messaging();
-
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
+// Handle background messages (only after messaging is initialized)
+const handleBackgroundMessage = (payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
   // Customize notification
@@ -48,6 +53,13 @@ messaging.onBackgroundMessage((payload) => {
 
   // Show notification
   self.registration.showNotification(notificationTitle, notificationOptions);
+};
+
+// Wire background handler when messaging becomes available
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'INIT_FIREBASE' && messaging && firebaseInitialized) {
+    messaging.onBackgroundMessage(handleBackgroundMessage);
+  }
 });
 
 // Handle notification click
