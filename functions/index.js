@@ -1,5 +1,6 @@
 const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const logger = require("firebase-functions/logger");
@@ -8,6 +9,9 @@ const logger = require("firebase-functions/logger");
 admin.initializeApp();
 
 const db = admin.firestore();
+// Allow undefined values to be stored as null in Firestore
+db.settings({ ignoreUndefinedProperties: true });
+
 const messaging = admin.messaging();
 
 // Configure email transporter (using Gmail as example)
@@ -988,135 +992,150 @@ exports.notifyUpcomingMatches = onSchedule("every 1 hours", async (_event) => {
 });
 
 // ============================================================================
-// AFCON 2025 WEB SCRAPER - LIVE SCORES, FIXTURES & STANDINGS
-// Scrapes data from multiple sources with fallback to hardcoded schedule
+// AFCON 2025 LIVE SCORES API - POWERED BY API-FOOTBALL
+// Real-time scores, fixtures & standings from official API
 // ============================================================================
 
-const {onCall} = require("firebase-functions/v2/https");
+// Note: onCall and onSchedule are already imported at top of file
 const axios = require("axios");
-const cheerio = require("cheerio");
+
+// API-Football configuration
+const API_FOOTBALL_KEY = '56200c0bdfaa4c5a82f724ead21ad14f';
+const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
+const AFCON_LEAGUE_ID = 6; // Africa Cup of Nations
+const AFCON_SEASON = 2025;
 
 // Firestore collection for AFCON data cache
 const AFCON_COLLECTION = "afcon2025";
 
 /**
- * Scrape live AFCON data from Google Search results
- * This function attempts to get live scores by scraping Google's sports data
+ * Fetch ALL currently live matches from API-Football
+ * Free plan allows live=all endpoint (but not season-specific queries)
  */
-async function scrapeGoogleAfconScores() {
+async function fetchAllLiveMatches() {
   try {
-    const response = await axios.get('https://www.google.com/search?q=afcon+2025+live+scores', {
+    logger.info('Fetching all live matches from API-Football...');
+    
+    const response = await axios.get(`https://${API_FOOTBALL_HOST}/fixtures`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
+        'x-apisports-key': API_FOOTBALL_KEY,
+        'x-apisports-host': API_FOOTBALL_HOST
       },
-      timeout: 5000
+      params: {
+        live: 'all'  // Free plan supports this!
+      },
+      timeout: 10000
     });
     
-    const $ = cheerio.load(response.data);
-    const matches = [];
+    if (!response.data?.response) {
+      logger.warn('No data in API-Football response');
+      return [];
+    }
     
-    // Google sports cards have specific class patterns
-    $('[data-attrid*="match"], .imso_mh__lg-st-cn').each((i, el) => {
-      const homeTeam = $(el).find('.imso_mh__first-tn-sc, .imso_mh__tm-nm').first().text().trim();
-      const awayTeam = $(el).find('.imso_mh__second-tn-sc, .imso_mh__tm-nm').last().text().trim();
-      const homeScore = $(el).find('.imso_mh__l-tm-sc').text().trim();
-      const awayScore = $(el).find('.imso_mh__r-tm-sc').text().trim();
-      const status = $(el).find('.imso_mh__ft-mtch, .imso_mh__lg-st-txt').text().trim();
+    // Filter only AFCON matches (league ID 6)
+    const afconMatches = response.data.response.filter(
+      fixture => fixture.league.id === AFCON_LEAGUE_ID
+    );
+    
+    const matches = afconMatches.map(fixture => {
+      const isLive = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE', 'BT'].includes(fixture.fixture.status.short);
+      const isFinished = ['FT', 'AET', 'PEN'].includes(fixture.fixture.status.short);
       
-      if (homeTeam && awayTeam) {
-        matches.push({
-          homeTeam: normalizeTeamName(homeTeam),
-          awayTeam: normalizeTeamName(awayTeam),
-          homeScore: parseInt(homeScore) || null,
-          awayScore: parseInt(awayScore) || null,
-          status: status.includes('FT') ? 'FT' : status.includes('HT') ? 'HT' : status.includes('Live') ? 'LIVE' : 'NS',
-          isLive: status.toLowerCase().includes('live') || /^\d+[\'′]$/.test(status)
-        });
-      }
+      return {
+        apiId: fixture.fixture.id,
+        homeTeam: normalizeTeamName(fixture.teams.home.name),
+        awayTeam: normalizeTeamName(fixture.teams.away.name),
+        homeScore: fixture.goals.home ?? null,
+        awayScore: fixture.goals.away ?? null,
+        date: fixture.fixture.date,
+        venue: fixture.fixture.venue?.name || 'TBD',
+        status: fixture.fixture.status.short,
+        elapsed: fixture.fixture.status.elapsed ?? null,
+        isLive,
+        isFinished,
+        homeLogo: fixture.teams.home.logo,
+        awayLogo: fixture.teams.away.logo
+      };
     });
     
+    logger.info(`Got ${matches.length} live AFCON matches from API-Football`);
     return matches;
   } catch (error) {
-    logger.warn('Google scraping failed:', error.message);
+    logger.error('API-Football live request failed:', error.message);
     return [];
   }
 }
 
 /**
- * Scrape AFCON data from FlashScore API (free, no auth required for basic data)
+ * Fetch today's live matches from API-Football
  */
-async function scrapeFlashScoreAfcon() {
+async function fetchLiveMatches() {
   try {
-    // FlashScore API endpoint for Africa Cup of Nations
-    const response = await axios.get('https://flashscore.com/football/africa/africa-cup-of-nations/', {
+    const response = await axios.get(`https://${API_FOOTBALL_HOST}/fixtures`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
+        'x-apisports-key': API_FOOTBALL_KEY,
+        'x-apisports-host': API_FOOTBALL_HOST
       },
-      timeout: 8000
+      params: {
+        league: AFCON_LEAGUE_ID,
+        season: AFCON_SEASON,
+        live: 'all'
+      },
+      timeout: 10000
     });
     
-    const $ = cheerio.load(response.data);
-    const matches = [];
+    if (!response.data?.response) {
+      return [];
+    }
     
-    // Parse match data from page
-    $('.event__match').each((i, el) => {
-      const homeTeam = $(el).find('.event__participant--home').text().trim();
-      const awayTeam = $(el).find('.event__participant--away').text().trim();
-      const homeScore = $(el).find('.event__score--home').text().trim();
-      const awayScore = $(el).find('.event__score--away').text().trim();
-      const stage = $(el).find('.event__stage--block').text().trim();
-      
-      if (homeTeam && awayTeam) {
-        const isLive = stage.includes("'") || stage.toLowerCase().includes('live') || stage === 'HT';
-        matches.push({
-          homeTeam: normalizeTeamName(homeTeam),
-          awayTeam: normalizeTeamName(awayTeam),
-          homeScore: parseInt(homeScore) || null,
-          awayScore: parseInt(awayScore) || null,
-          status: stage.includes('Finished') ? 'FT' : isLive ? 'LIVE' : 'NS',
-          isLive
-        });
-      }
-    });
-    
-    return matches;
+    return response.data.response.map(fixture => ({
+      apiId: fixture.fixture.id,
+      homeTeam: normalizeTeamName(fixture.teams.home.name),
+      awayTeam: normalizeTeamName(fixture.teams.away.name),
+      homeScore: fixture.goals.home ?? null,
+      awayScore: fixture.goals.away ?? null,
+      elapsed: fixture.fixture.status.elapsed ?? null,
+      status: fixture.fixture.status.short,
+      isLive: true
+    }));
   } catch (error) {
-    logger.warn('FlashScore scraping failed:', error.message);
+    logger.warn('Failed to fetch live matches:', error.message);
     return [];
   }
 }
 
 /**
- * Merge scraped data with our schedule
- * Updates scores and status from scraped data while keeping our schedule structure
+ * Merge API data with our schedule
+ * Updates scores and status from API data while keeping our schedule structure
  */
-function mergeScrapedDataWithSchedule(scrapedMatches, schedule) {
-  if (!scrapedMatches || scrapedMatches.length === 0) {
+function mergeApiDataWithSchedule(apiMatches, schedule) {
+  if (!apiMatches || apiMatches.length === 0) {
     return schedule;
   }
   
   return schedule.map(match => {
-    // Find matching scraped data
-    const scraped = scrapedMatches.find(s => 
-      (normalizeTeamName(s.homeTeam) === normalizeTeamName(match.homeTeam) &&
-       normalizeTeamName(s.awayTeam) === normalizeTeamName(match.awayTeam)) ||
-      (normalizeTeamName(s.homeTeam) === normalizeTeamName(match.awayTeam) &&
-       normalizeTeamName(s.awayTeam) === normalizeTeamName(match.homeTeam))
+    // Find matching API data
+    const apiMatch = apiMatches.find(a => 
+      (normalizeTeamName(a.homeTeam) === normalizeTeamName(match.homeTeam) &&
+       normalizeTeamName(a.awayTeam) === normalizeTeamName(match.awayTeam)) ||
+      (normalizeTeamName(a.homeTeam) === normalizeTeamName(match.awayTeam) &&
+       normalizeTeamName(a.awayTeam) === normalizeTeamName(match.homeTeam))
     );
     
-    if (scraped) {
+    if (apiMatch) {
       // Check if home/away are swapped
-      const isSwapped = normalizeTeamName(scraped.homeTeam) === normalizeTeamName(match.awayTeam);
+      const isSwapped = normalizeTeamName(apiMatch.homeTeam) === normalizeTeamName(match.awayTeam);
       
       return {
         ...match,
-        homeScore: isSwapped ? scraped.awayScore : scraped.homeScore,
-        awayScore: isSwapped ? scraped.homeScore : scraped.awayScore,
-        status: scraped.status || match.status,
-        isLive: scraped.isLive || false,
-        scrapedAt: new Date().toISOString()
+        homeScore: isSwapped ? apiMatch.awayScore : apiMatch.homeScore,
+        awayScore: isSwapped ? apiMatch.homeScore : apiMatch.awayScore,
+        status: apiMatch.status || match.status,
+        elapsed: apiMatch.elapsed ?? null,
+        isLive: apiMatch.isLive || false,
+        isFinished: apiMatch.isFinished || false,
+        apiId: apiMatch.apiId,
+        updatedAt: new Date().toISOString()
       };
     }
     
@@ -1125,27 +1144,18 @@ function mergeScrapedDataWithSchedule(scrapedMatches, schedule) {
 }
 
 /**
- * Attempt to fetch live data from multiple sources
+ * Fetch live data from API-Football (primary source)
+ * Uses the live=all endpoint which works on free plan
  */
 async function fetchLiveAfconData() {
-  // Try multiple sources in order of reliability
-  let scrapedData = [];
-  
-  // Try FlashScore first
-  scrapedData = await scrapeFlashScoreAfcon();
-  if (scrapedData.length > 0) {
-    logger.info(`Got ${scrapedData.length} matches from FlashScore`);
-    return scrapedData;
+  // Use the live=all endpoint (works on free plan!)
+  let liveData = await fetchAllLiveMatches();
+  if (liveData.length > 0) {
+    logger.info(`Got ${liveData.length} live AFCON matches from API-Football`);
+    return liveData;
   }
   
-  // Try Google as fallback
-  scrapedData = await scrapeGoogleAfconScores();
-  if (scrapedData.length > 0) {
-    logger.info(`Got ${scrapedData.length} matches from Google`);
-    return scrapedData;
-  }
-  
-  logger.info('No live data from scrapers, using schedule data');
+  logger.info('No live AFCON matches currently, using schedule fallback');
   return [];
 }
 
@@ -1195,12 +1205,21 @@ function normalizeTeamName(name) {
   const normalized = name.trim();
   if (AFCON_TEAMS[normalized]) return normalized;
   
+  // API-Football team name mappings
   const alternatives = {
     'Cote d\'Ivoire': 'Ivory Coast',
     'Côte d\'Ivoire': 'Ivory Coast',
+    'Ivory Coast': 'Ivory Coast',
     'Congo DR': 'DR Congo',
     'Dem. Rep. Congo': 'DR Congo',
-    'Democratic Republic of Congo': 'DR Congo'
+    'Democratic Republic of Congo': 'DR Congo',
+    'Congo': 'DR Congo',
+    'Congo Democratic Republic': 'DR Congo',
+    'Burkina-Faso': 'Burkina Faso',
+    'Equatorial-Guinea': 'Equatorial Guinea',
+    'South-Africa': 'South Africa',
+    'Cape Verde': 'Cape Verde',
+    'Guinea-Bissau': 'Guinea-Bissau'
   };
   return alternatives[normalized] || normalized;
 }
@@ -1443,28 +1462,29 @@ exports.getAfconData = onCall(async (request) => {
       };
     }
     
-    // Try to fetch live data from web scrapers
-    let scrapedData = [];
+    // Try to fetch live data from API-Football
+    let apiData = [];
     try {
-      scrapedData = await fetchLiveAfconData();
+      apiData = await fetchLiveAfconData();
     } catch (e) {
-      logger.warn('Scraping failed, using schedule data:', e.message);
+      logger.warn('API fetch failed, using schedule data:', e.message);
     }
     
-    // Merge scraped data with schedule
-    const mergedSchedule = mergeScrapedDataWithSchedule(scrapedData, AFCON_2025_SCHEDULE);
+    // Merge API data with schedule
+    const mergedSchedule = mergeApiDataWithSchedule(apiData, AFCON_2025_SCHEDULE);
     
     // Format fixtures with dynamic live detection
     const fixtures = mergedSchedule.map(match => {
       const isLive = match.isLive || isMatchCurrentlyLive(match);
-      const dynamicStatus = isLive ? getDynamicMatchStatus(match) : match.status;
+      const dynamicStatus = isLive ? (match.elapsed ? `${match.elapsed}'` : getDynamicMatchStatus(match)) : match.status;
       
       return {
         id: match.id,
         homeTeam: { name: match.homeTeam, ...getTeamInfo(match.homeTeam) },
         awayTeam: { name: match.awayTeam, ...getTeamInfo(match.awayTeam) },
-        homeScore: match.homeScore,
-        awayScore: match.awayScore,
+        homeScore: match.homeScore ?? null,
+        awayScore: match.awayScore ?? null,
+        elapsed: match.elapsed ?? null,
         date: match.date,
         venue: match.venue,
         group: match.group,
@@ -1578,5 +1598,85 @@ exports.updateAfconMatch = onCall(async (request) => {
   } catch (error) {
     logger.error('Error updating match:', error.message);
     throw error;
+  }
+});
+
+/**
+ * Scheduled function to refresh AFCON scores every 5 minutes
+ * Runs during AFCON tournament period (Dec 21, 2025 - Jan 18, 2026)
+ */
+exports.refreshAfconScores = onSchedule({
+  schedule: 'every 5 minutes',
+  region: 'us-central1',
+  timeZone: 'Africa/Casablanca'
+}, async (event) => {
+  const now = new Date();
+  const tournamentStart = new Date('2025-12-21T00:00:00Z');
+  const tournamentEnd = new Date('2026-01-19T00:00:00Z');
+  
+  // Only run during tournament
+  if (now < tournamentStart || now > tournamentEnd) {
+    logger.info('Outside AFCON tournament period, skipping refresh');
+    return;
+  }
+  
+  // Only run during match hours (10:00 - 23:59 Morocco time)
+  const hour = now.getUTCHours();
+  if (hour < 10 || hour > 23) {
+    logger.info('Outside match hours, skipping refresh');
+    return;
+  }
+  
+  try {
+    logger.info('Scheduled AFCON score refresh starting...');
+    
+    // Fetch latest live data from API (uses live=all which works on free plan)
+    const apiData = await fetchAllLiveMatches();
+    
+    if (apiData.length === 0) {
+      logger.info('No live AFCON matches currently');
+      return;
+    }
+    
+    // Merge with schedule
+    const mergedSchedule = mergeApiDataWithSchedule(apiData, AFCON_2025_SCHEDULE);
+    
+    // Format fixtures
+    const fixtures = mergedSchedule.map(match => {
+      const isLive = match.isLive || isMatchCurrentlyLive(match);
+      const dynamicStatus = isLive ? (match.elapsed ? `${match.elapsed}'` : getDynamicMatchStatus(match)) : match.status;
+      
+      return {
+        id: match.id,
+        homeTeam: { name: match.homeTeam, ...getTeamInfo(match.homeTeam) },
+        awayTeam: { name: match.awayTeam, ...getTeamInfo(match.awayTeam) },
+        homeScore: match.homeScore ?? null,
+        awayScore: match.awayScore ?? null,
+        elapsed: match.elapsed ?? null,
+        date: match.date,
+        venue: match.venue,
+        group: match.group,
+        round: match.round || (match.group ? `Group ${match.group}` : null),
+        status: dynamicStatus,
+        isLive: isLive
+      };
+    });
+    
+    const standings = calculateStandingsFromMatches(mergedSchedule);
+    const liveMatches = fixtures.filter(f => f.isLive);
+    
+    // Update cache
+    await db.collection(AFCON_COLLECTION).doc('latest').set({
+      success: true,
+      fixtures,
+      standings,
+      liveMatches,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    logger.info(`AFCON refresh complete: ${fixtures.length} fixtures, ${liveMatches.length} live`);
+    
+  } catch (error) {
+    logger.error('Scheduled AFCON refresh failed:', error.message);
   }
 });
