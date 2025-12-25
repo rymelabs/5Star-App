@@ -8,7 +8,20 @@ const FootballContext = createContext();
 export const useFootball = () => {
   const context = useContext(FootballContext);
   if (!context) {
-    throw new Error('useFootball must be used within a FootballProvider');
+    // Fallback to prevent hard crash if provider is not mounted (e.g., during HMR/isolated renders)
+    console.warn('⚠️ useFootball called without provider; returning empty context');
+    return {
+      teams: [],
+      fixtures: [],
+      leagueTable: [],
+      leagueSettings: {},
+      leagues: [],
+      activeSeason: null,
+      activeSeasons: [],
+      seasons: [],
+      loading: false,
+      error: 'FootballProvider missing',
+    };
   }
   return context;
 };
