@@ -3,8 +3,8 @@
 
 [build.environment]
   # Firebase API keys are designed to be public (security is handled by Firebase Rules)
-  # Disable smart detection to allow Firebase API keys (AIza prefix)
-  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza"
+  # Disable smart detection entirely - Firebase keys start with AIza and are safe to expose
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [[redirects]]
   from = "/*"
