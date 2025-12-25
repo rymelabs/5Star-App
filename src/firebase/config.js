@@ -5,7 +5,7 @@ import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 // Support both base64-encoded key (for Netlify) and plain key (for local dev / Firebase Hosting)
-// Updated: Dec 25, 2025
+// Updated: Dec 25, 2025 11:19 AM UTC
 const apiKeyB64 = import.meta.env.VITE_FIREBASE_API_KEY_B64 || '';
 const apiKeyPlain = import.meta.env.VITE_FIREBASE_API_KEY || '';
 
