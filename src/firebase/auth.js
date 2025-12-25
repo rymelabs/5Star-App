@@ -6,6 +6,8 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -149,10 +151,25 @@ export const onAuthStateChange = (callback) => {
   });
 };
 
-// Google Sign In
+// Detect if mobile browser
+const isMobileBrowser = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// Google Sign In - uses redirect on mobile for better compatibility
 export const signInWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
+    
+    // On mobile, use redirect instead of popup (popups are often blocked)
+    if (isMobileBrowser()) {
+      // This will redirect away from the page
+      await signInWithRedirect(auth, provider);
+      // The result will be handled by getRedirectResult on page load
+      return null;
+    }
+    
+    // On desktop, use popup
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
@@ -249,6 +266,41 @@ export const updateUserProfile = async (updates) => {
       ...updateData
     };
   } catch (error) {
+    throw error;
+  }
+};
+
+// Handle Google redirect result (call this on app initialization)
+export const handleGoogleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const user = result.user;
+      
+      // Check if user document exists
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // Create user document for new Google user
+        const newUserDoc = {
+          uid: user.uid,
+          name: user.displayName || '',
+          email: user.email,
+          role: 'user',
+          authProvider: 'google',
+          profileCompleted: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, 'users', user.uid), newUserDoc);
+      }
+
+      return user;
+    }
+    return null;
+  } catch (error) {
+    console.error('Google redirect result error:', error);
     throw error;
   }
 };
