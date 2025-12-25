@@ -23,7 +23,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "starsapp-e27d1",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "starsapp-e27d1.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1062173096121",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1062173096121:web:f7fb86663e1924ff470368"
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1062173096121:web:f7fb86663e1924ff470368",
+  measurementId: import.meta.env.VITE_GA_MEASUREMENT_ID || "G-TEXQZBETKG"
 };
 
 //testing for github push
