@@ -7,6 +7,8 @@ import { getFunctions } from 'firebase/functions';
 /**
  * Firebase Configuration
  * 
+ * Uses environment variables with fallback defaults.
+ * 
  * NOTE: Firebase API keys are designed to be PUBLIC and are NOT secrets.
  * Security is enforced through:
  * - Firebase Security Rules (Firestore, Storage)
@@ -16,12 +18,12 @@ import { getFunctions } from 'firebase/functions';
  * See: https://firebase.google.com/docs/projects/api-keys
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBdtawVAtXKwyA1F8sqzNK5TbjbAHS1QYQ",
-  authDomain: "starsapp-e27d1.firebaseapp.com",
-  projectId: "starsapp-e27d1",
-  storageBucket: "starsapp-e27d1.firebasestorage.app",
-  messagingSenderId: "1062173096121",
-  appId: "1:1062173096121:web:f7fb86663e1924ff470368"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBdtawVAtXKwyA1F8sqzNK5TbjbAHS1QYQ",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "starsapp-e27d1.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "starsapp-e27d1",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "starsapp-e27d1.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1062173096121",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1062173096121:web:f7fb86663e1924ff470368"
 };
 
 //testing for github push
