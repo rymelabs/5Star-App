@@ -24,6 +24,7 @@ const firebaseConfig = {
   appId: "1:1062173096121:web:f7fb86663e1924ff470368"
 };
 
+//testing for github push
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
