@@ -1,63 +1,37 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
-// Support both base64-encoded key (for Netlify) and plain key (for local dev / Firebase Hosting)
-// Updated: Dec 25, 2025 11:19 AM UTC
-const apiKeyB64 = import.meta.env.VITE_FIREBASE_API_KEY_B64 || '';
-const apiKeyPlain = import.meta.env.VITE_FIREBASE_API_KEY || '';
-
+/**
+ * Firebase Configuration
+ * 
+ * NOTE: Firebase API keys are designed to be PUBLIC and are NOT secrets.
+ * Security is enforced through:
+ * - Firebase Security Rules (Firestore, Storage)
+ * - Firebase App Check (optional)
+ * - Domain restrictions in Firebase Console
+ * 
+ * See: https://firebase.google.com/docs/projects/api-keys
+ */
 const firebaseConfig = {
-  apiKey: apiKeyB64 ? atob(apiKeyB64) : apiKeyPlain,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+  apiKey: "AIzaSyBdtawVAtXKwyA1F8sqzNK5TbjbAHS1QYQ",
+  authDomain: "starsapp-e27d1.firebaseapp.com",
+  projectId: "starsapp-e27d1",
+  storageBucket: "starsapp-e27d1.firebasestorage.app",
+  messagingSenderId: "1062173096121",
+  appId: "1:1062173096121:web:f7fb86663e1924ff470368"
 };
 
-// Validate configuration
-const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
-const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-if (missingKeys.length > 0) {
-  // Show user-friendly error
-  if (typeof window !== 'undefined') {
-    setTimeout(() => {
-      alert('Firebase configuration is missing. Please check the console for setup instructions.');
-    }, 1000);
-  }
-}
-
-let app = null;
-let auth = null;
-let db = null;
-let storage = null;
-let functions = null;
-
-// Only initialize Firebase if configuration is complete
-if (missingKeys.length === 0) {
-  try {
-    // Initialize Firebase
-    app = initializeApp(firebaseConfig);
-    
-    // Initialize Firebase services
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-    functions = getFunctions(app);
-    
-  } catch (error) {
-    
-    // Create mock objects to prevent crashes
-    auth = null;
-    db = null;
-    storage = null;
-  }
-} else {
-}
+// Initialize Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const functions = getFunctions(app);
 
 // Helper function to check if we're in development
 export const isDevelopment = () => {
@@ -82,45 +56,16 @@ export const getDomainInfo = () => {
   };
 };
 
-// Helper accessors to guarantee initialized services
-export const getFirebaseApp = () => {
-  if (!app) {
-    throw new Error('Firebase app has not been initialized. Ensure environment variables are set correctly.');
-  }
-  return app;
-};
+// Helper accessors for services
+export const getFirebaseApp = () => app;
+export const getFirebaseAuth = () => auth;
+export const getFirebaseDb = () => db;
+export const getFirebaseStorage = () => storage;
+export const getFirebaseFunctions = () => functions;
 
-export const getFirebaseAuth = () => {
-  if (!auth) {
-    throw new Error('Firebase auth has not been initialized. Check Firebase configuration and initialization logic.');
-  }
-  return auth;
-};
-
-export const getFirebaseDb = () => {
-  if (!db) {
-    throw new Error('Firestore has not been initialized. Check Firebase configuration and initialization logic.');
-  }
-  return db;
-};
-
-export const getFirebaseStorage = () => {
-  if (!storage) {
-    throw new Error('Firebase storage has not been initialized. Check Firebase configuration and initialization logic.');
-  }
-  return storage;
-};
-
-export const getFirebaseFunctions = () => {
-  if (!functions) {
-    throw new Error('Firebase functions has not been initialized. Check Firebase configuration and initialization logic.');
-  }
-  return functions;
-};
-
-// Expose raw config (without hardcoded secrets) for service worker initialization
+// Expose raw config for service worker initialization
 export const getFirebaseClientConfig = () => ({ ...firebaseConfig });
 
-// Direct exports (may be null if not initialized)
-export { auth, db, storage, functions };
+// Direct exports
+export { app, auth, db, storage, functions };
 export default app;
