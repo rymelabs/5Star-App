@@ -5,6 +5,7 @@ import {
   logoutUser, 
   onAuthStateChange,
   signInWithGoogle,
+  handleGoogleRedirectResult,
   signInAnonymous,
   updateUserProfile
 } from '../firebase/auth';
@@ -65,6 +66,11 @@ export const AuthProvider = ({ children }) => {
       setError('Firebase configuration missing. Please set up your .env file.');
       return;
     }
+    
+    // Handle Google redirect result (for mobile sign-in)
+    handleGoogleRedirectResult().catch((err) => {
+      console.warn('Google redirect check:', err.message);
+    });
     
     try {
       const unsubscribe = onAuthStateChange((userData) => {
