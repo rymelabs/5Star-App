@@ -13,9 +13,6 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-// Pass-through fetch handler so the SW is considered an app SW by more user agents.
-self.addEventListener('fetch', () => {});
-
 // Firebase config will be provided at runtime from the main app (no hardcoded keys here).
 let messaging = null;
 let firebaseInitialized = false;
