@@ -273,9 +273,12 @@ export const updateUserProfile = async (updates) => {
 // Handle Google redirect result (call this on app initialization)
 export const handleGoogleRedirectResult = async () => {
   try {
+    console.log('Checking for Google redirect result...');
     const result = await getRedirectResult(auth);
-    if (result) {
+    
+    if (result && result.user) {
       const user = result.user;
+      console.log('Google redirect result found for:', user.email);
       
       // Check if user document exists
       const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -294,13 +297,23 @@ export const handleGoogleRedirectResult = async () => {
         };
 
         await setDoc(doc(db, 'users', user.uid), newUserDoc);
+        console.log('Created new user document for Google user');
       }
 
       return user;
     }
+    
+    console.log('No Google redirect result pending');
     return null;
   } catch (error) {
-    console.error('Google redirect result error:', error);
+    // Common errors to handle gracefully
+    if (error.code === 'auth/popup-closed-by-user' || 
+        error.code === 'auth/cancelled-popup-request') {
+      console.log('User cancelled sign-in');
+      return null;
+    }
+    
+    console.error('Google redirect result error:', error.code, error.message);
     throw error;
   }
 };

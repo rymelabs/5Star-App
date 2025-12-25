@@ -60,32 +60,44 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     
-    // Check if Firebase is configured
-    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
-      setLoading(false);
-      setError('Firebase configuration missing. Please set up your .env file.');
-      return;
-    }
+    // Initialize auth state change listener
+    let unsubscribe;
     
-    // Handle Google redirect result (for mobile sign-in)
-    handleGoogleRedirectResult().catch((err) => {
-      console.warn('Google redirect check:', err.message);
-    });
-    
-    try {
-      const unsubscribe = onAuthStateChange((userData) => {
-        setUser(normalizeUser(userData));
-        setAuthState(deriveAuthState(userData));
+    const initAuth = async () => {
+      try {
+        // Handle Google redirect result first (for mobile sign-in)
+        // This must complete before we set loading to false
+        const redirectUser = await handleGoogleRedirectResult();
+        if (redirectUser) {
+          console.log('Google redirect sign-in successful:', redirectUser.email);
+        }
+      } catch (err) {
+        // Only log if it's a real error, not just "no redirect result"
+        if (err.code !== 'auth/null-user') {
+          console.warn('Google redirect check:', err.message);
+        }
+      }
+      
+      try {
+        unsubscribe = onAuthStateChange((userData) => {
+          setUser(normalizeUser(userData));
+          setAuthState(deriveAuthState(userData));
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Auth state observer error:', error);
         setLoading(false);
-      });
+        setError('Failed to initialize authentication');
+      }
+    };
+    
+    initAuth();
 
-      return () => {
+    return () => {
+      if (unsubscribe) {
         unsubscribe();
-      };
-    } catch (error) {
-      setLoading(false);
-      setError('Failed to initialize authentication');
-    }
+      }
+    };
   }, []);
 
   const register = async (userData) => {
