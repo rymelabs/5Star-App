@@ -64,7 +64,7 @@ const AfconPage = () => {
   const TabButton = ({ id, label, count, active, onClick }) => (
     <button
       onClick={onClick}
-      className={`relative px-4 py-2 text-xs font-medium transition-all duration-300 rounded-full flex items-center gap-1.5 ${
+      className={`relative px-6 py-3 text-base font-medium transition-all duration-300 rounded-full flex items-center gap-2.5 ${
         active 
           ? 'bg-white text-[#008751] shadow-lg shadow-black/10' 
           : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -72,7 +72,7 @@ const AfconPage = () => {
     >
       {label}
       {count > 0 && (
-        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
           active ? 'bg-[#EF3340] text-white' : 'bg-white/20 text-white'
         }`}>
           {count}
