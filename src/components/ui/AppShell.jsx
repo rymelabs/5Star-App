@@ -2,7 +2,7 @@ import React from 'react';
 
 const AppShell = React.forwardRef(({ children, header, bottomNav, className = '' }, ref) => {
   return (
-    <div className={`min-h-screen bg-app text-white flex flex-col relative ${className}`}>
+    <div className={`h-screen bg-app text-white flex flex-col relative overflow-hidden ${className}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Top-right glow */}
@@ -25,7 +25,7 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
         </header>
       )}
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Scrollable */}
       <main 
         ref={ref}
         className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
