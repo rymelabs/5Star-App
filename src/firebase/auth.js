@@ -8,7 +8,9 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signInAnonymously
+  signInAnonymously,
+  browserLocalPersistence,
+  setPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb, isDevelopment, getDomainInfo } from './config';
@@ -16,6 +18,11 @@ import { getFirebaseAuth, getFirebaseDb, isDevelopment, getDomainInfo } from './
 // Get auth and db instances
 const auth = getFirebaseAuth();
 const db = getFirebaseDb();
+
+// Set persistence to LOCAL to survive page reloads/redirects
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn('Failed to set auth persistence:', err);
+});
 
 // Register new user
 export const registerUser = async (email, password, userData) => {
@@ -156,53 +163,68 @@ const isMobileBrowser = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
-// Google Sign In - uses redirect on mobile for better compatibility
+// Helper to process Google sign-in result
+const processGoogleUser = async (user) => {
+  // Check if user document exists
+  const userDoc = await getDoc(doc(db, 'users', user.uid));
+  
+  if (!userDoc.exists()) {
+    // Create user document for new Google user
+    const newUserDoc = {
+      uid: user.uid,
+      name: user.displayName || '',
+      email: user.email,
+      role: 'user',
+      authProvider: 'google',
+      profileCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, 'users', user.uid), newUserDoc);
+  }
+
+  const userData = userDoc.exists() ? userDoc.data() : {};
+  return {
+    uid: user.uid,
+    email: user.email,
+    name: user.displayName || '',
+    role: userData.role || 'user',
+    authProvider: 'google',
+    profileCompleted: userData.profileCompleted || false
+  };
+};
+
+// Google Sign In - tries popup first, falls back to redirect on mobile
 export const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  
+  // Always try popup first - it works on most mobile browsers now
   try {
-    const provider = new GoogleAuthProvider();
+    console.log('Attempting Google sign-in with popup...');
+    const result = await signInWithPopup(auth, provider);
+    console.log('Popup sign-in successful:', result.user.email);
+    return await processGoogleUser(result.user);
+  } catch (popupError) {
+    console.log('Popup failed:', popupError.code, popupError.message);
     
-    // On mobile, use redirect instead of popup (popups are often blocked)
-    if (isMobileBrowser()) {
-      // This will redirect away from the page
+    // If popup was blocked or closed, try redirect on mobile
+    if (isMobileBrowser() && 
+        (popupError.code === 'auth/popup-blocked' || 
+         popupError.code === 'auth/popup-closed-by-user' ||
+         popupError.code === 'auth/cancelled-popup-request')) {
+      console.log('Falling back to redirect sign-in...');
+      // Store a flag so we know we're expecting a redirect result
+      sessionStorage.setItem('googleSignInPending', 'true');
       await signInWithRedirect(auth, provider);
-      // The result will be handled by getRedirectResult on page load
       return null;
     }
     
-    // On desktop, use popup
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
-    if (!userDoc.exists()) {
-      // Create user document for new Google user
-      const newUserDoc = {
-        uid: user.uid,
-        name: user.displayName || '',
-        email: user.email,
-        role: 'user',
-        authProvider: 'google',
-        profileCompleted: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      await setDoc(doc(db, 'users', user.uid), newUserDoc);
-    }
-
-    const userData = userDoc.exists() ? userDoc.data() : {};
-    return {
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || '',
-      role: userData.role || 'user',
-      authProvider: 'google',
-      profileCompleted: userData.profileCompleted || false
-    };
-  } catch (error) {
-    throw error;
+    // Re-throw other errors
+    throw popupError;
   }
 };
 
@@ -273,39 +295,35 @@ export const updateUserProfile = async (updates) => {
 // Handle Google redirect result (call this on app initialization)
 export const handleGoogleRedirectResult = async () => {
   try {
-    console.log('Checking for Google redirect result...');
+    // Check if we were expecting a redirect
+    const wasPending = sessionStorage.getItem('googleSignInPending');
+    console.log('Checking for Google redirect result... (pending flag:', wasPending, ')');
+    
     const result = await getRedirectResult(auth);
+    
+    // Clear the pending flag
+    sessionStorage.removeItem('googleSignInPending');
     
     if (result && result.user) {
       const user = result.user;
       console.log('Google redirect result found for:', user.email);
-      
-      // Check if user document exists
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      
-      if (!userDoc.exists()) {
-        // Create user document for new Google user
-        const newUserDoc = {
-          uid: user.uid,
-          name: user.displayName || '',
-          email: user.email,
-          role: 'user',
-          authProvider: 'google',
-          profileCompleted: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        await setDoc(doc(db, 'users', user.uid), newUserDoc);
-        console.log('Created new user document for Google user');
-      }
-
+      await processGoogleUser(user);
       return user;
+    }
+    
+    // If we were expecting a result but didn't get one, the user might already be signed in
+    // via the auth state observer - check current user
+    if (wasPending && auth.currentUser) {
+      console.log('Redirect pending but user already signed in:', auth.currentUser.email);
+      return auth.currentUser;
     }
     
     console.log('No Google redirect result pending');
     return null;
   } catch (error) {
+    // Clear the pending flag on error too
+    sessionStorage.removeItem('googleSignInPending');
+    
     // Common errors to handle gracefully
     if (error.code === 'auth/popup-closed-by-user' || 
         error.code === 'auth/cancelled-popup-request') {
