@@ -28,6 +28,8 @@
     @apply scroll-smooth;
     overflow: hidden;
     height: 100%;
+    /* iOS safe area - extend background into status bar */
+    background-color: #050816;
   }
   
   html::-webkit-scrollbar {
@@ -39,6 +41,7 @@
   
   body {
     @apply bg-app text-white font-sans antialiased min-h-screen;
+    background-color: #050816;
     background-image: radial-gradient(circle at 20% 50%, rgba(109, 40, 217, 0.08) 0%, transparent 50%),
                       radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.03) 0%, transparent 50%);
     touch-action: pan-y !important;
@@ -52,6 +55,9 @@
     text-size-adjust: 100%;
     overflow: hidden;
     height: 100%;
+    /* Ensure body extends into safe areas */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: 0; /* Reset - we handle safe areas in components */
   }
   
   body::-webkit-scrollbar {
