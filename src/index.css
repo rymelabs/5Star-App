@@ -68,31 +68,6 @@
       -webkit-transform: translateZ(0);
       transform: translateZ(0);
     }
-
-    /* Extend header blur/background into the top safe-area (status bar) */
-    .ios-safe-top-blur {
-      position: relative;
-      padding-top: env(safe-area-inset-top);
-    }
-
-    .ios-safe-top-blur::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: env(safe-area-inset-top);
-      background: rgba(5, 8, 22, 0.8); /* matches bg-app/80 */
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .ios-safe-top-blur > * {
-      position: relative;
-      z-index: 1;
-    }
   }
 }
 
