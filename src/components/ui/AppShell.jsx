@@ -14,7 +14,7 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
       {/* Header Area - Fixed positioning with iOS Safari fix */}
       {header && (
         <header 
-          className="fixed top-0 left-0 right-0 z-40 w-full backdrop-blur-md bg-app/80 border-b border-white/5"
+          className="fixed top-0 left-0 right-0 z-40 w-full backdrop-blur-md bg-app/80 border-b border-white/5 ios-safe-top-blur"
           style={{ 
             WebkitTransform: 'translateZ(0)',
             transform: 'translateZ(0)',
@@ -29,9 +29,10 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
       {/* Main Content Area - Add top padding to account for fixed header */}
       <main 
         ref={ref}
-        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar ${header ? 'pt-20' : 'pt-6'} ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
+        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar ${header ? '' : 'pt-6'} ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
         style={{
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          ...(header ? { paddingTop: 'calc(5rem + env(safe-area-inset-top))' } : null)
         }}
       >
         {children}
