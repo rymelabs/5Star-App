@@ -2,7 +2,7 @@ import React from 'react';
 
 const AppShell = React.forwardRef(({ children, header, bottomNav, className = '' }, ref) => {
   return (
-    <div className={`h-screen bg-app text-white flex flex-col relative overflow-x-hidden overflow-y-hidden ${className}`}>
+    <div className={`h-screen bg-app text-white flex flex-col relative overflow-hidden ${className}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Top-right glow */}
@@ -11,17 +11,28 @@ const AppShell = React.forwardRef(({ children, header, bottomNav, className = ''
         <div className="absolute -bottom-[10%] -left-[10%] w-[60%] h-[40%] bg-brand-purple/5 blur-[100px] rounded-full mix-blend-screen" />
       </div>
 
-      {/* Header Area */}
+      {/* Header Area - Fixed positioning with iOS Safari fix */}
       {header && (
-        <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-app/80 border-b border-white/5">
+        <header 
+          className="fixed top-0 left-0 right-0 z-40 w-full backdrop-blur-md bg-app/80 border-b border-white/5"
+          style={{ 
+            WebkitTransform: 'translateZ(0)',
+            transform: 'translateZ(0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden'
+          }}
+        >
           {header}
         </header>
       )}
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Add top padding to account for fixed header */}
       <main 
         ref={ref}
-        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar pt-6 ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
+        className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden hide-scrollbar ${header ? 'pt-20' : 'pt-6'} ${bottomNav ? 'pb-40 md:pb-32' : 'pb-12 lg:pb-24'}`}
+        style={{
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         {children}
       </main>

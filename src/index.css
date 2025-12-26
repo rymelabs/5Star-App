@@ -60,6 +60,15 @@
   body::-webkit-scrollbar-thumb {
     display: none;
   }
+
+  /* iOS Safari fixed header fix */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS only */
+    .fixed {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+  }
 }
 
 @layer components {
