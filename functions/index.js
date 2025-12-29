@@ -1269,6 +1269,7 @@ function isMatchCurrentlyLive(match) {
 
 /**
  * Get dynamic match status based on time
+ * If a match is scheduled but 1+ hour has passed since its start time with no update, mark as TBD
  */
 function getDynamicMatchStatus(match) {
   if (['FT', 'AET', 'CANC', 'PST'].includes(match.status)) {
@@ -1284,6 +1285,11 @@ function getDynamicMatchStatus(match) {
   }
   
   const minutes = Math.floor(elapsed / 60000);
+  
+  // If scheduled match hasn't started within 1 hour of kickoff, mark as TBD
+  if (match.status === 'NS' && minutes >= 60) {
+    return 'TBD';
+  }
   
   if (minutes <= 45) {
     return '1H';
