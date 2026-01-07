@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const LoadingScreen = ({ message = "Loading..." }) => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-app overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-app overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-brand-purple/10 rounded-full blur-[120px] animate-pulse" />

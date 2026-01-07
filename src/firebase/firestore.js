@@ -1632,15 +1632,31 @@ export const seasonsCollection = {
         status: 'upcoming', // upcoming, ongoing, completed
         ownerId: seasonData.ownerId || null,
         ownerName: seasonData.ownerName || null,
+
+        // Display metadata
+        logo: seasonData.logo || null,
+
+        // Season scheduling
+        // Stored as a YYYY-MM-DD string (local date semantics)
+        startDate: seasonData.startDate || null,
+        endDate: seasonData.endDate || null,
         
         // Group stage configuration
         numberOfGroups: seasonData.numberOfGroups || 4,
         teamsPerGroup: seasonData.teamsPerGroup || 4,
         groups: seasonData.groups || [], // Array of {id, name, teams: []}
+
+        // Relegation configuration
+        relegationPosition: Number.isFinite(Number(seasonData.relegationPosition)) ? Number(seasonData.relegationPosition) : null,
+        relegationDestinationSeasonId: seasonData.relegationDestinationSeasonId || null,
+        autoMoveRelegatedTeams: Boolean(seasonData.autoMoveRelegatedTeams),
+        isRelegationSeason: Boolean(seasonData.isRelegationSeason),
+        relegationProcessedAt: seasonData.relegationProcessedAt || null,
         
         // Knockout configuration
         knockoutConfig: {
           matchesPerRound: seasonData.knockoutConfig?.matchesPerRound || 2, // 1 = single leg, 2 = home & away
+          qualifiersPerGroup: seasonData.knockoutConfig?.qualifiersPerGroup || seasonData.qualifiersPerGroup || 2,
           rounds: seasonData.knockoutConfig?.rounds || [], // Array of knockout rounds
         },
         
@@ -1818,50 +1834,176 @@ export const seasonsCollection = {
   },
 
   // Generate group fixtures
-  generateGroupFixtures: async (seasonId) => {
+  generateGroupFixtures: async (seasonId, options = {}) => {
     try {
       const database = checkFirebaseInit();
       const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
       
-      if (!seasonDoc.exists()) return;
+      if (!seasonDoc.exists()) return [];
       
       const season = seasonDoc.data();
-      const fixtures = [];
+      let fixtures = [];
+
+      // Handle spacing range (min/max days between matchdays)
+      const spacingMin = Number.isFinite(Number(options?.spacingDaysMin)) && Number(options?.spacingDaysMin) > 0 
+        ? Number(options.spacingDaysMin) : 5;
+      const spacingMax = Number.isFinite(Number(options?.spacingDaysMax)) && Number(options?.spacingDaysMax) >= spacingMin 
+        ? Number(options.spacingDaysMax) : spacingMin + 4;
+      
+      // Handle kickoff time range
+      const kickoffTimeMin = typeof options?.kickoffTimeMin === 'string' ? options.kickoffTimeMin : '14:00';
+      const kickoffTimeMax = typeof options?.kickoffTimeMax === 'string' ? options.kickoffTimeMax : '18:00';
+      
+      // Max fixtures to generate (null = all)
+      const maxFixtures = Number.isFinite(Number(options?.maxFixtures)) && Number(options?.maxFixtures) > 0
+        ? Number(options.maxFixtures) : null;
+      
+      // Venues for random assignment
+      const venues = Array.isArray(options?.venues) ? options.venues.filter(v => v && typeof v === 'string') : [];
+      
+      // Existing fixtures to avoid duplicates (for "add more" mode)
+      const existingFixtures = Array.isArray(options?.existingFixtures) ? options.existingFixtures : [];
+      const existingMatchups = new Set(
+        existingFixtures.map(f => `${f.homeTeamId}_${f.awayTeamId}`)
+      );
+      
+      const startDateRaw = options?.startDate || season?.startDate || null;
+
+      const parseStartDate = (value) => {
+        if (!value) return null;
+        // Expect YYYY-MM-DD; fall back to Date parsing
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          const [y, m, d] = value.split('-').map((n) => parseInt(n, 10));
+          if (!y || !m || !d) return null;
+          return new Date(y, m - 1, d);
+        }
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      const parseTime = (timeStr) => {
+        const match = /^\s*(\d{1,2}):(\d{2})\s*$/.exec(timeStr);
+        if (!match) return { hours: 15, minutes: 0 };
+        const hours = Math.min(23, Math.max(0, parseInt(match[1], 10)));
+        const minutes = Math.min(59, Math.max(0, parseInt(match[2], 10)));
+        return { hours, minutes };
+      };
+
+      const randomBetween = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      };
+
+      const getRandomKickoffTime = () => {
+        const minTime = parseTime(kickoffTimeMin);
+        const maxTime = parseTime(kickoffTimeMax);
+        const minMinutes = minTime.hours * 60 + minTime.minutes;
+        const maxMinutes = maxTime.hours * 60 + maxTime.minutes;
+        const randomMinutes = randomBetween(minMinutes, maxMinutes);
+        return {
+          hours: Math.floor(randomMinutes / 60),
+          minutes: randomMinutes % 60
+        };
+      };
+
+      const getRandomVenue = () => {
+        if (venues.length === 0) return null;
+        return venues[Math.floor(Math.random() * venues.length)];
+      };
+
+      const applyKickoffTime = (date, time) => {
+        const dt = new Date(date);
+        dt.setHours(time.hours, time.minutes, 0, 0);
+        return dt;
+      };
+
+      const baseStartDate = parseStartDate(startDateRaw) || new Date();
+
+      const buildRoundRobinRounds = (teamIds) => {
+        const list = [...teamIds];
+        if (list.length < 2) return [];
+        if (list.length % 2 === 1) list.push(null); // bye
+
+        const n = list.length;
+        const rounds = [];
+        const rotate = (arr) => {
+          const fixed = arr[0];
+          const rest = arr.slice(1);
+          rest.unshift(rest.pop());
+          return [fixed, ...rest];
+        };
+
+        let teams = list;
+        for (let roundIndex = 0; roundIndex < n - 1; roundIndex++) {
+          const pairs = [];
+          for (let i = 0; i < n / 2; i++) {
+            const a = teams[i];
+            const b = teams[n - 1 - i];
+            if (!a || !b) continue;
+
+            // Alternate home/away for the first pairing to balance
+            const swap = i === 0 && roundIndex % 2 === 1;
+            const home = swap ? b : a;
+            const away = swap ? a : b;
+            pairs.push({ home, away });
+          }
+          rounds.push(pairs);
+          teams = rotate(teams);
+        }
+
+        return rounds;
+      };
       
       // Generate fixtures for each group
       season.groups.forEach(group => {
+        // Check if we've hit the max fixtures limit
+        if (maxFixtures && fixtures.length >= maxFixtures) return;
+
         const teams = group.teams;
+
+        const teamIds = (teams || []).map((t) => t?.id || t?.teamId).filter(Boolean);
+        const rounds = buildRoundRobinRounds(teamIds);
+        const allRounds = [...rounds, ...rounds.map((pairs) => pairs.map((p) => ({ home: p.away, away: p.home })))];
         
-        // Round-robin: each team plays every other team
-        for (let i = 0; i < teams.length; i++) {
-          for (let j = i + 1; j < teams.length; j++) {
-            // Home fixture
-            fixtures.push({
-              seasonId,
-              groupId: group.id,
-              groupName: group.name,
-              stage: 'group',
-              homeTeamId: teams[i].id,
-              awayTeamId: teams[j].id,
-              status: 'upcoming',
-              dateTime: null, // To be set by admin
-              venue: null // To be set by admin
-            });
-            
-            // Away fixture (return leg)
-            fixtures.push({
-              seasonId,
-              groupId: group.id,
-              groupName: group.name,
-              stage: 'group',
-              homeTeamId: teams[j].id,
-              awayTeamId: teams[i].id,
-              status: 'upcoming',
-              dateTime: null,
-              venue: null
-            });
+        // Track cumulative days from start date
+        let cumulativeDays = 0;
+        
+        allRounds.forEach((pairs, roundIndex) => {
+          // Check if we've hit the max fixtures limit
+          if (maxFixtures && fixtures.length >= maxFixtures) return;
+
+          // For first round, use base date; otherwise add random spacing
+          if (roundIndex > 0) {
+            cumulativeDays += randomBetween(spacingMin, spacingMax);
           }
-        }
+          
+          const matchDate = new Date(baseStartDate);
+          matchDate.setDate(matchDate.getDate() + cumulativeDays);
+
+          pairs.forEach((pair) => {
+            // Check if we've hit the max fixtures limit
+            if (maxFixtures && fixtures.length >= maxFixtures) return;
+
+            // Skip if this matchup already exists (for "add more" mode)
+            const matchupKey = `${pair.home}_${pair.away}`;
+            if (existingMatchups.has(matchupKey)) return;
+
+            // Get random kickoff time for each match
+            const kickoffTime = getRandomKickoffTime();
+            const matchDateTime = applyKickoffTime(matchDate, kickoffTime);
+            
+            fixtures.push({
+              seasonId,
+              groupId: group.id,
+              groupName: group.name,
+              stage: 'group',
+              homeTeamId: pair.home,
+              awayTeamId: pair.away,
+              status: 'upcoming',
+              dateTime: matchDateTime,
+              venue: getRandomVenue()
+            });
+          });
+        });
       });
       
       return fixtures;
