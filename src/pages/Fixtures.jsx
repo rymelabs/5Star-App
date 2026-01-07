@@ -729,19 +729,19 @@ const Fixtures = () => {
         >
           {showSeasonStandings ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
-                <h3 className="text-lg font-bold text-white">{displayTableSeason.name}</h3>
-                {seasons.length > 1 && (
-                  <select
-                    value={selectedTableSeasonId}
-                    onChange={(e) => setSelectedTableSeasonId(e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-lg text-xs px-2 py-1 text-white focus:outline-none"
-                  >
-                    {seasons.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                )}
+              <div className="mb-4 px-4 sm:px-0">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  {seasons.length > 1 && (
+                    <div className="order-1 sm:order-2 sm:w-[260px]">
+                      <Select
+                        value={selectedTableSeasonId}
+                        onChange={(e) => setSelectedTableSeasonId(e.target.value)}
+                        options={seasons.map((s) => ({ value: s.id, label: s.name }))}
+                      />
+                    </div>
+                  )}
+                  <h3 className="order-2 sm:order-1 text-lg font-bold text-white">{displayTableSeason.name}</h3>
+                </div>
               </div>
               <SeasonStandings season={displayTableSeason} teams={teams} fixtures={fixtures} />
             </div>
