@@ -9,6 +9,36 @@ let ready = false;
 let queue = [];
 
 /**
+ * Detect device type based on screen size and user agent
+ * @returns {'mobile' | 'tablet' | 'desktop'}
+ */
+const getDeviceType = () => {
+  const ua = navigator.userAgent.toLowerCase();
+  const width = window.innerWidth;
+  
+  // Check user agent for mobile indicators
+  const isMobileUA = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua);
+  const isTabletUA = /ipad|tablet|playbook|silk/i.test(ua) || (ua.includes('android') && !ua.includes('mobile'));
+  
+  // Combine UA detection with screen width for accuracy
+  if (isTabletUA || (width >= 768 && width < 1024 && isMobileUA)) {
+    return 'tablet';
+  }
+  if (isMobileUA || width < 768) {
+    return 'mobile';
+  }
+  return 'desktop';
+};
+
+/**
+ * Check if app is running as installed PWA
+ */
+const isPWA = () => {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+};
+
+/**
  * Check if user has granted analytics consent
  */
 const consented = () => localStorage.getItem('analytics-consent') === 'granted';
@@ -49,11 +79,27 @@ export const initAnalytics = (measurementId) => {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
   script.onload = () => {
+    const deviceType = getDeviceType();
+    const isInstalledPWA = isPWA();
+    
     gtag('js', new Date());
     gtag('config', measurementId, {
       anonymize_ip: true,
-      send_page_view: false // We'll send page views manually
+      send_page_view: false, // We'll send page views manually
+      custom_map: {
+        dimension1: 'device_type',
+        dimension2: 'is_pwa',
+        dimension3: 'screen_size'
+      }
     });
+    
+    // Set user properties for device info
+    gtag('set', 'user_properties', {
+      device_type: deviceType,
+      is_pwa: isInstalledPWA ? 'yes' : 'no',
+      screen_size: `${window.innerWidth}x${window.innerHeight}`
+    });
+    
     ready = true;
     
     // Flush queued events
@@ -77,6 +123,8 @@ export const trackPageView = (path, params = {}) => {
   push('event', 'page_view', {
     page_path: path,
     page_title: document.title,
+    device_type: getDeviceType(),
+    is_pwa: isPWA() ? 'yes' : 'no',
     ...params
   });
 };
@@ -246,3 +294,29 @@ export const trackAdminBulkUpload = (entity) => {
 export const trackUILatency = (screen, ms) => {
   trackEvent('ui_latency', { screen, ms });
 };
+
+/**
+ * Track session start with device info
+ * Call this when app loads
+ */
+export const trackSessionStart = () => {
+  if (!consented()) return;
+  push('event', 'session_start', {
+    device_type: getDeviceType(),
+    is_pwa: isPWA() ? 'yes' : 'no',
+    screen_width: window.innerWidth,
+    screen_height: window.innerHeight,
+    user_agent_simplified: /mobile/i.test(navigator.userAgent) ? 'mobile' : 
+                           /tablet/i.test(navigator.userAgent) ? 'tablet' : 'desktop'
+  });
+};
+
+/**
+ * Get current device type (exported for use elsewhere)
+ */
+export const getCurrentDeviceType = () => getDeviceType();
+
+/**
+ * Check if running as PWA (exported for use elsewhere)
+ */
+export const isRunningAsPWA = () => isPWA();
