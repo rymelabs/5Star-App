@@ -5,7 +5,7 @@ const LegalModal = ({ open, onClose, title, children }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose}></div>
       <div className="relative w-full max-w-2xl bg-dark-900 rounded-lg shadow-xl border border-dark-700 p-6 z-10">
         <div className="flex items-start justify-between mb-4">

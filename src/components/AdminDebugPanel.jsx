@@ -68,7 +68,7 @@ const AdminDebugPanel = () => {
 
   if (loading) {
     return (
-      <div className="fixed top-4 right-4 z-50 bg-yellow-900 text-yellow-100 p-4 rounded-lg shadow-lg max-w-md">
+      <div className="fixed top-4 right-4 z-[9999] bg-yellow-900 text-yellow-100 p-4 rounded-lg shadow-lg max-w-md">
         <h3 className="font-bold text-sm mb-2">🔍 Admin Debug Panel</h3>
         <p className="text-xs">Loading auth state...</p>
       </div>
@@ -76,7 +76,7 @@ const AdminDebugPanel = () => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-gray-900 text-gray-100 p-4 rounded-lg shadow-lg max-w-md border-2 border-yellow-500">
+    <div className="fixed top-4 right-4 z-[9999] bg-gray-900 text-gray-100 p-4 rounded-lg shadow-lg max-w-md border-2 border-yellow-500">
       <h3 className="font-bold text-sm mb-3 text-yellow-400">🔍 Admin Debug Panel</h3>
       
       {/* Current Auth State */}

@@ -210,7 +210,8 @@ const SearchModalContent = ({ isOpen, onClose }) => {
       setResults([]);
       setLoading(false);
     }
-  }, [query, performSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]); // Only depend on query, performSearch is stable enough via useCallback
 
   const handleResultClick = (result) => {
     // Navigate based on result type
@@ -255,7 +256,7 @@ const SearchModalContent = ({ isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
+          className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4"
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

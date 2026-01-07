@@ -347,7 +347,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       
       <div className="relative w-full max-w-4xl bg-dark-900 border border-dark-700 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">

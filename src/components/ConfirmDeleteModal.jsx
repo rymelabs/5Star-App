@@ -45,7 +45,7 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message, confir
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-dark-800 rounded-lg shadow-xl max-w-md w-full border border-dark-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">

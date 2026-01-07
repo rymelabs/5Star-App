@@ -23,7 +23,7 @@ const ProfileModal = ({ onClose }) => {
 
   if (showLogoutConfirm) {
     return (
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
+      <div className="fixed inset-0 z-[9999] bg-black bg-opacity-75 flex items-center justify-center">
         <div className="bg-dark-800 rounded-lg w-full max-w-sm mx-4 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">{t('pages.settings.confirmLogout')}</h3>
           <p className="text-gray-400 mb-6">{t('pages.settings.logoutConfirmMessage')}</p>
@@ -47,7 +47,7 @@ const ProfileModal = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-start justify-center pt-20">
+    <div className="fixed inset-0 z-[9999] bg-black bg-opacity-75 flex items-start justify-center pt-20">
       <div className="bg-dark-800 rounded-lg w-full max-w-sm mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-dark-700">

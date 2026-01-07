@@ -163,7 +163,7 @@ const NotificationModal = ({ userId, onClose }) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -177,7 +177,7 @@ const NotificationModal = ({ userId, onClose }) => {
   const styles = getNotificationStyles(currentNotification.type, currentNotification.priority);
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fade-in">
       <div className="relative w-full max-w-md">
         {/* Modal Content */}
         <div className={`bg-gradient-to-br ${styles.gradient} ${styles.border} rounded-3xl shadow-2xl shadow-black/50 overflow-hidden`}>

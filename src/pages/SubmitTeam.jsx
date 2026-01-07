@@ -370,7 +370,7 @@ const SubmitTeam = () => {
 
         {/* Preview Modal/Panel */}
         {previewOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
             <div className="bg-dark-900 p-6 rounded-lg max-w-2xl w-full">
               <h2 className="text-lg font-semibold mb-2">Preview Submission</h2>
               <div className="mb-4">

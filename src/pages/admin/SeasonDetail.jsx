@@ -5,6 +5,7 @@ import {
   Trophy, 
   Users,
   Calendar,
+  CheckCircle2,
   Play,
   Pause,
   Edit,
@@ -54,6 +55,17 @@ const SeasonDetail = () => {
   });
   const [savingKnockout, setSavingKnockout] = useState(false);
 
+  const [fixtureGenSettings, setFixtureGenSettings] = useState({
+    startDate: '',
+    spacingDaysMin: 5,
+    spacingDaysMax: 9,
+    kickoffTimeMin: '14:00',
+    kickoffTimeMax: '18:00',
+    maxFixtures: '', // Empty means generate all possible fixtures
+    venues: [], // List of venue names to randomly assign
+    newVenue: '' // Input field for adding new venue
+  });
+
   const liveTeamIds = useMemo(() => getLiveTeamIds(seasonFixtures), [seasonFixtures]);
 
   const isAdmin = user?.isAdmin;
@@ -95,6 +107,24 @@ const SeasonDetail = () => {
       };
     }
   }, [seasonId, teams]);
+
+  useEffect(() => {
+    if (!season) return;
+    const toYmd = (value) => {
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+      const d = value ? new Date(value) : new Date();
+      if (Number.isNaN(d.getTime())) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    setFixtureGenSettings((prev) => ({
+      ...prev,
+      startDate: season.startDate ? toYmd(season.startDate) : (prev.startDate || toYmd(new Date()))
+    }));
+  }, [season]);
 
   const loadSeason = async () => {
     try {
@@ -144,7 +174,15 @@ const SeasonDetail = () => {
     }
 
     try {
-      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId);
+      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId, {
+        startDate: fixtureGenSettings.startDate || season?.startDate || null,
+        spacingDaysMin: fixtureGenSettings.spacingDaysMin,
+        spacingDaysMax: fixtureGenSettings.spacingDaysMax,
+        kickoffTimeMin: fixtureGenSettings.kickoffTimeMin,
+        kickoffTimeMax: fixtureGenSettings.kickoffTimeMax,
+        maxFixtures: fixtureGenSettings.maxFixtures || null,
+        venues: fixtureGenSettings.venues
+      });
       
       // Save fixtures to Firestore
       for (const fixture of fixtures) {
@@ -200,7 +238,15 @@ const SeasonDetail = () => {
       const deletedCount = await fixturesCollection.deleteBySeason(seasonId);
       
       // Step 2: Generate new fixtures
-      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId);
+      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId, {
+        startDate: fixtureGenSettings.startDate || season?.startDate || null,
+        spacingDaysMin: fixtureGenSettings.spacingDaysMin,
+        spacingDaysMax: fixtureGenSettings.spacingDaysMax,
+        kickoffTimeMin: fixtureGenSettings.kickoffTimeMin,
+        kickoffTimeMax: fixtureGenSettings.kickoffTimeMax,
+        maxFixtures: fixtureGenSettings.maxFixtures || null,
+        venues: fixtureGenSettings.venues
+      });
       
       // Step 3: Save new fixtures
       for (const fixture of fixtures) {
@@ -215,6 +261,158 @@ const SeasonDetail = () => {
     } catch (error) {
       console.error('Error regenerating fixtures:', error);
       showToast('Failed to regenerate fixtures', 'error');
+    }
+  };
+
+  const handleAddMoreFixtures = async () => {
+    const addCount = parseInt(fixtureGenSettings.maxFixtures, 10);
+    if (!addCount || addCount < 1) {
+      showToast('Enter the number of fixtures to add in "Max fixtures" field', 'error');
+      return;
+    }
+
+    if (!confirm(`Add ${addCount} more fixtures to existing ones?`)) {
+      return;
+    }
+
+    try {
+      // Generate fixtures with the add count as max, app will handle avoiding duplicates
+      const fixtures = await seasonsCollection.generateGroupFixtures(seasonId, {
+        startDate: fixtureGenSettings.startDate || season?.startDate || null,
+        spacingDaysMin: fixtureGenSettings.spacingDaysMin,
+        spacingDaysMax: fixtureGenSettings.spacingDaysMax,
+        kickoffTimeMin: fixtureGenSettings.kickoffTimeMin,
+        kickoffTimeMax: fixtureGenSettings.kickoffTimeMax,
+        maxFixtures: addCount,
+        venues: fixtureGenSettings.venues,
+        existingFixtures: seasonFixtures // Pass existing fixtures to avoid duplicates
+      });
+      
+      // Save fixtures to Firestore
+      for (const fixture of fixtures) {
+        await fixturesCollection.add({
+          ...fixture,
+          createdAt: new Date(),
+          status: 'upcoming'
+        });
+      }
+
+      showToast(`Added ${fixtures.length} new fixtures!`, 'success');
+    } catch (error) {
+      console.error('Error adding fixtures:', error);
+      showToast('Failed to add fixtures', 'error');
+    }
+  };
+
+  const handleProcessRelegation = async () => {
+    const relegationPos = Number.isFinite(Number(season?.relegationPosition)) ? Number(season.relegationPosition) : null;
+    const destinationSeasonId = season?.relegationDestinationSeasonId;
+
+    if (!relegationPos) {
+      showToast('Set relegation position first (Edit season).', 'error');
+      return;
+    }
+    if (!destinationSeasonId) {
+      showToast('Select a relegation destination season (Edit season).', 'error');
+      return;
+    }
+    if (!confirm('Move teams in the relegation zone to the destination season now?')) {
+      return;
+    }
+
+    try {
+      const destination = await seasonsCollection.getById(destinationSeasonId);
+      if (!destination) {
+        showToast('Destination season not found.', 'error');
+        return;
+      }
+
+      const relegatedTeamIds = new Set();
+      const relegatedTeams = [];
+
+      (season.groups || []).forEach((group) => {
+        const computed = calculateGroupStandings(group, seasonFixtures, teams, season.id);
+        computed
+          .filter((row) => row.position >= relegationPos)
+          .forEach((row) => {
+            const teamId = row.teamId || row.team?.id;
+            if (!teamId || relegatedTeamIds.has(teamId)) return;
+            relegatedTeamIds.add(teamId);
+            const resolved = teams.find((t) => t.id === teamId) || row.team || { id: teamId, name: 'Unknown Team' };
+            relegatedTeams.push(resolved);
+          });
+      });
+
+      if (relegatedTeams.length === 0) {
+        showToast('No relegated teams found (need completed fixtures).', 'error');
+        return;
+      }
+
+      const destGroups = Array.isArray(destination.groups) && destination.groups.length
+        ? JSON.parse(JSON.stringify(destination.groups))
+        : [{ id: 'group-1', name: 'Relegation', teams: [], standings: [] }];
+
+      const destGroupIndex = 0;
+      const destGroup = destGroups[destGroupIndex];
+      const existingIds = new Set((destGroup.teams || []).map((t) => t?.id || t?.teamId).filter(Boolean));
+      const maxTeams = Number.isFinite(Number(destination.teamsPerGroup)) ? Number(destination.teamsPerGroup) : null;
+
+      const toAdd = [];
+      for (const team of relegatedTeams) {
+        const teamId = team?.id || team?.teamId;
+        if (!teamId || existingIds.has(teamId)) continue;
+        if (maxTeams && (destGroup.teams?.length || 0) + toAdd.length >= maxTeams) break;
+        toAdd.push(team);
+        existingIds.add(teamId);
+      }
+
+      if (toAdd.length === 0) {
+        showToast('All relegated teams already exist in destination season.', 'success');
+        return;
+      }
+
+      destGroups[destGroupIndex] = {
+        ...destGroup,
+        teams: [...(destGroup.teams || []), ...toAdd]
+      };
+
+      await seasonsCollection.update(destinationSeasonId, {
+        groups: destGroups,
+        updatedAt: new Date()
+      });
+
+      await seasonsCollection.update(seasonId, {
+        relegationProcessedAt: new Date(),
+        relegationMovedTeamIds: Array.from(relegatedTeamIds),
+        updatedAt: new Date()
+      });
+
+      showToast(`Moved ${toAdd.length} teams to destination season.`, 'success');
+    } catch (error) {
+      console.error('Error processing relegation:', error);
+      showToast('Failed to process relegation', 'error');
+    }
+  };
+
+  const handleCompleteSeason = async () => {
+    if (!confirm('Mark this season as completed?')) return;
+
+    try {
+      await seasonsCollection.update(seasonId, {
+        status: 'completed',
+        isActive: false,
+        completedAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      showToast('Season marked as completed.', 'success');
+
+      if (season?.autoMoveRelegatedTeams && season?.relegationDestinationSeasonId) {
+        await handleProcessRelegation();
+      }
+    } catch (error) {
+      console.error('Error completing season:', error);
+      showToast('Failed to complete season', 'error');
     }
   };
 
@@ -428,7 +626,7 @@ const SeasonDetail = () => {
     <div className="px-4 py-6 pb-24">
       {/* Toast */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}
@@ -484,6 +682,15 @@ const SeasonDetail = () => {
             {season.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             <span className="text-sm">{season.isActive ? 'Deactivate' : 'Activate'}</span>
           </button>
+          {season.status !== 'completed' && (
+            <button
+              onClick={handleCompleteSeason}
+              className="flex-1 sm:flex-none px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center space-x-2"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="text-sm">Complete</span>
+            </button>
+          )}
           <button
             onClick={() => navigate(`/admin/seasons/${seasonId}/edit`)}
             className="flex-1 sm:flex-none px-4 py-2 bg-accent-500/10 text-accent-400 border border-accent-500/30 rounded-lg hover:bg-accent-500/20 transition-colors flex items-center justify-center space-x-2"
@@ -557,6 +764,143 @@ const SeasonDetail = () => {
         </div>
       </div>
 
+      {/* Fixture Generation Settings */}
+      <div className="card p-4 mb-4">
+        <h3 className="text-sm font-semibold text-white mb-3">Fixture Generation</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Start date</label>
+            <input
+              type="date"
+              value={fixtureGenSettings.startDate}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, startDate: e.target.value }))}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Spacing min (days)</label>
+            <input
+              type="number"
+              min="1"
+              value={fixtureGenSettings.spacingDaysMin}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, spacingDaysMin: e.target.value === '' ? '' : parseInt(e.target.value, 10) }))}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (!val || val < 1) setFixtureGenSettings((prev) => ({ ...prev, spacingDaysMin: 5 }));
+              }}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Spacing max (days)</label>
+            <input
+              type="number"
+              min="1"
+              value={fixtureGenSettings.spacingDaysMax}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, spacingDaysMax: e.target.value === '' ? '' : parseInt(e.target.value, 10) }))}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (!val || val < 1) setFixtureGenSettings((prev) => ({ ...prev, spacingDaysMax: 9 }));
+              }}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Kickoff min</label>
+            <input
+              type="time"
+              value={fixtureGenSettings.kickoffTimeMin}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, kickoffTimeMin: e.target.value }))}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Kickoff max</label>
+            <input
+              type="time"
+              value={fixtureGenSettings.kickoffTimeMax}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, kickoffTimeMax: e.target.value }))}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Max fixtures</label>
+            <input
+              type="number"
+              min="1"
+              placeholder="All"
+              value={fixtureGenSettings.maxFixtures}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, maxFixtures: e.target.value === '' ? '' : parseInt(e.target.value, 10) }))}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+          </div>
+        </div>
+
+        {/* Venue Management */}
+        <div className="mt-4">
+          <label className="block text-xs text-gray-400 mb-1">Venues (random assignment)</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Add venue name..."
+              value={fixtureGenSettings.newVenue}
+              onChange={(e) => setFixtureGenSettings((prev) => ({ ...prev, newVenue: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && fixtureGenSettings.newVenue.trim()) {
+                  setFixtureGenSettings((prev) => ({
+                    ...prev,
+                    venues: [...prev.venues, prev.newVenue.trim()],
+                    newVenue: ''
+                  }));
+                }
+              }}
+              className="flex-1 px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (fixtureGenSettings.newVenue.trim()) {
+                  setFixtureGenSettings((prev) => ({
+                    ...prev,
+                    venues: [...prev.venues, prev.newVenue.trim()],
+                    newVenue: ''
+                  }));
+                }
+              }}
+              className="px-3 py-2 bg-primary-600 hover:bg-primary-700 rounded-lg text-white text-sm"
+            >
+              Add
+            </button>
+          </div>
+          {fixtureGenSettings.venues.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {fixtureGenSettings.venues.map((venue, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-dark-600 rounded-lg text-xs text-gray-300"
+                >
+                  {venue}
+                  <button
+                    type="button"
+                    onClick={() => setFixtureGenSettings((prev) => ({
+                      ...prev,
+                      venues: prev.venues.filter((_, i) => i !== idx)
+                    }))}
+                    className="text-gray-400 hover:text-red-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <p className="text-xs text-gray-500 mt-3">
+          Fixtures get random spacing, kickoff times, and venues (if added). Leave "Max fixtures" empty for all possible matches.
+        </p>
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
         <button
@@ -589,6 +933,23 @@ const SeasonDetail = () => {
           </div>
         </button>
 
+        {seasonFixtures.length > 0 && (
+          <button
+            onClick={handleAddMoreFixtures}
+            className="card p-3 hover:bg-dark-800/50 transition-colors text-left border border-blue-500/30"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-blue-500/10 rounded-lg flex-shrink-0">
+                <Plus className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-blue-400 text-sm truncate">➕ Add More Fixtures</h3>
+                <p className="text-xs text-gray-400 truncate">Add to existing ({seasonFixtures.length} fixtures)</p>
+              </div>
+            </div>
+          </button>
+        )}
+
         <button
           onClick={handleSeedKnockout}
           className="card p-3 hover:bg-dark-800/50 transition-colors text-left"
@@ -618,6 +979,23 @@ const SeasonDetail = () => {
             </div>
           </div>
         </button>
+
+        {season.autoMoveRelegatedTeams && season.relegationDestinationSeasonId && Number.isFinite(Number(season.relegationPosition)) && (
+          <button
+            onClick={handleProcessRelegation}
+            className="card p-3 hover:bg-dark-800/50 transition-colors text-left border border-red-500/30"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-red-500/10 rounded-lg flex-shrink-0">
+                <Target className="w-4 h-4 text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-red-400 text-sm truncate">Process Relegation</h3>
+                <p className="text-xs text-gray-400 truncate">Move relegated teams to destination season</p>
+              </div>
+            </div>
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -985,7 +1363,7 @@ const SeasonDetail = () => {
 
       {/* Manual Fixture Creation Modal */}
       {showFixtureModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-dark-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-white">Create Fixture</h2>
@@ -1113,7 +1491,7 @@ const SeasonDetail = () => {
 
       {/* Manual Knockout Round Creation Modal */}
       {showKnockoutModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-dark-800 rounded-xl border border-white/10 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-white">Create Knockout Round</h2>

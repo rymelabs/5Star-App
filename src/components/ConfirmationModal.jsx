@@ -71,7 +71,7 @@ const ConfirmationModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
       <div className={`relative w-full max-w-md bg-dark-800 rounded-2xl border ${styles.border} shadow-2xl`}>
         {/* Close button */}
         <button

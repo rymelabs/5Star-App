@@ -1,5 +1,6 @@
 import { useRecycleBin } from '../context/RecycleBinContext';
 import { useAuth } from '../context/AuthContext';
+import { fixturesCollection } from '../firebase/firestore';
 
 /**
  * Hook for soft-deleting items to recycle bin
@@ -50,9 +51,15 @@ export const useSoftDelete = () => {
 
   /**
    * Soft delete a season (moves to recycle bin)
+   * Also deletes all fixtures associated with the season
    */
   const softDeleteSeason = async (season, onSuccess) => {
     try {
+      // First, delete all fixtures associated with this season
+      if (season?.id) {
+        await fixturesCollection.deleteBySeason(season.id);
+      }
+      // Then move the season to recycle bin
       await moveToRecycleBin(season, 'season', 'seasons');
       if (onSuccess) onSuccess();
       return true;

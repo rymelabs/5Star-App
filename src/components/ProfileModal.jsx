@@ -36,7 +36,7 @@ const ProfileModal = ({ isOpen = true, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="fixed inset-0 z-50 flex items-start justify-end pt-20 pr-4 sm:pr-8"
+          className="fixed inset-0 z-[9999] flex items-start justify-end pt-20 pr-4 sm:pr-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

@@ -556,7 +556,7 @@ const Settings = () => {
           </div>
         </div>
 
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.2s_ease-out]">
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-[#1A1A1A] rounded-3xl w-full max-w-sm p-8 border border-white/10 shadow-2xl animate-[scaleIn_0.3s_ease-out]">
             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mx-auto mb-6 border border-red-500/20">
               <LogOut className="w-8 h-8 text-red-500" />
