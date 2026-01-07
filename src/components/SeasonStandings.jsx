@@ -65,12 +65,27 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
     return calculateGroupStandings(currentGroup, seasonFixtures, teams, season?.id);
   }, [currentGroup, seasonFixtures, teams, season?.id]);
 
+  const qualifiersPerGroup = season.knockoutConfig?.qualifiersPerGroup || 2;
+  const relegationPosition = useMemo(() => {
+    const raw = season?.relegationPosition;
+    const parsed = typeof raw === 'number' ? raw : parseInt(raw, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [season?.relegationPosition]);
+
   const getRowStyle = (position) => {
-    const qualifiers = season.knockoutConfig?.qualifiersPerGroup || 2;
-    if (position <= qualifiers) {
+    if (position <= qualifiersPerGroup) {
       return 'bg-gradient-to-r from-brand-purple/10 to-transparent border-l-2 border-l-brand-purple';
     }
+    if (relegationPosition && position >= relegationPosition) {
+      return 'bg-gradient-to-r from-red-500/10 to-transparent border-l-2 border-l-red-500';
+    }
     return 'border-l-2 border-l-transparent hover:bg-white/[0.02]';
+  };
+
+  const getStickyCellBg = (position) => {
+    if (position <= qualifiersPerGroup) return 'bg-brand-purple/10';
+    if (relegationPosition && position >= relegationPosition) return 'bg-red-500/10';
+    return 'bg-elevated';
   };
 
   return (
@@ -132,16 +147,17 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
             <tbody className="divide-y divide-white/5">
               {standings.map((standing) => {
                 const team = teams.find(t => t.id === standing.team?.id || t.id === standing.teamId);
-                const isQualifier = standing.position <= (season.knockoutConfig?.qualifiersPerGroup || 2);
+                const isQualifier = standing.position <= qualifiersPerGroup;
                 const teamId = team?.id || standing.team?.id || standing.teamId;
                 const isTeamLive = teamId ? liveTeamIds.has(teamId) : false;
+                const stickyCellBg = getStickyCellBg(standing.position);
                 
                 return (
                   <tr 
                     key={standing.position} 
                     className={`transition-colors duration-200 group text-xs sm:text-sm ${getRowStyle(standing.position)}`}
                   >
-                    <td className="py-1.5 pl-4 pr-2 sticky left-0 bg-inherit z-10">
+                    <td className={`py-1.5 pl-4 pr-2 sticky left-0 ${stickyCellBg} z-10`}>
                       <span className={`
                         flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold
                         ${isQualifier ? 'bg-brand-purple text-white shadow-[0_0_10px_rgba(109,40,217,0.4)]' : 'text-gray-500'}
@@ -149,7 +165,7 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
                         {standing.position}
                       </span>
                     </td>
-                    <td className="py-1.5 px-4 sticky left-12 bg-inherit z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+                    <td className={`py-1.5 px-4 sticky left-12 ${stickyCellBg} z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]`}>
                       <div className="flex items-center gap-2.5">
                         <NewTeamAvatar 
                           team={team || standing.team} 
@@ -191,12 +207,20 @@ const SeasonStandings = ({ season, teams = [], fixtures = [] }) => {
         </div>
         
         {/* Footer / Legend */}
-        {season.knockoutConfig?.qualifiersPerGroup > 0 && (
+        {(qualifiersPerGroup > 0 || !!relegationPosition) && (
           <div className="px-4 py-4 bg-white/[0.02] border-t border-white/5 flex items-center gap-6 text-xs text-gray-500">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-brand-purple shadow-[0_0_8px_rgba(109,40,217,0.5)]"></div>
-              <span className="font-medium">Qualification Zone</span>
-            </div>
+            {qualifiersPerGroup > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-brand-purple shadow-[0_0_8px_rgba(109,40,217,0.5)]"></div>
+                <span className="font-medium">Qualification Zone</span>
+              </div>
+            )}
+            {relegationPosition && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"></div>
+                <span className="font-medium">Relegation Zone</span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-gray-600"></div>
               <span>Elimination</span>

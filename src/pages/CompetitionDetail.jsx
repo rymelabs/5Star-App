@@ -652,18 +652,25 @@ const CompetitionDetail = () => {
                             {groupStandings?.[group.id]?.map((standing, index) => {
                               const teamId = standing.teamId || standing.team?.id;
                               const isTeamLive = teamId ? liveTeamIds.has(teamId) : false;
+                              const relegationPos = Number.isFinite(Number(competition?.relegationPosition)) ? Number(competition.relegationPosition) : null;
+                              const rowPos = Number(standing.position) || (index + 1);
+                              const isRelegated = Boolean(relegationPos && rowPos >= relegationPos);
 
                               return (
                               <tr
                                 key={standing.teamId || standing.team?.id}
                                 onClick={() => handleTeamClick(standing.teamId || standing.team?.id)}
-                                className="hover:bg-white/[0.02] cursor-pointer transition-colors group"
+                                className={`hover:bg-white/[0.02] cursor-pointer transition-colors group ${isRelegated ? 'bg-red-500/[0.03]' : ''}`}
                               >
                                 <td className="px-4 py-3">
                                   <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                                    index < 2 ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-500'
+                                    index < 2
+                                      ? 'bg-emerald-500/10 text-emerald-400'
+                                      : isRelegated
+                                        ? 'bg-red-500/10 text-red-400'
+                                        : 'text-gray-500'
                                   }`}>
-                                    {index + 1}
+                                    {rowPos}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3">

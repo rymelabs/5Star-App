@@ -184,8 +184,8 @@ class AfconService {
       case 'AET': return 'After ET';
       case 'PEN': return 'Penalties';
       case 'NS': return this.formatMatchTime(match.date);
-      case 'PST': return 'Postponed';
-      case 'CANC': return 'Cancelled';
+      case 'PST': return 'TBD';
+      case 'CANC': return 'CANC';
       default: return match.status;
     }
   }

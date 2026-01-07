@@ -33,7 +33,8 @@ const EditSeason = () => {
     numberOfGroups: 4,
     teamsPerGroup: 4,
     matchesPerRound: 2,
-    qualifiersPerGroup: 2
+    qualifiersPerGroup: 2,
+    relegationPosition: ''
   });
 
   const [groups, setGroups] = useState([]);
@@ -73,6 +74,7 @@ const EditSeason = () => {
         teamsPerGroup: season.teamsPerGroup || 4,
         matchesPerRound: season.knockoutConfig?.matchesPerRound || 2,
         qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2,
+        relegationPosition: (season.relegationPosition ?? '') === null ? '' : (season.relegationPosition ?? ''),
         ownerId: season.ownerId || null,
         ownerName: season.ownerName || 'Unknown Admin',
         logo: season.logo || null
@@ -103,7 +105,7 @@ const EditSeason = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup'].includes(name)
+    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup', 'relegationPosition'].includes(name)
       ? (value === '' ? '' : parseInt(value, 10))
       : value;
     
@@ -237,6 +239,15 @@ const EditSeason = () => {
       return;
     }
 
+    if (formData.relegationPosition !== '') {
+      const relegationPos = parseInt(formData.relegationPosition, 10);
+      const teamsPerGroup = parseInt(formData.teamsPerGroup, 10);
+      if (Number.isNaN(relegationPos) || relegationPos < 1 || relegationPos > teamsPerGroup) {
+        showToast('Relegation position must be between 1 and teams per group.', 'error');
+        return;
+      }
+    }
+
     // Check if all groups are properly configured
     const emptyGroups = groups.filter(g => g.teams.length === 0);
     if (emptyGroups.length > 0) {
@@ -261,6 +272,7 @@ const EditSeason = () => {
         year: formData.year,
         numberOfGroups: formData.numberOfGroups,
         teamsPerGroup: formData.teamsPerGroup,
+        relegationPosition: formData.relegationPosition === '' ? null : parseInt(formData.relegationPosition, 10),
         groups: groups,
         knockoutConfig: {
           matchesPerRound: formData.matchesPerRound,
@@ -461,6 +473,25 @@ const EditSeason = () => {
                     className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Relegation starts at position
+                </label>
+                <input
+                  type="number"
+                  name="relegationPosition"
+                  value={formData.relegationPosition}
+                  onChange={handleChange}
+                  min="1"
+                  max={formData.teamsPerGroup}
+                  className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  placeholder="Optional"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Teams at or below this position will be highlighted red in group/season tables.
+                </p>
               </div>
             </div>
           </div>

@@ -33,7 +33,8 @@ const CreateSeason = () => {
     numberOfGroups: 4,
     teamsPerGroup: 4,
     matchesPerRound: 2, // Knockout matches per round
-    qualifiersPerGroup: 2 // How many teams qualify from each group
+    qualifiersPerGroup: 2, // How many teams qualify from each group
+    relegationPosition: '' // Position where relegation zone starts (optional)
   });
 
   const [groups, setGroups] = useState([]);
@@ -64,7 +65,7 @@ const CreateSeason = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup'].includes(name)
+    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup', 'relegationPosition'].includes(name)
       ? (value === '' ? '' : parseInt(value, 10))
       : value;
     
@@ -139,6 +140,15 @@ const CreateSeason = () => {
       return;
     }
 
+    if (formData.relegationPosition !== '') {
+      const relegationPos = parseInt(formData.relegationPosition, 10);
+      const teamsPerGroup = parseInt(formData.teamsPerGroup, 10);
+      if (Number.isNaN(relegationPos) || relegationPos < 1 || relegationPos > teamsPerGroup) {
+        showToast((t('createSeason.invalidRelegationPosition') || 'Relegation position must be between 1 and teams per group.'), 'error');
+        return;
+      }
+    }
+
     // Check if all groups have teams
     const emptyGroups = groups.filter(g => g.teams.length === 0);
     if (emptyGroups.length > 0) {
@@ -161,6 +171,7 @@ const CreateSeason = () => {
         year: parseInt(formData.year, 10),
         numberOfGroups: parseInt(formData.numberOfGroups, 10),
         teamsPerGroup: parseInt(formData.teamsPerGroup, 10),
+        relegationPosition: formData.relegationPosition === '' ? null : parseInt(formData.relegationPosition, 10),
         logo: logoUrl,
         ownerId: user?.uid || null,
         ownerName: user?.displayName || user?.name || user?.email || 'Unknown Admin',
@@ -337,6 +348,25 @@ const CreateSeason = () => {
                   max="2099"
                   className="input-field w-full"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('createSeason.relegationPosition') || 'Relegation starts at position'}
+                </label>
+                <input
+                  type="number"
+                  name="relegationPosition"
+                  value={formData.relegationPosition}
+                  onChange={handleChange}
+                  min="1"
+                  max={formData.teamsPerGroup}
+                  className="input-field w-full"
+                  placeholder={t('createSeason.optional') || 'Optional'}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {t('createSeason.relegationHint') || 'Teams at or below this position will be highlighted red in group/season tables.'}
+                </p>
               </div>
             </div>
           </div>
