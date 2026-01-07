@@ -55,6 +55,21 @@ export const abbreviateTeamName = (teamName) => {
 // Check if a fixture is currently live
 export const isFixtureLive = (fixture) => {
   if (!fixture) return false;
+
+  const rawStatus = fixture.status;
+  const normalizedStatus = String(rawStatus || '').trim().toLowerCase();
+
+  // Never treat postponed/cancelled/TBD fixtures as live
+  if (
+    normalizedStatus === 'pst' ||
+    normalizedStatus === 'postponed' ||
+    normalizedStatus === 'tbd' ||
+    normalizedStatus === 'canc' ||
+    normalizedStatus === 'cancelled' ||
+    normalizedStatus === 'canceled'
+  ) {
+    return false;
+  }
   
   // If admin marked it as live or playing, it's live
   if (fixture.status === 'live' || fixture.status === 'playing') {

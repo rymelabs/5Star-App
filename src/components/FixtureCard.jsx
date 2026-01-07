@@ -21,6 +21,17 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
   const isCompleted = status === 'completed' || status === 'finished';
   const isRow = variant === 'row';
 
+  const getStatusTag = (rawStatus) => {
+    const normalized = String(rawStatus || '').trim().toLowerCase();
+    if (!normalized) return null;
+    if (normalized === 'tbd' || normalized === 'pst' || normalized === 'postponed') return 'TBD';
+    if (normalized === 'canc' || normalized === 'cancelled' || normalized === 'canceled') return 'CANC';
+    return null;
+  };
+
+  const statusTag = getStatusTag(fixture.status);
+  const statusTagClass = statusTag === 'CANC' ? 'text-red-400' : 'text-brand-purple';
+
   const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
   const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
   const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
@@ -73,6 +84,8 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
                   </span>
                   LIVE {fixture.liveData?.minute && `• ${fixture.liveData.minute}'`}
                 </span>
+              ) : statusTag ? (
+                <span className={`font-bold ${statusTagClass}`}>{statusTag}</span>
               ) : (
                 <span>{dateLabel}</span>
               )}
@@ -83,7 +96,9 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
         {/* Row Mode: Time/Status Indicator */}
         {isRow && (
           <div className="absolute top-1/2 -translate-y-1/2 left-0 w-12 text-center text-[10px] font-medium text-white/40">
-             {isLive ? (
+             {statusTag ? (
+                <span className={`font-bold ${statusTagClass}`}>{statusTag}</span>
+              ) : isLive ? (
                 <span className="text-red-400 animate-pulse">
                   {fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'LIVE'}
                 </span>

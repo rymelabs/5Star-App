@@ -11,6 +11,16 @@ const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
   const isLive = status === 'live' || isFixtureLive(fixture);
   const isCompleted = status === 'completed' || status === 'finished';
 
+  const getStatusTag = (rawStatus) => {
+    const normalized = String(rawStatus || '').trim().toLowerCase();
+    if (!normalized) return null;
+    if (normalized === 'tbd' || normalized === 'pst' || normalized === 'postponed') return 'TBD';
+    if (normalized === 'canc' || normalized === 'cancelled' || normalized === 'canceled') return 'CANC';
+    return null;
+  };
+
+  const statusTag = getStatusTag(fixture.status);
+
   const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
   const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
   const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
@@ -42,7 +52,14 @@ const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
       <div className="flex items-center p-4 gap-6">
         {/* Status/Time Column */}
         <div className="w-24 flex flex-col items-center justify-center border-r border-white/5 pr-6">
-          {isLive ? (
+          {statusTag ? (
+            <div className="flex flex-col items-center gap-1">
+              <span className={`${statusTag === 'CANC' ? 'text-red-500' : 'text-brand-purple'} font-bold text-sm`}>
+                {statusTag}
+              </span>
+              <span className="text-gray-500 text-xs">{dateLabel}</span>
+            </div>
+          ) : isLive ? (
             <div className="flex flex-col items-center gap-1">
               <span className="text-red-500 font-bold text-sm animate-pulse">LIVE</span>
               <span className="text-red-400 text-xs font-medium">{fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'ONGOING'}</span>

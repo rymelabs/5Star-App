@@ -648,6 +648,7 @@ const SeasonDetail = () => {
           {season.groups?.map((group) => {
             // Compute standings from fixtures using shared utility
             const computedStandings = calculateGroupStandings(group, seasonFixtures, teams, season.id);
+            const relegationPos = Number.isFinite(Number(season?.relegationPosition)) ? Number(season.relegationPosition) : null;
             
             return (
             <div key={group.id} className="card p-3 sm:p-4">
@@ -674,8 +675,19 @@ const SeasonDetail = () => {
                       </thead>
                       <tbody className="text-xs sm:text-sm">
                         {computedStandings.map((standing) => (
-                            <tr key={standing.teamId} className="border-b border-gray-700/50">
-                              <td className="py-3 px-2 sm:px-0 text-white sticky left-0 bg-dark-700 sm:bg-transparent z-10">{standing.position}</td>
+                            <tr
+                              key={standing.teamId}
+                              className={`border-b border-gray-700/50 ${
+                                relegationPos && Number(standing.position) >= relegationPos ? 'bg-red-500/[0.04]' : ''
+                              }`}
+                            >
+                              <td
+                                className={`py-3 px-2 sm:px-0 sticky left-0 bg-dark-700 sm:bg-transparent z-10 ${
+                                  relegationPos && Number(standing.position) >= relegationPos ? 'text-red-400 font-semibold' : 'text-white'
+                                }`}
+                              >
+                                {standing.position}
+                              </td>
                               <td className="py-3 px-2 sticky left-8 sm:left-0 bg-dark-700 sm:bg-transparent z-10">
                                 <div className="flex items-center space-x-2 min-w-[120px] sm:min-w-0 max-w-[140px] sm:max-w-[200px]">
                                   {standing.team?.logo && (

@@ -12,6 +12,17 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
   const timeLabel = formatTime(fixture.dateTime);
   const isCompleted = fixture.status === 'completed';
   const isLive = isFixtureLive(fixture);
+
+  const getStatusTag = (rawStatus) => {
+    const status = String(rawStatus || '').trim().toLowerCase();
+    if (!status) return null;
+    if (status === 'tbd' || status === 'pst' || status === 'postponed') return 'TBD';
+    if (status === 'canc' || status === 'cancelled' || status === 'canceled') return 'CANC';
+    return null;
+  };
+
+  const statusTag = getStatusTag(fixture.status);
+  const statusTagClass = statusTag === 'CANC' ? 'text-red-500' : 'text-brand-purple';
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined;
 
   const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
@@ -27,7 +38,9 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
     >
       {/* Time/Status Column */}
       <div className="w-14 flex-shrink-0 flex flex-col items-center justify-center px-2">
-        {isLive ? (
+        {statusTag ? (
+          <span className={`text-[11px] font-bold ${statusTagClass}`}>{statusTag}</span>
+        ) : isLive ? (
           <span className="text-[11px] font-bold text-red-500 animate-pulse">LIVE</span>
         ) : isCompleted ? (
           <span className="text-[11px] font-semibold text-gray-400">FT</span>
