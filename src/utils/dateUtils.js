@@ -52,7 +52,7 @@ export const getRelativeTime = (dateString) => {
 
 export const isFestiveSeason = () => {
   const now = new Date();
-  const endDate = new Date('2026-01-25T23:59:59');
+  const endDate = new Date('2026-01-23T23:00:00');
   return now <= endDate;
 };
 
