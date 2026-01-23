@@ -23,7 +23,6 @@ const withLazyErrorLogging = (label, importer) => React.lazy(async () => {
 const Latest = React.lazy(() => import('./pages/Latest'));
 const Fixtures = React.lazy(() => import('./pages/Fixtures'));
 const FixtureDetail = React.lazy(() => import('./pages/FixtureDetail'));
-const AfconPage = React.lazy(() => import('./pages/AfconPage'));
 const Teams = React.lazy(() => import('./pages/Teams'));
 const TeamDetail = React.lazy(() => import('./pages/TeamDetail'));
 const PlayerDetail = React.lazy(() => import('./pages/PlayerDetail'));
@@ -158,7 +157,6 @@ const AppContent = () => {
           <Route path="/" element={<Latest />} />
           <Route path="/fixtures" element={<Fixtures />} />
           <Route path="/fixtures/:id" element={<FixtureDetail />} />
-          <Route path="/afcon" element={<AfconPage />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/:id" element={<TeamDetail />} />
           <Route path="/teams/:teamId/players/:id" element={<PlayerDetail />} />
