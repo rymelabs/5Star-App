@@ -281,7 +281,11 @@ const CreateSeason = () => {
       }, 1500);
     } catch (error) {
       console.error('Error creating season:', error);
-      showToast(t('createSeason.createFailed'), 'error');
+      // Show more detailed error message
+      const errorMessage = error?.code === 'permission-denied' 
+        ? 'Permission denied. Please ensure your admin privileges are properly set up.'
+        : error?.message || t('createSeason.createFailed');
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -303,9 +307,9 @@ const CreateSeason = () => {
 
   return (
     <div className="px-4 py-6 pb-24">
-      {/* Toast */}
+      {/* Toast - positioned below fixed header (top-20 = 80px to clear ~5rem header) */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
+        <div className={`fixed top-20 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}

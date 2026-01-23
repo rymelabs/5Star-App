@@ -137,16 +137,49 @@ export const onAuthStateChange = (callback) => {
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       
+      // Get the ID token result to check custom claims
+      let tokenClaims = {};
+      try {
+        const tokenResult = await user.getIdTokenResult();
+        tokenClaims = tokenResult.claims || {};
+      } catch (e) {
+        console.warn('Could not get token claims:', e);
+      }
+      
       if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Check if role in Firestore doesn't match token claims - may need token refresh
+        const firestoreRole = userData.role || 'user';
+        const tokenRole = tokenClaims.role;
+        const isAdminInFirestore = firestoreRole === 'admin' || firestoreRole === 'super-admin';
+        const isAdminInToken = tokenClaims.admin === true;
+        
+        // If Firestore says admin but token doesn't have admin claim, force refresh
+        if (isAdminInFirestore && !isAdminInToken) {
+          console.warn('Admin role mismatch: Firestore role is admin but token missing admin claim. Refreshing token...');
+          try {
+            await user.getIdToken(true); // Force refresh
+            const refreshedToken = await user.getIdTokenResult();
+            tokenClaims = refreshedToken.claims || {};
+            console.log('Token refreshed. Admin claim:', tokenClaims.admin);
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+          }
+        }
+        
         callback({
           uid: user.uid,
           email: user.email,
-          ...userDoc.data()
+          firebaseUser: user, // Include Firebase user for token operations
+          tokenClaims, // Include token claims for debugging
+          ...userData
         });
       } else {
         callback({
           uid: user.uid,
           email: user.email,
+          firebaseUser: user,
+          tokenClaims,
           name: user.displayName || 'User',
           role: 'user'
         });
@@ -333,5 +366,39 @@ export const handleGoogleRedirectResult = async () => {
     
     console.error('Google redirect result error:', error.code, error.message);
     throw error;
+  }
+};
+
+// Force refresh the current user's ID token to get latest custom claims
+export const forceTokenRefresh = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('No user signed in');
+  }
+  
+  try {
+    await user.getIdToken(true);
+    const tokenResult = await user.getIdTokenResult();
+    console.log('Token refreshed. Claims:', tokenResult.claims);
+    return tokenResult.claims;
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    throw error;
+  }
+};
+
+// Get current user's token claims
+export const getTokenClaims = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    return null;
+  }
+  
+  try {
+    const tokenResult = await user.getIdTokenResult();
+    return tokenResult.claims;
+  } catch (error) {
+    console.error('Failed to get token claims:', error);
+    return null;
   }
 };

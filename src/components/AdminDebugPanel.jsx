@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getFirebaseDb } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import { forceTokenRefresh, getTokenClaims } from '../firebase/auth';
 
 /**
  * Admin Debug Panel
@@ -16,6 +17,7 @@ import { doc, getDoc } from 'firebase/firestore';
 const AdminDebugPanel = () => {
   const { user, loading } = useAuth();
   const [firestoreData, setFirestoreData] = useState(null);
+  const [tokenClaims, setTokenClaims] = useState(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,8 +39,27 @@ const AdminDebugPanel = () => {
       } else {
         setError('User document not found in Firestore!');
       }
+      
+      // Also get token claims
+      const claims = await getTokenClaims();
+      setTokenClaims(claims);
     } catch (err) {
       setError('Error fetching from Firestore: ' + err.message);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleForceRefresh = async () => {
+    try {
+      setChecking(true);
+      const claims = await forceTokenRefresh();
+      setTokenClaims(claims);
+      alert('Token refreshed! Check if admin claim is now set.');
+      // Reload to pick up new state
+      window.location.reload();
+    } catch (err) {
+      alert('Error refreshing token: ' + err.message);
     } finally {
       setChecking(false);
     }
@@ -127,6 +148,26 @@ const AdminDebugPanel = () => {
         )}
       </div>
 
+      {/* Token Claims */}
+      <div className="mb-3 text-xs">
+        <h4 className="font-semibold text-white mb-1">🔐 Token Claims (for Firestore rules):</h4>
+        <div className="bg-gray-800 p-2 rounded font-mono">
+          {tokenClaims ? (
+            <>
+              <div>admin: <span className={tokenClaims.admin ? 'text-green-400' : 'text-red-400'}>
+                {tokenClaims.admin ? 'TRUE ✅' : 'FALSE ❌'}
+              </span></div>
+              <div>superAdmin: <span className={tokenClaims.superAdmin ? 'text-green-400' : 'text-gray-400'}>
+                {tokenClaims.superAdmin ? 'TRUE' : 'FALSE'}
+              </span></div>
+              <div>role: <span className="text-yellow-400">{tokenClaims.role || 'NOT SET'}</span></div>
+            </>
+          ) : (
+            <span className="text-gray-400">Loading...</span>
+          )}
+        </div>
+      </div>
+
       {/* Diagnosis */}
       <div className="mb-3 text-xs">
         <h4 className="font-semibold text-white mb-1">💡 Diagnosis:</h4>
@@ -136,12 +177,13 @@ const AdminDebugPanel = () => {
           ) : !firestoreData ? (
             <div className="text-yellow-400">⏳ Checking Firestore...</div>
           ) : firestoreData.role === 'admin' || firestoreData.role === 'super-admin' ? (
-            user?.isAdmin ? (
-              <div className="text-green-400">✅ All good! You should have access.</div>
+            tokenClaims?.admin === true ? (
+              <div className="text-green-400">✅ All good! Firestore role and token claim are set correctly.</div>
             ) : (
               <div className="text-red-400">
-                ⚠️ Role is "{firestoreData.role}" in Firestore but isAdmin is FALSE in React!
-                <br />This means the auth state needs to be refreshed.
+                ⚠️ ISSUE FOUND: Role is "{firestoreData.role}" in Firestore but token.admin claim is NOT set!
+                <br />Firestore rules will deny write access.
+                <br />Click "Refresh Token" below to try to fix.
               </div>
             )
           ) : (
@@ -155,29 +197,27 @@ const AdminDebugPanel = () => {
 
       {/* Actions */}
       <div className="space-y-2">
-        {firestoreData && (firestoreData.role === 'admin' || firestoreData.role === 'super-admin') && !user?.isAdmin && (
-          <button
-            onClick={forceRefresh}
-            className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-xs font-semibold"
-          >
-            🔄 Force Refresh (Clear Cache & Reload)
-          </button>
-        )}
+        <button
+          onClick={handleForceRefresh}
+          disabled={checking}
+          className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-xs font-semibold disabled:opacity-50"
+        >
+          🔄 Refresh Token Claims
+        </button>
         
-        {user?.uid && (
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold text-center"
-          >
-            🔗 Open in Firebase Console
-          </a>
-        )}
+        <button
+          onClick={forceRefresh}
+          className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-xs font-semibold"
+        >
+          🔁 Clear Cache & Reload Page
+        </button>
         
         <button
           onClick={() => {
-              k.includes('auth') || k.includes('user') || k.includes('firebase')
-            ));
+            console.log('=== Admin Debug Info ===');
+            console.log('User:', user);
+            console.log('Firestore Data:', firestoreData);
+            console.log('Token Claims:', tokenClaims);
             alert('Debug info logged to console (F12)');
           }}
           className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"

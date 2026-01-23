@@ -356,9 +356,9 @@ const EditSeason = () => {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Toast Notification */}
+      {/* Toast Notification - positioned below fixed header */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 px-4 sm:px-6 py-3 rounded-lg shadow-lg z-[9999] ${
+        <div className={`fixed top-20 right-4 px-4 sm:px-6 py-3 rounded-lg shadow-lg z-[9999] ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}
