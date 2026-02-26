@@ -270,7 +270,8 @@
             "posting": "Ana aikawa...",
             "post": "Aika",
             "logIn": "Shiga",
-            "toComment": "don yin sharhi"
+            "toComment": "don yin sharhi",
+            "highlights": "Highlights ɗin Wasa"
         },
         "admin": {
             "accessDenied": "An hana shiga",
@@ -512,6 +513,13 @@
         "cancelled": "An Soke",
         "homeScore": "Maki Gida",
         "awayScore": "Maki Baƙo",
+        "highlightsUrl": "URL na Highlights ɗin Wasa",
+        "uploadOr": "KO LODA FAYIL",
+        "uploadingProgress": "Ana lodawa... {progress}%",
+        "uploadingPrompt": "Ana loda bidiyon ku...",
+        "clickToUpload": "Danna don zaɓar ko jawo fayil ɗin bidiyo",
+        "uploadLimit": "MP4, WEBM, MOV (Max 100MB)",
+        "uploadComplete": "An loda bidiyo & ya shirya",
         "penalties": "Fenariti",
         "decidedByPenalties": "An yanke da fenariti",
         "homePens": "Fenariti Gida",

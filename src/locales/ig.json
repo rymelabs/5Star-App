@@ -270,7 +270,8 @@
             "posting": "Na-eziga...",
             "post": "Zipu",
             "logIn": "Banye",
-            "toComment": "iji tinye nkọwa"
+            "toComment": "iji tinye nkọwa",
+            "highlights": "Highlights Egwuregwu"
         },
         "admin": {
             "accessDenied": "Agọnarịla ohere",
@@ -512,6 +513,13 @@
         "cancelled": "Kagburu",
         "homeScore": "Akara Ụlọ",
         "awayScore": "Akara Mpụga",
+        "highlightsUrl": "URL Highlights Egwuregwu",
+        "uploadOr": "MA Ọ BỤ BULITE FAỊLỤ",
+        "uploadingProgress": "Na-ebulite... {progress}%",
+        "uploadingPrompt": "Na-ebulite vidiyo gị...",
+        "clickToUpload": "Pịa ka ị họrọ ma ọ bụ dọrọ faịlụ vidiyo",
+        "uploadLimit": "MP4, WEBM, MOV (Max 100MB)",
+        "uploadComplete": "Ebugoro vidiyo & dị njikere",
         "penalties": "Penarịti",
         "decidedByPenalties": "E kpebiri site na penarịti",
         "homePens": "Penarịti Ụlọ",

@@ -29,9 +29,9 @@ export const formatScore = (homeScore, awayScore) => {
 // Abbreviate team names
 export const abbreviateTeamName = (teamName) => {
   if (!teamName || typeof teamName !== 'string') return '';
-  
+
   const words = teamName.trim().split(/\s+/);
-  
+
   // Normalize words: remove empty, filter out small tokens if necessary
   const cleaned = words.filter(w => w && w.length > 0);
 
@@ -55,22 +55,22 @@ export const abbreviateTeamName = (teamName) => {
 // Check if a fixture is currently live
 export const isFixtureLive = (fixture) => {
   if (!fixture) return false;
-  
+
   // If admin marked it as live or playing, it's live
   if (fixture.status === 'live' || fixture.status === 'playing') {
     return true;
   }
-  
+
   // Check if match time has started but less than 2 hours have passed
   const matchTime = new Date(fixture.dateTime);
   const now = new Date();
   const timeDiff = now - matchTime; // milliseconds
-  
+
   // Match is live if:
   // - Current time is after match start time
   // - Less than 2 hours (7200000 ms) have passed since match start
   const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-  
+
   return timeDiff >= 0 && timeDiff <= twoHours;
 };
 
@@ -104,7 +104,7 @@ export const sortBy = (array, key, direction = 'asc') => {
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
+
     if (direction === 'desc') {
       return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
     }
@@ -163,4 +163,29 @@ export const removeFromStorage = (key) => {
     localStorage.removeItem(key);
   } catch (error) {
   }
+};
+
+/**
+ * Convert various video platform URLs to their embed formats
+ * @param {string} url - The original video URL
+ * @returns {string} - The embeddable URL
+ */
+export const getEmbedUrl = (url) => {
+  if (!url) return '';
+
+  // YouTube
+  // Supports: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID, youtube.com/live/ID, etc.
+  const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/|live\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  }
+
+  // Vimeo
+  // Supports: vimeo.com/ID, player.vimeo.com/video/ID
+  const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  return url;
 };

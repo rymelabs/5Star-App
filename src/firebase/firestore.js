@@ -1,15 +1,15 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
+import {
+  collection,
+  doc,
+  getDocs,
   getDoc,
-  addDoc, 
+  addDoc,
   setDoc,
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
   limit,
   startAfter,
   onSnapshot,
@@ -74,7 +74,7 @@ export const teamsCollection = {
     try {
       const database = checkFirebaseInit();
       let q;
-      
+
       if (lastDoc) {
         q = query(
           collection(database, 'teams'),
@@ -89,14 +89,14 @@ export const teamsCollection = {
           limit(pageSize)
         );
       }
-      
+
       const querySnapshot = await getDocs(q);
       const teams = querySnapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
         _doc: doc
       }));
-      
+
       return {
         teams,
         lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
@@ -168,7 +168,7 @@ export const teamsCollection = {
       const ensurePlayerIds = (players = []) => {
         return players.map(p => ({
           ...p,
-          id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`
+          id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`
         }));
       };
 
@@ -266,13 +266,13 @@ export const teamsCollection = {
       const id = String(teamId);
       const teamRef = doc(database, 'teams', id);
       const teamDoc = await getDoc(teamRef);
-      
+
       if (!teamDoc.exists()) {
         throw new Error('Team not found');
       }
 
       const currentFollowers = teamDoc.data().followers || [];
-      
+
       // Check if already following
       if (currentFollowers.includes(userId)) {
         return;
@@ -297,13 +297,13 @@ export const teamsCollection = {
       const id = String(teamId);
       const teamRef = doc(database, 'teams', id);
       const teamDoc = await getDoc(teamRef);
-      
+
       if (!teamDoc.exists()) {
         throw new Error('Team not found');
       }
 
       const currentFollowers = teamDoc.data().followers || [];
-      
+
       // Check if not following
       if (!currentFollowers.includes(userId)) {
         return;
@@ -382,7 +382,7 @@ export const teamsCollection = {
 
       const ensurePlayerIds = (players = []) => players.map(p => ({
         ...p,
-        id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`
+        id: p.id || `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`
       }));
 
       const teamData = {
@@ -543,7 +543,7 @@ export const fixturesCollection = {
     try {
       const database = checkFirebaseInit();
       let queryConstraints = [orderBy('dateTime', 'desc')];
-      
+
       // Add filters if provided
       if (filters.seasonId) {
         queryConstraints.push(where('seasonId', '==', filters.seasonId));
@@ -551,23 +551,23 @@ export const fixturesCollection = {
       if (filters.status) {
         queryConstraints.push(where('status', '==', filters.status));
       }
-      
+
       // Add pagination
       if (lastDoc) {
         queryConstraints.push(startAfter(lastDoc));
       }
       queryConstraints.push(limit(pageSize));
-      
+
       const q = query(collection(database, 'fixtures'), ...queryConstraints);
       const querySnapshot = await getDocs(q);
-      
+
       const fixtures = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime),
         _doc: doc
       }));
-      
+
       return {
         fixtures,
         lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
@@ -648,7 +648,7 @@ export const fixturesCollection = {
   add: async (fixtureData) => {
     try {
       const database = checkFirebaseInit();
-      
+
       // Handle dateTime - ensure it's a valid Date or null
       let dateTimeValue = null;
       if (fixtureData.dateTime) {
@@ -657,7 +657,7 @@ export const fixturesCollection = {
           dateTimeValue = parsedDate;
         }
       }
-      
+
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
         ownerId: fixtureData.ownerId || null,
@@ -714,7 +714,7 @@ export const fixturesCollection = {
       const database = checkFirebaseInit();
       const fixtureRef = doc(database, 'fixtures', fixtureId);
       const fixtureDoc = await getDoc(fixtureRef);
-      
+
       if (!fixtureDoc.exists()) {
         throw new Error('Fixture not found');
       }
@@ -755,7 +755,7 @@ export const fixturesCollection = {
       const database = checkFirebaseInit();
       const fixtureRef = doc(database, 'fixtures', fixtureId);
       const fixtureDoc = await getDoc(fixtureRef);
-      
+
       if (!fixtureDoc.exists()) {
         throw new Error('Fixture not found');
       }
@@ -763,13 +763,13 @@ export const fixturesCollection = {
       const fixtureData = fixtureDoc.data();
       const userPredictions = fixtureData.userPredictions || {};
       const predictions = fixtureData.predictions || { home: 0, draw: 0, away: 0 };
-      
+
       // Remove previous prediction if exists
       const previousPrediction = userPredictions[userId];
       if (previousPrediction && predictions[previousPrediction] > 0) {
         predictions[previousPrediction]--;
       }
-      
+
       // Add new prediction
       predictions[prediction]++;
       userPredictions[userId] = prediction;
@@ -787,6 +787,55 @@ export const fixturesCollection = {
     }
   },
 
+  // Update user rating for a player in a fixture
+  updatePlayerRating: async (fixtureId, userId, playerId, rating) => {
+    try {
+      const database = checkFirebaseInit();
+      const fixtureRef = doc(database, 'fixtures', fixtureId);
+      const fixtureDoc = await getDoc(fixtureRef);
+
+      if (!fixtureDoc.exists()) {
+        throw new Error('Fixture not found');
+      }
+
+      const fixtureData = fixtureDoc.data();
+      // userPlayerRatings: { [userId]: { [playerId]: rating } }
+      const userPlayerRatings = fixtureData.userPlayerRatings || {};
+      if (!userPlayerRatings[userId]) userPlayerRatings[userId] = {};
+      userPlayerRatings[userId][playerId] = rating;
+
+      // playerRatings: { [playerId]: { total: sum, count: N, avg: sum/N } }
+      const playerRatings = fixtureData.playerRatings || {};
+
+      // Recalculate average for this player
+      let sum = 0;
+      let count = 0;
+      Object.values(userPlayerRatings).forEach(userRatings => {
+        if (userRatings[playerId] !== undefined) {
+          sum += userRatings[playerId];
+          count++;
+        }
+      });
+
+      playerRatings[playerId] = {
+        total: sum,
+        count: count,
+        avg: parseFloat((sum / count).toFixed(1))
+      };
+
+      await updateDoc(fixtureRef, {
+        userPlayerRatings,
+        playerRatings,
+        updatedAt: serverTimestamp()
+      });
+
+      return { playerRating: playerRatings[playerId], userRating: rating };
+    } catch (error) {
+      console.error('Error updating player rating:', error);
+      throw error;
+    }
+  },
+
   // Delete fixtures by season
   deleteBySeason: async (seasonId) => {
     try {
@@ -796,12 +845,12 @@ export const fixturesCollection = {
         where('seasonId', '==', seasonId)
       );
       const querySnapshot = await getDocs(q);
-      
+
       const batch = writeBatch(database);
       querySnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
       });
-      
+
       await batch.commit();
       return querySnapshot.docs.length; // Return count of deleted fixtures
     } catch (error) {
@@ -815,20 +864,20 @@ export const fixturesCollection = {
     try {
       const database = checkFirebaseInit();
       const querySnapshot = await getDocs(collection(database, 'fixtures'));
-      
+
       const batch = writeBatch(database);
       let deletedCount = 0;
-      
+
       querySnapshot.docs.forEach(doc => {
         const data = doc.data();
         // Delete fixtures with undefined or missing team IDs
-        if (!data.homeTeamId || !data.awayTeamId || 
-            data.homeTeamId === 'undefined' || data.awayTeamId === 'undefined') {
+        if (!data.homeTeamId || !data.awayTeamId ||
+          data.homeTeamId === 'undefined' || data.awayTeamId === 'undefined') {
           batch.delete(doc.ref);
           deletedCount++;
         }
       });
-      
+
       await batch.commit();
       return deletedCount;
     } catch (error) {
@@ -911,7 +960,7 @@ export const newsCollection = {
     try {
       const database = checkFirebaseInit();
       let q;
-      
+
       if (lastDoc) {
         q = query(
           collection(database, 'articles'),
@@ -926,13 +975,13 @@ export const newsCollection = {
           limit(pageSize)
         );
       }
-      
+
       const querySnapshot = await getDocs(q);
       const articles = querySnapshot.docs.map(doc => ({
         ...mapArticleDoc(doc),
         _doc: doc
       }));
-      
+
       return {
         articles,
         lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
@@ -950,11 +999,11 @@ export const newsCollection = {
       const database = checkFirebaseInit();
       const docRef = doc(database, 'articles', articleId);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         return mapArticleDoc(docSnap);
       }
-      
+
       console.warn(`Article not found with ID: ${articleId}`);
       return null;
     } catch (error) {
@@ -967,28 +1016,28 @@ export const newsCollection = {
   getBySlug: async (slugOrId) => {
     try {
       const database = checkFirebaseInit();
-      
+
       // First, try to find by slug
       const q = query(collection(database, 'articles'), where('slug', '==', slugOrId));
       const querySnapshot = await getDocs(q);
-      
+
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
         return mapArticleDoc(docSnap);
       }
-      
+
       // If not found by slug, try by document ID (for old articles without slugs)
       try {
         const docRef = doc(database, 'articles', slugOrId);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
           return mapArticleDoc(docSnap);
         }
       } catch {
         // If it's not a valid document ID, just continue
       }
-      
+
       console.warn(`Article not found with slug or ID: ${slugOrId}`);
       return null;
     } catch (error) {
@@ -1070,17 +1119,17 @@ export const newsCollection = {
       // Convert ID to string (handles both numeric and string IDs)
       const articleIdStr = String(articleId);
       const docRef = doc(database, 'articles', articleIdStr);
-      
+
       // Verify article exists before deleting
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
         console.warn('Article already deleted or does not exist:', articleIdStr);
         return; // Don't throw error, just return
       }
-      
+
       // Delete the document
       await deleteDoc(docRef);
-      
+
       // Verify deletion
       const verifySnap = await getDoc(docRef);
       if (verifySnap.exists()) {
@@ -1101,18 +1150,18 @@ export const newsCollection = {
       const articleIdStr = String(articleId);
       const articleRef = doc(database, 'articles', articleIdStr);
       const articleSnap = await getDoc(articleRef);
-      
+
       if (!articleSnap.exists()) {
         throw new Error('Article not found');
       }
-      
+
       const articleData = articleSnap.data();
       const likedBy = articleData.likedBy || [];
       const likes = articleData.likes || 0;
-      
+
       let newLikedBy;
       let newLikes;
-      
+
       if (likedBy.includes(userId)) {
         // Unlike - remove user from array
         newLikedBy = likedBy.filter(id => id !== userId);
@@ -1122,13 +1171,13 @@ export const newsCollection = {
         newLikedBy = [...likedBy, userId];
         newLikes = likes + 1;
       }
-      
+
       await updateDoc(articleRef, {
         likedBy: newLikedBy,
         likes: newLikes,
         updatedAt: serverTimestamp()
       });
-      
+
       return {
         liked: !likedBy.includes(userId),
         likes: newLikes
@@ -1145,22 +1194,22 @@ export const newsCollection = {
       const database = checkFirebaseInit();
       const articleIdStr = String(articleId);
       const articleRef = doc(database, 'articles', articleIdStr);
-      
+
       // Get current views count
       const articleSnap = await getDoc(articleRef);
-      
+
       if (!articleSnap.exists()) {
         console.warn('Article not found for view increment:', articleIdStr);
         return;
       }
-      
+
       const currentViews = articleSnap.data().views || 0;
-      
+
       // Increment view count atomically
       await updateDoc(articleRef, {
         views: increment(1)
       });
-      
+
       return currentViews + 1;
     } catch (error) {
       console.error('Error incrementing view count:', error);
@@ -1171,7 +1220,7 @@ export const newsCollection = {
 
 // Comments collection functions
 export const commentsCollection = {
-    // Get comments for an item
+  // Get comments for an item
   getForItem: async (itemType, itemId) => {
     try {
       const database = checkFirebaseInit();
@@ -1455,7 +1504,7 @@ export const leagueSettingsCollection = {
       const database = checkFirebaseInit();
       const settingsRef = doc(database, 'leagueSettings', 'current');
       const settingsDoc = await getDoc(settingsRef);
-      
+
       if (settingsDoc.exists()) {
         return settingsDoc.data();
       } else {
@@ -1548,7 +1597,7 @@ export const seasonsCollection = {
     try {
       const database = checkFirebaseInit();
       const q = query(
-        collection(database, 'seasons'), 
+        collection(database, 'seasons'),
         where('isActive', '==', true),
         limit(1)
       );
@@ -1589,7 +1638,7 @@ export const seasonsCollection = {
     try {
       const database = checkFirebaseInit();
       const currentYear = new Date().getFullYear();
-      
+
       const season = {
         name: seasonData.name || `Fivescores Premier League Season ${currentYear}`,
         year: seasonData.year || currentYear,
@@ -1597,23 +1646,23 @@ export const seasonsCollection = {
         status: 'upcoming', // upcoming, ongoing, completed
         ownerId: seasonData.ownerId || null,
         ownerName: seasonData.ownerName || null,
-        
+
         // Group stage configuration
         numberOfGroups: seasonData.numberOfGroups || 4,
         teamsPerGroup: seasonData.teamsPerGroup || 4,
         groups: seasonData.groups || [], // Array of {id, name, teams: []}
-        
+
         // Knockout configuration
         knockoutConfig: {
           matchesPerRound: seasonData.knockoutConfig?.matchesPerRound || 2, // 1 = single leg, 2 = home & away
           rounds: seasonData.knockoutConfig?.rounds || [], // Array of knockout rounds
         },
-        
+
         // Metadata
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
-      
+
       const docRef = await addDoc(collection(database, 'seasons'), season);
       return docRef.id;
     } catch (error) {
@@ -1660,7 +1709,7 @@ export const seasonsCollection = {
     try {
       const database = checkFirebaseInit();
       const batch = writeBatch(database);
-      
+
       // Get all seasons
       let seasonsSnapshot;
       if (ownerId) {
@@ -1670,19 +1719,19 @@ export const seasonsCollection = {
       } else {
         seasonsSnapshot = await getDocs(collection(database, 'seasons'));
       }
-      
+
       // Deactivate all seasons
       seasonsSnapshot.docs.forEach((seasonDoc) => {
         batch.update(seasonDoc.ref, { isActive: false });
       });
-      
+
       // Activate the selected season
-      batch.update(doc(database, 'seasons', seasonId), { 
+      batch.update(doc(database, 'seasons', seasonId), {
         isActive: true,
         status: 'ongoing',
         updatedAt: serverTimestamp()
       });
-      
+
       await batch.commit();
     } catch (error) {
       console.error('Error setting exclusive active season:', error);
@@ -1713,24 +1762,24 @@ export const seasonsCollection = {
       const database = checkFirebaseInit();
       const seasonRef = doc(database, 'seasons', seasonId);
       const seasonDoc = await getDoc(seasonRef);
-      
+
       if (seasonDoc.exists()) {
         const season = seasonDoc.data();
         const groups = season.groups || [];
         const groupId = `group-${Date.now()}`;
-        
+
         groups.push({
           id: groupId,
           name: groupData.name || `Group ${groups.length + 1}`,
           teams: groupData.teams || [],
           standings: [] // Will be calculated from fixtures
         });
-        
+
         await updateDoc(seasonRef, {
           groups,
           updatedAt: serverTimestamp()
         });
-        
+
         return groupId;
       }
     } catch (error) {
@@ -1745,19 +1794,19 @@ export const seasonsCollection = {
       const database = checkFirebaseInit();
       const seasonRef = doc(database, 'seasons', seasonId);
       const seasonDoc = await getDoc(seasonRef);
-      
+
       if (seasonDoc.exists()) {
         const season = seasonDoc.data();
         const groups = season.groups || [];
         const groupIndex = groups.findIndex(g => g.id === groupId);
-        
+
         if (groupIndex !== -1) {
           groups[groupIndex] = {
             ...groups[groupIndex],
             ...groupData,
             id: groupId // Preserve the ID
           };
-          
+
           await updateDoc(seasonRef, {
             groups,
             updatedAt: serverTimestamp()
@@ -1787,16 +1836,16 @@ export const seasonsCollection = {
     try {
       const database = checkFirebaseInit();
       const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
-      
+
       if (!seasonDoc.exists()) return;
-      
+
       const season = seasonDoc.data();
       const fixtures = [];
-      
+
       // Generate fixtures for each group
       season.groups.forEach(group => {
         const teams = group.teams;
-        
+
         // Round-robin: each team plays every other team
         for (let i = 0; i < teams.length; i++) {
           for (let j = i + 1; j < teams.length; j++) {
@@ -1812,7 +1861,7 @@ export const seasonsCollection = {
               dateTime: null, // To be set by admin
               venue: null // To be set by admin
             });
-            
+
             // Away fixture (return leg)
             fixtures.push({
               seasonId,
@@ -1828,7 +1877,7 @@ export const seasonsCollection = {
           }
         }
       });
-      
+
       return fixtures;
     } catch (error) {
       console.error('Error generating group fixtures:', error);
@@ -1841,18 +1890,18 @@ export const seasonsCollection = {
     try {
       const database = checkFirebaseInit();
       const seasonDoc = await getDoc(doc(database, 'seasons', seasonId));
-      
+
       if (!seasonDoc.exists()) return;
-      
+
       const season = seasonDoc.data();
       const qualifiedTeams = [];
-      
+
       // Get top N teams from each group
       season.groups.forEach(group => {
         const standings = (group.standings || [])
           .sort((a, b) => b.points - a.points || (b.goalDifference - a.goalDifference))
           .slice(0, qualifiersPerGroup);
-        
+
         standings.forEach((team, index) => {
           qualifiedTeams.push({
             teamId: team.teamId,
@@ -1863,18 +1912,18 @@ export const seasonsCollection = {
           });
         });
       });
-      
+
       // Create knockout rounds
       const knockoutRounds = [];
       let currentRound = qualifiedTeams;
       let roundNumber = 1;
-      
+
       while (currentRound.length > 1) {
         const roundName = currentRound.length === 2 ? 'Final' :
-                         currentRound.length === 4 ? 'Semi-Finals' :
-                         currentRound.length === 8 ? 'Quarter-Finals' :
-                         `Round of ${currentRound.length}`;
-        
+          currentRound.length === 4 ? 'Semi-Finals' :
+            currentRound.length === 8 ? 'Quarter-Finals' :
+              `Round of ${currentRound.length}`;
+
         const matches = [];
         for (let i = 0; i < currentRound.length; i += 2) {
           matches.push({
@@ -1883,23 +1932,23 @@ export const seasonsCollection = {
             matchNumber: (i / 2) + 1
           });
         }
-        
+
         knockoutRounds.push({
           roundNumber,
           name: roundName,
           matches,
           completed: false
         });
-        
+
         currentRound = currentRound.slice(0, currentRound.length / 2);
         roundNumber++;
       }
-      
+
       await updateDoc(doc(database, 'seasons', seasonId), {
         'knockoutConfig.rounds': knockoutRounds,
         updatedAt: serverTimestamp()
       });
-      
+
       return knockoutRounds;
     } catch (error) {
       console.error('Error seeding knockout stage:', error);
@@ -1943,11 +1992,11 @@ export const playersCollection = {
     try {
       const database = checkFirebaseInit();
       const playerDoc = await getDoc(doc(database, 'players', playerId));
-      
+
       if (!playerDoc.exists()) {
         return null;
       }
-      
+
       return {
         id: playerDoc.id,
         ...playerDoc.data()
@@ -1968,7 +2017,7 @@ export const playersCollection = {
         orderBy('jerseyNumber', 'asc')
       );
       const querySnapshot = await getDocs(q);
-      
+
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -2024,11 +2073,11 @@ export const playersCollection = {
   getStats: async (playerId) => {
     try {
       const database = checkFirebaseInit();
-      
+
       // Get all fixtures where this player participated
       const fixturesRef = collection(database, 'fixtures');
       const querySnapshot = await getDocs(fixturesRef);
-      
+
       const stats = {
         matchesPlayed: 0,
         goals: 0,
@@ -2038,10 +2087,10 @@ export const playersCollection = {
         minutesPlayed: 0,
         cleanSheets: 0
       };
-      
+
       querySnapshot.docs.forEach(doc => {
         const fixture = doc.data();
-        
+
         // Check events for this player
         if (fixture.events && Array.isArray(fixture.events)) {
           fixture.events.forEach(event => {
@@ -2053,21 +2102,21 @@ export const playersCollection = {
             }
           });
         }
-        
+
         // Check if player was in lineup
         if (fixture.lineup) {
           const inHomeLineup = fixture.lineup.home?.some(p => p.playerId === playerId);
           const inAwayLineup = fixture.lineup.away?.some(p => p.playerId === playerId);
-          
+
           if (inHomeLineup || inAwayLineup) {
             stats.matchesPlayed++;
-            
+
             // Check for clean sheet (goalkeeper)
             if (fixture.status === 'completed') {
-              const playerLineup = inHomeLineup 
+              const playerLineup = inHomeLineup
                 ? fixture.lineup.home.find(p => p.playerId === playerId)
                 : fixture.lineup.away.find(p => p.playerId === playerId);
-              
+
               if (playerLineup?.position === 'GK') {
                 const conceded = inHomeLineup ? fixture.awayScore : fixture.homeScore;
                 if (conceded === 0) stats.cleanSheets++;
@@ -2076,7 +2125,7 @@ export const playersCollection = {
           }
         }
       });
-      
+
       return stats;
     } catch (error) {
       console.error('Error fetching player stats:', error);

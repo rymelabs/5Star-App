@@ -10,7 +10,8 @@ import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp, Search, Video, Upload, CloudUpload, Loader2 } from 'lucide-react';
+import { uploadVideoWithProgress, deleteVideo } from '../../services/videoUploadService';
 
 const AdminFixtures = () => {
   const { t } = useLanguage();
@@ -58,8 +59,11 @@ const AdminFixtures = () => {
     penaltyWinnerId: '',
     homeLineup: [],
     awayLineup: [],
-    events: []
+    events: [],
+    highlightsUrl: ''
   });
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [selectedSeasonGroups, setSelectedSeasonGroups] = useState([]);
   const [showLineupModal, setShowLineupModal] = useState(null); // 'home' or 'away'
   const [showEventModal, setShowEventModal] = useState(false);
@@ -183,7 +187,8 @@ const AdminFixtures = () => {
         penaltyWinnerId: formData.decidedByPenalties ? (formData.penaltyWinnerId || null) : null,
         homeLineup: formData.homeLineup || [],
         awayLineup: formData.awayLineup || [],
-        events: formData.events || []
+        events: formData.events || [],
+        highlightsUrl: formData.highlightsUrl || ''
       };
 
       await addFixture(fixtureData);
@@ -312,7 +317,8 @@ const AdminFixtures = () => {
       penaltyWinnerId: '',
       homeLineup: [],
       awayLineup: [],
-      events: []
+      events: [],
+      highlightsUrl: ''
     });
     setSelectedSeasonGroups([]);
     setShowAddForm(false);
@@ -348,7 +354,8 @@ const AdminFixtures = () => {
       penaltyWinnerId: fixture.penaltyWinnerId || '',
       homeLineup: fixture.homeLineup || [],
       awayLineup: fixture.awayLineup || [],
-      events: fixture.events || []
+      events: fixture.events || [],
+      highlightsUrl: fixture.highlightsUrl || ''
     });
     // Load groups if season is selected
     if (fixture.seasonId) {
@@ -390,7 +397,8 @@ const AdminFixtures = () => {
         penaltyWinnerId: formData.decidedByPenalties ? (formData.penaltyWinnerId || null) : null,
         homeLineup: formData.homeLineup || [],
         awayLineup: formData.awayLineup || [],
-        events: formData.events || []
+        events: formData.events || [],
+        highlightsUrl: formData.highlightsUrl || ''
       };
 
       await updateFixture(editingId, updates);
@@ -425,6 +433,38 @@ const AdminFixtures = () => {
       showToast(t('adminFixtures.deleteFailed') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVideoFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      setVideoUploadProgress(0);
+
+      // If we already have an uploaded video URL, we should delete it first
+      if (formData.highlightsUrl && formData.highlightsUrl.includes('firebasestorage')) {
+        await deleteVideo(formData.highlightsUrl);
+      }
+
+      const downloadUrl = await uploadVideoWithProgress(file, 'highlights', (progress) => {
+        setVideoUploadProgress(progress);
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        highlightsUrl: downloadUrl
+      }));
+
+      showToast('Match highlights uploaded successfully', 'success');
+    } catch (error) {
+      console.error('Video upload error:', error);
+      showToast('Video upload failed: ' + error.message, 'error');
+    } finally {
+      setUploadingVideo(false);
+      setVideoUploadProgress(0);
     }
   };
 
@@ -750,6 +790,68 @@ const AdminFixtures = () => {
                       placeholder="0"
                       min="0"
                     />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-brand-purple" />
+                        <span>{t('adminFixtures.highlightsUrl') || 'Match Highlights URL'}</span>
+                      </div>
+                    </label>
+                    <input
+                      type="url"
+                      name="highlightsUrl"
+                      value={formData.highlightsUrl}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+
+                    <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('adminFixtures.uploadOr')}</span>
+                        {uploadingVideo && (
+                          <div className="flex items-center gap-2 text-brand-purple">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">{t('adminFixtures.uploadingProgress', { progress: videoUploadProgress })}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <label className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all cursor-pointer ${uploadingVideo ? 'border-brand-purple/50 bg-brand-purple/5 opacity-50' : 'border-white/10 hover:border-brand-purple/50 hover:bg-white/5'
+                        }`}>
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoFileChange}
+                          disabled={uploadingVideo}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <CloudUpload className={`w-8 h-8 mb-2 ${uploadingVideo ? 'text-brand-purple' : 'text-gray-500'}`} />
+                        <span className="text-xs font-medium text-gray-400">
+                          {uploadingVideo ? t('adminFixtures.uploadingPrompt') : t('adminFixtures.clickToUpload')}
+                        </span>
+                        <span className="text-[10px] text-gray-600 mt-1">{t('adminFixtures.uploadLimit')}</span>
+                      </label>
+
+                      {uploadingVideo && (
+                        <div className="mt-3 w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-brand-purple to-accent-green transition-all duration-300"
+                            style={{ width: `${videoUploadProgress}%` }}
+                          />
+                        </div>
+                      )}
+
+                      {formData.highlightsUrl && formData.highlightsUrl.includes('firebasestorage') && !uploadingVideo && (
+                        <div className="mt-3 flex items-center gap-2 text-[10px] text-accent-green bg-accent-green/10 px-3 py-1.5 rounded-lg border border-accent-green/20">
+                          <Check className="w-3 h-3" />
+                          <span className="font-bold uppercase tracking-widest">{t('adminFixtures.uploadComplete')}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">YouTube, Vimeo, or a direct MP4 upload</p>
                   </div>
 
                   {/* Penalties (Knockout) */}
