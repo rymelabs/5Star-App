@@ -12,24 +12,7 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
   const timeLabel = formatTime(fixture.dateTime);
   const isCompleted = fixture.status === 'completed';
   const isLive = isFixtureLive(fixture);
-
-  const getStatusTag = (rawStatus) => {
-    const status = String(rawStatus || '').trim().toLowerCase();
-    if (!status) return null;
-    if (status === 'tbd' || status === 'pst' || status === 'postponed') return 'TBD';
-    if (status === 'canc' || status === 'cancelled' || status === 'canceled') return 'CANC';
-    return null;
-  };
-
-  const statusTag = getStatusTag(fixture.status);
-  const statusTagClass = statusTag === 'CANC' ? 'text-red-500' : 'text-brand-purple';
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined;
-
-  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
-  const homeScoreNum = Number.isFinite(Number(fixture.homeScore)) ? Number(fixture.homeScore) : 0;
-  const awayScoreNum = Number.isFinite(Number(fixture.awayScore)) ? Number(fixture.awayScore) : 0;
-  const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
-  const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
 
   return (
     <div
@@ -38,9 +21,7 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
     >
       {/* Time/Status Column */}
       <div className="w-14 flex-shrink-0 flex flex-col items-center justify-center px-2">
-        {statusTag ? (
-          <span className={`text-[11px] font-bold ${statusTagClass}`}>{statusTag}</span>
-        ) : isLive ? (
+        {isLive ? (
           <span className="text-[11px] font-bold text-red-500 animate-pulse">LIVE</span>
         ) : isCompleted ? (
           <span className="text-[11px] font-semibold text-gray-400">FT</span>
@@ -60,7 +41,7 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
         {/* Home Team */}
         <div className="flex-1 flex items-center gap-2 min-w-0 justify-end">
           <span className={`text-[13px] truncate transition-colors ${
-            isCompleted && homeScoreNum > awayScoreNum
+            isCompleted && Number(fixture.homeScore) > Number(fixture.awayScore)
               ? 'text-white font-semibold'
               : 'text-gray-300 group-hover:text-white'
           }`}>
@@ -74,15 +55,15 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
           {isCompleted || isLive ? (
             <div className="flex items-center gap-1">
               <span className={`text-[15px] font-bold w-5 text-center ${
-                homeScoreNum > awayScoreNum ? 'text-white' : 'text-gray-400'
+                Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white' : 'text-gray-400'
               }`}>
-                {homeScoreDisplay}
+                {fixture.homeScore}
               </span>
               <span className="text-[11px] text-gray-600">-</span>
               <span className={`text-[15px] font-bold w-5 text-center ${
-                awayScoreNum > homeScoreNum ? 'text-white' : 'text-gray-400'
+                Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white' : 'text-gray-400'
               }`}>
-                {awayScoreDisplay}
+                {fixture.awayScore}
               </span>
             </div>
           ) : (
@@ -99,7 +80,7 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
         <div className="flex-1 flex items-center gap-2 min-w-0 justify-start">
           <NewTeamAvatar team={fixture.awayTeam} size={22} />
           <span className={`text-[13px] truncate transition-colors ${
-            isCompleted && awayScoreNum > homeScoreNum
+            isCompleted && Number(fixture.awayScore) > Number(fixture.homeScore)
               ? 'text-white font-semibold'
               : 'text-gray-300 group-hover:text-white'
           }`}>

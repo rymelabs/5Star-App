@@ -23,7 +23,6 @@ const CreateSeason = () => {
   const currentYear = new Date().getFullYear();
   
   const [allTeams, setAllTeams] = useState([]);
-  const [allSeasons, setAllSeasons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Basic info, 2: Groups, 3: Knockout config
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -31,17 +30,10 @@ const CreateSeason = () => {
   const [formData, setFormData] = useState({
     name: '',
     year: currentYear,
-    startDate: '',
     numberOfGroups: 4,
     teamsPerGroup: 4,
-    enableKnockout: true, // Toggle for knockout stage
     matchesPerRound: 2, // Knockout matches per round
-    qualifiersPerGroup: 2, // How many teams qualify from each group
-    relegationPosition: '', // Position where relegation zone starts (optional)
-    autoMoveRelegatedTeams: false,
-    relegationDestinationSeasonId: '',
-    createRelegationSeason: false,
-    relegationSeasonName: ''
+    qualifiersPerGroup: 2 // How many teams qualify from each group
   });
 
   const [groups, setGroups] = useState([]);
@@ -51,17 +43,13 @@ const CreateSeason = () => {
   const isAdmin = user?.isAdmin;
 
   useEffect(() => {
-    loadTeamsAndSeasons();
+    loadTeams();
   }, []);
 
-  const loadTeamsAndSeasons = async () => {
+  const loadTeams = async () => {
     try {
-      const [teams, seasons] = await Promise.all([
-        teamsCollection.getAll(),
-        seasonsCollection.getAll()
-      ]);
+      const teams = await teamsCollection.getAll();
       setAllTeams(teams);
-      setAllSeasons(seasons);
     } catch (error) {
       console.error('Error loading teams:', error);
     }
@@ -76,21 +64,13 @@ const CreateSeason = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup', 'relegationPosition'].includes(name)
+    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup'].includes(name)
       ? (value === '' ? '' : parseInt(value, 10))
       : value;
     
     setFormData(prev => ({
       ...prev,
       [name]: numValue
-    }));
-  };
-
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
     }));
   };
 
@@ -159,26 +139,6 @@ const CreateSeason = () => {
       return;
     }
 
-    if (formData.relegationPosition !== '') {
-      const relegationPos = parseInt(formData.relegationPosition, 10);
-      const teamsPerGroup = parseInt(formData.teamsPerGroup, 10);
-      if (Number.isNaN(relegationPos) || relegationPos < 1 || relegationPos > teamsPerGroup) {
-        showToast((t('createSeason.invalidRelegationPosition') || 'Relegation position must be between 1 and teams per group.'), 'error');
-        return;
-      }
-    }
-
-    if (formData.autoMoveRelegatedTeams) {
-      if (formData.relegationPosition === '') {
-        showToast((t('createSeason.relegationRequiredForAutoMove') || 'Set a relegation position to enable auto-move.'), 'error');
-        return;
-      }
-      if (!formData.createRelegationSeason && !formData.relegationDestinationSeasonId) {
-        showToast((t('createSeason.selectRelegationSeason') || 'Select a relegation season (or enable creating one).'), 'error');
-        return;
-      }
-    }
-
     // Check if all groups have teams
     const emptyGroups = groups.filter(g => g.teams.length === 0);
     if (emptyGroups.length > 0) {
@@ -199,12 +159,8 @@ const CreateSeason = () => {
       const seasonData = {
         name: formData.name.trim(),
         year: parseInt(formData.year, 10),
-        startDate: formData.startDate || null,
         numberOfGroups: parseInt(formData.numberOfGroups, 10),
         teamsPerGroup: parseInt(formData.teamsPerGroup, 10),
-        relegationPosition: formData.relegationPosition === '' ? null : parseInt(formData.relegationPosition, 10),
-        autoMoveRelegatedTeams: Boolean(formData.autoMoveRelegatedTeams),
-        relegationDestinationSeasonId: formData.createRelegationSeason ? null : (formData.relegationDestinationSeasonId || null),
         logo: logoUrl,
         ownerId: user?.uid || null,
         ownerName: user?.displayName || user?.name || user?.email || 'Unknown Admin',
@@ -225,55 +181,16 @@ const CreateSeason = () => {
             points: 0
           }))
         })),
-        enableKnockout: Boolean(formData.enableKnockout),
-        knockoutConfig: formData.enableKnockout ? {
+        knockoutConfig: {
           matchesPerRound: parseInt(formData.matchesPerRound, 10),
           qualifiersPerGroup: parseInt(formData.qualifiersPerGroup, 10),
           rounds: []
-        } : null,
+        },
         isActive: false,
         status: 'upcoming'
       };
 
       const seasonId = await seasonsCollection.create(seasonData);
-
-      // Optionally create a linked relegation season and connect it
-      if (formData.createRelegationSeason) {
-        const baseName = formData.relegationSeasonName?.trim() || `${seasonData.name} Relegation`;
-        const maxTeams = parseInt(formData.numberOfGroups, 10) * parseInt(formData.teamsPerGroup, 10);
-        const relegationSeasonId = await seasonsCollection.create({
-          name: baseName,
-          year: seasonData.year,
-          isActive: false,
-          status: 'upcoming',
-          isRelegationSeason: true,
-          ownerId: seasonData.ownerId,
-          ownerName: seasonData.ownerName,
-          numberOfGroups: 1,
-          teamsPerGroup: maxTeams,
-          groups: [{
-            id: 'group-1',
-            name: 'Relegation',
-            teams: [],
-            standings: []
-          }],
-          knockoutConfig: {
-            matchesPerRound: 1,
-            qualifiersPerGroup: 0,
-            rounds: []
-          },
-          relegationPosition: null,
-          autoMoveRelegatedTeams: false,
-          relegationDestinationSeasonId: null
-        });
-
-        await seasonsCollection.update(seasonId, {
-          relegationDestinationSeasonId: relegationSeasonId,
-          autoMoveRelegatedTeams: Boolean(formData.autoMoveRelegatedTeams),
-          updatedAt: new Date()
-        });
-      }
-
       showToast(t('createSeason.seasonCreated'), 'success');
       
       setTimeout(() => {
@@ -281,11 +198,7 @@ const CreateSeason = () => {
       }, 1500);
     } catch (error) {
       console.error('Error creating season:', error);
-      // Show more detailed error message
-      const errorMessage = error?.code === 'permission-denied' 
-        ? 'Permission denied. Please ensure your admin privileges are properly set up.'
-        : error?.message || t('createSeason.createFailed');
-      showToast(errorMessage, 'error');
+      showToast(t('createSeason.createFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -307,9 +220,9 @@ const CreateSeason = () => {
 
   return (
     <div className="px-4 py-6 pb-24">
-      {/* Toast - positioned below fixed header (top-20 = 80px to clear ~5rem header) */}
+      {/* Toast */}
       {toast.show && (
-        <div className={`fixed top-20 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}
@@ -425,114 +338,6 @@ const CreateSeason = () => {
                   className="input-field w-full"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('createSeason.startDate') || 'Season Start Date'}
-                </label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  className="input-field w-full"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {t('createSeason.startDateHint') || 'Fixture generation will start from this date.'}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('createSeason.relegationPosition') || 'Relegation starts at position'}
-                </label>
-                <input
-                  type="number"
-                  name="relegationPosition"
-                  value={formData.relegationPosition}
-                  onChange={handleChange}
-                  min="1"
-                  max={formData.teamsPerGroup}
-                  className="input-field w-full"
-                  placeholder={t('createSeason.optional') || 'Optional'}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {t('createSeason.relegationHint') || 'Teams at or below this position will be highlighted red in group/season tables.'}
-                </p>
-              </div>
-
-              <div className="p-4 bg-dark-800/50 border border-white/10 rounded-lg space-y-3">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    name="autoMoveRelegatedTeams"
-                    checked={formData.autoMoveRelegatedTeams}
-                    onChange={handleCheckboxChange}
-                    className="mt-1"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">
-                      {t('createSeason.autoMoveRelegatedTeams') || 'Auto-move relegated teams'}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {t('createSeason.autoMoveHint') || 'When the season is completed, teams in the relegation zone can be moved to a relegation season.'}
-                    </p>
-                  </div>
-                </div>
-
-                {formData.autoMoveRelegatedTeams && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="createRelegationSeason"
-                        checked={formData.createRelegationSeason}
-                        onChange={handleCheckboxChange}
-                      />
-                      <span className="text-sm text-gray-200">
-                        {t('createSeason.createRelegationSeason') || 'Create a relegation season automatically'}
-                      </span>
-                    </div>
-
-                    {formData.createRelegationSeason ? (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          {t('createSeason.relegationSeasonName') || 'Relegation season name'}
-                        </label>
-                        <input
-                          type="text"
-                          name="relegationSeasonName"
-                          value={formData.relegationSeasonName}
-                          onChange={handleChange}
-                          placeholder={`${formData.name || 'Season'} Relegation`}
-                          className="input-field w-full"
-                        />
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          {t('createSeason.relegationDestination') || 'Move relegated teams to'}
-                        </label>
-                        <select
-                          name="relegationDestinationSeasonId"
-                          value={formData.relegationDestinationSeasonId}
-                          onChange={handleChange}
-                          className="input-field w-full"
-                        >
-                          <option value="">{t('createSeason.selectSeason') || 'Select a season'}</option>
-                          {allSeasons
-                            .filter((s) => s?.id)
-                            .map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.name} {s.year ? `(${s.year})` : ''}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
             </div>
           </div>
 
@@ -585,70 +390,48 @@ const CreateSeason = () => {
           </div>
 
           <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Calendar className="w-6 h-6 text-green-500 mr-3" />
-                <h3 className="text-lg font-semibold text-white">{t('createSeason.knockoutStageConfig')}</h3>
-              </div>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableKnockout"
-                  checked={formData.enableKnockout}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded border-gray-600 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-300">{t('createSeason.enableKnockout')}</span>
-              </label>
+            <div className="flex items-center mb-4">
+              <Calendar className="w-6 h-6 text-green-500 mr-3" />
+              <h3 className="text-lg font-semibold text-white">{t('createSeason.knockoutStageConfig')}</h3>
             </div>
             
-            {formData.enableKnockout ? (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {t('createSeason.matchesPerRound')}
-                    </label>
-                    <select
-                      name="matchesPerRound"
-                      value={formData.matchesPerRound}
-                      onChange={handleChange}
-                      className="input-field w-full"
-                    >
-                      <option value="1">{t('createSeason.singleLeg')}</option>
-                      <option value="2">{t('createSeason.homeAway')}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {t('createSeason.qualifiersPerGroup')}
-                    </label>
-                    <input
-                      type="number"
-                      name="qualifiersPerGroup"
-                      value={formData.qualifiersPerGroup}
-                      onChange={handleChange}
-                      min="1"
-                      max={formData.teamsPerGroup}
-                      className="input-field w-full"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <p className="text-sm text-green-400">
-                    <strong>{t('createSeason.knockoutTeams')}:</strong> {formData.numberOfGroups * formData.qualifiersPerGroup} {t('createSeason.teamsWillQualify')}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="p-3 bg-gray-500/10 border border-gray-500/30 rounded-lg">
-                <p className="text-sm text-gray-400">
-                  {t('createSeason.knockoutDisabledInfo')}
-                </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('createSeason.matchesPerRound')}
+                </label>
+                <select
+                  name="matchesPerRound"
+                  value={formData.matchesPerRound}
+                  onChange={handleChange}
+                  className="input-field w-full"
+                >
+                  <option value="1">{t('createSeason.singleLeg')}</option>
+                  <option value="2">{t('createSeason.homeAway')}</option>
+                </select>
               </div>
-            )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('createSeason.qualifiersPerGroup')}
+                </label>
+                <input
+                  type="number"
+                  name="qualifiersPerGroup"
+                  value={formData.qualifiersPerGroup}
+                  onChange={handleChange}
+                  min="1"
+                  max={formData.teamsPerGroup}
+                  className="input-field w-full"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <p className="text-sm text-green-400">
+                <strong>{t('createSeason.knockoutTeams')}:</strong> {formData.numberOfGroups * formData.qualifiersPerGroup} {t('createSeason.teamsWillQualify')}
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-end">
@@ -790,25 +573,15 @@ const CreateSeason = () => {
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">{t('createSeason.knockoutStage')}</span>
+                <span className="text-gray-400">{t('createSeason.knockoutFormat')}</span>
                 <span className="text-white font-medium">
-                  {formData.enableKnockout ? t('createSeason.enabled') : t('createSeason.disabled')}
+                  {formData.matchesPerRound === 1 ? t('createSeason.singleLeg') : t('createSeason.homeAway')}
                 </span>
               </div>
-              {formData.enableKnockout && (
-                <>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="text-gray-400">{t('createSeason.knockoutFormat')}</span>
-                    <span className="text-white font-medium">
-                      {formData.matchesPerRound === 1 ? t('createSeason.singleLeg') : t('createSeason.homeAway')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-gray-400">{t('createSeason.qualifiersPerGroup')}</span>
-                    <span className="text-white font-medium">{formData.qualifiersPerGroup}</span>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between py-2">
+                <span className="text-gray-400">{t('createSeason.qualifiersPerGroup')}</span>
+                <span className="text-white font-medium">{formData.qualifiersPerGroup}</span>
+              </div>
             </div>
 
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">

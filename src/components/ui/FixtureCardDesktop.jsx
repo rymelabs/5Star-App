@@ -1,29 +1,15 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { MapPin, Bell, Share2, ChevronRight } from 'lucide-react';
 import NewTeamAvatar from '../NewTeamAvatar';
 import { isFixtureLive } from '../../utils/helpers';
 import { formatDateTime, formatTime } from '../../utils/dateUtils';
 
-const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
+const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
   const home = fixture.homeTeam || fixture.homeTeamId || {};
   const away = fixture.awayTeam || fixture.awayTeamId || {};
   const status = fixture.status || (isFixtureLive(fixture) ? 'live' : 'scheduled');
   const isLive = status === 'live' || isFixtureLive(fixture);
   const isCompleted = status === 'completed' || status === 'finished';
-
-  const getStatusTag = (rawStatus) => {
-    const normalized = String(rawStatus || '').trim().toLowerCase();
-    if (!normalized) return null;
-    if (normalized === 'tbd' || normalized === 'pst' || normalized === 'postponed') return 'TBD';
-    if (normalized === 'canc' || normalized === 'cancelled' || normalized === 'canceled') return 'CANC';
-    return null;
-  };
-
-  const statusTag = getStatusTag(fixture.status);
-
-  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
-  const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
-  const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
 
   const dateLabel = fixture.dateTime ? formatDateTime(fixture.dateTime) : '';
   const timeLabel = fixture.dateTime ? formatTime(fixture.dateTime) : '';
@@ -52,14 +38,7 @@ const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
       <div className="flex items-center p-4 gap-6">
         {/* Status/Time Column */}
         <div className="w-24 flex flex-col items-center justify-center border-r border-white/5 pr-6">
-          {statusTag ? (
-            <div className="flex flex-col items-center gap-1">
-              <span className={`${statusTag === 'CANC' ? 'text-red-500' : 'text-brand-purple'} font-bold text-sm`}>
-                {statusTag}
-              </span>
-              <span className="text-gray-500 text-xs">{dateLabel}</span>
-            </div>
-          ) : isLive ? (
+          {isLive ? (
             <div className="flex flex-col items-center gap-1">
               <span className="text-red-500 font-bold text-sm animate-pulse">LIVE</span>
               <span className="text-red-400 text-xs font-medium">{fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'ONGOING'}</span>
@@ -90,11 +69,11 @@ const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
             {isLive || isCompleted ? (
               <div className="flex items-center gap-3 bg-black/20 px-4 py-2 rounded-lg border border-white/5">
                 <span className={`text-2xl font-bold ${isLive ? 'text-brand-purple' : 'text-white'}`}>
-                  {homeScoreDisplay}
+                  {fixture.homeScore ?? 0}
                 </span>
                 <span className="text-gray-600 font-medium">-</span>
                 <span className={`text-2xl font-bold ${isLive ? 'text-brand-purple' : 'text-white'}`}>
-                  {awayScoreDisplay}
+                  {fixture.awayScore ?? 0}
                 </span>
               </div>
             ) : (
@@ -131,8 +110,6 @@ const FixtureCardDesktop = memo(({ fixture = {}, onClick = () => {} }) => {
       </div>
     </div>
   );
-});
-
-FixtureCardDesktop.displayName = 'FixtureCardDesktop';
+};
 
 export default FixtureCardDesktop;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const LanguageContext = createContext();
 
@@ -65,19 +65,17 @@ export const LanguageProvider = ({ children }) => {
     return value || key;
   };
 
-  const availableLanguages = useMemo(() => [
-    { code: 'en', name: 'English', nativeName: 'English' },
-    { code: 'yo', name: 'Yoruba', nativeName: 'Èdè Yorùbá' },
-    { code: 'ig', name: 'Igbo', nativeName: 'Asụsụ Igbo' },
-    { code: 'ha', name: 'Hausa', nativeName: 'Harshen Hausa' },
-  ], []);
-
-  const value = useMemo(() => ({
+  const value = {
     language,
     changeLanguage,
     t,
-    availableLanguages,
-  }), [language, changeLanguage, t, availableLanguages]);
+    availableLanguages: [
+      { code: 'en', name: 'English', nativeName: 'English' },
+      { code: 'yo', name: 'Yoruba', nativeName: 'Èdè Yorùbá' },
+      { code: 'ig', name: 'Igbo', nativeName: 'Asụsụ Igbo' },
+      { code: 'ha', name: 'Hausa', nativeName: 'Harshen Hausa' },
+    ],
+  };
 
   return (
     <LanguageContext.Provider value={value}>

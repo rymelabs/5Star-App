@@ -1,12 +1,4 @@
-[build]
-  # No build command here - set in Netlify UI
-
-[build.environment]
-  # Firebase API keys are designed to be public (security is handled by Firebase Rules)
-  # Disable smart detection entirely - Firebase keys start with AIza and are safe to expose
-  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
-
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from="/*"
+to = "/index.html"
+status = 200

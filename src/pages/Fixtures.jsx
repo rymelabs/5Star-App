@@ -25,7 +25,7 @@ const CompetitionGroup = ({ group, onFixtureClick, onCompetitionClick }) => (
       onClick={() => group.info.id !== 'unknown' && onCompetitionClick?.(group.info)}
     >
       {group.info.logo ? (
-        <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" loading="lazy" decoding="async" />
+        <img src={group.info.logo} alt={group.info.name} className="w-4 h-4 object-contain" />
       ) : (
         <Trophy className="w-3.5 h-3.5 text-brand-purple" />
       )}
@@ -128,7 +128,7 @@ const Fixtures = () => {
       filtered = filtered.filter(f => f.seasonId === selectedSeasonId);
     }
     if (statusFilter === 'upcoming') {
-      filtered = filtered.filter(f => new Date(f.dateTime) > new Date() && f.status !== 'completed' && f.status !== 'live');
+      filtered = filtered.filter(f => new Date(f.dateTime) > new Date());
     } else if (statusFilter === 'completed') {
       filtered = filtered.filter(f => f.status === 'completed');
     } else if (statusFilter === 'live') {
@@ -153,21 +153,13 @@ const Fixtures = () => {
   }, [fixtures]);
 
   // Groupings
-  const { lastThreeResults, recentFixtures, pastDateGroups, upcomingGroups, liveFixtures, todayFixtures, todayResults } = useMemo(() => {
+  const { lastThreeResults, recentFixtures, pastDateGroups, upcomingGroups, liveFixtures, todayFixtures } = useMemo(() => {
     if (!filteredFixtures.length) {
-      return { lastThreeResults: [], recentFixtures: [], pastDateGroups: [], upcomingGroups: [], liveFixtures: [], todayFixtures: [], todayResults: [] };
+      return { lastThreeResults: [], recentFixtures: [], pastDateGroups: [], upcomingGroups: [], liveFixtures: [], todayFixtures: [] };
     }
 
     const now = new Date();
-    const getLocalDateKey = (dateInput) => {
-      const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
-      if (Number.isNaN(d.getTime())) return '';
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-    const todayKey = getLocalDateKey(now);
+    const todayKey = now.toISOString().split('T')[0];
     const pastFixtures = [];
     const upcomingGroupsMap = {};
     const live = [];
@@ -184,17 +176,10 @@ const Fixtures = () => {
         return;
       }
 
-      const key = getLocalDateKey(date);
-
-      // Completed fixtures should always be treated as past/results
-      // (timezone/clock drift can make a completed match look "upcoming" by dateTime)
-      if (fixture.status === 'completed') {
-        pastFixtures.push(fixture);
-        return;
-      }
+      const key = date.toISOString().split('T')[0];
       
       // Collect today's non-live upcoming fixtures
-      if (key === todayKey && fixture.status !== 'live') {
+      if (key === todayKey && fixture.status !== 'live' && fixture.status !== 'completed') {
         today.push(fixture);
       }
 
@@ -206,10 +191,7 @@ const Fixtures = () => {
             fixtures: [],
           };
         }
-        // Don't duplicate live fixtures in upcoming lists
-        if (fixture.status !== 'live') {
-          upcomingGroupsMap[key].fixtures.push(fixture);
-        }
+        upcomingGroupsMap[key].fixtures.push(fixture);
         return;
       }
 
@@ -217,7 +199,7 @@ const Fixtures = () => {
     });
 
     const pastGroupsMap = pastFixtures.reduce((acc, fixture) => {
-      const key = getLocalDateKey(fixture.dateTime);
+      const key = new Date(fixture.dateTime).toISOString().split('T')[0];
       if (!acc[key]) {
         acc[key] = {
           key,
@@ -233,15 +215,12 @@ const Fixtures = () => {
       .filter((fixture) => fixture.status === 'completed')
       .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
-    const todayResults = completedPastFixtures.filter((fixture) => getLocalDateKey(fixture.dateTime) === todayKey);
-    const nonTodayCompletedPastFixtures = completedPastFixtures.filter((fixture) => getLocalDateKey(fixture.dateTime) !== todayKey);
-
     // Split: first 3 for prominent display, rest for carousel
     // const lastThree = completedPastFixtures.slice(0, LAST_RESULTS_HIGHLIGHT);
     // const recent = completedPastFixtures.slice(LAST_RESULTS_HIGHLIGHT, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
     
     // Combined recent results (like Latest page)
-    const recent = nonTodayCompletedPastFixtures.slice(0, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
+    const recent = completedPastFixtures.slice(0, RECENT_RESULTS_LIMIT + LAST_RESULTS_HIGHLIGHT);
     const lastThree = []; // Empty to disable the split section
 
     const pastDateGroups = Object.values(pastGroupsMap)
@@ -261,7 +240,7 @@ const Fixtures = () => {
     // Sort today's fixtures by time
     today.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-    return { lastThreeResults: lastThree, recentFixtures: recent, pastDateGroups, upcomingGroups, liveFixtures: live, todayFixtures: today, todayResults };
+    return { lastThreeResults: lastThree, recentFixtures: recent, pastDateGroups, upcomingGroups, liveFixtures: live, todayFixtures: today };
   }, [filteredFixtures]);
 
   // Group results by date, then by competition
@@ -270,9 +249,7 @@ const Fixtures = () => {
     
     const dateMap = {};
     recentFixtures.forEach(fixture => {
-      const d = new Date(fixture.dateTime);
-      if (Number.isNaN(d.getTime())) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const key = new Date(fixture.dateTime).toISOString().split('T')[0];
       if (!dateMap[key]) {
         dateMap[key] = {
           key,
@@ -552,31 +529,6 @@ const Fixtures = () => {
                 </section>
               )}
 
-              {/* Today's Results - Prioritized above upcoming fixtures */}
-              {todayResults.length > 0 && (
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between px-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-                      <h2 className="text-sm font-bold text-white tracking-wide">
-                        {t('pages.fixtures.results') || 'Results'}
-                      </h2>
-                    </div>
-                    <span className="text-[11px] text-white/40">{t('pages.fixtures.today') || 'Today'}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {groupFixturesByCompetition(todayResults).map((group) => (
-                      <CompetitionGroup
-                        key={`today-results-${group.info.id}`}
-                        group={group}
-                        onFixtureClick={handleFixtureClick}
-                        onCompetitionClick={handleCompetitionClick}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
               {/* Today's Matches - Highlighted Section */}
               {todayFixtures.length > 0 && (
                 <section className="space-y-3">
@@ -729,19 +681,19 @@ const Fixtures = () => {
         >
           {showSeasonStandings ? (
             <div className="space-y-4">
-              <div className="mb-4 px-4 sm:px-0">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  {seasons.length > 1 && (
-                    <div className="order-1 sm:order-2 sm:w-[260px]">
-                      <Select
-                        value={selectedTableSeasonId}
-                        onChange={(e) => setSelectedTableSeasonId(e.target.value)}
-                        options={seasons.map((s) => ({ value: s.id, label: s.name }))}
-                      />
-                    </div>
-                  )}
-                  <h3 className="order-2 sm:order-1 text-lg font-bold text-white">{displayTableSeason.name}</h3>
-                </div>
+              <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
+                <h3 className="text-lg font-bold text-white">{displayTableSeason.name}</h3>
+                {seasons.length > 1 && (
+                  <select
+                    value={selectedTableSeasonId}
+                    onChange={(e) => setSelectedTableSeasonId(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-lg text-xs px-2 py-1 text-white focus:outline-none"
+                  >
+                    {seasons.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <SeasonStandings season={displayTableSeason} teams={teams} fixtures={fixtures} />
             </div>

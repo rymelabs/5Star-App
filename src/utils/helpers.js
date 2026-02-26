@@ -55,21 +55,6 @@ export const abbreviateTeamName = (teamName) => {
 // Check if a fixture is currently live
 export const isFixtureLive = (fixture) => {
   if (!fixture) return false;
-
-  const rawStatus = fixture.status;
-  const normalizedStatus = String(rawStatus || '').trim().toLowerCase();
-
-  // Never treat postponed/cancelled/TBD fixtures as live
-  if (
-    normalizedStatus === 'pst' ||
-    normalizedStatus === 'postponed' ||
-    normalizedStatus === 'tbd' ||
-    normalizedStatus === 'canc' ||
-    normalizedStatus === 'cancelled' ||
-    normalizedStatus === 'canceled'
-  ) {
-    return false;
-  }
   
   // If admin marked it as live or playing, it's live
   if (fixture.status === 'live' || fixture.status === 'playing') {
@@ -87,24 +72,6 @@ export const isFixtureLive = (fixture) => {
   const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
   
   return timeDiff >= 0 && timeDiff <= twoHours;
-};
-
-const getFixtureTeamIds = (fixture) => {
-  const homeId = fixture?.homeTeam?.id || fixture?.homeTeamId || fixture?.homeTeam?.teamId;
-  const awayId = fixture?.awayTeam?.id || fixture?.awayTeamId || fixture?.awayTeam?.teamId;
-  return [homeId, awayId].filter(Boolean);
-};
-
-export const getLiveTeamIds = (fixtures = []) => {
-  const liveIds = new Set();
-  if (!Array.isArray(fixtures) || fixtures.length === 0) return liveIds;
-
-  fixtures.forEach((fixture) => {
-    if (!isFixtureLive(fixture)) return;
-    getFixtureTeamIds(fixture).forEach((id) => liveIds.add(id));
-  });
-
-  return liveIds;
 };
 
 // Number utilities

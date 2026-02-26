@@ -60,40 +60,6 @@
   body::-webkit-scrollbar-thumb {
     display: none;
   }
-
-  /* iOS Safari fixed header fix */
-  @supports (-webkit-touch-callout: none) {
-    /* iOS only */
-    .fixed {
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
-
-    /* Extend header blur/background into the top safe-area (status bar) */
-    .ios-safe-top-blur {
-      position: relative;
-      padding-top: env(safe-area-inset-top);
-    }
-
-    .ios-safe-top-blur::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: env(safe-area-inset-top);
-      background: rgba(5, 8, 22, 0.8); /* matches bg-app/80 */
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .ios-safe-top-blur > * {
-      position: relative;
-      z-index: 1;
-    }
-  }
 }
 
 @layer components {
@@ -230,17 +196,6 @@
     opacity: 1;
     transform: translateY(0) scale(1);
     animation: nav-pulse 1.8s ease-in-out infinite;
-  }
-
-  /* Ensure emoji flags keep intended size despite compact text overrides */
-  .flag-emoji {
-    font-size: 2.88rem !important;
-    line-height: 1 !important;
-  }
-
-  .flag-emoji-sm {
-    font-size: 1.6rem !important;
-    line-height: 1 !important;
   }
   
   .nav-icon,
@@ -932,13 +887,5 @@
 
   .nav-item-glow {
     background: radial-gradient(circle at center, rgba(109, 40, 217, 0.4) 0%, transparent 70%);
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 }

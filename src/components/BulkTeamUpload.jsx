@@ -4,9 +4,7 @@ import NewTeamAvatar from './NewTeamAvatar';
 import { useFootball } from '../context/FootballContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-
-// Dynamic import for xlsx - only loaded when needed (saves ~200KB from initial bundle)
-const loadXLSX = () => import('xlsx');
+import * as XLSX from 'xlsx';
 
 const BulkTeamUpload = ({ isOpen, onClose }) => {
   const [uploadMethod, setUploadMethod] = useState('csv');
@@ -16,7 +14,7 @@ const BulkTeamUpload = ({ isOpen, onClose }) => {
   const [errors, setErrors] = useState([]);
   const [previewData, setPreviewData] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const { addBulkTeams } = useFootball();
   const { showNotification } = useNotification();
   const { t } = useLanguage();
@@ -44,7 +42,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       ]
     },
     {
-      name: "Chelsea", 
+      name: "Chelsea",
       logo: "https://logos-world.net/wp-content/uploads/2020/06/Chelsea-Logo.png",
       stadium: "Stamford Bridge",
       founded: "1905",
@@ -59,11 +57,8 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     }
   ], null, 2);
 
-  const downloadTemplate = async (type) => {
+  const downloadTemplate = (type) => {
     if (type === 'xlsx') {
-      // Dynamically load xlsx library only when needed
-      const XLSX = await loadXLSX();
-      
       // Create Excel workbook
       const exampleTeams = [
         {
@@ -91,7 +86,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
           ])
         }
       ];
-      
+
       const worksheet = XLSX.utils.json_to_sheet(exampleTeams);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Teams");
@@ -114,15 +109,15 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
 
     teams.forEach((team, index) => {
       const rowErrors = [];
-      
+
       if (!team.name || team.name.trim() === '') {
         rowErrors.push(t('bulkUpload.teamNameRequired'));
       }
-      
+
       if (team.founded && (isNaN(team.founded) || team.founded < 1800 || team.founded > new Date().getFullYear())) {
         rowErrors.push(t('bulkUpload.foundedYearRange'));
       }
-      
+
       if (team.logo && !team.logo.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         rowErrors.push(t('bulkUpload.logoValidUrl'));
       }
@@ -132,7 +127,7 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       if (team.players) {
         try {
           const playersList = typeof team.players === 'string' ? JSON.parse(team.players) : team.players;
-          
+
           if (Array.isArray(playersList)) {
             const jerseyNumbers = new Set();
             let hasCaptain = false;
@@ -173,12 +168,21 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
               }
 
               validPlayers.push({
-                id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                id: player.id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: player.name.trim(),
                 position: player.position || 'Forward',
                 jerseyNumber: jerseyNum,
                 isCaptain: player.isCaptain === true || player.isCaptain === 'true',
-                isGoalkeeper: player.isGoalkeeper === true || player.isGoalkeeper === 'true'
+                isGoalkeeper: player.isGoalkeeper === true || player.isGoalkeeper === 'true',
+                // Extensive Player Data (EPD) fields
+                dateOfBirth: player.dateOfBirth || null,
+                placeOfBirth: player.placeOfBirth || null,
+                nationality: player.nationality || null,
+                height: player.height || null,
+                preferredFoot: player.preferredFoot || null,
+                marketValue: player.marketValue || null,
+                contractExpiry: player.contractExpiry || null,
+                photo: player.photo || player.photoUrl || null
               });
             });
           }
@@ -212,21 +216,21 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
   const parseCsvData = (csv) => {
     const lines = csv.trim().split('\n');
     if (lines.length < 2) return [];
-    
+
     const headers = lines[0].split(',').map(h => h.trim());
     const teams = [];
-    
+
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
       const team = {};
-      
+
       headers.forEach((header, index) => {
         team[header] = values[index] || '';
       });
-      
+
       teams.push(team);
     }
-    
+
     return teams;
   };
 
@@ -238,10 +242,8 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
     }
   };
 
-  const parseExcelData = async (arrayBuffer) => {
+  const parseExcelData = (arrayBuffer) => {
     try {
-      // Dynamically load xlsx library only when needed
-      const XLSX = await loadXLSX();
       const workbook = XLSX.read(arrayBuffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -258,11 +260,11 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
 
     setFile(selectedFile);
     setErrors([]); // Clear previous errors
-    
+
     if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = await parseExcelData(e.target.result);
+      reader.onload = (e) => {
+        const data = parseExcelData(e.target.result);
         if (data) {
           setJsonData(JSON.stringify(data, null, 2));
           setUploadMethod('xlsx');
@@ -298,9 +300,9 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
   const previewDataHandler = () => {
     setErrors([]);
     setPreviewData([]);
-    
+
     let teams = [];
-    
+
     if (uploadMethod === 'csv') {
       teams = parseCsvData(csvData);
     } else if (uploadMethod === 'xlsx') {
@@ -316,12 +318,12 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
         return;
       }
     }
-    
+
     if (teams.length === 0) {
       setErrors([{ row: 1, team: 'Data', errors: [t('bulkUpload.noValidData')] }]);
       return;
     }
-    
+
     const { errors: validationErrors, validTeams } = validateTeamData(teams);
     setErrors(validationErrors);
     setPreviewData(validTeams);
@@ -332,9 +334,9 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
       showNotification(t('bulkUpload.noTeamsToUpload'), 'error');
       return;
     }
-    
+
     setIsProcessing(true);
-    
+
     try {
       await addBulkTeams(previewData);
       showNotification(t('bulkUpload.uploadSuccess').replace('{count}', previewData.length), 'success');
@@ -347,9 +349,9 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-4xl bg-dark-900 border border-dark-700 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-700">
@@ -383,31 +385,28 @@ Manchester United,https://logos-world.net/wp-content/uploads/2020/06/Manchester-
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setUploadMethod('csv')}
-                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${
-                  uploadMethod === 'csv' 
-                    ? 'bg-primary-500 text-white' 
+                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${uploadMethod === 'csv'
+                    ? 'bg-primary-500 text-white'
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                }`}
+                  }`}
               >
                 {t('bulkUpload.csvFormat')}
               </button>
               <button
                 onClick={() => setUploadMethod('xlsx')}
-                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${
-                  uploadMethod === 'xlsx' 
-                    ? 'bg-primary-500 text-white' 
+                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${uploadMethod === 'xlsx'
+                    ? 'bg-primary-500 text-white'
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                }`}
+                  }`}
               >
                 {t('bulkUpload.excelFormat')}
               </button>
               <button
                 onClick={() => setUploadMethod('json')}
-                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${
-                  uploadMethod === 'json' 
-                    ? 'bg-primary-500 text-white' 
+                className={`px-4 py-2 rounded-lg font-medium tracking-tight transition-colors ${uploadMethod === 'json'
+                    ? 'bg-primary-500 text-white'
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                }`}
+                  }`}
               >
                 {t('bulkUpload.jsonFormat')}
               </button>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Check, X, AlertCircle, Info, Bell } from 'lucide-react';
 import Toast from '../components/Toast';
 import { useAuth } from './AuthContext';
@@ -121,12 +121,8 @@ export const NotificationProvider = ({ children }) => {
       setFcmToken(result.token);
       setPermissionGranted(true);
       
-      // Save token to Firestore only for real (non-dev) tokens.
-      // In dev/unsupported environments we intentionally return a dummy token
-      // to keep UI preferences working, but we should not store it server-side.
-      if (!result.isDevMode) {
-        await saveFCMToken(currentUser.uid, result.token);
-      }
+      // Save token to Firestore
+      await saveFCMToken(currentUser.uid, result.token);
       
       // Show appropriate success message
       if (result.isDevMode) {
@@ -219,37 +215,22 @@ export const NotificationProvider = ({ children }) => {
     loadNotifications({ limit: 50 });
     loadUnreadCount();
 
-    // Set up foreground message listener (async)
-    let unsubscribe = null;
-    let cancelled = false;
+    // Set up foreground message listener
+    const unsubscribe = onForegroundMessage((notification) => {
+      
+      // Show toast notification
+      addNotification({
+        type: 'info',
+        title: notification.title,
+        message: notification.body,
+      });
 
-    (async () => {
-      try {
-        const maybeUnsub = await onForegroundMessage((notification) => {
-          // Show toast notification
-          addNotification({
-            type: 'info',
-            title: notification.title,
-            message: notification.body,
-          });
-
-          // Reload notifications and count
-          loadNotifications({ limit: 50 });
-          loadUnreadCount();
-        });
-
-        if (!cancelled) {
-          unsubscribe = typeof maybeUnsub === 'function' ? maybeUnsub : null;
-        } else if (typeof maybeUnsub === 'function') {
-          maybeUnsub();
-        }
-      } catch (_error) {
-        // Silent: foreground messaging may be unsupported on some platforms
-      }
-    })();
+      // Reload notifications and count
+      loadNotifications({ limit: 50 });
+      loadUnreadCount();
+    });
 
     return () => {
-      cancelled = true;
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
@@ -263,14 +244,7 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [currentUser, fcmToken]);
 
-  const showNotification = useCallback((title, type = 'info', message) => {
-    if (type === 'success') return showSuccess(title, message);
-    if (type === 'error') return showError(title, message);
-    if (type === 'warning') return showWarning(title, message);
-    return showInfo(title, message);
-  }, [showSuccess, showError, showWarning, showInfo]);
-
-  const value = useMemo(() => ({
+  const value = {
     // Toast notifications
     notifications,
     addNotification,
@@ -279,7 +253,13 @@ export const NotificationProvider = ({ children }) => {
     showError,
     showWarning,
     showInfo,
-    showNotification,
+    // Backwards-compatible alias
+    showNotification: (title, type = 'info', message) => {
+      if (type === 'success') return showSuccess(title, message);
+      if (type === 'error') return showError(title, message);
+      if (type === 'warning') return showWarning(title, message);
+      return showInfo(title, message);
+    },
     
     // FCM notifications
     inboxNotifications,
@@ -291,19 +271,14 @@ export const NotificationProvider = ({ children }) => {
     loadUnreadCount,
     markAsRead,
     markAllAsRead,
-  }), [
-    notifications, addNotification, removeNotification,
-    showSuccess, showError, showWarning, showInfo, showNotification,
-    inboxNotifications, unreadCount, fcmToken, permissionGranted,
-    requestPermission, loadNotifications, loadUnreadCount, markAsRead, markAllAsRead
-  ]);
+  };
 
   return (
     <NotificationContext.Provider value={value}>
       {children}
       
       {/* Notification Container */}
-      <div className="fixed top-4 right-4 z-[9999] space-y-2">
+      <div className="fixed top-4 right-4 z-50 space-y-2">
         {notifications.map(notification => (
           <Toast
             key={notification.id}

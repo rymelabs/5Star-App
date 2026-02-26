@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState } from 'react';
 
 const sizeToPixels = (size) => {
   if (typeof size === 'number') return size;
@@ -23,20 +23,13 @@ const getInitial = (name) => {
   return trimmed.charAt(0).toUpperCase();
 };
 
-const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '', useThumbnail = true }) => {
+const NewTeamAvatar = ({ team, name = '', size = 48, className = '' }) => {
   const [imgError, setImgError] = useState(false);
   const teamName = team?.name || name;
   // Normalize team logo: check multiple possible property names
-  const teamLogoFull = team?.logo || team?.profilePicture || team?.image || team?.imageUrl || team?.logoUrl || team?.crest || team?.badge || '';
-  const teamLogoThumb = team?.logoThumbUrl || '';
-  
-  // Use thumbnail for small sizes (< 80px) if available, otherwise use full logo
-  // Falls back to full logo if thumbnail is missing
-  const sizePx = sizeToPixels(size);
-  const shouldUseThumbnail = useThumbnail && sizePx <= 80 && teamLogoThumb;
-  const teamLogo = shouldUseThumbnail ? teamLogoThumb : teamLogoFull;
-  
+  const teamLogo = team?.logo || team?.profilePicture || team?.image || team?.imageUrl || team?.logoUrl || team?.crest || team?.badge || '';
   const initial = getInitial(teamName);
+  const sizePx = sizeToPixels(size);
   const fontSize = Math.max(14, Math.floor(sizePx * 0.55));
   const showImage = Boolean(teamLogo) && !imgError;
 
@@ -53,7 +46,6 @@ const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '', useThu
           alt={teamName}
           className="w-full h-full object-cover"
           loading="lazy"
-          decoding="async"
           onError={() => setImgError(true)}
         />
       ) : (
@@ -63,8 +55,6 @@ const NewTeamAvatar = memo(({ team, name = '', size = 48, className = '', useThu
       )}
     </div>
   );
-});
-
-NewTeamAvatar.displayName = 'NewTeamAvatar';
+};
 
 export default NewTeamAvatar;

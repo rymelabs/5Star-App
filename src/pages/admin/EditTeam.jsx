@@ -4,7 +4,7 @@ import { useFootball } from '../../context/FootballContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ArrowLeft, Save, X, Users, UserPlus, Shield, Goal, Trash2, Edit, Image, Link } from 'lucide-react';
-import { uploadImage, validateImageFile, uploadLogoWithVariants } from '../../services/imageUploadService';
+import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 
 const EditTeam = () => {
   const { teamId } = useParams();
@@ -12,7 +12,7 @@ const EditTeam = () => {
   const { user } = useAuth();
   const { teams, leagues, updateTeam } = useFootball();
   const { showSuccess, showError } = useNotification();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     logo: '',
@@ -35,6 +35,9 @@ const EditTeam = () => {
     preferredFoot: '',
     marketValue: '',
     contractExpiry: '',
+    photo: '',
+    bio: '',
+    status: 'available',
   });
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
@@ -43,6 +46,8 @@ const EditTeam = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [selectedPlayerPhoto, setSelectedPlayerPhoto] = useState(null);
+  const [playerPhotoPreview, setPlayerPhotoPreview] = useState(null);
 
   useEffect(() => {
     // Load team data with fallbacks
@@ -151,24 +156,59 @@ const EditTeam = () => {
       preferredFoot: player.preferredFoot || '',
       marketValue: player.marketValue || '',
       contractExpiry: player.contractExpiry || '',
+      photo: player.photo || '',
+      bio: player.bio || '',
+      status: player.status || 'available',
     });
+    setSelectedPlayerPhoto(null);
+    setPlayerPhotoPreview(null);
     setShowPlayerForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAddPlayer = () => {
+  const handlePlayerPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setSelectedPlayerPhoto(null);
+      setPlayerPhotoPreview(null);
+      return;
+    }
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      showError('Invalid Image', validation.error);
+      e.target.value = '';
+      return;
+    }
+    setSelectedPlayerPhoto(file);
+    const preview = URL.createObjectURL(file);
+    setPlayerPhotoPreview(preview);
+  };
+
+  const handleAddPlayer = async () => {
     if (!playerForm.name.trim() || !playerForm.jerseyNumber) {
       showError('Validation Error', 'Please enter player name and jersey number');
       return;
     }
 
     // Validate jersey number uniqueness (exclude current player if editing)
-    const jerseyExists = formData.players.some(p => 
+    const jerseyExists = formData.players.some(p =>
       p.jerseyNumber === playerForm.jerseyNumber && p.id !== editingPlayer
     );
     if (jerseyExists) {
       showError('Duplicate Jersey Number', 'This jersey number is already assigned');
       return;
+    }
+
+    // Upload player photo if a file was selected
+    let photoUrl = playerForm.photo || '';
+    if (selectedPlayerPhoto) {
+      try {
+        const safeName = playerForm.name.replace(/[^a-zA-Z0-9]/g, '_') || 'player_photo';
+        photoUrl = await uploadImage(selectedPlayerPhoto, 'players', `${safeName}_${Date.now()}`);
+      } catch (uploadError) {
+        showError('Photo Upload Failed', uploadError.message || 'Unable to upload player photo.');
+        return;
+      }
     }
 
     // If setting as goalkeeper, unset previous goalkeeper
@@ -191,13 +231,14 @@ const EditTeam = () => {
       // Update existing player
       setFormData(prev => ({
         ...prev,
-        players: prev.players.map(p => 
+        players: prev.players.map(p =>
           p.id === editingPlayer
             ? {
-                ...p,
-                ...playerForm,
-                jerseyNumber: parseInt(playerForm.jerseyNumber)
-              }
+              ...p,
+              ...playerForm,
+              photo: photoUrl,
+              jerseyNumber: parseInt(playerForm.jerseyNumber)
+            }
             : p
         )
       }));
@@ -206,6 +247,7 @@ const EditTeam = () => {
       // Add new player
       const newPlayer = {
         ...playerForm,
+        photo: photoUrl,
         id: Date.now().toString(),
         jerseyNumber: parseInt(playerForm.jerseyNumber)
       };
@@ -218,6 +260,10 @@ const EditTeam = () => {
     }
 
     // Reset player form
+    resetPlayerForm();
+  };
+
+  const resetPlayerForm = () => {
     setPlayerForm({
       name: '',
       position: 'Forward',
@@ -231,7 +277,13 @@ const EditTeam = () => {
       preferredFoot: '',
       marketValue: '',
       contractExpiry: '',
+      photo: '',
+      bio: '',
+      status: 'available',
     });
+    setSelectedPlayerPhoto(null);
+    if (playerPhotoPreview) URL.revokeObjectURL(playerPhotoPreview);
+    setPlayerPhotoPreview(null);
     setEditingPlayer(null);
     setShowPlayerForm(false);
   };
@@ -246,7 +298,7 @@ const EditTeam = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       showError('Validation Error', 'Please enter a team name');
       return;
@@ -260,15 +312,12 @@ const EditTeam = () => {
     try {
       setLoading(true);
       let logoUrl = formData.logo;
-      let logoThumbUrl = null;
 
       if (logoUploadMethod === 'file' && selectedLogoFile) {
         setUploadingLogo(true);
         try {
-          // Upload with thumbnail variant
-          const variants = await uploadLogoWithVariants(selectedLogoFile, formData.name);
-          logoUrl = variants.logo;
-          logoThumbUrl = variants.logoThumbUrl;
+          const safeName = formData.name.replace(/[^a-zA-Z0-9]/g, '_') || 'team_logo';
+          logoUrl = await uploadImage(selectedLogoFile, 'teams', `${safeName}_${Date.now()}`);
         } catch (uploadError) {
           showError('Image Upload Failed', uploadError.message || 'Unable to upload logo image. Please try again.');
           setUploadingLogo(false);
@@ -282,7 +331,6 @@ const EditTeam = () => {
       const updatedTeam = {
         ...formData,
         logo: (logoUrl || '').trim(),
-        ...(logoThumbUrl && { logoThumbUrl }),
         name: formData.name.trim(),
         updatedAt: new Date().toISOString()
       };
@@ -326,7 +374,7 @@ const EditTeam = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="card p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Team Information</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -352,7 +400,7 @@ const EditTeam = () => {
                   value={formData.leagueId}
                   onChange={handleInputChange}
                   className="input-field w-full"
-                  
+
                 >
                   <option value="">Select a league</option>
                   {leagues.map(league => (
@@ -372,11 +420,10 @@ const EditTeam = () => {
                   <button
                     type="button"
                     onClick={() => handleLogoUploadMethodChange('url')}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      logoUploadMethod === 'url'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${logoUploadMethod === 'url'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                      }`}
                   >
                     <Link className="w-4 h-4" />
                     URL
@@ -384,11 +431,10 @@ const EditTeam = () => {
                   <button
                     type="button"
                     onClick={() => handleLogoUploadMethodChange('file')}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      logoUploadMethod === 'file'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${logoUploadMethod === 'file'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-dark-700 text-gray-300 hover:bg-dark-600'
+                      }`}
                   >
                     <Image className="w-4 h-4" />
                     Upload File
@@ -680,6 +726,78 @@ const EditTeam = () => {
                     />
                   </div>
 
+                  {/* Availability Status */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={playerForm.status}
+                      onChange={handlePlayerInputChange}
+                      className="input-field w-full text-sm"
+                    >
+                      <option value="available">Available</option>
+                      <option value="injured">Injured</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="on_loan">On Loan</option>
+                    </select>
+                  </div>
+
+                  {/* Player Bio */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                      Bio / Scouting Report
+                    </label>
+                    <textarea
+                      name="bio"
+                      value={playerForm.bio}
+                      onChange={handlePlayerInputChange}
+                      className="input-field w-full text-sm min-h-[80px] resize-y"
+                      placeholder="Short biography or scouting report..."
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Player Photo Upload */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                      Player Photo
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {/* Preview */}
+                      <div className="w-16 h-16 rounded-full bg-dark-700 border border-dark-600 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {(playerPhotoPreview || playerForm.photo) ? (
+                          <img
+                            src={playerPhotoPreview || playerForm.photo}
+                            alt="Player"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Users className="w-6 h-6 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePlayerPhotoChange}
+                          className="input-field w-full text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-600 file:text-white hover:file:bg-primary-500"
+                        />
+                        <p className="text-[10px] text-gray-500">JPEG, PNG, WebP. Max 5MB.</p>
+                        {playerForm.photo && !selectedPlayerPhoto && (
+                          <button
+                            type="button"
+                            onClick={() => setPlayerForm(prev => ({ ...prev, photo: '' }))}
+                            className="text-[10px] text-red-400 hover:text-red-300"
+                          >
+                            Remove current photo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-4 md:col-span-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -714,24 +832,7 @@ const EditTeam = () => {
                 <div className="flex justify-end gap-2 mt-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowPlayerForm(false);
-                      setEditingPlayer(null);
-                      setPlayerForm({
-                        name: '',
-                        position: 'Forward',
-                        jerseyNumber: '',
-                        isCaptain: false,
-                        isGoalkeeper: false,
-                        dateOfBirth: '',
-                        placeOfBirth: '',
-                        nationality: '',
-                        height: '',
-                        preferredFoot: '',
-                        marketValue: '',
-                        contractExpiry: '',
-                      });
-                    }}
+                    onClick={() => resetPlayerForm()}
                     className="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-white rounded-lg text-sm transition-colors"
                   >
                     Cancel
@@ -758,8 +859,12 @@ const EditTeam = () => {
                       className="flex items-center justify-between p-3 bg-dark-800 border border-dark-700 rounded-lg hover:border-dark-600 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                          {player.jerseyNumber}
+                        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0">
+                          {player.photo ? (
+                            <img src={player.photo} alt={player.name} className="w-full h-full object-cover" />
+                          ) : (
+                            player.jerseyNumber
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">

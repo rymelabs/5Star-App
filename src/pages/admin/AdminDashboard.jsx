@@ -27,10 +27,7 @@ import {
   Database,
   Bell,
   Inbox,
-  RotateCcw,
-  ImageIcon,
-  ShieldCheck,
-  Sparkles
+  RotateCcw
 } from 'lucide-react';
 import AdminTeams from './AdminTeams';
 import AdminFixtures from './AdminFixtures';
@@ -278,14 +275,6 @@ const AdminDashboard = () => {
       color: 'text-gray-400',
       count: recycleBinItems.length || 0,
     },
-    ...(user?.isSuperAdmin ? [{
-      title: 'Logo Migration Tool',
-      description: 'Generate optimized thumbnails for team logos',
-      icon: ImageIcon,
-      path: '/admin/teams/migrate-logos',
-      color: 'text-orange-400',
-      count: '-',
-    }] : []),
   ];
 
 
@@ -313,185 +302,133 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="relative z-10 pt-4 space-y-5">
+      <div className="relative z-10 pt-6 space-y-8">
         {/* Welcome Section */}
         <div className="px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-[#0f172a] border border-white/10"
-          >
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-purple/20 via-transparent to-blue-600/10 opacity-50" />
-            <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-brand-purple/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/3" />
-            
-            <div className="relative p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-purple to-blue-600 flex items-center justify-center shadow-lg">
-                    <BarChart3 className="w-6 h-6 text-white" />
-                  </div>
-                  {user?.isSuperAdmin && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center border-2 border-[#0f172a]">
-                      <ShieldCheck className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                </div>
-                
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-white tracking-tight">
-                      {t('pages.admin.welcomeBack').replace('{name}', user?.name || 'Admin')}
-                    </h2>
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <p className="text-sm text-slate-400">
-                    {t('pages.admin.whatsHappening')}
-                  </p>
-                </div>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-purple/20 to-blue-600/20 border border-white/10 p-1">
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
+            <div className="relative p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-brand-purple flex items-center justify-center shadow-lg shadow-brand-purple/30">
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
-
-              <div className="flex items-center gap-2">
-                <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                  <p className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Role</p>
-                  <p className="text-xs font-bold text-slate-200">
-                    {user?.isSuperAdmin ? 'Super Admin' : 'Admin'}
-                  </p>
-                </div>
-                <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                  <p className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Status</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <p className="text-xs font-bold text-emerald-400">Online</p>
-                  </div>
-                </div>
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1">
+                  {t('pages.admin.welcomeBack').replace('{name}', user.name)}
+                </h2>
+                <p className="text-sm text-white/60">
+                  {t('pages.admin.whatsHappening')}
+                </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Stats Grid */}
         <div className="px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 + index * 0.03 }}
-                className="relative group"
-              >
-                <div className="relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-9 h-9 rounded-xl ${stat.bgColor} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                    </div>
-                    <div className="text-2xl font-bold text-white tracking-tight">{stat.value}</div>
-                  </div>
-                  <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{stat.title}</div>
+              <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                <div className={`w-8 h-8 rounded-full ${stat.bgColor} flex items-center justify-center mb-3`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
-              </motion.div>
+                <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-xs font-medium text-white/40 uppercase tracking-wider">{stat.title}</div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="space-y-3 px-4">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-1 h-4 bg-brand-purple rounded-full" />
-            <h2 className="text-xs font-bold text-white uppercase tracking-[0.15em]">{t('pages.admin.quickActions')}</h2>
+          <div className="flex items-center gap-2 text-brand-purple px-2">
+            <Activity className="w-4 h-4" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.quickActions')}</h2>
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {quickActions.map((action, index) => (
-              <motion.button
+              <button
                 key={index}
-                whileHover={{ y: -2, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={action.onClick}
-                className="relative group overflow-hidden rounded-2xl bg-[#0f172a] border border-white/5 p-3 text-left transition-all hover:border-brand-purple/30"
+                className="bg-white/5 backdrop-blur-sm border border-white/5 rounded-2xl p-4 text-left hover:bg-white/10 transition-all group"
               >
-                <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-2 group-hover:bg-brand-purple transition-all duration-300`}>
-                    <action.icon className={`w-5 h-5 ${action.color} group-hover:text-white transition-colors`} />
-                  </div>
-                  <h3 className="text-[11px] font-semibold text-white leading-tight group-hover:text-brand-purple transition-colors">{action.title}</h3>
+                <div className={`w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                  <action.icon className={`w-4 h-4 ${action.color}`} />
                 </div>
-              </motion.button>
+                <h3 className="text-sm font-bold text-white mb-1">{action.title}</h3>
+                <p className="text-[10px] text-white/40 leading-relaxed line-clamp-2">{action.description}</p>
+              </button>
             ))}
           </div>
         </div>
 
         {/* Management Sections */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 px-5">
-            <div className="w-1 h-4 bg-blue-500 rounded-full" />
-            <h2 className="text-xs font-bold text-white uppercase tracking-[0.15em]">{t('pages.admin.management')}</h2>
+          <div className="flex items-center gap-2 text-brand-purple px-6">
+            <Settings className="w-4 h-4" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.management')}</h2>
           </div>
           
-          <div className="mx-4 bg-[#0f172a]/50 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-1 divide-y divide-white/5">
-              {managementSections.filter(Boolean).map((section, index) => (
-                <motion.button
-                  key={index}
-                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
-                  onClick={() => navigate(section.path)}
-                  className="w-full px-4 py-3 flex items-center justify-between group transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl bg-[#1e293b] border border-white/5 flex items-center justify-center group-hover:border-brand-purple/30 transition-all duration-300`}>
-                      <section.icon className={`w-4 h-4 ${section.color}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-white group-hover:text-brand-purple transition-colors">{section.title}</h3>
-                      <p className="text-[11px] text-slate-500 font-medium line-clamp-1">{section.description}</p>
-                    </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/5 divide-y divide-white/5 rounded-2xl overflow-hidden">
+            {managementSections.filter(Boolean).map((section, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(section.path)}
+                className="w-full px-6 py-4 flex items-center justify-between group hover:bg-white/5 transition-colors text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <section.icon className={`w-4 h-4 ${section.color}`} />
                   </div>
-                  <div className="flex items-center gap-3">
-                    {section.count !== '-' && (
-                      <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white">
-                        {section.count}
-                      </span>
-                    )}
-                    <ChevronDown className="w-4 h-4 text-slate-500 -rotate-90 group-hover:text-brand-purple transition-colors" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white group-hover:text-white/90 transition-colors">{section.title}</h3>
+                    <p className="text-xs text-white/40 mt-0.5">{section.description}</p>
                   </div>
-                </motion.button>
-              ))}
-            </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {section.count !== '-' && (
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white/60">
+                      {section.count}
+                    </span>
+                  )}
+                  <ChevronDown className="w-4 h-4 text-white/20 -rotate-90 group-hover:text-white/60 transition-colors" />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Recent Activity */}
         <div className="space-y-3 pb-8">
-          <div className="flex items-center justify-between px-5">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-[0.15em]">{t('pages.admin.recentActivity')}</h2>
+          <div className="flex items-center justify-between px-6">
+            <div className="flex items-center gap-2 text-brand-purple">
+              <Eye className="w-4 h-4" />
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em]">{t('pages.admin.recentActivity')}</h2>
             </div>
           </div>
 
-          <div className="mx-4 bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/5 divide-y divide-white/5 rounded-2xl overflow-hidden">
             {recentActivities.length > 0 ? (
               <>
-                {recentActivities.map((activity, idx) => {
+                {recentActivities.map((activity) => {
                   // Determine icon and color based on activity type
-                  let Icon, iconColor;
+                  let Icon, bgColor;
                   switch (activity.type) {
                     case 'team':
                       Icon = Users;
-                      iconColor = 'text-blue-400';
+                      bgColor = 'bg-blue-600';
                       break;
                     case 'fixture':
                       Icon = Calendar;
-                      iconColor = 'text-accent-400';
+                      bgColor = 'bg-accent-600';
                       break;
                     case 'news':
                     case 'article':
                       Icon = Newspaper;
-                      iconColor = 'text-purple-400';
+                      bgColor = 'bg-purple-600';
                       break;
                     default:
                       Icon = Activity;
-                      iconColor = 'text-slate-400';
+                      bgColor = 'bg-gray-600';
                   }
 
                   // Format action text
@@ -516,21 +453,22 @@ const AdminDashboard = () => {
                   };
 
                   return (
-                    <div 
-                      key={activity.id} 
-                      className="px-4 py-3 hover:bg-white/5 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center`}>
-                          <Icon className={`w-4 h-4 ${iconColor}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-white truncate">
-                            {actionText} {activity.type}: <span className="text-slate-400">{activity.itemName}</span>
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            {timeAgo(activity.createdAt?.toDate ? activity.createdAt.toDate() : new Date(activity.createdAt))} • {activity.userName}
-                          </p>
+                    <div key={activity.id} className="px-6 py-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                              <Icon className="w-4 h-4 text-white" />
+                           </div>
+                           <div>
+                              <p className="text-sm font-medium text-white">
+                                {actionText} {activity.type}: {activity.itemName}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-white/40">
+                                  {timeAgo(activity.createdAt?.toDate ? activity.createdAt.toDate() : new Date(activity.createdAt))} • {t('pages.admin.by')} {activity.userName}
+                                </span>
+                              </div>
+                           </div>
                         </div>
                       </div>
                     </div>
@@ -541,10 +479,10 @@ const AdminDashboard = () => {
                   <button
                     onClick={showAllActivities ? handleShowLess : handleLoadMore}
                     disabled={loadingMore}
-                    className="w-full py-2.5 text-[10px] font-bold text-brand-purple hover:bg-white/5 transition-colors uppercase tracking-widest flex items-center justify-center gap-1.5"
+                    className="w-full py-3 text-xs font-bold text-brand-purple hover:text-brand-purple-light hover:bg-white/5 transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
                   >
                     {loadingMore ? (
-                      <div className="w-3 h-3 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         {showAllActivities ? (
@@ -562,13 +500,12 @@ const AdminDashboard = () => {
                 )}
               </>
             ) : (
-              <div className="text-center py-8 text-slate-500">
-                <p className="text-xs">No recent activity found.</p>
+              <div className="p-8 text-center">
+                <p className="text-sm text-white/40">{t('pages.admin.noRecentActivity')}</p>
               </div>
             )}
           </div>
         </div>
-
       </div>
     </motion.div>
   );

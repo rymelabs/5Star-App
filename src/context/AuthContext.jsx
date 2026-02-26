@@ -1,26 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   registerUser, 
   loginUser, 
   logoutUser, 
   onAuthStateChange,
   signInWithGoogle,
-  handleGoogleRedirectResult,
   signInAnonymous,
   updateUserProfile
 } from '../firebase/auth';
 
-const AuthContext = createContext({
-  user: null,
-  authState: 'guest',
-  loading: true,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  loginWithGoogle: async () => {},
-  loginAsGuest: async () => {},
-  updateProfile: async () => {}
-});
+const AuthContext = createContext();
 
 const deriveAuthState = (rawUser) => {
   if (!rawUser) return 'guest';
@@ -46,7 +35,7 @@ const normalizeUser = (rawUser) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -60,44 +49,27 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     
-    // Initialize auth state change listener
-    let unsubscribe;
+    // Check if Firebase is configured
+    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      setLoading(false);
+      setError('Firebase configuration missing. Please set up your .env file.');
+      return;
+    }
     
-    const initAuth = async () => {
-      try {
-        // Handle Google redirect result first (for mobile sign-in)
-        // This must complete before we set loading to false
-        const redirectUser = await handleGoogleRedirectResult();
-        if (redirectUser) {
-          console.log('Google redirect sign-in successful:', redirectUser.email);
-        }
-      } catch (err) {
-        // Only log if it's a real error, not just "no redirect result"
-        if (err.code !== 'auth/null-user') {
-          console.warn('Google redirect check:', err.message);
-        }
-      }
-      
-      try {
-        unsubscribe = onAuthStateChange((userData) => {
-          setUser(normalizeUser(userData));
-          setAuthState(deriveAuthState(userData));
-          setLoading(false);
-        });
-      } catch (error) {
-        console.error('Auth state observer error:', error);
+    try {
+      const unsubscribe = onAuthStateChange((userData) => {
+        setUser(normalizeUser(userData));
+        setAuthState(deriveAuthState(userData));
         setLoading(false);
-        setError('Failed to initialize authentication');
-      }
-    };
-    
-    initAuth();
+      });
 
-    return () => {
-      if (unsubscribe) {
+      return () => {
         unsubscribe();
-      }
-    };
+      };
+    } catch (error) {
+      setLoading(false);
+      setError('Failed to initialize authentication');
+    }
   }, []);
 
   const register = async (userData) => {
@@ -209,7 +181,7 @@ export const AuthProvider = ({ children }) => {
   const isAnonymous = authState === 'anonymous';
   const isAuthenticated = authState === 'authenticated';
 
-  const value = useMemo(() => ({
+  const value = {
     user,
     loading,
     error,
@@ -223,7 +195,7 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle: signInWithGoogleProvider,
     signInAnonymously: signInAnonymousProvider,
     updateProfile
-  }), [user, loading, error, authState, isGuest, isAnonymous, isAuthenticated]);
+  };
 
   return (
     <AuthContext.Provider value={value}>

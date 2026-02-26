@@ -4,10 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePwaInstall } from '../context/PwaInstallContext';
 import { settingsCollection } from '../firebase/settings';
-import { getFirebaseDb } from '../firebase/config';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import {
   ArrowLeft,
   Bell,
@@ -20,7 +17,6 @@ import {
   Check,
   Inbox,
   MoreHorizontal,
-  Download,
 } from 'lucide-react';
 import NotificationPermissionModal from '../components/NotificationPermissionModal';
 
@@ -29,7 +25,6 @@ const Settings = () => {
   const { user, logout } = useAuth();
   const { unreadCount, permissionGranted, requestPermission } = useNotification();
   const { language: currentLanguage, changeLanguage, availableLanguages, t } = useLanguage();
-  const { isInstalled, promptInstall } = usePwaInstall();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -274,78 +269,7 @@ const Settings = () => {
     }, 500);
   };
 
-  const handleInstallApp = async () => {
-    try {
-      const result = await promptInstall();
-
-      if (result.status === 'accepted') {
-        showToast('App installed successfully!', 'success');
-        return;
-      }
-
-      if (result.status === 'dismissed') {
-        showToast('App installation cancelled', 'error');
-        return;
-      }
-
-      if (result.status === 'ios') {
-        showToast('On iPhone/iPad: tap Share → Add to Home Screen', 'success');
-        return;
-      }
-
-      if (result.status === 'already-installed') {
-        showToast('App is already installed', 'success');
-        return;
-      }
-
-      showToast('Install prompt not available yet. Use your browser menu → Add to Home screen.', 'error');
-    } catch (error) {
-      showToast('Failed to install app', 'error');
-      console.error('Install prompt error:', error);
-    }
-  };
-
-  const handleSendTestPush = async () => {
-    if (!user?.uid) {
-      showToast('You must be logged in', 'error');
-      return;
-    }
-
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      showToast('Enable notifications first', 'error');
-      return;
-    }
-
-    try {
-      const db = getFirebaseDb();
-      await addDoc(collection(db, 'pushTests'), {
-        userId: user.uid,
-        title: '🔔 Push Test',
-        body: 'If you see this, push notifications work.',
-        url: '/settings',
-        createdAt: serverTimestamp(),
-      });
-      showToast('Test push requested. Check your notifications.', 'success');
-    } catch (error) {
-      showToast(error?.message || 'Failed to request test push', 'error');
-    }
-  };
-
   const settingSections = [
-    {
-      title: 'Install Now',
-      icon: Download,
-      items: [
-        {
-          label: 'Install App',
-          description: 'Add fivescores to your home screen for a better experience',
-          type: 'button',
-          buttonLabel: isInstalled ? 'Installed' : 'Install on Device',
-          onClick: handleInstallApp,
-          disabled: isInstalled,
-        },
-      ],
-    },
     {
       title: t('pages.settings.notifications'),
       icon: Bell,
@@ -365,14 +289,6 @@ const Settings = () => {
           buttonLabel: permissionGranted ? t('pages.settings.enabled') : t('pages.settings.enable'),
           onClick: () => !permissionGranted && setShowPermissionModal(true),
           disabled: permissionGranted,
-        },
-        {
-          label: 'Send Test Push',
-          description: 'Sends a test notification to this device',
-          type: 'button',
-          buttonLabel: 'Send Test Push',
-          onClick: handleSendTestPush,
-          disabled: !permissionGranted,
         },
         {
           label: t('pages.settings.pushNotifications'),
@@ -556,7 +472,7 @@ const Settings = () => {
           </div>
         </div>
 
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.2s_ease-out]">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-[#1A1A1A] rounded-3xl w-full max-w-sm p-8 border border-white/10 shadow-2xl animate-[scaleIn_0.3s_ease-out]">
             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mx-auto mb-6 border border-red-500/20">
               <LogOut className="w-8 h-8 text-red-500" />
@@ -789,7 +705,7 @@ const Settings = () => {
       </div>
 
       {toast.show && (
-        <div className="fixed bottom-40 left-1/2 transform -translate-x-1/2 z-[60] animate-[slideInUp_0.3s_ease-out] w-full max-w-xs px-4">
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-[slideInUp_0.3s_ease-out] w-full max-w-xs px-4">
           <div
             className={`rounded-2xl px-4 py-3 shadow-2xl backdrop-blur-md border border-white/10 flex items-center gap-3 ${
               toast.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'

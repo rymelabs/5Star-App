@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { MapPin } from 'lucide-react';
 import NewTeamAvatar from './NewTeamAvatar';
 import { isFixtureLive } from '../utils/helpers';
@@ -6,7 +6,7 @@ import { formatDateTime } from '../utils/dateUtils';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import FixtureCardDesktop from './ui/FixtureCardDesktop';
 
-const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, variant = 'card' }) => {
+const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, variant = 'card' }) => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   
   // Use desktop variant only if not in compact mode and on desktop screen
@@ -20,21 +20,6 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
   const isLive = status === 'live' || isFixtureLive(fixture);
   const isCompleted = status === 'completed' || status === 'finished';
   const isRow = variant === 'row';
-
-  const getStatusTag = (rawStatus) => {
-    const normalized = String(rawStatus || '').trim().toLowerCase();
-    if (!normalized) return null;
-    if (normalized === 'tbd' || normalized === 'pst' || normalized === 'postponed') return 'TBD';
-    if (normalized === 'canc' || normalized === 'cancelled' || normalized === 'canceled') return 'CANC';
-    return null;
-  };
-
-  const statusTag = getStatusTag(fixture.status);
-  const statusTagClass = statusTag === 'CANC' ? 'text-red-400' : 'text-brand-purple';
-
-  const scoreForDisplay = (value) => (value === '' || value === null || value === undefined ? 0 : value);
-  const homeScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.homeScore) : fixture.homeScore;
-  const awayScoreDisplay = (isLive || isCompleted) ? scoreForDisplay(fixture.awayScore) : fixture.awayScore;
 
   // Format date/time using project helper
   const dateLabel = fixture.dateTime ? formatDateTime(fixture.dateTime) : '';
@@ -84,8 +69,6 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
                   </span>
                   LIVE {fixture.liveData?.minute && `• ${fixture.liveData.minute}'`}
                 </span>
-              ) : statusTag ? (
-                <span className={`font-bold ${statusTagClass}`}>{statusTag}</span>
               ) : (
                 <span>{dateLabel}</span>
               )}
@@ -96,9 +79,7 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
         {/* Row Mode: Time/Status Indicator */}
         {isRow && (
           <div className="absolute top-1/2 -translate-y-1/2 left-0 w-12 text-center text-[10px] font-medium text-white/40">
-             {statusTag ? (
-                <span className={`font-bold ${statusTagClass}`}>{statusTag}</span>
-              ) : isLive ? (
+             {isLive ? (
                 <span className="text-red-400 animate-pulse">
                   {fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'LIVE'}
                 </span>
@@ -136,10 +117,10 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
               <div className={`flex items-center font-bold text-white ${
                 isRow ? 'gap-1 text-sm' : (compact ? 'gap-1 text-sm sm:text-lg' : 'gap-1.5 sm:gap-2 text-lg sm:text-2xl')
               }`}>
-                <span>{homeScoreDisplay}</span>
+                <span>{fixture.homeScore ?? 0}</span>
                 {!isRow && <span className="text-white/20">-</span>}
                 {isRow && <span className="text-white/20 text-[10px] mx-0.5">-</span>}
-                <span>{awayScoreDisplay}</span>
+                <span>{fixture.awayScore ?? 0}</span>
               </div>
             ) : (
               <span className={`font-bold text-white/20 ${
@@ -166,8 +147,6 @@ const FixtureCard = memo(({ fixture = {}, onClick = () => {}, compact = false, v
       </div>
     </button>
   );
-});
-
-FixtureCard.displayName = 'FixtureCard';
+};
 
 export default FixtureCard;

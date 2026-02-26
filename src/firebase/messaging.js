@@ -1,5 +1,5 @@
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import { getFirebaseApp, getFirebaseClientConfig } from './config';
+import { getFirebaseApp } from './config';
 
 let messaging = null;
 let messagingSupported = null;
@@ -96,16 +96,9 @@ export const requestNotificationPermission = async () => {
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         scope: '/'
       });
-
-      // Wait for service worker to be ready and send runtime config (avoids hardcoded keys in SW)
-      const readyRegistration = await navigator.serviceWorker.ready;
-      const activeSw = readyRegistration.active || registration.active;
-      if (activeSw) {
-        activeSw.postMessage({
-          type: 'INIT_FIREBASE',
-          config: getFirebaseClientConfig(),
-        });
-      }
+      
+      // Wait for service worker to be ready
+      await navigator.serviceWorker.ready;
     } catch (swError) {
       
       // Still allow enabling for development
@@ -147,8 +140,7 @@ export const requestNotificationPermission = async () => {
       };
     }
 
-    const serviceWorkerRegistration = await navigator.serviceWorker.ready;
-    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
+    const token = await getToken(messaging, { vapidKey });
     
     if (token) {
       return { success: true, token, isDevMode: false };
@@ -203,8 +195,8 @@ export const onForegroundMessage = async (callback) => {
     const notificationData = {
       title: payload.notification?.title || 'New Notification',
       body: payload.notification?.body || '',
-      icon: payload.notification?.icon || '/icons/icon-192.png',
-      badge: payload.notification?.badge || '/icons/icon-192.png',
+      icon: payload.notification?.icon || '/Fivescores logo.svg',
+      badge: payload.notification?.badge || '/Fivescores logo.svg',
       data: payload.data || {},
       timestamp: new Date().toISOString()
     };

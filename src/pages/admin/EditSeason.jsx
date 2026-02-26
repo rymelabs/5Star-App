@@ -22,7 +22,6 @@ const EditSeason = () => {
   const currentYear = new Date().getFullYear();
   
   const [allTeams, setAllTeams] = useState([]);
-  const [allSeasons, setAllSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState(1);
@@ -31,14 +30,10 @@ const EditSeason = () => {
   const [formData, setFormData] = useState({
     name: '',
     year: currentYear,
-    startDate: '',
     numberOfGroups: 4,
     teamsPerGroup: 4,
     matchesPerRound: 2,
-    qualifiersPerGroup: 2,
-    relegationPosition: '',
-    autoMoveRelegatedTeams: false,
-    relegationDestinationSeasonId: ''
+    qualifiersPerGroup: 2
   });
 
   const [groups, setGroups] = useState([]);
@@ -56,10 +51,9 @@ const EditSeason = () => {
   const loadSeasonAndTeams = async () => {
     try {
       setLoading(true);
-      const [season, teams, seasons] = await Promise.all([
+      const [season, teams] = await Promise.all([
         seasonsCollection.getById(seasonId),
-        teamsCollection.getAll(),
-        seasonsCollection.getAll()
+        teamsCollection.getAll()
       ]);
 
       if (!season) {
@@ -70,20 +64,15 @@ const EditSeason = () => {
 
       setOriginalSeason(season);
       setAllTeams(teams);
-      setAllSeasons(seasons);
       
       // Populate form data
       setFormData({
         name: season.name || '',
         year: season.year || currentYear,
-        startDate: season.startDate || '',
         numberOfGroups: season.numberOfGroups || 4,
         teamsPerGroup: season.teamsPerGroup || 4,
         matchesPerRound: season.knockoutConfig?.matchesPerRound || 2,
         qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2,
-        relegationPosition: (season.relegationPosition ?? '') === null ? '' : (season.relegationPosition ?? ''),
-        autoMoveRelegatedTeams: Boolean(season.autoMoveRelegatedTeams),
-        relegationDestinationSeasonId: season.relegationDestinationSeasonId || '',
         ownerId: season.ownerId || null,
         ownerName: season.ownerName || 'Unknown Admin',
         logo: season.logo || null
@@ -114,21 +103,13 @@ const EditSeason = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup', 'relegationPosition'].includes(name)
+    const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup'].includes(name)
       ? (value === '' ? '' : parseInt(value, 10))
       : value;
     
     setFormData(prev => ({
       ...prev,
       [name]: numValue
-    }));
-  };
-
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
     }));
   };
 
@@ -256,30 +237,6 @@ const EditSeason = () => {
       return;
     }
 
-    if (formData.relegationPosition !== '') {
-      const relegationPos = parseInt(formData.relegationPosition, 10);
-      const teamsPerGroup = parseInt(formData.teamsPerGroup, 10);
-      if (Number.isNaN(relegationPos) || relegationPos < 1 || relegationPos > teamsPerGroup) {
-        showToast('Relegation position must be between 1 and teams per group.', 'error');
-        return;
-      }
-    }
-
-    if (formData.autoMoveRelegatedTeams) {
-      if (formData.relegationPosition === '') {
-        showToast('Set a relegation position to enable auto-move.', 'error');
-        return;
-      }
-      if (!formData.relegationDestinationSeasonId) {
-        showToast('Select a destination season for relegated teams.', 'error');
-        return;
-      }
-      if (formData.relegationDestinationSeasonId === seasonId) {
-        showToast('Destination season cannot be the same as this season.', 'error');
-        return;
-      }
-    }
-
     // Check if all groups are properly configured
     const emptyGroups = groups.filter(g => g.teams.length === 0);
     if (emptyGroups.length > 0) {
@@ -302,12 +259,8 @@ const EditSeason = () => {
       const updateData = {
         name: formData.name,
         year: formData.year,
-        startDate: formData.startDate || null,
         numberOfGroups: formData.numberOfGroups,
         teamsPerGroup: formData.teamsPerGroup,
-        relegationPosition: formData.relegationPosition === '' ? null : parseInt(formData.relegationPosition, 10),
-        autoMoveRelegatedTeams: Boolean(formData.autoMoveRelegatedTeams),
-        relegationDestinationSeasonId: formData.autoMoveRelegatedTeams ? (formData.relegationDestinationSeasonId || null) : null,
         groups: groups,
         knockoutConfig: {
           matchesPerRound: formData.matchesPerRound,
@@ -356,9 +309,9 @@ const EditSeason = () => {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Toast Notification - positioned below fixed header */}
+      {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed top-20 right-4 px-4 sm:px-6 py-3 rounded-lg shadow-lg z-[9999] ${
+        <div className={`fixed top-4 right-4 px-4 sm:px-6 py-3 rounded-lg shadow-lg z-50 ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}
@@ -472,22 +425,6 @@ const EditSeason = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Season Start Date
-                </label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Fixture generation will start from this date.
-                </p>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -524,69 +461,6 @@ const EditSeason = () => {
                     className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Relegation starts at position
-                </label>
-                <input
-                  type="number"
-                  name="relegationPosition"
-                  value={formData.relegationPosition}
-                  onChange={handleChange}
-                  min="1"
-                  max={formData.teamsPerGroup}
-                  className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                  placeholder="Optional"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Teams at or below this position will be highlighted red in group/season tables.
-                </p>
-              </div>
-
-              <div className="p-4 bg-dark-800/50 border border-white/10 rounded-lg space-y-3">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    name="autoMoveRelegatedTeams"
-                    checked={formData.autoMoveRelegatedTeams}
-                    onChange={handleCheckboxChange}
-                    className="mt-1"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">Auto-move relegated teams</p>
-                    <p className="text-xs text-gray-400">
-                      When you complete the season, move relegated teams to another season.
-                    </p>
-                  </div>
-                </div>
-
-                {formData.autoMoveRelegatedTeams && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Move relegated teams to
-                    </label>
-                    <select
-                      name="relegationDestinationSeasonId"
-                      value={formData.relegationDestinationSeasonId}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    >
-                      <option value="">Select a season</option>
-                      {allSeasons
-                        .filter((s) => s?.id && s.id !== seasonId)
-                        .map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name} {s.year ? `(${s.year})` : ''}
-                          </option>
-                        ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Teams can also be manually added by editing the destination season.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -678,7 +552,7 @@ const EditSeason = () => {
                     <div key={team.id} className="flex items-center justify-between p-2 bg-dark-700 rounded-lg">
                       <div className="flex items-center space-x-2 min-w-0 flex-1">
                         {team.logo && (
-                          <img src={team.logo} alt={team.name} className="w-6 h-6 rounded flex-shrink-0" loading="lazy" decoding="async" />
+                          <img src={team.logo} alt={team.name} className="w-6 h-6 rounded flex-shrink-0" />
                         )}
                         <span className="text-sm text-white truncate">{team.name}</span>
                       </div>
@@ -780,7 +654,7 @@ const EditSeason = () => {
                         {group.teams.map(team => (
                           <div key={team.id} className="flex items-center space-x-2">
                             {team.logo && (
-                              <img src={team.logo} alt={team.name} className="w-4 h-4 rounded" loading="lazy" decoding="async" />
+                              <img src={team.logo} alt={team.name} className="w-4 h-4 rounded" />
                             )}
                             <span className="text-xs text-gray-300">{team.name}</span>
                           </div>

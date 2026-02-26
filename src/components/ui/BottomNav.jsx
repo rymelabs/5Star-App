@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, memo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, useAnimation } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { navItems } from '../navItems';
 import { isFestiveSeason } from '../../utils/dateUtils';
 
-const BottomNav = memo(() => {
+const BottomNav = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -184,8 +184,6 @@ const BottomNav = memo(() => {
       </motion.nav>
     </div>
   );
-});
-
-BottomNav.displayName = 'BottomNav';
+};
 
 export default BottomNav;

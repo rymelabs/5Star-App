@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, TrendingUp, Award } from 'lucide-react';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
-import { truncateText, formatScore, abbreviateTeamName, isFixtureLive, getLiveTeamIds } from '../utils/helpers';
+import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
@@ -90,105 +90,53 @@ const Latest = () => {
   // Get latest news for carousel (top 3)
   const latestNews = articles?.slice(0, 3) || [];
 
-  const getCompetitionDetails = React.useCallback((seasonId, leagueId, competitionName) => {
-    // First try to find from seasons
-    if (seasonId) {
-      const season = seasons.find(s => s.id === seasonId);
-      if (season) {
-        return {
-          id: season.id,
-          logo: season.logo || null,
-          type: 'season'
-        };
-      }
-    }
-
-    // Then try to find from leagues
-    if (leagueId) {
-      const league = leagues.find(l => l.id === leagueId);
-      if (league) {
-        return {
-          id: league.id,
-          logo: league.logo || null,
-          type: 'league'
-        };
-      }
-    }
-
-    // Try to find by name match
-    const league = leagues.find(l =>
-      l.name?.toLowerCase() === competitionName?.toLowerCase()
-    );
-    if (league) {
-      return {
-        id: league.id,
-        logo: league.logo || null,
-        type: 'league'
-      };
-    }
-
-    return { id: null, logo: null, type: null };
-  }, [seasons, leagues]);
-
-  // Live fixtures grouped by competition/league/season (for Live Matches section)
-  const groupedLiveContent = React.useMemo(() => {
-    if (!fixtures || fixtures.length === 0) return [];
-
-    const competitionsMap = new Map();
-
-    fixtures
-      .filter(fixture => isFixtureLive(fixture))
-      .forEach(fixture => {
-        const compName = fixture.competition || 'General Fixtures';
-        const seasonName = fixture.seasonId === activeSeason?.id ? activeSeason.name : null;
-        const groupKey = seasonName || compName;
-
-        if (!competitionsMap.has(groupKey)) {
-          const details = getCompetitionDetails(fixture.seasonId, fixture.leagueId, compName);
-
-          competitionsMap.set(groupKey, {
-            name: groupKey,
-            logo: details.logo,
-            competitionId: details.id,
-            competitionType: details.type,
-            isActiveSeason: !!seasonName,
-            competition: compName,
-            liveFixtures: []
-          });
-        }
-
-        const group = competitionsMap.get(groupKey);
-        group.liveFixtures.push(fixture);
-      });
-
-    return Array.from(competitionsMap.values())
-      .map(group => {
-        group.liveFixtures.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-        return group;
-      })
-      .filter(group => group.liveFixtures.length > 0)
-      .sort((a, b) => {
-        if (a.isActiveSeason && !b.isActiveSeason) return -1;
-        if (!a.isActiveSeason && b.isActiveSeason) return 1;
-        return a.name.localeCompare(b.name);
-      });
-  }, [fixtures, activeSeason, getCompetitionDetails]);
-
   // Group all content by competition/league/season
   const groupedContent = React.useMemo(() => {
     if (!fixtures || fixtures.length === 0) return [];
 
     const now = new Date();
-    const getLocalDateKey = (dateInput) => {
-      const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
-      if (Number.isNaN(d.getTime())) return '';
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-    const todayKey = getLocalDateKey(now);
     const competitionsMap = new Map();
+
+    // Helper to find logo and details for a season or league
+    const findCompetitionDetails = (seasonId, leagueId, competitionName) => {
+      // First try to find from seasons
+      if (seasonId) {
+        const season = seasons.find(s => s.id === seasonId);
+        if (season) {
+          return { 
+            id: season.id, 
+            logo: season.logo || null, 
+            type: 'season' 
+          };
+        }
+      }
+      
+      // Then try to find from leagues
+      if (leagueId) {
+        const league = leagues.find(l => l.id === leagueId);
+        if (league) {
+          return { 
+            id: league.id, 
+            logo: league.logo || null, 
+            type: 'league' 
+          };
+        }
+      }
+      
+      // Try to find by name match
+      const league = leagues.find(l => 
+        l.name?.toLowerCase() === competitionName?.toLowerCase()
+      );
+      if (league) {
+        return { 
+          id: league.id, 
+          logo: league.logo || null, 
+          type: 'league' 
+        };
+      }
+      
+      return { id: null, logo: null, type: null };
+    };
 
     // Process all fixtures and group by competition/season
     fixtures.forEach(fixture => {
@@ -198,7 +146,7 @@ const Latest = () => {
 
       if (!competitionsMap.has(groupKey)) {
         // Find details for this group
-        const details = getCompetitionDetails(fixture.seasonId, fixture.leagueId, compName);
+        const details = findCompetitionDetails(fixture.seasonId, fixture.leagueId, compName);
         
         competitionsMap.set(groupKey, {
           name: groupKey,
@@ -232,53 +180,24 @@ const Latest = () => {
 
         // Sort results by date (most recent first), limit to 6
         group.recentResults.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-        group.hasTodayResults = group.recentResults.some((fixture) => getLocalDateKey(fixture.dateTime) === todayKey);
-        group.latestResultTime = new Date(group.recentResults[0]?.dateTime || 0).getTime();
         group.recentResults = group.recentResults.slice(0, 6);
 
         return group;
       })
-      .filter(group =>
-        group.upcomingFixtures.length > 0 ||
+      .filter(group => 
+        group.upcomingFixtures.length > 0 || 
         group.recentResults.length > 0
       )
       .sort((a, b) => {
         // Active season first
         if (a.isActiveSeason && !b.isActiveSeason) return -1;
         if (!a.isActiveSeason && b.isActiveSeason) return 1;
-
-        // Then prioritize groups that have results today
-        if (a.hasTodayResults && !b.hasTodayResults) return -1;
-        if (!a.hasTodayResults && b.hasTodayResults) return 1;
-
-        // Then show the most recent result groups first
-        if (a.latestResultTime !== b.latestResultTime) return b.latestResultTime - a.latestResultTime;
-
-        // Then prioritize groups that actually have results
-        const aHasResults = a.recentResults.length > 0;
-        const bHasResults = b.recentResults.length > 0;
-        if (aHasResults && !bHasResults) return -1;
-        if (!aHasResults && bHasResults) return 1;
-
         return a.name.localeCompare(b.name);
       });
-  }, [fixtures, activeSeason, getCompetitionDetails]);
-
-  const groupedContentRecentFirst = React.useMemo(() => {
-    const threshold = Date.now() - 24 * 60 * 60 * 1000;
-    const recent = groupedContent.filter(
-      (group) => group.hasTodayResults || (group.latestResultTime && group.latestResultTime >= threshold)
-    );
-    const older = groupedContent.filter(
-      (group) => !group.hasTodayResults && (!group.latestResultTime || group.latestResultTime < threshold)
-    );
-    return { recent, older };
-  }, [groupedContent]);
+  }, [fixtures, activeSeason, seasons, leagues]);
 
   // Get top 6 teams from league table
   const topTeams = leagueTable?.slice(0, 6) || [];
-
-  const liveTeamIds = React.useMemo(() => getLiveTeamIds(fixtures), [fixtures]);
 
   const handleNewsClick = (article) => {
     if (article?.slug) {
@@ -494,59 +413,6 @@ const Latest = () => {
     </section>
   );
 
-  const LiveMatchesSection = () => (
-    groupedLiveContent.length > 0 && (
-      <section className="space-y-4">
-        <div className="flex items-center justify-between px-2">
-          <h2 className="text-lg font-semibold text-white">{t('pages.latest.liveMatches') || 'Live Matches'}</h2>
-          <button
-            onClick={() => navigate('/fixtures')}
-            className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
-          >
-            {t('common.viewAll') || 'See all'}
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {groupedLiveContent.map((group) => (
-            <div key={`live-${group.name}`} className="space-y-3">
-              <div
-                className={`flex items-center gap-2 px-2 ${group.competitionId ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-                onClick={() => handleCompetitionClick(group)}
-              >
-                {group.logo ? (
-                  <img
-                    src={group.logo}
-                    alt={group.name}
-                    className="w-5 h-5 object-contain rounded"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
-                    }}
-                  />
-                ) : null}
-                <Trophy
-                  className="w-5 h-5 text-brand-purple"
-                  style={{ display: group.logo ? 'none' : 'block' }}
-                />
-                <h3 className="text-[13px] sm:text-base font-bold text-white leading-tight">{group.name}</h3>
-                {group.competitionId && (
-                  <ChevronRight className="w-4 h-4 text-gray-500 ml-auto" />
-                )}
-              </div>
-
-              <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
-                {group.liveFixtures.map((fixture) => (
-                  <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    )
-  );
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -565,19 +431,11 @@ const Latest = () => {
         </p>
       </header>
 
-      {/* Live Matches */}
-      <LiveMatchesSection />
-
-      {/* Recent Results/Fixtures (today / last 24h) */}
-      {groupedContentRecentFirst.recent.map((group) => (
-        <CompetitionGroup key={group.name} group={group} />
-      ))}
-
-      {/* Latest News */}
+      {/* Latest News - Always show first */}
       <NewsSection />
 
-      {/* Older Results/Fixtures (keep below news) */}
-      {groupedContentRecentFirst.older.map((group) => (
+      {/* Grouped Content by Competition/League/Season */}
+      {groupedContent.map((group) => (
         <CompetitionGroup key={group.name} group={group} />
       ))}
 
@@ -612,7 +470,7 @@ const Latest = () => {
                     </div>
                     <NewTeamAvatar team={entry.team} size={32} />
                     <div className="flex-1 min-w-0">
-                      <div className={`font-semibold text-sm truncate ${liveTeamIds.has(entry.team.id) ? 'text-red-400' : 'text-white'}`}>{entry.team.name}</div>
+                      <div className="font-semibold text-sm text-white truncate">{entry.team.name}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs">
