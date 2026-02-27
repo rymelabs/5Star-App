@@ -14,6 +14,221 @@ import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Za
 import { uploadVideoWithProgress, deleteVideo } from '../../services/videoUploadService';
 import { MATCH_BREAK_RATIO, createDefaultLiveClock, resolveFixtureTiming, toCanonicalFixtureStatus, validateRegulationMinutes } from '../../utils/matchTiming';
 
+const STATS_METRICS = [
+  { key: 'possession', label: 'Possession', unit: '%', min: 0, max: 100, step: 1 },
+  { key: 'shots', label: 'Shots', min: 0, step: 1 },
+  { key: 'shotsOnTarget', label: 'Shots on Target', min: 0, step: 1 },
+  { key: 'corners', label: 'Corners', min: 0, step: 1 },
+  { key: 'fouls', label: 'Fouls', min: 0, step: 1 },
+  { key: 'yellowCards', label: 'Yellow Cards', min: 0, step: 1 },
+  { key: 'redCards', label: 'Red Cards', min: 0, step: 1 },
+];
+const GOAL_LINKED_STATS = ['shots', 'shotsOnTarget'];
+
+const createEmptyStatsForm = () => STATS_METRICS.reduce((acc, metric) => {
+  acc[metric.key] = { home: '', away: '' };
+  return acc;
+}, {});
+
+const toNonNegativeInteger = (value, fallback = null) => {
+  if (value === '' || value === null || value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+};
+
+const clampPercent = (value, fallback = null) => {
+  const parsed = toNonNegativeInteger(value, fallback);
+  if (parsed === null) return fallback;
+  return Math.min(100, parsed);
+};
+
+const withBalancedPossession = (stats, changedSide, nextValue) => {
+  const base = {
+    ...(stats || {}),
+    possession: {
+      ...(stats?.possession || { home: '', away: '' }),
+    },
+  };
+  const parsed = clampPercent(nextValue, null);
+  if (parsed === null) {
+    base.possession.home = '';
+    base.possession.away = '';
+    return base;
+  }
+
+  const oppositeSide = changedSide === 'home' ? 'away' : 'home';
+  base.possession[changedSide] = String(parsed);
+  base.possession[oppositeSide] = String(Math.max(0, 100 - parsed));
+  return base;
+};
+
+const ensureLivePossessionDefaults = (stats, status) => {
+  const canonicalStatus = toCanonicalFixtureStatus(status || 'scheduled');
+  if (canonicalStatus !== 'live' && canonicalStatus !== 'completed') {
+    return stats;
+  }
+
+  const homeValue = clampPercent(stats?.possession?.home, null);
+  const awayValue = clampPercent(stats?.possession?.away, null);
+  if (homeValue !== null || awayValue !== null) {
+    return stats;
+  }
+
+  return {
+    ...(stats || {}),
+    possession: { home: '50', away: '50' },
+  };
+};
+
+const applyGoalLinkedStatAutoSync = ({
+  previousStats,
+  nextStats,
+  side,
+  previousGoals,
+  nextGoals,
+}) => {
+  if (previousGoals === nextGoals) return nextStats;
+
+  const mergedStats = {
+    ...(nextStats || {}),
+  };
+
+  GOAL_LINKED_STATS.forEach((statKey) => {
+    const prevValue = toNonNegativeInteger(previousStats?.[statKey]?.[side], null);
+    const currentValue = toNonNegativeInteger(nextStats?.[statKey]?.[side], null);
+    const shouldAutoSync = prevValue === null || prevValue === previousGoals;
+    const targetValue = shouldAutoSync ? nextGoals : currentValue;
+
+    mergedStats[statKey] = {
+      ...(mergedStats?.[statKey] || { home: '', away: '' }),
+      [side]: targetValue === null ? '' : String(Math.max(0, targetValue)),
+    };
+  });
+
+  return mergedStats;
+};
+
+const statsFormFromFixture = (stats) => {
+  const base = createEmptyStatsForm();
+  if (!stats || typeof stats !== 'object') return base;
+
+  STATS_METRICS.forEach((metric) => {
+    const value = stats[metric.key];
+    if (!value || typeof value !== 'object') return;
+
+    const homeValue = Number(value.home);
+    const awayValue = Number(value.away);
+    base[metric.key] = {
+      home: Number.isFinite(homeValue) ? String(homeValue) : '',
+      away: Number.isFinite(awayValue) ? String(awayValue) : '',
+    };
+  });
+
+  return base;
+};
+
+const buildFixtureStatsPayload = (statsForm, options = {}) => {
+  const canonicalStatus = toCanonicalFixtureStatus(options.status || 'scheduled');
+  const isLiveOrCompleted = canonicalStatus === 'live' || canonicalStatus === 'completed';
+  const homeGoals = toNonNegativeInteger(options.homeScore, 0);
+  const awayGoals = toNonNegativeInteger(options.awayScore, 0);
+
+  const hasAnyInput = STATS_METRICS.some((metric) => {
+    const homeRaw = statsForm?.[metric.key]?.home ?? '';
+    const awayRaw = statsForm?.[metric.key]?.away ?? '';
+    return String(homeRaw).trim() !== '' || String(awayRaw).trim() !== '';
+  });
+
+  const shouldAutofillStats = isLiveOrCompleted || homeGoals > 0 || awayGoals > 0;
+  if (!hasAnyInput && !shouldAutofillStats) {
+    return null;
+  }
+
+  const payload = {};
+  const rawPossessionHome = clampPercent(statsForm?.possession?.home, null);
+  const rawPossessionAway = clampPercent(statsForm?.possession?.away, null);
+  if (rawPossessionHome !== null || rawPossessionAway !== null || isLiveOrCompleted) {
+    let homePossession = rawPossessionHome;
+    let awayPossession = rawPossessionAway;
+
+    if (homePossession === null && awayPossession === null) {
+      homePossession = 50;
+      awayPossession = 50;
+    } else if (homePossession !== null && awayPossession === null) {
+      awayPossession = Math.max(0, 100 - homePossession);
+    } else if (homePossession === null && awayPossession !== null) {
+      homePossession = Math.max(0, 100 - awayPossession);
+    } else {
+      const total = homePossession + awayPossession;
+      if (total !== 100) {
+        awayPossession = Math.max(0, 100 - homePossession);
+      }
+    }
+
+    payload.possession = {
+      home: homePossession,
+      away: awayPossession,
+    };
+  }
+
+  STATS_METRICS
+    .filter((metric) => metric.key !== 'possession')
+    .forEach((metric) => {
+      const homeRaw = toNonNegativeInteger(statsForm?.[metric.key]?.home, null);
+      const awayRaw = toNonNegativeInteger(statsForm?.[metric.key]?.away, null);
+
+      let homeValue = homeRaw;
+      let awayValue = awayRaw;
+
+      if (metric.key === 'shots' || metric.key === 'shotsOnTarget') {
+        if (homeValue === null) homeValue = homeGoals;
+        if (awayValue === null) awayValue = awayGoals;
+      } else if (isLiveOrCompleted) {
+        if (homeValue === null) homeValue = 0;
+        if (awayValue === null) awayValue = 0;
+      }
+
+      if (homeValue === null && awayValue === null) {
+        return;
+      }
+
+      payload[metric.key] = {
+        home: Math.max(0, homeValue ?? 0),
+        away: Math.max(0, awayValue ?? 0),
+      };
+    });
+
+  return Object.keys(payload).length > 0 ? payload : null;
+};
+
+const createFixtureFormData = () => ({
+  homeTeam: '',
+  awayTeam: '',
+  date: '',
+  time: '',
+  venue: '',
+  competition: '',
+  round: '',
+  status: 'scheduled',
+  homeScore: '',
+  awayScore: '',
+  seasonId: '',
+  leagueId: '',
+  groupId: '',
+  stage: '',
+  decidedByPenalties: false,
+  penaltyHomeScore: '',
+  penaltyAwayScore: '',
+  penaltyWinnerId: '',
+  homeLineup: [],
+  awayLineup: [],
+  events: [],
+  highlightsUrl: '',
+  regulationMinutes: '',
+  stats: createEmptyStatsForm(),
+});
+
 const AdminFixtures = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -39,31 +254,7 @@ const AdminFixtures = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, fixture: null });
-  const [formData, setFormData] = useState({
-    homeTeam: '',
-    awayTeam: '',
-    date: '',
-    time: '',
-    venue: '',
-    competition: '',
-    round: '',
-    status: 'scheduled',
-    homeScore: '',
-    awayScore: '',
-    seasonId: '',
-    leagueId: '',
-    groupId: '',
-    stage: '',
-    decidedByPenalties: false,
-    penaltyHomeScore: '',
-    penaltyAwayScore: '',
-    penaltyWinnerId: '',
-    homeLineup: [],
-    awayLineup: [],
-    events: [],
-    highlightsUrl: '',
-    regulationMinutes: ''
-  });
+  const [formData, setFormData] = useState(createFixtureFormData());
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [selectedSeasonGroups, setSelectedSeasonGroups] = useState([]);
@@ -126,10 +317,37 @@ const AdminFixtures = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: value,
+      };
+
+      if (name === 'homeScore' || name === 'awayScore') {
+        const side = name === 'homeScore' ? 'home' : 'away';
+        const previousGoals = toNonNegativeInteger(prev[name], 0);
+        const nextGoals = toNonNegativeInteger(value, 0);
+        const nextStats = applyGoalLinkedStatAutoSync({
+          previousStats: prev.stats,
+          nextStats: prev.stats,
+          side,
+          previousGoals,
+          nextGoals,
+        });
+        next.stats = ensureLivePossessionDefaults(nextStats, prev.status);
+      }
+
+      if (name === 'status') {
+        next.stats = ensureLivePossessionDefaults(prev.stats, value);
+      }
+
+      if (name === 'seasonId') {
+        next.groupId = '';
+        next.stage = '';
+      }
+
+      return next;
+    });
 
     // If season changes, load its groups
     if (name === 'seasonId') {
@@ -139,13 +357,28 @@ const AdminFixtures = () => {
       } else {
         setSelectedSeasonGroups([]);
       }
-      // Reset group and stage when season changes
-      setFormData(prev => ({
-        ...prev,
-        groupId: '',
-        stage: ''
-      }));
     }
+  };
+
+  const handleStatInputChange = (statKey, side, value) => {
+    setFormData((prev) => {
+      const nextStats = {
+        ...(prev.stats || {}),
+        [statKey]: {
+          ...(prev.stats?.[statKey] || { home: '', away: '' }),
+          [side]: value,
+        },
+      };
+
+      const resolvedStats = statKey === 'possession'
+        ? withBalancedPossession(prev.stats, side, value)
+        : nextStats;
+
+      return {
+        ...prev,
+        stats: ensureLivePossessionDefaults(resolvedStats, prev.status),
+      };
+    });
   };
 
   const handlePenaltyToggle = (checked) => {
@@ -166,7 +399,6 @@ const AdminFixtures = () => {
     try {
       // Combine date and time into a single dateTime
       const dateTimeString = `${formData.date}T${formData.time}`;
-      const dateTime = new Date(dateTimeString);
       const selectedLeague = leagues.find((league) => league.id === formData.leagueId) || null;
       const selectedSeason = seasons.find((season) => season.id === formData.seasonId) || null;
       const timingValidation = validateRegulationMinutes(formData.regulationMinutes, { allowNull: true });
@@ -179,6 +411,13 @@ const AdminFixtures = () => {
         fixtureRegulationMinutes: timingValidation.minutes
       });
       const canonicalStatus = toCanonicalFixtureStatus(formData.status || 'scheduled');
+      const homeScoreValue = formData.homeScore !== '' ? parseInt(formData.homeScore, 10) : null;
+      const awayScoreValue = formData.awayScore !== '' ? parseInt(formData.awayScore, 10) : null;
+      const statsPayload = buildFixtureStatsPayload(formData.stats, {
+        status: canonicalStatus,
+        homeScore: homeScoreValue,
+        awayScore: awayScoreValue
+      });
 
       const fixtureData = {
         homeTeamId: formData.homeTeam,
@@ -189,8 +428,8 @@ const AdminFixtures = () => {
         competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : 'Friendly')),
         round: formData.round || '',
         status: canonicalStatus,
-        homeScore: formData.homeScore || null,
-        awayScore: formData.awayScore || null,
+        homeScore: homeScoreValue,
+        awayScore: awayScoreValue,
         regulationMinutes: timingValidation.minutes,
         matchTiming: resolvedTiming,
         liveClock: createDefaultLiveClock({
@@ -209,37 +448,14 @@ const AdminFixtures = () => {
         homeLineup: formData.homeLineup || [],
         awayLineup: formData.awayLineup || [],
         events: formData.events || [],
-        highlightsUrl: formData.highlightsUrl || ''
+        highlightsUrl: formData.highlightsUrl || '',
+        stats: statsPayload,
       };
 
       await addFixture(fixtureData);
 
       // Reset form
-      setFormData({
-        homeTeam: '',
-        awayTeam: '',
-        date: '',
-        time: '',
-        venue: '',
-        competition: '',
-        round: '',
-        status: 'scheduled',
-        homeScore: '',
-        awayScore: '',
-        seasonId: '',
-        leagueId: '',
-        groupId: '',
-        stage: '',
-        decidedByPenalties: false,
-        penaltyHomeScore: '',
-        penaltyAwayScore: '',
-        penaltyWinnerId: '',
-        homeLineup: [],
-        awayLineup: [],
-        events: [],
-        highlightsUrl: '',
-        regulationMinutes: ''
-      });
+      setFormData(createFixtureFormData());
       setShowAddForm(false);
     } catch (error) {
       showToast(t('adminFixtures.addFailed') + ': ' + error.message, 'error');
@@ -339,19 +555,29 @@ const AdminFixtures = () => {
       timestamp: new Date().toISOString()
     };
 
-    setFormData(prev => ({
-      ...prev,
-      events: [...(prev.events || []), newEvent]
-    }));
-
-    // Auto-increment score if it's a goal
-    if (eventForm.type === 'goal') {
-      const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
-      setFormData(prev => ({
+    setFormData((prev) => {
+      const next = {
         ...prev,
-        [scoreKey]: (parseInt(prev[scoreKey]) || 0) + 1
-      }));
-    }
+        events: [...(prev.events || []), newEvent],
+      };
+
+      if (eventForm.type === 'goal' && eventSide) {
+        const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
+        const previousGoals = toNonNegativeInteger(prev[scoreKey], 0);
+        const nextGoals = previousGoals + 1;
+        next[scoreKey] = nextGoals;
+        next.stats = applyGoalLinkedStatAutoSync({
+          previousStats: prev.stats,
+          nextStats: prev.stats,
+          side: eventSide,
+          previousGoals,
+          nextGoals,
+        });
+      }
+
+      next.stats = ensureLivePossessionDefaults(next.stats || prev.stats, next.status);
+      return next;
+    });
 
     // Reset event form
     setEventForm({
@@ -365,55 +591,50 @@ const AdminFixtures = () => {
   };
 
   const handleRemoveEvent = (eventId) => {
-    const event = formData.events.find(e => e.id === eventId);
+    setFormData((prev) => {
+      const event = (prev.events || []).find((entry) => entry.id === eventId);
+      const next = {
+        ...prev,
+        events: (prev.events || []).filter((entry) => entry.id !== eventId),
+      };
 
-    // Decrement score if removing a goal
-    if (event && event.type === 'goal') {
-      const eventSide = event.teamSide || resolveEventSide({
-        teamRef: event.teamId || event.team,
-        playerId: event.playerId
-      });
-      if (eventSide) {
-        const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
-        setFormData(prev => ({
-          ...prev,
-          [scoreKey]: Math.max(0, (parseInt(prev[scoreKey]) || 0) - 1)
-        }));
+      if (event && event.type === 'goal') {
+        let eventSide = event.teamSide || null;
+        if (!eventSide) {
+          const eventTeamRef = normalizeRef(event.teamId || event.team);
+          const homeRef = normalizeRef(prev.homeTeam);
+          const awayRef = normalizeRef(prev.awayTeam);
+          if (eventTeamRef && eventTeamRef === homeRef) eventSide = 'home';
+          if (eventTeamRef && eventTeamRef === awayRef) eventSide = 'away';
+        }
+        if (!eventSide && event.playerId) {
+          const playerRef = normalizeRef(event.playerId);
+          if ((prev.homeLineup || []).some((id) => normalizeRef(id) === playerRef)) eventSide = 'home';
+          if ((prev.awayLineup || []).some((id) => normalizeRef(id) === playerRef)) eventSide = 'away';
+        }
+
+        if (eventSide) {
+          const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
+          const previousGoals = toNonNegativeInteger(prev[scoreKey], 0);
+          const nextGoals = Math.max(0, previousGoals - 1);
+          next[scoreKey] = nextGoals;
+          next.stats = applyGoalLinkedStatAutoSync({
+            previousStats: prev.stats,
+            nextStats: prev.stats,
+            side: eventSide,
+            previousGoals,
+            nextGoals,
+          });
+        }
       }
-    }
 
-    setFormData(prev => ({
-      ...prev,
-      events: prev.events.filter(e => e.id !== eventId)
-    }));
+      next.stats = ensureLivePossessionDefaults(next.stats || prev.stats, next.status);
+      return next;
+    });
   };
 
   const handleCancel = () => {
-    setFormData({
-      homeTeam: '',
-      awayTeam: '',
-      date: '',
-      time: '',
-      venue: '',
-      competition: '',
-      round: '',
-      status: 'scheduled',
-      homeScore: '',
-      awayScore: '',
-      seasonId: '',
-      leagueId: '',
-      groupId: '',
-      stage: '',
-      decidedByPenalties: false,
-      penaltyHomeScore: '',
-      penaltyAwayScore: '',
-      penaltyWinnerId: '',
-      homeLineup: [],
-      awayLineup: [],
-      events: [],
-      highlightsUrl: '',
-      regulationMinutes: ''
-    });
+    setFormData(createFixtureFormData());
     setSelectedSeasonGroups([]);
     setShowAddForm(false);
     setEditingId(null);
@@ -451,7 +672,11 @@ const AdminFixtures = () => {
       awayLineup: fixture.awayLineup || [],
       events: fixture.events || [],
       highlightsUrl: fixture.highlightsUrl || '',
-      regulationMinutes: fixture.matchTiming?.source === 'fixture' ? fixture.matchTiming.regulationMinutes : ''
+      regulationMinutes: fixture.matchTiming?.source === 'fixture' ? fixture.matchTiming.regulationMinutes : '',
+      stats: ensureLivePossessionDefaults(
+        statsFormFromFixture(fixture.stats),
+        fixture.status
+      ),
     });
     // Load groups if season is selected
     if (fixture.seasonId) {
@@ -485,6 +710,13 @@ const AdminFixtures = () => {
         fixtureRegulationMinutes: timingValidation.minutes
       });
       const canonicalStatus = toCanonicalFixtureStatus(formData.status || existingFixture?.status || 'scheduled');
+      const homeScoreValue = formData.homeScore !== '' ? parseInt(formData.homeScore, 10) : null;
+      const awayScoreValue = formData.awayScore !== '' ? parseInt(formData.awayScore, 10) : null;
+      const statsPayload = buildFixtureStatsPayload(formData.stats, {
+        status: canonicalStatus,
+        homeScore: homeScoreValue,
+        awayScore: awayScoreValue
+      });
 
       const updates = {
         homeTeamId: formData.homeTeam,
@@ -495,8 +727,8 @@ const AdminFixtures = () => {
         competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : null)),
         round: formData.round || '',
         status: canonicalStatus,
-        homeScore: formData.homeScore !== '' ? parseInt(formData.homeScore) : null,
-        awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null,
+        homeScore: homeScoreValue,
+        awayScore: awayScoreValue,
         regulationMinutes: timingValidation.minutes,
         matchTiming: resolvedTiming,
         minute: canonicalStatus === 'completed' ? resolvedTiming.regulationMinutes : (existingFixture?.minute ?? 0),
@@ -515,7 +747,8 @@ const AdminFixtures = () => {
         homeLineup: formData.homeLineup || [],
         awayLineup: formData.awayLineup || [],
         events: formData.events || [],
-        highlightsUrl: formData.highlightsUrl || ''
+        highlightsUrl: formData.highlightsUrl || '',
+        stats: statsPayload,
       };
 
       await updateFixture(editingId, updates);
@@ -1076,6 +1309,61 @@ const AdminFixtures = () => {
                       placeholder="0"
                       min="0"
                     />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Match Stats</p>
+                        <p className="text-xs text-gray-400">Optional: entered values are shown in the fixture Stats tab.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {STATS_METRICS.map((metric) => (
+                        <div key={metric.key} className="grid grid-cols-3 gap-2 items-center">
+                          <div>
+                            <label className="block text-[11px] font-medium text-gray-300 mb-1 truncate">
+                              {teams.find((team) => team.id === formData.homeTeam)?.name || t('adminFixtures.homeTeam')}
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.stats?.[metric.key]?.home ?? ''}
+                              onChange={(e) => handleStatInputChange(metric.key, 'home', e.target.value)}
+                              className="input-field w-full"
+                              min={metric.min ?? 0}
+                              max={metric.max}
+                              step={metric.step ?? 1}
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div className="text-center">
+                            <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">
+                              {metric.label}
+                              {metric.unit ? ` (${metric.unit})` : ''}
+                            </label>
+                            <span className="text-[10px] text-gray-600">Home vs Away</span>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-medium text-gray-300 mb-1 truncate text-right">
+                              {teams.find((team) => team.id === formData.awayTeam)?.name || t('adminFixtures.awayTeam')}
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.stats?.[metric.key]?.away ?? ''}
+                              onChange={(e) => handleStatInputChange(metric.key, 'away', e.target.value)}
+                              className="input-field w-full"
+                              min={metric.min ?? 0}
+                              max={metric.max}
+                              step={metric.step ?? 1}
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">

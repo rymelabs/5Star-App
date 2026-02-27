@@ -2,6 +2,7 @@ const FALLBACK_KEY = 'match.narration.fallback';
 
 const DEFAULT_VARIANT_COUNT = 20;
 const GOAL_DYNAMIC_KEY = 'match.narration.goal.dynamic';
+const GOAL_OVERTURNED_DYNAMIC_KEY = 'match.narration.goal.overturned.dynamic';
 const KICKOFF_DYNAMIC_KEY = 'match.narration.kickoff.dynamic';
 const SECOND_HALF_DYNAMIC_KEY = 'match.narration.second_half.dynamic';
 
@@ -59,6 +60,33 @@ const GOAL_CLOSERS = [
   'The final touch was unstoppable.',
   'They smelled blood and took it.',
   'Game on in a big way.'
+];
+
+const GOAL_OVERTURNED_TEMPLATES = [
+  'VAR intervention: goal overturned for {teamName}.',
+  'After review, {teamName} lose that goal.',
+  'No goal. {teamName} see it wiped off.',
+  'The finish is cancelled for {teamName}.',
+  'Decision changed: goal removed from {teamName}.',
+  'Big reversal: {teamName} have that goal struck out.',
+  'The board changes, {teamName} lose the goal.',
+  'Review complete: {teamName} are denied.',
+  '{teamName} thought they had it, but it is overturned.',
+  'The goal does not stand for {teamName}.',
+  'Call corrected: {teamName} are pulled back.',
+  'That strike is disallowed for {teamName}.',
+  '{teamName} have a goal overturned after checks.',
+  'Reversal confirmed: no goal for {teamName}.',
+  '{teamName} are pegged back by the decision.',
+  'Score correction applied against {teamName}.',
+  'The referee overturns it, {teamName} lose out.',
+  'The crowd reacts as {teamName} lose that goal.',
+  'Momentum shift: {teamName} have a goal ruled out.',
+  'Re-check done, goal removed for {teamName}.',
+  'Goal chalked off for {teamName}.',
+  'Overturned after review, {teamName} are denied.',
+  '{teamName} will not count that finish.',
+  'Final verdict: goal overturned for {teamName}.'
 ];
 
 const KICKOFF_OPENERS = [
@@ -223,6 +251,23 @@ const resolveGoalDynamicText = (params = {}) => {
   return interpolate(sentence, normalized).replace(/\s+/g, ' ').trim();
 };
 
+const normalizeGoalOverturnedParams = (params = {}) => ({
+  ...params,
+  teamName: params.teamName || params.homeTeam || params.awayTeam || 'A team',
+  homeScore: params.homeScore ?? 0,
+  awayScore: params.awayScore ?? 0
+});
+
+const resolveGoalOverturnedText = (params = {}) => {
+  const normalized = normalizeGoalOverturnedParams(params);
+  const seed = `${normalized.teamName}:${normalized.minute}:${normalized.homeScore}-${normalized.awayScore}:overturned`;
+  const rawVariant = Number.isFinite(Number(normalized.variantIndex))
+    ? Number(normalized.variantIndex)
+    : hashString(seed);
+  const variant = Math.abs(rawVariant) % GOAL_OVERTURNED_TEMPLATES.length;
+  return interpolate(GOAL_OVERTURNED_TEMPLATES[variant], normalized).replace(/\s+/g, ' ').trim();
+};
+
 const normalizeTransitionParams = (params = {}) => ({
   ...params,
   homeTeam: params.homeTeam || 'Home',
@@ -316,6 +361,9 @@ export const resolveSystemCommentaryText = (event, t) => {
   const params = event.templateParams || {};
   if (event.templateKey === GOAL_DYNAMIC_KEY || event.transitionPhase === 'goal') {
     return resolveGoalDynamicText(params);
+  }
+  if (event.templateKey === GOAL_OVERTURNED_DYNAMIC_KEY || event.transitionPhase === 'goal_overturned') {
+    return resolveGoalOverturnedText(params);
   }
   if (event.templateKey === KICKOFF_DYNAMIC_KEY || event.transitionPhase === 'kickoff') {
     return resolveKickoffDynamicText(params);

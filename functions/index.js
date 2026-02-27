@@ -277,8 +277,10 @@ const AUTO_FULL_TIME_MINUTE = 90;
 const LEGACY_DEFAULT_REGULATION_MINUTES = 90;
 const MATCH_BREAK_RATIO = 15 / 90;
 const GOAL_PUNCHLINE_VARIANT_COUNT = 3600;
+const GOAL_OVERTURNED_VARIANT_COUNT = 24;
 const KICKOFF_PUNCHLINE_VARIANT_COUNT = 2400;
 const SECOND_HALF_PUNCHLINE_VARIANT_COUNT = 2400;
+const RUNTIME_STATS_KEYS = ["possession", "shots", "shotsOnTarget", "corners", "fouls", "yellowCards", "redCards"];
 const LEGACY_STATUS_MAP = {
   upcoming: "scheduled",
   playing: "live",
@@ -334,6 +336,93 @@ function resolveTimingFromFixture(fixture = {}) {
     breakRatio: MATCH_BREAK_RATIO,
     source,
   };
+}
+
+function toNonNegativeInt(value, fallback = null) {
+  if (value === "" || value === null || value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+}
+
+function toClampedPercent(value, fallback = null) {
+  const parsed = toNonNegativeInt(value, fallback);
+  if (parsed === null) return fallback;
+  return Math.min(100, parsed);
+}
+
+function hasFixtureStatsInput(stats) {
+  if (!stats || typeof stats !== "object") return false;
+  return RUNTIME_STATS_KEYS.some((key) => {
+    const homeValue = stats?.[key]?.home;
+    const awayValue = stats?.[key]?.away;
+    return homeValue !== "" && homeValue !== null && homeValue !== undefined ||
+      awayValue !== "" && awayValue !== null && awayValue !== undefined;
+  });
+}
+
+function normalizeFixtureStats({stats, status, homeScore, awayScore}) {
+  const canonicalStatus = toCanonicalFixtureStatus(status || "scheduled");
+  const isLiveOrCompleted = canonicalStatus === "live" || canonicalStatus === "completed";
+  const safeHomeGoals = toNonNegativeInt(homeScore, 0);
+  const safeAwayGoals = toNonNegativeInt(awayScore, 0);
+  const shouldAutofill = isLiveOrCompleted || safeHomeGoals > 0 || safeAwayGoals > 0;
+  const hasInput = hasFixtureStatsInput(stats);
+
+  if (!hasInput && !shouldAutofill) {
+    return null;
+  }
+
+  const payload = {};
+  const possessionHome = toClampedPercent(stats?.possession?.home, null);
+  const possessionAway = toClampedPercent(stats?.possession?.away, null);
+  if (possessionHome !== null || possessionAway !== null || isLiveOrCompleted) {
+    let homeValue = possessionHome;
+    let awayValue = possessionAway;
+
+    if (homeValue === null && awayValue === null) {
+      homeValue = 50;
+      awayValue = 50;
+    } else if (homeValue !== null && awayValue === null) {
+      awayValue = Math.max(0, 100 - homeValue);
+    } else if (homeValue === null && awayValue !== null) {
+      homeValue = Math.max(0, 100 - awayValue);
+    } else {
+      const total = homeValue + awayValue;
+      if (total !== 100) {
+        awayValue = Math.max(0, 100 - homeValue);
+      }
+    }
+
+    payload.possession = {
+      home: homeValue,
+      away: awayValue,
+    };
+  }
+
+  RUNTIME_STATS_KEYS
+    .filter((key) => key !== "possession")
+    .forEach((key) => {
+      let homeValue = toNonNegativeInt(stats?.[key]?.home, null);
+      let awayValue = toNonNegativeInt(stats?.[key]?.away, null);
+
+      if (key === "shots" || key === "shotsOnTarget") {
+        if (homeValue === null) homeValue = safeHomeGoals;
+        if (awayValue === null) awayValue = safeAwayGoals;
+      } else if (isLiveOrCompleted) {
+        if (homeValue === null) homeValue = 0;
+        if (awayValue === null) awayValue = 0;
+      }
+
+      if (homeValue === null && awayValue === null) return;
+
+      payload[key] = {
+        home: Math.max(0, homeValue ?? 0),
+        away: Math.max(0, awayValue ?? 0),
+      };
+    });
+
+  return Object.keys(payload).length > 0 ? payload : null;
 }
 
 function inferPhaseStartedAtMs({phase, liveClock, minute, kickoffMs, timing, nowMs}) {
@@ -596,6 +685,36 @@ function buildGoalCommentaryEvent({
   };
 }
 
+function buildGoalOverturnedCommentaryEvent({
+  fixtureId,
+  correctionKey,
+  side,
+  teamName,
+  minute,
+  homeScore,
+  awayScore,
+}) {
+  const variantIndex = hashSeed(`${fixtureId}:goal-overturned:${correctionKey}`) % GOAL_OVERTURNED_VARIANT_COUNT;
+  return {
+    id: `system-goal-overturned-${fixtureId}-${correctionKey}`,
+    type: "system_commentary",
+    isSystem: true,
+    templateKey: "match.narration.goal.overturned.dynamic",
+    templateParams: {
+      teamName,
+      homeScore,
+      awayScore,
+      minute,
+      variantIndex,
+    },
+    transitionPhase: "goal_overturned",
+    correctionKey,
+    goalSide: side,
+    minute,
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function countRealGoalEvents(events = []) {
   if (!Array.isArray(events)) return 0;
   return events.filter((event) =>
@@ -603,6 +722,62 @@ function countRealGoalEvents(events = []) {
     !event.isSystem &&
     (event.type === "goal" || event.type === "penalty_scored")
   ).length;
+}
+
+function maybeAddGoalOverturnedCommentaryEvent({
+  beforeFixture,
+  afterFixture,
+  fixtureId,
+  events,
+}) {
+  if (!Array.isArray(events)) return false;
+
+  const beforeHome = Number(beforeFixture?.homeScore ?? 0);
+  const beforeAway = Number(beforeFixture?.awayScore ?? 0);
+  const afterHome = Number(afterFixture?.homeScore ?? 0);
+  const afterAway = Number(afterFixture?.awayScore ?? 0);
+  const homeDelta = afterHome - beforeHome;
+  const awayDelta = afterAway - beforeAway;
+
+  if (homeDelta >= 0 && awayDelta >= 0) return false;
+
+  const sides = [];
+  if (homeDelta < 0) sides.push("home");
+  if (awayDelta < 0) sides.push("away");
+  if (sides.length === 0) return false;
+
+  let added = false;
+  const minute = Number(afterFixture?.liveClock?.currentMinute ?? afterFixture?.minute ?? 0);
+  const changeStamp = toMillis(afterFixture?.updatedAt) || Date.now();
+
+  for (const side of sides) {
+    const correctionKey = `overturned:${side}:${beforeHome}-${beforeAway}->${afterHome}-${afterAway}:${changeStamp}`;
+    const exists = events.some((event) =>
+      event &&
+      event.isSystem &&
+      event.type === "system_commentary" &&
+      event.transitionPhase === "goal_overturned" &&
+      String(event.correctionKey || "") === correctionKey
+    );
+    if (exists) continue;
+
+    const teamName = side === "home"
+      ? (afterFixture?.homeTeam?.name || "Home")
+      : (afterFixture?.awayTeam?.name || "Away");
+    const commentary = buildGoalOverturnedCommentaryEvent({
+      fixtureId,
+      correctionKey,
+      side,
+      teamName,
+      minute,
+      homeScore: afterHome,
+      awayScore: afterAway,
+    });
+    events.push(commentary);
+    added = true;
+  }
+
+  return added;
 }
 
 function maybeAddScoreDeltaGoalCommentaryEvent({
@@ -1074,13 +1249,21 @@ function computeLiveClockUpdate(fixture, fixtureId, nowMs) {
     source: timing.source || "default",
   };
   const timingChanged = JSON.stringify(fixture.matchTiming || null) !== JSON.stringify(nextMatchTiming);
+  const nextStats = normalizeFixtureStats({
+    stats: fixture.stats,
+    status,
+    homeScore,
+    awayScore,
+  });
+  const statsChanged = JSON.stringify(fixture.stats || null) !== JSON.stringify(nextStats || null);
 
   if (!changed &&
       status === canonicalStatus &&
       minute === Number(fixture.minute ?? 0) &&
       Number(liveClock.currentMinute ?? 0) === Number(fixture.liveClock?.currentMinute ?? 0) &&
       !eventsChanged &&
-      !timingChanged) {
+      !timingChanged &&
+      !statsChanged) {
     return null;
   }
 
@@ -1092,6 +1275,9 @@ function computeLiveClockUpdate(fixture, fixtureId, nowMs) {
   };
   if (eventsChanged) {
     updatePayload.events = events;
+  }
+  if (statsChanged) {
+    updatePayload.stats = nextStats;
   }
   return updatePayload;
 }
@@ -1299,15 +1485,22 @@ exports.onFixtureUpdated = onDocumentUpdated("fixtures/{fixtureId}", async (even
         fixtureId,
         events: workingEvents,
       });
-      const fixtureForClockUpdate = scoreDeltaFactAdded
+      const goalOverturnedFactAdded = scoreChanged && maybeAddGoalOverturnedCommentaryEvent({
+        beforeFixture: beforeData,
+        afterFixture: afterData,
+        fixtureId,
+        events: workingEvents,
+      });
+      const hasPrefillFacts = scoreDeltaFactAdded || goalOverturnedFactAdded;
+      const fixtureForClockUpdate = hasPrefillFacts
         ? {...afterData, events: workingEvents}
         : afterData;
       const immediateUpdate = computeLiveClockUpdate(fixtureForClockUpdate, fixtureId, Date.now());
 
-      if (immediateUpdate || scoreDeltaFactAdded) {
+      if (immediateUpdate || hasPrefillFacts) {
         const nextEvents = immediateUpdate?.events
           ? [...immediateUpdate.events]
-          : scoreDeltaFactAdded
+          : hasPrefillFacts
             ? workingEvents
             : null;
         const updatePayload = {

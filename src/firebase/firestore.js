@@ -58,6 +58,95 @@ const toMillis = (value) => {
   return null;
 };
 
+const FIXTURE_STATS_KEYS = ['possession', 'shots', 'shotsOnTarget', 'corners', 'fouls', 'yellowCards', 'redCards'];
+
+const toNonNegativeInt = (value, fallback = null) => {
+  if (value === '' || value === null || value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+};
+
+const toClampedPercent = (value, fallback = null) => {
+  const parsed = toNonNegativeInt(value, fallback);
+  if (parsed === null) return fallback;
+  return Math.min(100, parsed);
+};
+
+const hasFixtureStatsInput = (stats) => {
+  if (!stats || typeof stats !== 'object') return false;
+  return FIXTURE_STATS_KEYS.some((key) => {
+    const homeValue = stats?.[key]?.home;
+    const awayValue = stats?.[key]?.away;
+    return homeValue !== '' && homeValue !== null && homeValue !== undefined ||
+      awayValue !== '' && awayValue !== null && awayValue !== undefined;
+  });
+};
+
+const normalizeFixtureStats = ({ stats, status, homeScore, awayScore }) => {
+  const canonicalStatus = toCanonicalFixtureStatus(status || 'scheduled');
+  const isLiveOrCompleted = canonicalStatus === 'live' || canonicalStatus === 'completed';
+  const safeHomeGoals = toNonNegativeInt(homeScore, 0);
+  const safeAwayGoals = toNonNegativeInt(awayScore, 0);
+  const shouldAutofill = isLiveOrCompleted || safeHomeGoals > 0 || safeAwayGoals > 0;
+  const hasInput = hasFixtureStatsInput(stats);
+
+  if (!hasInput && !shouldAutofill) {
+    return null;
+  }
+
+  const payload = {};
+  const possessionHome = toClampedPercent(stats?.possession?.home, null);
+  const possessionAway = toClampedPercent(stats?.possession?.away, null);
+  if (possessionHome !== null || possessionAway !== null || isLiveOrCompleted) {
+    let homeValue = possessionHome;
+    let awayValue = possessionAway;
+
+    if (homeValue === null && awayValue === null) {
+      homeValue = 50;
+      awayValue = 50;
+    } else if (homeValue !== null && awayValue === null) {
+      awayValue = Math.max(0, 100 - homeValue);
+    } else if (homeValue === null && awayValue !== null) {
+      homeValue = Math.max(0, 100 - awayValue);
+    } else {
+      const total = homeValue + awayValue;
+      if (total !== 100) {
+        awayValue = Math.max(0, 100 - homeValue);
+      }
+    }
+
+    payload.possession = {
+      home: homeValue,
+      away: awayValue,
+    };
+  }
+
+  FIXTURE_STATS_KEYS
+    .filter((key) => key !== 'possession')
+    .forEach((key) => {
+      let homeValue = toNonNegativeInt(stats?.[key]?.home, null);
+      let awayValue = toNonNegativeInt(stats?.[key]?.away, null);
+
+      if (key === 'shots' || key === 'shotsOnTarget') {
+        if (homeValue === null) homeValue = safeHomeGoals;
+        if (awayValue === null) awayValue = safeAwayGoals;
+      } else if (isLiveOrCompleted) {
+        if (homeValue === null) homeValue = 0;
+        if (awayValue === null) awayValue = 0;
+      }
+
+      if (homeValue === null && awayValue === null) return;
+
+      payload[key] = {
+        home: Math.max(0, homeValue ?? 0),
+        away: Math.max(0, awayValue ?? 0),
+      };
+    });
+
+  return Object.keys(payload).length > 0 ? payload : null;
+};
+
 // Teams collection functions
 export const teamsCollection = {
   // Get all teams
@@ -683,6 +772,12 @@ export const fixturesCollection = {
         status: canonicalStatus,
         matchTiming: resolvedMatchTiming
       });
+      const normalizedStats = normalizeFixtureStats({
+        stats: fixtureData.stats,
+        status: canonicalStatus,
+        homeScore: fixtureData.homeScore,
+        awayScore: fixtureData.awayScore
+      });
 
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
@@ -690,6 +785,7 @@ export const fixturesCollection = {
         minute: Number(fixtureData.minute ?? resolvedLiveClock.currentMinute ?? 0),
         liveClock: resolvedLiveClock,
         matchTiming: resolvedMatchTiming,
+        stats: normalizedStats,
         ownerId: fixtureData.ownerId || null,
         ownerName: fixtureData.ownerName || null,
         dateTime: dateTimeValue || new Date(), // Default to now if no valid date
@@ -714,6 +810,8 @@ export const fixturesCollection = {
     try {
       const database = checkFirebaseInit();
       const fixtureRef = doc(database, 'fixtures', fixtureId);
+      const fixtureSnap = await getDoc(fixtureRef);
+      const currentFixture = fixtureSnap.exists() ? fixtureSnap.data() : {};
       const payload = {
         ...updates
       };
@@ -727,6 +825,32 @@ export const fixturesCollection = {
         if (validation.valid && validation.minutes != null) {
           payload.matchTiming = createMatchTimingSnapshot(validation.minutes, 'fixture');
         }
+      }
+
+      const nextStatus = toCanonicalFixtureStatus(payload.status || currentFixture.status || 'scheduled');
+      const nextHomeScore = Object.prototype.hasOwnProperty.call(payload, 'homeScore')
+        ? payload.homeScore
+        : currentFixture.homeScore;
+      const nextAwayScore = Object.prototype.hasOwnProperty.call(payload, 'awayScore')
+        ? payload.awayScore
+        : currentFixture.awayScore;
+      const statsInput = Object.prototype.hasOwnProperty.call(payload, 'stats')
+        ? payload.stats
+        : currentFixture.stats;
+      const normalizedStats = normalizeFixtureStats({
+        stats: statsInput,
+        status: nextStatus,
+        homeScore: nextHomeScore,
+        awayScore: nextAwayScore
+      });
+      const shouldPersistStats = normalizedStats !== null ||
+        Object.prototype.hasOwnProperty.call(payload, 'stats') ||
+        nextStatus === 'live' ||
+        nextStatus === 'completed' ||
+        Number(nextHomeScore || 0) > 0 ||
+        Number(nextAwayScore || 0) > 0;
+      if (shouldPersistStats) {
+        payload.stats = normalizedStats;
       }
 
       await updateDoc(fixtureRef, {
