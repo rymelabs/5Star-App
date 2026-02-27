@@ -634,6 +634,7 @@ const mapStoryDoc = (docSnap) => {
   return {
     id: docSnap.id,
     ...data,
+    views: Number(data.views || 0),
     createdAt: normalizeStoryDate(data.createdAt),
     updatedAt: normalizeStoryDate(data.updatedAt),
     expiresAt: normalizeStoryDate(data.expiresAt)
@@ -702,6 +703,7 @@ export const storiesCollection = {
           textColor: storyData?.style?.textColor || '#ffffff',
           fontFamily: storyData?.style?.fontFamily || 'inherit'
         },
+        views: 0,
         expiresAt,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -722,6 +724,30 @@ export const storiesCollection = {
     } catch (error) {
       console.error('Error deleting story:', error);
       throw error;
+    }
+  },
+
+  incrementView: async (storyId) => {
+    try {
+      const database = checkFirebaseInit();
+      const storyIdStr = String(storyId);
+      const storyRef = doc(database, 'stories', storyIdStr);
+      const storySnap = await getDoc(storyRef);
+
+      if (!storySnap.exists()) {
+        console.warn('Story not found for view increment:', storyIdStr);
+        return null;
+      }
+
+      const currentViews = Number(storySnap.data().views || 0);
+      await updateDoc(storyRef, {
+        views: increment(1)
+      });
+
+      return currentViews + 1;
+    } catch (error) {
+      console.error('Error incrementing story view count:', error);
+      return null;
     }
   }
 };

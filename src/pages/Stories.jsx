@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp, ArrowDown, Plus, Trash2, PlayCircle, Clock3, Image as ImageIcon, Type, Link as LinkIcon, Video, X } from 'lucide-react';
+import { Plus, Trash2, PlayCircle, Clock3, Image as ImageIcon, Type, Link as LinkIcon, Video, X, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFootball } from '../context/FootballContext';
 import { useCompetitions } from '../context/CompetitionsContext';
 import { useNotification } from '../context/NotificationContext';
+import PitchSnapLogo from '../components/PitchSnapLogo';
 import { storiesCollection } from '../firebase/firestore';
 import { uploadImage, validateImageFile } from '../services/imageUploadService';
 import { uploadVideoWithProgress } from '../services/videoUploadService';
@@ -50,6 +51,22 @@ const INITIAL_FORM = {
   backgroundColor: '#1f2937',
   textColor: '#ffffff',
   fontFamily: 'inherit'
+};
+
+const SNAP_AUTO_ADVANCE_MS = 30000;
+const VIEWED_STORIES_STORAGE_KEY = 'viewedPitchSnapIds';
+
+const loadViewedStoryIds = () => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.sessionStorage.getItem(VIEWED_STORIES_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.map((id) => String(id)));
+  } catch {
+    return new Set();
+  }
 };
 
 const toDate = (value) => {
@@ -104,8 +121,14 @@ const Stories = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [touchStartY, setTouchStartY] = useState(null);
+  const [storyProgress, setStoryProgress] = useState(0);
+  const [isSnapPaused, setIsSnapPaused] = useState(false);
+  const touchStartYRef = useRef(null);
+  const touchStartXRef = useRef(null);
+  const touchMovedRef = useRef(false);
   const wheelLockRef = useRef(0);
+  const viewedStoryIdsRef = useRef(loadViewedStoryIds());
+  const isSnapPausedRef = useRef(false);
 
   const isAdmin = Boolean(user?.isAdmin);
 
@@ -305,7 +328,6 @@ const Stories = () => {
 
   const currentGroup = groupedStories[currentGroupIndex] || null;
   const currentStory = currentGroup?.stories?.[currentStoryIndex] || null;
-  const currentStoryIndexWithinTotal = currentStory ? sortedStories.findIndex((story) => story.id === currentStory.id) + 1 : 0;
 
   useEffect(() => {
     if (!groupedStories.length) {
@@ -352,16 +374,76 @@ const Stories = () => {
     moveToPreviousGroup();
   }, [currentGroup, currentStoryIndex, moveToPreviousGroup]);
 
+  const handlePauseStart = useCallback(() => {
+    setIsSnapPaused(true);
+  }, []);
+
+  const handlePauseEnd = useCallback(() => {
+    setIsSnapPaused(false);
+  }, []);
+
+  const persistViewedStoryIds = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(
+        VIEWED_STORIES_STORAGE_KEY,
+        JSON.stringify(Array.from(viewedStoryIdsRef.current))
+      );
+    } catch {
+      // Ignore storage write failures
+    }
+  }, []);
+
+  const markStoryViewed = useCallback(async (storyId) => {
+    const normalizedStoryId = storyId ? String(storyId) : '';
+    if (!normalizedStoryId || viewedStoryIdsRef.current.has(normalizedStoryId)) return;
+
+    viewedStoryIdsRef.current.add(normalizedStoryId);
+    persistViewedStoryIds();
+    await storiesCollection.incrementView(normalizedStoryId);
+  }, [persistViewedStoryIds]);
+
   useEffect(() => {
-    if (!currentStory) return;
-    if (currentStory.contentType === 'video') return;
+    isSnapPausedRef.current = isSnapPaused;
+  }, [isSnapPaused]);
 
-    const timeout = setTimeout(() => {
-      moveToNextStory();
-    }, currentStory.contentType === 'video_link' ? 9000 : 7000);
+  useEffect(() => {
+    if (!currentStory?.id) return;
 
-    return () => clearTimeout(timeout);
-  }, [currentStory, moveToNextStory]);
+    setStoryProgress(0);
+    setIsSnapPaused(false);
+    isSnapPausedRef.current = false;
+    let elapsedMs = 0;
+    let lastTickMs = Date.now();
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+
+      if (isSnapPausedRef.current) {
+        lastTickMs = now;
+        return;
+      }
+
+      elapsedMs = Math.min(SNAP_AUTO_ADVANCE_MS, elapsedMs + (now - lastTickMs));
+      lastTickMs = now;
+
+      const percent = Math.min(100, (elapsedMs / SNAP_AUTO_ADVANCE_MS) * 100);
+      setStoryProgress(percent);
+
+      if (elapsedMs >= SNAP_AUTO_ADVANCE_MS) {
+        clearInterval(interval);
+        setStoryProgress(100);
+        moveToNextStory();
+      }
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [currentStory?.id, moveToNextStory]);
+
+  useEffect(() => {
+    if (!currentStory?.id) return;
+    markStoryViewed(currentStory.id);
+  }, [currentStory?.id, markStoryViewed]);
 
   const handleWheel = (event) => {
     const now = Date.now();
@@ -376,19 +458,70 @@ const Stories = () => {
   };
 
   const handleTouchStart = (event) => {
-    setTouchStartY(event.touches?.[0]?.clientY ?? null);
+    handlePauseStart();
+    const touch = event.touches?.[0];
+    touchStartYRef.current = touch?.clientY ?? null;
+    touchStartXRef.current = touch?.clientX ?? null;
+    touchMovedRef.current = false;
+  };
+
+  const handleTouchMove = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch || touchStartYRef.current == null || touchStartXRef.current == null) return;
+    const deltaY = Math.abs(touchStartYRef.current - touch.clientY);
+    const deltaX = Math.abs(touchStartXRef.current - touch.clientX);
+    if (deltaY > 12 || deltaX > 12) {
+      touchMovedRef.current = true;
+    }
   };
 
   const handleTouchEnd = (event) => {
-    if (touchStartY == null) return;
-    const touchEndY = event.changedTouches?.[0]?.clientY ?? touchStartY;
-    const delta = touchStartY - touchEndY;
+    handlePauseEnd();
+    if (touchStartYRef.current == null) return;
+    const touchEndY = event.changedTouches?.[0]?.clientY ?? touchStartYRef.current;
+    const delta = touchStartYRef.current - touchEndY;
     if (Math.abs(delta) > 55) {
       if (delta > 0) moveToNextGroup();
       else moveToPreviousGroup();
     }
-    setTouchStartY(null);
+    touchStartYRef.current = null;
+    touchStartXRef.current = null;
   };
+
+  const handleTouchCancel = () => {
+    handlePauseEnd();
+    touchStartYRef.current = null;
+    touchStartXRef.current = null;
+    touchMovedRef.current = false;
+  };
+
+  const handleSnapTap = useCallback((direction) => {
+    if (touchMovedRef.current) {
+      touchMovedRef.current = false;
+      return;
+    }
+    if (direction === 'next') {
+      moveToNextStory();
+      return;
+    }
+    moveToPreviousStory();
+  }, [moveToNextStory, moveToPreviousStory]);
+
+  const formatStoryViews = useCallback((views) => {
+    const safeViews = Number(views || 0);
+    return Number.isFinite(safeViews) ? safeViews.toLocaleString() : '0';
+  }, []);
+
+  const currentStoryViews = Number(currentStory?.views || 0);
+  const snapViewportHeightClass = showComposer
+    ? 'h-[60dvh] md:h-[78vh]'
+    : 'h-[calc(100dvh-9rem)] md:h-[78vh]';
+
+  useEffect(() => {
+    if (!currentStory?.id) return;
+    touchMovedRef.current = false;
+    setIsSnapPaused(false);
+  }, [currentStory?.id]);
 
   const resetComposer = () => {
     setFormData(INITIAL_FORM);
@@ -597,7 +730,7 @@ const Stories = () => {
       return (
         <div className="h-full w-full relative bg-black">
           {story.mediaUrl ? (
-            <video src={story.mediaUrl} className="h-full w-full object-cover" controls autoPlay playsInline />
+            <video src={story.mediaUrl} className="h-full w-full object-cover" autoPlay muted playsInline />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-gray-300">
               <Video className="w-10 h-10" />
@@ -657,9 +790,8 @@ const Stories = () => {
   return (
     <div className="min-h-screen px-4 pb-28 space-y-4">
       <div className="flex items-center justify-between pt-2">
-        <div>
-          <h1 className="text-white text-2xl font-bold">PitchSnaps</h1>
-          <p className="text-gray-400 text-sm">Swipe up to jump to the next admin PitchSnap set.</p>
+        <div className="flex items-center">
+          <PitchSnapLogo showText />
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -907,20 +1039,13 @@ const Stories = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <span>
-              PitchSnap {currentStoryIndexWithinTotal} of {sortedStories.length}
-            </span>
-            <span>
-              Admin {currentGroupIndex + 1} of {groupedStories.length}
-            </span>
-          </div>
-
           <div
-            className="relative overflow-hidden rounded-3xl border border-white/10 bg-black h-[68vh]"
+            className={`relative overflow-hidden border-y border-white/10 bg-black -mx-4 sm:mx-0 sm:rounded-3xl sm:border ${snapViewportHeightClass} min-h-[420px]`}
             onWheel={handleWheel}
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchCancel}
           >
             <div className="absolute top-0 left-0 right-0 z-10 p-3 flex gap-1">
               {currentGroup.stories.map((story, index) => {
@@ -929,8 +1054,8 @@ const Stories = () => {
                 return (
                   <div key={story.id} className="h-1 flex-1 rounded bg-white/25 overflow-hidden">
                     <div
-                      className={`h-full ${isActive || isCompleted ? 'bg-white' : 'bg-transparent'} transition-all duration-300`}
-                      style={{ width: isCompleted ? '100%' : isActive ? '65%' : '0%' }}
+                      className={`h-full ${isActive || isCompleted ? 'bg-white' : 'bg-transparent'}`}
+                      style={{ width: isCompleted ? '100%' : isActive ? `${storyProgress}%` : '0%' }}
                     />
                   </div>
                 );
@@ -944,46 +1069,39 @@ const Stories = () => {
                   {STORY_ENTITY_LABEL[currentStory.entityType] || 'Update'} • {getEntityDisplayName(currentStory)}
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-white/85 bg-black/35 rounded-full px-2 py-1">
-                <Clock3 className="w-3 h-3" />
-                {currentExpiresInHours != null ? `${currentExpiresInHours}h left` : 'Live'}
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2 text-[11px] text-white/85 bg-black/35 rounded-full px-2 py-1">
+                  <Clock3 className="w-3 h-3" />
+                  {currentExpiresInHours != null ? `${currentExpiresInHours}h left` : 'Live'}
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-white/85 bg-black/35 rounded-full px-2 py-1">
+                  <Eye className="w-3 h-3" />
+                  {formatStoryViews(currentStoryViews)} views
+                </div>
               </div>
             </div>
 
-            {renderStoryContent(currentStory)}
-          </div>
+            <div
+              className="absolute inset-0 z-20 flex"
+              onMouseDown={handlePauseStart}
+              onMouseUp={handlePauseEnd}
+              onMouseLeave={handlePauseEnd}
+            >
+              <button
+                type="button"
+                aria-label="Previous snap"
+                onClick={() => handleSnapTap('prev')}
+                className="h-full w-1/2"
+              />
+              <button
+                type="button"
+                aria-label="Next snap"
+                onClick={() => handleSnapTap('next')}
+                className="h-full w-1/2"
+              />
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <button
-              type="button"
-              onClick={moveToPreviousStory}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
-            >
-              Previous Snap
-            </button>
-            <button
-              type="button"
-              onClick={moveToNextStory}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
-            >
-              Next Snap
-            </button>
-            <button
-              type="button"
-              onClick={moveToPreviousGroup}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10 inline-flex items-center justify-center gap-1"
-            >
-              <ArrowDown className="w-4 h-4" />
-              Previous Admin
-            </button>
-            <button
-              type="button"
-              onClick={moveToNextGroup}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10 inline-flex items-center justify-center gap-1"
-            >
-              <ArrowUp className="w-4 h-4" />
-              Next Admin
-            </button>
+            {renderStoryContent(currentStory)}
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
