@@ -23,6 +23,113 @@ const hashSeed = (value = '') => {
   return Math.abs(hash);
 };
 
+const MATCH_STATS_ORDER = [
+  'possession',
+  'shots',
+  'shotsOnTarget',
+  'corners',
+  'fouls',
+  'yellowCards',
+  'redCards',
+];
+
+const MATCH_STAT_LABELS = {
+  possession: 'Possession',
+  shots: 'Shots',
+  shotsOnTarget: 'Shots on Target',
+  corners: 'Corners',
+  fouls: 'Fouls',
+  yellowCards: 'Yellow Cards',
+  redCards: 'Red Cards',
+};
+
+const toNonNegativeInt = (value, fallback = null) => {
+  if (value === '' || value === null || value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+};
+
+const clampPercent = (value, fallback = null) => {
+  const parsed = toNonNegativeInt(value, fallback);
+  if (parsed === null) return fallback;
+  return Math.min(100, parsed);
+};
+
+const hasStatsInput = (stats) => {
+  if (!stats || typeof stats !== 'object') return false;
+  return MATCH_STATS_ORDER.some((key) => {
+    const homeValue = stats?.[key]?.home;
+    const awayValue = stats?.[key]?.away;
+    return homeValue !== '' && homeValue !== null && homeValue !== undefined ||
+      awayValue !== '' && awayValue !== null && awayValue !== undefined;
+  });
+};
+
+const buildDisplayStats = (fixture) => {
+  if (!fixture) return null;
+  const status = getCanonicalFixtureStatus(fixture);
+  const isLiveOrCompleted = status === 'live' || status === 'completed' || isFixtureLive(fixture);
+  const rawStats = fixture.stats && typeof fixture.stats === 'object' ? fixture.stats : null;
+  const homeGoals = toNonNegativeInt(fixture.homeScore, 0);
+  const awayGoals = toNonNegativeInt(fixture.awayScore, 0);
+  const shouldRender = hasStatsInput(rawStats) || isLiveOrCompleted || homeGoals > 0 || awayGoals > 0;
+  if (!shouldRender) return null;
+
+  const normalized = {};
+
+  const rawHomePossession = clampPercent(rawStats?.possession?.home, null);
+  const rawAwayPossession = clampPercent(rawStats?.possession?.away, null);
+  let homePossession = rawHomePossession;
+  let awayPossession = rawAwayPossession;
+  if (homePossession === null && awayPossession === null) {
+    if (isLiveOrCompleted) {
+      homePossession = 50;
+      awayPossession = 50;
+    }
+  } else if (homePossession !== null && awayPossession === null) {
+    awayPossession = Math.max(0, 100 - homePossession);
+  } else if (homePossession === null && awayPossession !== null) {
+    homePossession = Math.max(0, 100 - awayPossession);
+  } else {
+    const total = homePossession + awayPossession;
+    if (total !== 100) {
+      awayPossession = Math.max(0, 100 - homePossession);
+    }
+  }
+  if (homePossession !== null && awayPossession !== null) {
+    normalized.possession = { home: homePossession, away: awayPossession };
+  }
+
+  MATCH_STATS_ORDER
+    .filter((key) => key !== 'possession')
+    .forEach((key) => {
+      let homeValue = toNonNegativeInt(rawStats?.[key]?.home, null);
+      let awayValue = toNonNegativeInt(rawStats?.[key]?.away, null);
+
+      if (key === 'shots' || key === 'shotsOnTarget') {
+        if (homeValue === null) homeValue = homeGoals;
+        if (awayValue === null) awayValue = awayGoals;
+      } else if (isLiveOrCompleted) {
+        if (homeValue === null) homeValue = 0;
+        if (awayValue === null) awayValue = 0;
+      }
+
+      if (homeValue === null && awayValue === null) return;
+      normalized[key] = {
+        home: Math.max(0, homeValue ?? 0),
+        away: Math.max(0, awayValue ?? 0),
+      };
+    });
+
+  const ordered = MATCH_STATS_ORDER.reduce((acc, key) => {
+    if (normalized[key]) acc[key] = normalized[key];
+    return acc;
+  }, {});
+
+  return Object.keys(ordered).length > 0 ? ordered : null;
+};
+
 const FixtureDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -610,6 +717,7 @@ const FixtureDetail = () => {
   const liveBadgeState = getFixtureLiveBadgeState(fixture);
   const displayMinute = getFixtureMinute(fixture);
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== undefined && fixture.penaltyHomeScore !== null && fixture.penaltyAwayScore !== undefined && fixture.penaltyAwayScore !== null;
+  const fixtureStats = buildDisplayStats(fixture);
 
   const TabButton = ({ id, label, icon: Icon }) => (
     <button
@@ -1348,17 +1456,18 @@ const FixtureDetail = () => {
         {/* STATS TAB */}
         {activeTab === 'stats' && (
           <div className="space-y-6 animate-fade-in">
-            {fixture.stats ? (
+            {fixtureStats ? (
               <div className="bg-white/5 border border-white/5 rounded-2xl p-6 space-y-8">
-                {Object.entries(fixture.stats).map(([stat, values]) => {
+                {Object.entries(fixtureStats).map(([stat, values]) => {
                   const total = values.home + values.away;
                   const homePercent = total ? (values.home / total) * 100 : 50;
+                  const statLabel = MATCH_STAT_LABELS[stat] || stat;
 
                   return (
                     <div key={stat} className="space-y-3">
                       <div className="flex justify-between text-sm font-bold">
                         <span className="text-white w-12">{values.home}</span>
-                        <span className="text-gray-400 uppercase text-xs tracking-widest flex-1 text-center">{stat}</span>
+                        <span className="text-gray-400 uppercase text-xs tracking-widest flex-1 text-center">{statLabel}</span>
                         <span className="text-white w-12 text-right">{values.away}</span>
                       </div>
                       <div className="h-3 bg-dark-800 rounded-full overflow-hidden flex relative shadow-inner">

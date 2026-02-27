@@ -1,8 +1,16 @@
 import admin from 'firebase-admin';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 const SERVICE_ACCOUNT_PATH = path.resolve('./scripts/serviceAccountKey.json');
+const FIREBASE_CLI_CONFIG_PATH = path.resolve(
+  process.env.HOME || process.env.USERPROFILE || '.',
+  '.config/configstore/firebase-tools.json'
+);
+const FIREBASE_RC_PATH = path.resolve('./.firebaserc');
+const FIREBASE_CLI_CLIENT_ID = '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com';
+const FIREBASE_CLI_CLIENT_SECRET = 'j9iVZfS8kkCEFUPaAeJV0sAi';
 const DEFAULT_REGULATION_MINUTES = 30;
 const AUTO_FULL_TIME_MINUTE = 90;
 const LEGACY_DEFAULT_REGULATION_MINUTES = 90;
@@ -16,6 +24,15 @@ const LEGACY_STATUS_MAP = {
   playing: 'live',
   finished: 'completed'
 };
+const RUNTIME_STATS_KEYS = [
+  'possession',
+  'shots',
+  'shotsOnTarget',
+  'corners',
+  'fouls',
+  'yellowCards',
+  'redCards'
+];
 
 function getServiceAccount() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -27,10 +44,122 @@ function getServiceAccount() {
   return null;
 }
 
+function getFirebaseCliRefreshToken() {
+  if (!fs.existsSync(FIREBASE_CLI_CONFIG_PATH)) return null;
+  try {
+    const config = JSON.parse(fs.readFileSync(FIREBASE_CLI_CONFIG_PATH, 'utf8'));
+    const refreshToken = config?.tokens?.refresh_token;
+    return refreshToken ? String(refreshToken) : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function resolveProjectId() {
+  const envProjectId = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID;
+  if (envProjectId) return envProjectId;
+
+  if (!fs.existsSync(FIREBASE_RC_PATH)) return null;
+  try {
+    const firebaseRc = JSON.parse(fs.readFileSync(FIREBASE_RC_PATH, 'utf8'));
+    const defaultProject = firebaseRc?.projects?.default;
+    return defaultProject ? String(defaultProject) : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
 function toCanonicalStatus(status) {
   if (!status) return 'scheduled';
   const normalized = String(status).toLowerCase();
   return LEGACY_STATUS_MAP[normalized] || normalized;
+}
+
+function toNonNegativeInt(value, fallback = null) {
+  if (value === '' || value === null || value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+}
+
+function toClampedPercent(value, fallback = null) {
+  const parsed = toNonNegativeInt(value, fallback);
+  if (parsed === null) return fallback;
+  return Math.min(100, parsed);
+}
+
+function hasFixtureStatsInput(stats) {
+  if (!stats || typeof stats !== 'object') return false;
+  return RUNTIME_STATS_KEYS.some((key) => {
+    const homeValue = stats?.[key]?.home;
+    const awayValue = stats?.[key]?.away;
+    return homeValue !== '' && homeValue !== null && homeValue !== undefined ||
+      awayValue !== '' && awayValue !== null && awayValue !== undefined;
+  });
+}
+
+function normalizeFixtureStats({ stats, status, homeScore, awayScore }) {
+  const canonicalStatus = toCanonicalStatus(status || 'scheduled');
+  const isLiveOrCompleted = canonicalStatus === 'live' || canonicalStatus === 'completed';
+  const safeHomeGoals = toNonNegativeInt(homeScore, 0);
+  const safeAwayGoals = toNonNegativeInt(awayScore, 0);
+  const shouldAutofill = isLiveOrCompleted || safeHomeGoals > 0 || safeAwayGoals > 0;
+  const hasInput = hasFixtureStatsInput(stats);
+
+  if (!hasInput && !shouldAutofill) {
+    return null;
+  }
+
+  const payload = {};
+  const possessionHome = toClampedPercent(stats?.possession?.home, null);
+  const possessionAway = toClampedPercent(stats?.possession?.away, null);
+  if (possessionHome !== null || possessionAway !== null || isLiveOrCompleted) {
+    let homeValue = possessionHome;
+    let awayValue = possessionAway;
+
+    if (homeValue === null && awayValue === null) {
+      homeValue = 50;
+      awayValue = 50;
+    } else if (homeValue !== null && awayValue === null) {
+      awayValue = Math.max(0, 100 - homeValue);
+    } else if (homeValue === null && awayValue !== null) {
+      homeValue = Math.max(0, 100 - awayValue);
+    } else {
+      const total = homeValue + awayValue;
+      if (total !== 100) {
+        awayValue = Math.max(0, 100 - homeValue);
+      }
+    }
+
+    payload.possession = {
+      home: homeValue,
+      away: awayValue
+    };
+  }
+
+  RUNTIME_STATS_KEYS
+    .filter((key) => key !== 'possession')
+    .forEach((key) => {
+      let homeValue = toNonNegativeInt(stats?.[key]?.home, null);
+      let awayValue = toNonNegativeInt(stats?.[key]?.away, null);
+
+      if (key === 'shots' || key === 'shotsOnTarget') {
+        if (homeValue === null) homeValue = safeHomeGoals;
+        if (awayValue === null) awayValue = safeAwayGoals;
+      } else if (isLiveOrCompleted) {
+        if (homeValue === null) homeValue = 0;
+        if (awayValue === null) awayValue = 0;
+      }
+
+      if (homeValue === null && awayValue === null) return;
+
+      payload[key] = {
+        home: Math.max(0, homeValue ?? 0),
+        away: Math.max(0, awayValue ?? 0)
+      };
+    });
+
+  return Object.keys(payload).length > 0 ? payload : null;
 }
 
 function toMillis(value) {
@@ -602,10 +731,36 @@ const dryRun = args.includes('--dry');
 
 async function main() {
   const serviceAccount = getServiceAccount();
+  const projectId = resolveProjectId();
   if (serviceAccount) {
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      ...(projectId ? { projectId } : {})
+    });
   } else {
-    admin.initializeApp({ credential: admin.credential.applicationDefault() });
+    const refreshToken = getFirebaseCliRefreshToken();
+    if (refreshToken && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      const tempAdcPath = path.join(
+        os.tmpdir(),
+        `firebase-tools-adc-${projectId || 'default'}.json`
+      );
+      fs.writeFileSync(
+        tempAdcPath,
+        JSON.stringify({
+          type: 'authorized_user',
+          client_id: FIREBASE_CLI_CLIENT_ID,
+          client_secret: FIREBASE_CLI_CLIENT_SECRET,
+          refresh_token: refreshToken
+        }),
+        'utf8'
+      );
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = tempAdcPath;
+    }
+
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      ...(projectId ? { projectId } : {})
+    });
   }
   const db = admin.firestore();
 
@@ -637,6 +792,12 @@ async function main() {
       fixture: data,
       fixtureId: doc.id
     });
+    const normalizedStats = normalizeFixtureStats({
+      stats: data.stats,
+      status: canonicalStatus,
+      homeScore,
+      awayScore
+    });
     const minute = canonicalStatus === 'completed'
       ? Number(liveClock.currentMinute ?? data.minute ?? autoFullTimeMinute)
       : canonicalStatus === 'live'
@@ -648,7 +809,8 @@ async function main() {
       minute,
       matchTiming: timing,
       liveClock,
-      events: goalSyncedEvents.events
+      events: goalSyncedEvents.events,
+      stats: normalizedStats
     };
 
     const changed =
@@ -656,6 +818,7 @@ async function main() {
       JSON.stringify(data.matchTiming || null) !== JSON.stringify(update.matchTiming) ||
       JSON.stringify(data.liveClock || null) !== JSON.stringify(update.liveClock) ||
       Number(data.minute || 0) !== Number(update.minute || 0) ||
+      JSON.stringify(data.stats || null) !== JSON.stringify(update.stats || null) ||
       normalizedEvents.changed ||
       goalSyncedEvents.changed;
 
@@ -668,6 +831,9 @@ async function main() {
   }
 
   console.log(`${dryRun ? 'Dry run' : 'Applied'}: ${affected} fixture(s) require updates.`);
+
+  // Close Firestore gRPC channels so the process exits after migrations complete.
+  await admin.app().delete();
 }
 
 main().catch((error) => {

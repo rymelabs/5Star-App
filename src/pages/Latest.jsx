@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -9,11 +9,31 @@ import { useLanguage } from '../context/LanguageContext';
 import { ChevronRight, Calendar, Trophy, Instagram, TrendingUp, Award } from 'lucide-react';
 import NewTeamAvatar from '../components/NewTeamAvatar';
 import { formatDate, formatTime, getMatchDayLabel } from '../utils/dateUtils';
-import { truncateText, formatScore, abbreviateTeamName, isFixtureLive } from '../utils/helpers';
+import { truncateText, formatScore, abbreviateTeamName, isFixtureLive, getEffectiveFixtureStatus } from '../utils/helpers';
 import NotificationModal from '../components/NotificationModal';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
 import CompactFixtureRow from '../components/CompactFixtureRow';
+
+const toFixtureDate = (value) => {
+  if (!value) return null;
+  if (value?.toDate && typeof value.toDate === 'function') {
+    try {
+      return value.toDate();
+    } catch {
+      return null;
+    }
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const isSameLocalDay = (a, b) => {
+  if (!a || !b) return false;
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+};
 
 const Latest = () => {
   const navigate = useNavigate();
@@ -90,6 +110,52 @@ const Latest = () => {
   // Get latest news for carousel (top 3)
   const latestNews = articles?.slice(0, 3) || [];
 
+  const priorityLiveFixtures = useMemo(() => {
+    if (!Array.isArray(fixtures) || fixtures.length === 0) return [];
+    return fixtures
+      .filter((fixture) => isFixtureLive(fixture))
+      .sort((a, b) => {
+        const dateA = toFixtureDate(a.dateTime) || new Date(0);
+        const dateB = toFixtureDate(b.dateTime) || new Date(0);
+        return dateA - dateB;
+      });
+  }, [fixtures]);
+
+  const todayCompletedResults = useMemo(() => {
+    if (!Array.isArray(fixtures) || fixtures.length === 0) return [];
+    const now = new Date();
+    return fixtures
+      .filter((fixture) => {
+        if (getEffectiveFixtureStatus(fixture) !== 'completed') return false;
+        const fixtureDate = toFixtureDate(fixture.dateTime);
+        return isSameLocalDay(fixtureDate, now);
+      })
+      .sort((a, b) => {
+        const dateA = toFixtureDate(a.dateTime) || new Date(0);
+        const dateB = toFixtureDate(b.dateTime) || new Date(0);
+        return dateB - dateA;
+      });
+  }, [fixtures]);
+
+  const todayUpcomingFixtures = useMemo(() => {
+    if (!Array.isArray(fixtures) || fixtures.length === 0) return [];
+    const now = new Date();
+    return fixtures
+      .filter((fixture) => {
+        const fixtureDate = toFixtureDate(fixture.dateTime);
+        if (!fixtureDate) return false;
+        if (!isSameLocalDay(fixtureDate, now)) return false;
+        if (fixtureDate <= now) return false;
+        const status = getEffectiveFixtureStatus(fixture);
+        return status === 'scheduled';
+      })
+      .sort((a, b) => {
+        const dateA = toFixtureDate(a.dateTime) || new Date(0);
+        const dateB = toFixtureDate(b.dateTime) || new Date(0);
+        return dateA - dateB;
+      });
+  }, [fixtures]);
+
   // Group all content by competition/league/season
   const groupedContent = React.useMemo(() => {
     if (!fixtures || fixtures.length === 0) return [];
@@ -161,12 +227,16 @@ const Latest = () => {
       }
 
       const group = competitionsMap.get(groupKey);
-      const fixtureDate = new Date(fixture.dateTime);
+      const fixtureDate = toFixtureDate(fixture.dateTime);
+      if (!fixtureDate) return;
+      const effectiveStatus = getEffectiveFixtureStatus(fixture);
+      const isTodayResult = effectiveStatus === 'completed' && isSameLocalDay(fixtureDate, now);
+      const isTodayUpcoming = effectiveStatus === 'scheduled' && fixtureDate > now && isSameLocalDay(fixtureDate, now);
 
       // Categorize fixtures
-      if (fixture.status === 'completed') {
+      if (effectiveStatus === 'completed' && !isTodayResult) {
         group.recentResults.push(fixture);
-      } else if (fixtureDate > now) {
+      } else if (effectiveStatus === 'scheduled' && fixtureDate > now && !isTodayUpcoming) {
         group.upcomingFixtures.push(fixture);
       }
     });
@@ -431,8 +501,80 @@ const Latest = () => {
         </p>
       </header>
 
-      {/* Latest News - Always show first */}
+      {/* Priority: Live Matches */}
+      {priorityLiveFixtures.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-lg font-semibold text-white">{t('pages.fixtures.liveNow') || 'Live Matches'}</h2>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures?status=live')}
+              className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
+            >
+              {t('common.viewAll') || 'See all'}
+            </button>
+          </div>
+
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+            {priorityLiveFixtures.map((fixture) => (
+              <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Latest News */}
       <NewsSection />
+
+      {/* Priority: Today's Upcoming Fixtures */}
+      {todayUpcomingFixtures.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-amber-500 rounded-full" />
+              <h2 className="text-lg font-semibold text-white">{t('pages.fixtures.today') || "Today's Upcoming"}</h2>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures?status=today')}
+              className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
+            >
+              {t('common.viewAll') || 'See all'}
+            </button>
+          </div>
+
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+            {todayUpcomingFixtures.map((fixture) => (
+              <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Priority: Today Results */}
+      {todayCompletedResults.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+              <h2 className="text-lg font-semibold text-white">{t('pages.fixtures.results') || "Today's Results"}</h2>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures?status=completed')}
+              className="text-brand-purple text-xs font-semibold tracking-wide uppercase hover:text-brand-purple/80 transition-colors"
+            >
+              {t('common.viewAll') || 'See all'}
+            </button>
+          </div>
+
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden">
+            {todayCompletedResults.map((fixture) => (
+              <CompactFixtureRow key={fixture.id} fixture={fixture} onClick={handleFixtureClick} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Grouped Content by Competition/League/Season */}
       {groupedContent.map((group) => (
