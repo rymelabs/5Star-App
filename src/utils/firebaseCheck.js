@@ -1,6 +1,6 @@
 export const validateFirebaseConfig = () => {
   const requiredEnvVars = [
-    'VITE_FIREBASE_API_KEY',
+    'VITE_FIREBASE_API_KEY_B64',
     'VITE_FIREBASE_AUTH_DOMAIN',
     'VITE_FIREBASE_PROJECT_ID',
     'VITE_FIREBASE_STORAGE_BUCKET',
@@ -19,7 +19,7 @@ export const validateFirebaseConfig = () => {
 
 export const getFirebaseConfigStatus = () => {
   return {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing',
+    apiKeyB64: import.meta.env.VITE_FIREBASE_API_KEY_B64 ? '✅ Set' : '❌ Missing',
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? '✅ Set' : '❌ Missing',
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing',
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? '✅ Set' : '❌ Missing',

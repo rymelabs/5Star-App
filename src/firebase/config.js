@@ -3,8 +3,20 @@ import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
+const decodeBase64 = (encodedValue) => {
+  if (!encodedValue || typeof globalThis.atob !== 'function') {
+    return '';
+  }
+
+  try {
+    return globalThis.atob(encodedValue);
+  } catch {
+    return '';
+  }
+};
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  apiKey: decodeBase64(import.meta.env.VITE_FIREBASE_API_KEY_B64 || ''),
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
