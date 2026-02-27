@@ -3,6 +3,7 @@
 .env.local
 .env.development.local
 .env.example
+.env.production
 
 # Firebase service account key
 serviceAccountKey.json
