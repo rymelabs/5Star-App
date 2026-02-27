@@ -786,19 +786,25 @@ const Stories = () => {
   const currentExpiresInHours = currentStory?.expiresAt
     ? Math.max(0, Math.ceil((new Date(currentStory.expiresAt).getTime() - Date.now()) / (60 * 60 * 1000)))
     : null;
+  const mobileThemeBackground = {
+    background: 'radial-gradient(circle at 8% 6%, rgba(16,185,129,0.28) 0%, rgba(16,185,129,0) 42%), radial-gradient(circle at 92% 12%, rgba(56,189,248,0.24) 0%, rgba(56,189,248,0) 38%), radial-gradient(circle at 50% 100%, rgba(251,146,60,0.16) 0%, rgba(251,146,60,0) 46%), linear-gradient(180deg, #020617 0%, #061525 52%, #020617 100%)'
+  };
 
   return (
-    <div className="min-h-screen px-4 pb-28 space-y-4">
-      <div className="flex items-center justify-between pt-2">
+    <div className="relative min-h-screen px-3 md:px-4 pb-28 space-y-4 md:space-y-5">
+      <div className="pointer-events-none absolute inset-0 -z-10 md:hidden" style={mobileThemeBackground} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent md:hidden" />
+
+      <div className="sticky top-2 z-30 flex items-center justify-between rounded-[1.4rem] border border-emerald-300/20 bg-slate-950/80 px-3 py-2 backdrop-blur-xl shadow-[0_18px_45px_-28px_rgba(16,185,129,0.8)] md:static md:rounded-none md:border-none md:bg-transparent md:px-0 md:py-0 md:shadow-none">
         <div className="flex items-center">
-          <PitchSnapLogo showText />
+          <PitchSnapLogo showText className="drop-shadow-[0_0_20px_rgba(16,185,129,0.45)]" />
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
               type="button"
               onClick={handleComposerToggle}
-              className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-3 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300 px-3 py-2 text-xs font-semibold text-slate-950 shadow-[0_12px_28px_-18px_rgba(16,185,129,0.9)] transition hover:brightness-105"
             >
               {showComposer ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               {showComposer ? 'Close' : 'Post'}
@@ -807,7 +813,7 @@ const Stories = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="rounded-full border border-white/15 px-3 py-2 text-xs text-gray-200 hover:bg-white/5"
+            className="rounded-full border border-cyan-200/30 bg-slate-900/70 px-3 py-2 text-xs text-cyan-100 transition hover:bg-cyan-400/10"
           >
             Back
           </button>
@@ -815,8 +821,8 @@ const Stories = () => {
       </div>
 
       {showComposer && isAdmin && (
-        <form onSubmit={handleCreateStory} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+        <form onSubmit={handleCreateStory} className="rounded-[1.6rem] border border-cyan-300/20 bg-slate-950/65 p-4 backdrop-blur-xl space-y-4 shadow-[0_22px_50px_-38px_rgba(34,211,238,0.8)]">
+          <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
             <Plus className="w-4 h-4" />
             Create PitchSnap Update
           </div>
@@ -1007,7 +1013,7 @@ const Stories = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_15px_35px_-20px_rgba(34,211,238,0.9)] disabled:opacity-60"
             >
               <Plus className="w-4 h-4" />
               {submitting ? 'Posting...' : 'Post PitchSnap'}
@@ -1015,7 +1021,7 @@ const Stories = () => {
             <button
               type="button"
               onClick={resetComposer}
-              className="rounded-full border border-white/15 px-4 py-2 text-sm text-gray-200 hover:bg-white/5"
+              className="rounded-full border border-cyan-200/30 bg-slate-900/60 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-400/10"
             >
               Reset
             </button>
@@ -1024,15 +1030,15 @@ const Stories = () => {
       )}
 
       {loading ? (
-        <div className="min-h-[50vh] grid place-items-center">
-          <div className="text-gray-400 text-sm">Loading PitchSnaps...</div>
+        <div className="min-h-[50vh] grid place-items-center rounded-[1.8rem] border border-cyan-300/15 bg-slate-950/60 backdrop-blur-xl">
+          <div className="text-cyan-100/75 text-sm">Loading PitchSnaps...</div>
         </div>
       ) : !currentStory ? (
-        <div className="min-h-[50vh] rounded-3xl border border-white/10 bg-white/5 grid place-items-center p-8 text-center">
+        <div className="min-h-[50vh] rounded-[1.8rem] border border-cyan-300/15 bg-slate-950/60 grid place-items-center p-8 text-center backdrop-blur-xl">
           <div className="space-y-3">
-            <PlayCircle className="w-10 h-10 text-brand-purple mx-auto" />
-            <h2 className="text-white text-lg font-semibold">No active PitchSnaps</h2>
-            <p className="text-gray-400 text-sm">
+            <PlayCircle className="w-10 h-10 text-emerald-300 mx-auto" />
+            <h2 className="text-cyan-100 text-lg font-semibold">No active PitchSnaps</h2>
+            <p className="text-cyan-100/60 text-sm">
               Admin status updates will appear here and expire automatically after 24-48 hours.
             </p>
           </div>
@@ -1040,7 +1046,7 @@ const Stories = () => {
       ) : (
         <div className="space-y-3">
           <div
-            className={`relative overflow-hidden border-y border-white/10 bg-black -mx-4 sm:mx-0 sm:rounded-3xl sm:border ${snapViewportHeightClass} min-h-[420px]`}
+            className={`relative overflow-hidden -mx-3 md:mx-0 border-y border-cyan-300/25 bg-slate-950/95 shadow-[0_30px_70px_-35px_rgba(16,185,129,0.75)] md:rounded-3xl md:border md:border-white/10 md:bg-black ${snapViewportHeightClass} min-h-[420px]`}
             onWheel={handleWheel}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -1052,9 +1058,9 @@ const Stories = () => {
                 const isCompleted = index < currentStoryIndex;
                 const isActive = index === currentStoryIndex;
                 return (
-                  <div key={story.id} className="h-1 flex-1 rounded bg-white/25 overflow-hidden">
+                  <div key={story.id} className="h-1 flex-1 rounded bg-white/15 overflow-hidden">
                     <div
-                      className={`h-full ${isActive || isCompleted ? 'bg-white' : 'bg-transparent'}`}
+                      className={`h-full ${isActive || isCompleted ? 'bg-gradient-to-r from-emerald-300 via-cyan-300 to-orange-200' : 'bg-transparent'}`}
                       style={{ width: isCompleted ? '100%' : isActive ? `${storyProgress}%` : '0%' }}
                     />
                   </div>
@@ -1063,18 +1069,18 @@ const Stories = () => {
             </div>
 
             <div className="absolute top-4 left-4 right-4 z-10 mt-2 flex items-start justify-between gap-2 text-white">
-              <div className="space-y-1">
+              <div className="space-y-1 rounded-2xl border border-white/15 bg-slate-900/50 px-3 py-2 backdrop-blur-sm">
                 <div className="text-sm font-semibold">{currentStory.ownerName || 'Admin'}</div>
-                <div className="text-xs text-white/80">
+                <div className="text-xs text-cyan-100/80">
                   {STORY_ENTITY_LABEL[currentStory.entityType] || 'Update'} • {getEntityDisplayName(currentStory)}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <div className="flex items-center gap-2 text-[11px] text-white/85 bg-black/35 rounded-full px-2 py-1">
+                <div className="flex items-center gap-2 text-[11px] text-cyan-100/90 bg-slate-900/60 border border-cyan-200/20 rounded-full px-2 py-1">
                   <Clock3 className="w-3 h-3" />
                   {currentExpiresInHours != null ? `${currentExpiresInHours}h left` : 'Live'}
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-white/85 bg-black/35 rounded-full px-2 py-1">
+                <div className="flex items-center gap-1.5 text-[11px] text-cyan-100/90 bg-slate-900/60 border border-cyan-200/20 rounded-full px-2 py-1">
                   <Eye className="w-3 h-3" />
                   {formatStoryViews(currentStoryViews)} views
                 </div>
@@ -1104,7 +1110,7 @@ const Stories = () => {
             {renderStoryContent(currentStory)}
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
+          <div className="flex items-center justify-between rounded-2xl border border-cyan-300/20 bg-slate-950/60 px-3 py-2 text-xs text-cyan-100/85 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               {currentStory.contentType === 'text' && <Type className="w-3.5 h-3.5" />}
               {currentStory.contentType === 'image' && <ImageIcon className="w-3.5 h-3.5" />}
@@ -1116,7 +1122,7 @@ const Stories = () => {
               <button
                 type="button"
                 onClick={handleDeleteStory}
-                className="inline-flex items-center gap-1 rounded-full border border-red-400/40 px-2 py-1 text-red-300 hover:bg-red-500/10"
+                className="inline-flex items-center gap-1 rounded-full border border-red-300/40 bg-red-950/20 px-2 py-1 text-red-200 transition hover:bg-red-500/20"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Delete
