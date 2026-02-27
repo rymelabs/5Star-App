@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import NewTeamAvatar from './NewTeamAvatar';
-import { isFixtureLive } from '../utils/helpers';
+import { getEffectiveFixtureStatus, getFixtureMinute, getFixtureLiveBadgeState, isFixtureLive } from '../utils/helpers';
 import { formatDateTime } from '../utils/dateUtils';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import FixtureCardDesktop from './ui/FixtureCardDesktop';
@@ -16,9 +16,11 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
 
   const home = fixture.homeTeam || fixture.homeTeamId || {};
   const away = fixture.awayTeam || fixture.awayTeamId || {};
-  const status = fixture.status || (isFixtureLive(fixture) ? 'live' : 'scheduled');
-  const isLive = status === 'live' || isFixtureLive(fixture);
-  const isCompleted = status === 'completed' || status === 'finished';
+  const status = getEffectiveFixtureStatus(fixture);
+  const liveBadge = getFixtureLiveBadgeState(fixture);
+  const isLive = liveBadge.live || isFixtureLive(fixture);
+  const isCompleted = status === 'completed';
+  const liveMinute = getFixtureMinute(fixture);
   const isRow = variant === 'row';
 
   // Format date/time using project helper
@@ -67,7 +69,7 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                   </span>
-                  LIVE {fixture.liveData?.minute && `• ${fixture.liveData.minute}'`}
+                  {liveBadge.text === 'HT' ? 'LIVE • HT' : liveBadge.text === 'PAUSED' ? 'LIVE • PAUSED' : `LIVE • ${liveMinute}'`}
                 </span>
               ) : (
                 <span>{dateLabel}</span>
@@ -81,7 +83,7 @@ const FixtureCard = ({ fixture = {}, onClick = () => {}, compact = false, varian
           <div className="absolute top-1/2 -translate-y-1/2 left-0 w-12 text-center text-[10px] font-medium text-white/40">
              {isLive ? (
                 <span className="text-red-400 animate-pulse">
-                  {fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'LIVE'}
+                  {liveBadge.text === 'HT' ? 'HT' : liveBadge.text === 'PAUSED' ? 'PAUSED' : `${liveMinute}'`}
                 </span>
               ) : isCompleted ? (
                 <span>FT</span>

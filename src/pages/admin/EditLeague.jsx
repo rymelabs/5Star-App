@@ -13,6 +13,7 @@ import { leaguesCollection } from '../../firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { MATCH_BREAK_RATIO, createMatchTimingSnapshot, validateRegulationMinutes } from '../../utils/matchTiming';
 
 const EditLeague = () => {
   const navigate = useNavigate();
@@ -26,7 +27,8 @@ const EditLeague = () => {
     name: '',
     qualifiedPosition: 4,
     relegationPosition: 18,
-    totalTeams: 20
+    totalTeams: 20,
+    regulationMinutes: 30
   });
 
   const isAdmin = user?.isAdmin;
@@ -47,6 +49,7 @@ const EditLeague = () => {
           qualifiedPosition: league.qualifiedPosition,
           relegationPosition: league.relegationPosition,
           totalTeams: league.totalTeams,
+          regulationMinutes: league.matchTimingDefaults?.regulationMinutes || 30,
           ownerId: league.ownerId || null,
           ownerName: league.ownerName || 'Unknown Admin'
         });
@@ -88,10 +91,21 @@ const EditLeague = () => {
       return;
     }
 
+    const timingValidation = validateRegulationMinutes(formData.regulationMinutes);
+    if (!timingValidation.valid) {
+      showToast(timingValidation.error, 'warning');
+      return;
+    }
+
     try {
       setSaving(true);
+      const matchTiming = createMatchTimingSnapshot(timingValidation.minutes, 'league');
       const payload = {
         ...formData,
+        matchTimingDefaults: {
+          regulationMinutes: matchTiming.regulationMinutes,
+          breakRatio: MATCH_BREAK_RATIO
+        },
         ownerId: formData.ownerId || user?.uid || null,
         ownerName: formData.ownerName || user?.displayName || user?.name || user?.email || 'Unknown Admin'
       };
@@ -266,6 +280,26 @@ const EditLeague = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-white mb-2">Default Match Playtime</h3>
+          <p className="text-sm text-gray-400 mb-4">League default used when season/fixture overrides are empty.</p>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Regulation Minutes</label>
+          <input
+            type="number"
+            name="regulationMinutes"
+            value={formData.regulationMinutes}
+            onChange={handleChange}
+            min="30"
+            max="240"
+            step="2"
+            className="input-field w-full"
+            required
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Half: {Number(formData.regulationMinutes || 0) / 2 || 0} mins • Break: {Math.max(1, Math.round(Number(formData.regulationMinutes || 0) * MATCH_BREAK_RATIO))} mins
+          </p>
         </div>
 
         {/* Preview */}

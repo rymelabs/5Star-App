@@ -18,6 +18,14 @@ import {
   increment
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
+import {
+  DEFAULT_REGULATION_MINUTES,
+  MATCH_BREAK_RATIO,
+  createDefaultLiveClock,
+  createMatchTimingSnapshot,
+  toCanonicalFixtureStatus,
+  validateRegulationMinutes
+} from '../utils/matchTiming';
 
 // Helper function to check if Firebase is initialized
 const checkFirebaseInit = () => {
@@ -530,6 +538,7 @@ export const fixturesCollection = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
@@ -549,7 +558,7 @@ export const fixturesCollection = {
         queryConstraints.push(where('seasonId', '==', filters.seasonId));
       }
       if (filters.status) {
-        queryConstraints.push(where('status', '==', filters.status));
+        queryConstraints.push(where('status', '==', toCanonicalFixtureStatus(filters.status)));
       }
 
       // Add pagination
@@ -564,6 +573,7 @@ export const fixturesCollection = {
       const fixtures = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime),
         _doc: doc
       }));
@@ -592,6 +602,7 @@ export const fixturesCollection = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
@@ -614,6 +625,7 @@ export const fixturesCollection = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
@@ -636,6 +648,7 @@ export const fixturesCollection = {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
     } catch (error) {
@@ -658,8 +671,25 @@ export const fixturesCollection = {
         }
       }
 
+      const canonicalStatus = toCanonicalFixtureStatus(fixtureData.status || 'scheduled');
+      const regulationValidation = validateRegulationMinutes(fixtureData.regulationMinutes, { allowNull: true });
+      const resolvedMatchTiming = fixtureData.matchTiming || createMatchTimingSnapshot(
+        regulationValidation.valid && regulationValidation.minutes != null
+          ? regulationValidation.minutes
+          : DEFAULT_REGULATION_MINUTES,
+        regulationValidation.valid && regulationValidation.minutes != null ? 'fixture' : 'default'
+      );
+      const resolvedLiveClock = fixtureData.liveClock || createDefaultLiveClock({
+        status: canonicalStatus,
+        matchTiming: resolvedMatchTiming
+      });
+
       const docRef = await addDoc(collection(database, 'fixtures'), {
         ...fixtureData,
+        status: canonicalStatus,
+        minute: Number(fixtureData.minute ?? resolvedLiveClock.currentMinute ?? 0),
+        liveClock: resolvedLiveClock,
+        matchTiming: resolvedMatchTiming,
         ownerId: fixtureData.ownerId || null,
         ownerName: fixtureData.ownerName || null,
         dateTime: dateTimeValue || new Date(), // Default to now if no valid date
@@ -684,8 +714,23 @@ export const fixturesCollection = {
     try {
       const database = checkFirebaseInit();
       const fixtureRef = doc(database, 'fixtures', fixtureId);
+      const payload = {
+        ...updates
+      };
+
+      if (Object.prototype.hasOwnProperty.call(payload, 'status')) {
+        payload.status = toCanonicalFixtureStatus(payload.status);
+      }
+
+      if (Object.prototype.hasOwnProperty.call(payload, 'regulationMinutes')) {
+        const validation = validateRegulationMinutes(payload.regulationMinutes, { allowNull: true });
+        if (validation.valid && validation.minutes != null) {
+          payload.matchTiming = createMatchTimingSnapshot(validation.minutes, 'fixture');
+        }
+      }
+
       await updateDoc(fixtureRef, {
-        ...updates,
+        ...payload,
         updatedAt: serverTimestamp()
       });
     } catch (error) {
@@ -702,6 +747,7 @@ export const fixturesCollection = {
       const fixtures = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
+        status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
       callback(fixtures);
@@ -1646,6 +1692,9 @@ export const seasonsCollection = {
         status: 'upcoming', // upcoming, ongoing, completed
         ownerId: seasonData.ownerId || null,
         ownerName: seasonData.ownerName || null,
+        matchTimingOverride: {
+          regulationMinutes: seasonData?.matchTimingOverride?.regulationMinutes ?? null
+        },
 
         // Group stage configuration
         numberOfGroups: seasonData.numberOfGroups || 4,
@@ -1857,7 +1906,7 @@ export const seasonsCollection = {
               stage: 'group',
               homeTeamId: teams[i].id,
               awayTeamId: teams[j].id,
-              status: 'upcoming',
+              status: 'scheduled',
               dateTime: null, // To be set by admin
               venue: null // To be set by admin
             });
@@ -1870,7 +1919,7 @@ export const seasonsCollection = {
               stage: 'group',
               homeTeamId: teams[j].id,
               awayTeamId: teams[i].id,
-              status: 'upcoming',
+              status: 'scheduled',
               dateTime: null,
               venue: null
             });
@@ -2170,8 +2219,14 @@ export const leaguesCollection = {
   add: async (leagueData) => {
     try {
       const database = checkFirebaseInit();
+      const parsedMinutes = Number(leagueData?.matchTimingDefaults?.regulationMinutes);
+      const timingMinutes = Number.isInteger(parsedMinutes) ? parsedMinutes : DEFAULT_REGULATION_MINUTES;
       const docRef = await addDoc(collection(database, 'leagues'), {
         ...leagueData,
+        matchTimingDefaults: {
+          regulationMinutes: timingMinutes,
+          breakRatio: MATCH_BREAK_RATIO
+        },
         ownerId: leagueData.ownerId || null,
         ownerName: leagueData.ownerName || null,
         createdAt: serverTimestamp(),
@@ -2188,8 +2243,14 @@ export const leaguesCollection = {
   update: async (leagueId, leagueData) => {
     try {
       const database = checkFirebaseInit();
+      const parsedMinutes = Number(leagueData?.matchTimingDefaults?.regulationMinutes);
+      const timingMinutes = Number.isInteger(parsedMinutes) ? parsedMinutes : DEFAULT_REGULATION_MINUTES;
       await updateDoc(doc(database, 'leagues', leagueId), {
         ...leagueData,
+        matchTimingDefaults: {
+          regulationMinutes: timingMinutes,
+          breakRatio: MATCH_BREAK_RATIO
+        },
         updatedAt: serverTimestamp()
       });
     } catch (error) {

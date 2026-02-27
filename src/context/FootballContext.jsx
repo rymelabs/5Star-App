@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { teamsCollection, fixturesCollection, leagueTableCollection, adminActivityCollection, leagueSettingsCollection, seasonsCollection, leaguesCollection } from '../firebase/firestore';
 import { useAuth } from './AuthContext';
 import useCachedState from '../hooks/useCachedState';
+import {
+  createDefaultLiveClock,
+  resolveFixtureTiming,
+  toCanonicalFixtureStatus,
+  validateRegulationMinutes
+} from '../utils/matchTiming';
 
 const FootballContext = createContext();
 
@@ -86,6 +92,7 @@ export const FootballProvider = ({ children }) => {
         const populatedFixtures = updatedFixtures.map(fixture => {
           const homeTeam = teams.find(t => t.id === fixture.homeTeamId);
           const awayTeam = teams.find(t => t.id === fixture.awayTeamId);
+          const canonicalStatus = toCanonicalFixtureStatus(fixture.status);
           
           // Log warning if teams are not found
           if (!homeTeam) {
@@ -97,6 +104,7 @@ export const FootballProvider = ({ children }) => {
           
           return {
             ...fixture,
+            status: canonicalStatus,
             homeTeam: homeTeam || { id: fixture.homeTeamId, name: `Unknown Team (${fixture.homeTeamId?.substring(0, 8) || 'no ID'})`, logo: '' },
             awayTeam: awayTeam || { id: fixture.awayTeamId, name: `Unknown Team (${fixture.awayTeamId?.substring(0, 8) || 'no ID'})`, logo: '' }
           };
@@ -135,6 +143,7 @@ export const FootballProvider = ({ children }) => {
       const populatedFixtures = fixturesData.map(fixture => {
         const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
         const awayTeam = teamsData.find(t => t.id === fixture.awayTeamId);
+        const canonicalStatus = toCanonicalFixtureStatus(fixture.status);
         
         // Log warning if teams are not found
         if (!homeTeam) {
@@ -146,6 +155,7 @@ export const FootballProvider = ({ children }) => {
         
         return {
           ...fixture,
+          status: canonicalStatus,
           homeTeam: homeTeam || { id: fixture.homeTeamId, name: `Unknown Team (${fixture.homeTeamId?.substring(0, 8) || 'no ID'})`, logo: '' },
           awayTeam: awayTeam || { id: fixture.awayTeamId, name: `Unknown Team (${fixture.awayTeamId?.substring(0, 8) || 'no ID'})`, logo: '' }
         };
@@ -335,8 +345,27 @@ export const FootballProvider = ({ children }) => {
     }
 
     try {
+      const leagueForFixture = leagues.find((league) => league.id === fixtureData.leagueId) || null;
+      const seasonForFixture = seasons.find((season) => season.id === fixtureData.seasonId) || null;
+      const regulationValidation = validateRegulationMinutes(fixtureData.regulationMinutes, { allowNull: true });
+      const fixtureRegulationMinutes = regulationValidation.valid ? regulationValidation.minutes : null;
+      const matchTiming = resolveFixtureTiming({
+        league: leagueForFixture,
+        season: seasonForFixture,
+        fixtureRegulationMinutes
+      });
+      const canonicalStatus = toCanonicalFixtureStatus(fixtureData.status || 'scheduled');
+
       const fixturePayload = applyOwnerMetadata({
         ...fixtureData,
+        regulationMinutes: fixtureRegulationMinutes,
+        matchTiming,
+        status: canonicalStatus,
+        minute: fixtureData.minute ?? (canonicalStatus === 'completed' ? matchTiming.regulationMinutes : 0),
+        liveClock: fixtureData.liveClock || createDefaultLiveClock({
+          status: canonicalStatus,
+          matchTiming
+        }),
         decidedByPenalties: Boolean(fixtureData.decidedByPenalties),
         penaltyHomeScore: fixtureData.decidedByPenalties ? fixtureData.penaltyHomeScore ?? null : null,
         penaltyAwayScore: fixtureData.decidedByPenalties ? fixtureData.penaltyAwayScore ?? null : null,
@@ -391,12 +420,41 @@ export const FootballProvider = ({ children }) => {
   const updateFixture = async (fixtureId, updates) => {
     try {
       const fixture = fixtures.find(f => f.id === fixtureId);
-      const wasCompleted = fixture?.status === 'completed';
-      const isNowCompleted = updates.status === 'completed';
-      const statusChangedToLive = fixture?.status !== 'live' && updates.status === 'live';
+      const previousStatus = toCanonicalFixtureStatus(fixture?.status);
+      const nextStatus = toCanonicalFixtureStatus(updates.status ?? fixture?.status);
+      const wasCompleted = previousStatus === 'completed';
+      const isNowCompleted = nextStatus === 'completed';
+      const statusChangedToLive = previousStatus !== 'live' && nextStatus === 'live';
+
+      const mergedFixture = { ...fixture, ...updates };
+      const leagueForFixture = leagues.find((league) => league.id === mergedFixture.leagueId) || null;
+      const seasonForFixture = seasons.find((season) => season.id === mergedFixture.seasonId) || null;
+      const existingOverride = fixture?.matchTiming?.source === 'fixture'
+        ? fixture?.matchTiming?.regulationMinutes
+        : null;
+      const overrideCandidate = Object.prototype.hasOwnProperty.call(updates, 'regulationMinutes')
+        ? updates.regulationMinutes
+        : existingOverride;
+      const regulationValidation = validateRegulationMinutes(overrideCandidate, { allowNull: true });
+      const fixtureRegulationMinutes = regulationValidation.valid ? regulationValidation.minutes : null;
+      const resolvedTiming = resolveFixtureTiming({
+        league: leagueForFixture,
+        season: seasonForFixture,
+        fixtureRegulationMinutes
+      });
       
       const normalizedUpdates = {
         ...updates,
+        status: nextStatus,
+        regulationMinutes: fixtureRegulationMinutes,
+        matchTiming: resolvedTiming,
+        minute: Object.prototype.hasOwnProperty.call(updates, 'minute')
+          ? updates.minute
+          : (nextStatus === 'completed' ? resolvedTiming.regulationMinutes : (fixture?.minute ?? 0)),
+        liveClock: updates.liveClock || fixture?.liveClock || createDefaultLiveClock({
+          status: nextStatus,
+          matchTiming: resolvedTiming
+        }),
         decidedByPenalties: Boolean(updates.decidedByPenalties),
         penaltyHomeScore: updates.decidedByPenalties ? updates.penaltyHomeScore ?? null : null,
         penaltyAwayScore: updates.decidedByPenalties ? updates.penaltyAwayScore ?? null : null,

@@ -8,6 +8,7 @@
     "build": "vite build",
     "migrate:normalize-teams": "node ./scripts/migrations/normalizeTeams.mjs --dry",
     "migrate:fix-fixtures-competition": "node ./scripts/migrations/fixFixturesCompetition.mjs",
+    "migrate:backfill-match-timing": "node ./scripts/migrations/backfill-match-timing.mjs --dry",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",

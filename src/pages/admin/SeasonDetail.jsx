@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useFootball } from '../../context/FootballContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { calculateGroupStandings } from '../../utils/standingsUtils';
+import { createDefaultLiveClock, resolveFixtureTiming } from '../../utils/matchTiming';
 
 const SeasonDetail = () => {
   const navigate = useNavigate();
@@ -142,13 +143,17 @@ const SeasonDetail = () => {
 
     try {
       const fixtures = await seasonsCollection.generateGroupFixtures(seasonId);
+      const matchTiming = resolveFixtureTiming({ season });
       
       // Save fixtures to Firestore
       for (const fixture of fixtures) {
         await fixturesCollection.add({
           ...fixture,
           createdAt: new Date(),
-          status: 'upcoming'
+          status: 'scheduled',
+          matchTiming,
+          minute: 0,
+          liveClock: createDefaultLiveClock({ status: 'scheduled', matchTiming })
         });
       }
 
@@ -198,13 +203,17 @@ const SeasonDetail = () => {
       
       // Step 2: Generate new fixtures
       const fixtures = await seasonsCollection.generateGroupFixtures(seasonId);
+      const matchTiming = resolveFixtureTiming({ season });
       
       // Step 3: Save new fixtures
       for (const fixture of fixtures) {
         await fixturesCollection.add({
           ...fixture,
           createdAt: new Date(),
-          status: 'upcoming'
+          status: 'scheduled',
+          matchTiming,
+          minute: 0,
+          liveClock: createDefaultLiveClock({ status: 'scheduled', matchTiming })
         });
       }
 
@@ -278,12 +287,15 @@ const SeasonDetail = () => {
         stage: fixtureForm.stage,
         dateTime: fixtureForm.dateTime ? new Date(fixtureForm.dateTime).toISOString() : new Date().toISOString(),
         venue: fixtureForm.venue || null,
-        status: 'upcoming',
+        status: 'scheduled',
         homeScore: null,
         awayScore: null,
         createdAt: new Date(),
-        createdManually: true
+        createdManually: true,
+        matchTiming: resolveFixtureTiming({ season }),
+        minute: 0
       };
+      fixtureData.liveClock = createDefaultLiveClock({ status: 'scheduled', matchTiming: fixtureData.matchTiming });
 
       await fixturesCollection.add(fixtureData);
 

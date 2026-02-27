@@ -10,8 +10,9 @@ import AdminPageLayout from '../../components/AdminPageLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import NewTeamAvatar from '../../components/NewTeamAvatar';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp, Search, Video, Upload, CloudUpload, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Save, X, Users, Target, Zap, Check, ChevronDown, ChevronUp, Search, Video, Upload, CloudUpload, Loader2, Pause, Play, Flag } from 'lucide-react';
 import { uploadVideoWithProgress, deleteVideo } from '../../services/videoUploadService';
+import { MATCH_BREAK_RATIO, createDefaultLiveClock, resolveFixtureTiming, toCanonicalFixtureStatus, validateRegulationMinutes } from '../../utils/matchTiming';
 
 const AdminFixtures = () => {
   const { t } = useLanguage();
@@ -60,7 +61,8 @@ const AdminFixtures = () => {
     homeLineup: [],
     awayLineup: [],
     events: [],
-    highlightsUrl: ''
+    highlightsUrl: '',
+    regulationMinutes: ''
   });
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
@@ -112,8 +114,8 @@ const AdminFixtures = () => {
   }, {});
 
   const totalFixtures = fixtures.length;
-  const upcomingFixtures = fixtures.filter(f => ['scheduled', 'playing', 'live'].includes(f.status)).length;
-  const completedFixtures = fixtures.filter(f => ['finished', 'completed'].includes(f.status)).length;
+  const upcomingFixtures = fixtures.filter(f => ['scheduled', 'live'].includes(toCanonicalFixtureStatus(f.status))).length;
+  const completedFixtures = fixtures.filter(f => toCanonicalFixtureStatus(f.status) === 'completed').length;
   const uniqueTeams = new Set(fixtures.flatMap(f => [f.homeTeamId, f.awayTeamId].filter(Boolean))).size;
 
   const handleCreateClick = () => {
@@ -165,6 +167,18 @@ const AdminFixtures = () => {
       // Combine date and time into a single dateTime
       const dateTimeString = `${formData.date}T${formData.time}`;
       const dateTime = new Date(dateTimeString);
+      const selectedLeague = leagues.find((league) => league.id === formData.leagueId) || null;
+      const selectedSeason = seasons.find((season) => season.id === formData.seasonId) || null;
+      const timingValidation = validateRegulationMinutes(formData.regulationMinutes, { allowNull: true });
+      if (!timingValidation.valid) {
+        throw new Error(timingValidation.error);
+      }
+      const resolvedTiming = resolveFixtureTiming({
+        league: selectedLeague,
+        season: selectedSeason,
+        fixtureRegulationMinutes: timingValidation.minutes
+      });
+      const canonicalStatus = toCanonicalFixtureStatus(formData.status || 'scheduled');
 
       const fixtureData = {
         homeTeamId: formData.homeTeam,
@@ -174,9 +188,16 @@ const AdminFixtures = () => {
         // competition resolution: explicit competition -> selected season name -> selected league name -> 'Friendly'
         competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : 'Friendly')),
         round: formData.round || '',
-        status: formData.status || 'scheduled',
+        status: canonicalStatus,
         homeScore: formData.homeScore || null,
         awayScore: formData.awayScore || null,
+        regulationMinutes: timingValidation.minutes,
+        matchTiming: resolvedTiming,
+        liveClock: createDefaultLiveClock({
+          status: canonicalStatus,
+          matchTiming: resolvedTiming
+        }),
+        minute: canonicalStatus === 'completed' ? resolvedTiming.regulationMinutes : 0,
         seasonId: formData.seasonId || null,
         leagueId: formData.leagueId || null,
         groupId: formData.groupId || null,
@@ -202,7 +223,22 @@ const AdminFixtures = () => {
         venue: '',
         competition: '',
         round: '',
-        status: 'scheduled'
+        status: 'scheduled',
+        homeScore: '',
+        awayScore: '',
+        seasonId: '',
+        leagueId: '',
+        groupId: '',
+        stage: '',
+        decidedByPenalties: false,
+        penaltyHomeScore: '',
+        penaltyAwayScore: '',
+        penaltyWinnerId: '',
+        homeLineup: [],
+        awayLineup: [],
+        events: [],
+        highlightsUrl: '',
+        regulationMinutes: ''
       });
       setShowAddForm(false);
     } catch (error) {
@@ -237,16 +273,66 @@ const AdminFixtures = () => {
   };
 
   // Event Management
+  const normalizeRef = (value) => String(value ?? '').trim();
+
+  const resolveEventSide = ({ teamRef, playerId }) => {
+    const homeId = normalizeRef(formData.homeTeam);
+    const awayId = normalizeRef(formData.awayTeam);
+    const rawTeamRef = normalizeRef(teamRef);
+    const rawTeamRefLower = rawTeamRef.toLowerCase();
+
+    if (rawTeamRefLower === 'home') return 'home';
+    if (rawTeamRefLower === 'away') return 'away';
+    if (rawTeamRef && rawTeamRef === homeId) return 'home';
+    if (rawTeamRef && rawTeamRef === awayId) return 'away';
+
+    const homeTeam = teams.find((team) => normalizeRef(team?.id) === homeId);
+    const awayTeam = teams.find((team) => normalizeRef(team?.id) === awayId);
+    const homeName = String(homeTeam?.name || '').trim().toLowerCase();
+    const awayName = String(awayTeam?.name || '').trim().toLowerCase();
+
+    if (rawTeamRefLower && rawTeamRefLower === homeName) return 'home';
+    if (rawTeamRefLower && rawTeamRefLower === awayName) return 'away';
+
+    if (playerId) {
+      const normalizedPlayerId = normalizeRef(playerId);
+      const inHomeLineup = (formData.homeLineup || []).some((id) => normalizeRef(id) === normalizedPlayerId);
+      if (inHomeLineup) return 'home';
+      const inAwayLineup = (formData.awayLineup || []).some((id) => normalizeRef(id) === normalizedPlayerId);
+      if (inAwayLineup) return 'away';
+
+      const inHomeSquad = (homeTeam?.players || []).some((player) => normalizeRef(player?.id) === normalizedPlayerId);
+      if (inHomeSquad) return 'home';
+      const inAwaySquad = (awayTeam?.players || []).some((player) => normalizeRef(player?.id) === normalizedPlayerId);
+      if (inAwaySquad) return 'away';
+    }
+
+    return null;
+  };
+
   const handleAddEvent = () => {
     if (!eventForm.player || !eventForm.minute) {
       showToast(t('adminFixtures.eventValidation'), 'warning');
       return;
     }
 
+    const eventSide = resolveEventSide({ teamRef: eventForm.team, playerId: eventForm.player });
+    if (eventForm.type === 'goal' && !eventSide) {
+      showToast('Unable to resolve scoring team. Please re-select team and player.', 'warning');
+      return;
+    }
+    const resolvedTeamId = eventSide === 'home'
+      ? formData.homeTeam
+      : eventSide === 'away'
+        ? formData.awayTeam
+        : eventForm.team;
+
     const newEvent = {
       id: Date.now().toString(),
       type: eventForm.type,
-      team: eventForm.team,
+      team: resolvedTeamId,
+      teamId: resolvedTeamId,
+      teamSide: eventSide || undefined,
       playerId: eventForm.player,
       minute: parseInt(eventForm.minute),
       assistById: eventForm.assistBy || null,
@@ -260,7 +346,7 @@ const AdminFixtures = () => {
 
     // Auto-increment score if it's a goal
     if (eventForm.type === 'goal') {
-      const scoreKey = eventForm.team === 'home' ? 'homeScore' : 'awayScore';
+      const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
       setFormData(prev => ({
         ...prev,
         [scoreKey]: (parseInt(prev[scoreKey]) || 0) + 1
@@ -283,11 +369,17 @@ const AdminFixtures = () => {
 
     // Decrement score if removing a goal
     if (event && event.type === 'goal') {
-      const scoreKey = event.team === 'home' ? 'homeScore' : 'awayScore';
-      setFormData(prev => ({
-        ...prev,
-        [scoreKey]: Math.max(0, (parseInt(prev[scoreKey]) || 0) - 1)
-      }));
+      const eventSide = event.teamSide || resolveEventSide({
+        teamRef: event.teamId || event.team,
+        playerId: event.playerId
+      });
+      if (eventSide) {
+        const scoreKey = eventSide === 'home' ? 'homeScore' : 'awayScore';
+        setFormData(prev => ({
+          ...prev,
+          [scoreKey]: Math.max(0, (parseInt(prev[scoreKey]) || 0) - 1)
+        }));
+      }
     }
 
     setFormData(prev => ({
@@ -309,6 +401,7 @@ const AdminFixtures = () => {
       homeScore: '',
       awayScore: '',
       seasonId: '',
+      leagueId: '',
       groupId: '',
       stage: '',
       decidedByPenalties: false,
@@ -318,7 +411,8 @@ const AdminFixtures = () => {
       homeLineup: [],
       awayLineup: [],
       events: [],
-      highlightsUrl: ''
+      highlightsUrl: '',
+      regulationMinutes: ''
     });
     setSelectedSeasonGroups([]);
     setShowAddForm(false);
@@ -342,10 +436,11 @@ const AdminFixtures = () => {
       // When prefilling: prefer fixture.competition, then fixture.season name, then fixture.league name
       competition: fixture.competition || (fixture.seasonId ? (seasons.find(s => s.id === fixture.seasonId)?.name) : (fixture.leagueId ? (leagues.find(l => l.id === fixture.leagueId)?.name) : '')),
       round: fixture.round || '',
-      status: fixture.status || 'scheduled',
+      status: toCanonicalFixtureStatus(fixture.status || 'scheduled'),
       homeScore: fixture.homeScore !== null && fixture.homeScore !== undefined ? fixture.homeScore : '',
       awayScore: fixture.awayScore !== null && fixture.awayScore !== undefined ? fixture.awayScore : '',
       seasonId: fixture.seasonId || '',
+      leagueId: fixture.leagueId || '',
       groupId: fixture.groupId || '',
       stage: fixture.stage || '',
       decidedByPenalties: Boolean(fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined),
@@ -355,7 +450,8 @@ const AdminFixtures = () => {
       homeLineup: fixture.homeLineup || [],
       awayLineup: fixture.awayLineup || [],
       events: fixture.events || [],
-      highlightsUrl: fixture.highlightsUrl || ''
+      highlightsUrl: fixture.highlightsUrl || '',
+      regulationMinutes: fixture.matchTiming?.source === 'fixture' ? fixture.matchTiming.regulationMinutes : ''
     });
     // Load groups if season is selected
     if (fixture.seasonId) {
@@ -376,6 +472,19 @@ const AdminFixtures = () => {
     try {
       const dateTimeString = `${formData.date}T${formData.time}`;
       const dateTime = new Date(dateTimeString);
+      const existingFixture = fixtures.find(f => f.id === editingId);
+      const selectedLeague = leagues.find((league) => league.id === (formData.leagueId || existingFixture?.leagueId)) || null;
+      const selectedSeason = seasons.find((season) => season.id === (formData.seasonId || existingFixture?.seasonId)) || null;
+      const timingValidation = validateRegulationMinutes(formData.regulationMinutes, { allowNull: true });
+      if (!timingValidation.valid) {
+        throw new Error(timingValidation.error);
+      }
+      const resolvedTiming = resolveFixtureTiming({
+        league: selectedLeague,
+        season: selectedSeason,
+        fixtureRegulationMinutes: timingValidation.minutes
+      });
+      const canonicalStatus = toCanonicalFixtureStatus(formData.status || existingFixture?.status || 'scheduled');
 
       const updates = {
         homeTeamId: formData.homeTeam,
@@ -385,10 +494,18 @@ const AdminFixtures = () => {
         // competition resolution on update: explicit competition -> season name -> league name -> null
         competition: formData.competition || (formData.seasonId ? (seasons.find(s => s.id === formData.seasonId)?.name) : (formData.leagueId ? (leagues.find(l => l.id === formData.leagueId)?.name) : null)),
         round: formData.round || '',
-        status: formData.status || 'scheduled',
+        status: canonicalStatus,
         homeScore: formData.homeScore !== '' ? parseInt(formData.homeScore) : null,
         awayScore: formData.awayScore !== '' ? parseInt(formData.awayScore) : null,
+        regulationMinutes: timingValidation.minutes,
+        matchTiming: resolvedTiming,
+        minute: canonicalStatus === 'completed' ? resolvedTiming.regulationMinutes : (existingFixture?.minute ?? 0),
+        liveClock: existingFixture?.liveClock || createDefaultLiveClock({
+          status: canonicalStatus,
+          matchTiming: resolvedTiming
+        }),
         seasonId: formData.seasonId || null,
+        leagueId: formData.leagueId || null,
         groupId: formData.groupId || null,
         stage: formData.stage || null,
         decidedByPenalties: formData.decidedByPenalties || false,
@@ -469,12 +586,158 @@ const AdminFixtures = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (toCanonicalFixtureStatus(status)) {
       case 'live': return 'text-accent-500 bg-accent-500/20';
-      case 'finished': return 'text-gray-400 bg-gray-500/20';
+      case 'completed': return 'text-gray-400 bg-gray-500/20';
       case 'postponed': return 'text-yellow-500 bg-yellow-500/20';
       case 'cancelled': return 'text-red-500 bg-red-500/20';
       default: return 'text-primary-500 bg-primary-500/20';
+    }
+  };
+
+  const handleClockAction = async (fixture, action) => {
+    const nowMs = Date.now();
+    const nowIso = new Date(nowMs).toISOString();
+    const timing = fixture.matchTiming || resolveFixtureTiming({
+      league: leagues.find((league) => league.id === fixture.leagueId) || null,
+      season: seasons.find((season) => season.id === fixture.seasonId) || null,
+      fixtureRegulationMinutes: fixture.regulationMinutes
+    });
+    const currentClock = fixture.liveClock || createDefaultLiveClock(fixture, nowIso);
+    const currentMinute = Number(currentClock.currentMinute ?? fixture.minute ?? 0);
+    const canonicalStatus = toCanonicalFixtureStatus(fixture.status);
+    const kickoffMs = (() => {
+      const raw = fixture.dateTime || fixture.date;
+      if (!raw) return null;
+      if (raw && typeof raw.toDate === 'function') {
+        const parsed = raw.toDate().getTime();
+        return Number.isNaN(parsed) ? null : parsed;
+      }
+      const parsed = new Date(raw).getTime();
+      return Number.isNaN(parsed) ? null : parsed;
+    })();
+    const getPhaseStartedAtForMinute = (phase, minuteValue) => {
+      if (phase === 'first_half') {
+        const elapsed = Math.max(0, Math.min(timing.halfMinutes, Number(minuteValue) || 0));
+        return new Date(nowMs - (elapsed * 60000)).toISOString();
+      }
+      if (phase === 'second_half') {
+        const elapsed = Math.max(0, Math.min(
+          timing.halfMinutes,
+          (Number(minuteValue) || timing.halfMinutes) - timing.halfMinutes
+        ));
+        return new Date(nowMs - (elapsed * 60000)).toISOString();
+      }
+      return new Date(nowMs).toISOString();
+    };
+    let updates = null;
+
+    if (action === 'start_live' && canonicalStatus === 'scheduled') {
+      const shouldAlignToKickoff = kickoffMs != null && kickoffMs <= nowMs;
+      const startMs = shouldAlignToKickoff ? kickoffMs : nowMs;
+      const startMinute = shouldAlignToKickoff
+        ? Math.min(timing.halfMinutes, Math.max(0, Math.floor((nowMs - kickoffMs) / 60000)))
+        : 0;
+      updates = {
+        status: 'live',
+        minute: startMinute,
+        liveClock: {
+          ...currentClock,
+          phase: 'first_half',
+          phaseStartedAt: new Date(startMs).toISOString(),
+          currentMinute: startMinute,
+          adminPause: false
+        }
+      };
+    }
+
+    if (action === 'pause') {
+      updates = {
+        status: 'live',
+        minute: currentMinute,
+        liveClock: {
+          ...currentClock,
+          adminPause: true,
+          currentMinute
+        }
+      };
+    }
+
+    if (action === 'resume') {
+      const phase = currentClock.phase && currentClock.phase !== 'pre_match'
+        ? currentClock.phase
+        : 'first_half';
+      updates = {
+        status: 'live',
+        minute: currentMinute,
+        liveClock: {
+          ...currentClock,
+          phase,
+          adminPause: false,
+          phaseStartedAt: getPhaseStartedAtForMinute(phase, currentMinute),
+          currentMinute
+        }
+      };
+    }
+
+    if (action === 'hold_second_half') {
+      updates = {
+        status: 'live',
+        minute: timing.halfMinutes,
+        liveClock: {
+          ...currentClock,
+          phase: 'halftime',
+          holdSecondHalf: true,
+          currentMinute: timing.halfMinutes,
+          phaseStartedAt: nowIso,
+          adminPause: false
+        }
+      };
+    }
+
+    if (action === 'start_second_half') {
+      const nextMinute = Math.max(timing.halfMinutes, currentMinute);
+      updates = {
+        status: 'live',
+        minute: nextMinute,
+        liveClock: {
+          ...currentClock,
+          phase: 'second_half',
+          holdSecondHalf: false,
+          adminPause: false,
+          currentMinute: nextMinute,
+          phaseStartedAt: getPhaseStartedAtForMinute('second_half', nextMinute)
+        }
+      };
+    }
+
+    if (action === 'end_match') {
+      const finalMinute = Math.max(0, currentMinute);
+      updates = {
+        status: 'completed',
+        minute: finalMinute,
+        liveClock: {
+          ...currentClock,
+          phase: 'full_time',
+          holdSecondHalf: false,
+          adminPause: false,
+          currentMinute: finalMinute,
+          phaseStartedAt: nowIso,
+          lastTransitionKey: `manual_full_time:${Date.now()}`
+        }
+      };
+    }
+
+    if (!updates) return;
+
+    try {
+      setLoading(true);
+      await updateFixture(fixture.id, updates);
+      showToast('Match clock updated', 'success');
+    } catch (error) {
+      showToast(`Clock update failed: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -755,11 +1018,34 @@ const AdminFixtures = () => {
                     >
                       <option value="scheduled">{t('adminFixtures.scheduled')}</option>
                       <option value="live">{t('adminFixtures.live')}</option>
-                      <option value="playing">{t('adminFixtures.playing')}</option>
                       <option value="completed">{t('adminFixtures.completed')}</option>
                       <option value="postponed">{t('adminFixtures.postponed')}</option>
                       <option value="cancelled">{t('adminFixtures.cancelled')}</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Match Duration Override (mins)
+                    </label>
+                    <input
+                      type="number"
+                      name="regulationMinutes"
+                      value={formData.regulationMinutes}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="Leave empty to inherit"
+                      min="30"
+                      max="240"
+                      step="2"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      {formData.regulationMinutes === '' ? (
+                        'Uses season/league default'
+                      ) : (
+                        `Half: ${Number(formData.regulationMinutes || 0) / 2 || 0} mins • Break: ${Math.max(1, Math.round(Number(formData.regulationMinutes || 0) * MATCH_BREAK_RATIO))} mins`
+                      )}
+                    </p>
                   </div>
 
                   <div>
@@ -1406,6 +1692,12 @@ const AdminFixtures = () => {
                       // Safely get team data
                       const homeTeam = fixture.homeTeam || teams.find(t => t.id === fixture.homeTeamId) || { name: 'Unknown', logo: '' };
                       const awayTeam = fixture.awayTeam || teams.find(t => t.id === fixture.awayTeamId) || { name: 'Unknown', logo: '' };
+                      const canonicalStatus = toCanonicalFixtureStatus(fixture.status);
+                      const isLiveStatus = canonicalStatus === 'live';
+                      const isCompletedStatus = canonicalStatus === 'completed';
+                      const liveClock = fixture.liveClock || {};
+                      const isPaused = Boolean(liveClock.adminPause);
+                      const inHalftime = liveClock.phase === 'halftime';
 
                       return (
                         <div key={fixture.id} className="group relative w-full overflow-hidden rounded-xl border border-white/5 bg-[#0b1020] transition-all hover:border-white/10 hover:bg-[#111629]">
@@ -1456,7 +1748,7 @@ const AdminFixtures = () => {
 
                               {/* Score / VS */}
                               <div className="flex flex-col items-center justify-center rounded-lg bg-black/20 backdrop-blur-sm px-2 py-1 min-w-[50px]">
-                                {fixture.status === 'finished' || fixture.status === 'completed' || fixture.status === 'live' ? (
+                                {isCompletedStatus || isLiveStatus ? (
                                   <div className="flex items-center gap-1 text-lg font-bold text-white">
                                     <span>{fixture.homeScore ?? 0}</span>
                                     <span className="text-white/20">-</span>
@@ -1465,11 +1757,13 @@ const AdminFixtures = () => {
                                 ) : (
                                   <span className="text-sm font-bold text-white/20">VS</span>
                                 )}
-                                {(fixture.status === 'finished' || fixture.status === 'completed') && (
+                                {isCompletedStatus && (
                                   <span className="text-[8px] font-medium uppercase text-white/40">FT</span>
                                 )}
-                                {fixture.status === 'live' && (
-                                  <span className="text-[8px] font-bold uppercase text-red-500 animate-pulse">LIVE</span>
+                                {isLiveStatus && (
+                                  <span className="text-[8px] font-bold uppercase text-red-500 animate-pulse">
+                                    {isPaused ? 'PAUSED' : inHalftime ? 'HT' : 'LIVE'}
+                                  </span>
                                 )}
                               </div>
 
@@ -1497,9 +1791,60 @@ const AdminFixtures = () => {
                                   </>
                                 )}
                               </div>
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest ${getStatusColor(fixture.status)}`}>
-                                {fixture.status}
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest ${getStatusColor(canonicalStatus)}`}>
+                                {canonicalStatus}
                               </span>
+                            </div>
+
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {canonicalStatus === 'scheduled' && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'start_live')}
+                                  className="px-2 py-1 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold"
+                                >
+                                  Start
+                                </button>
+                              )}
+                              {isLiveStatus && !isPaused && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'pause')}
+                                  className="px-2 py-1 rounded bg-yellow-500/15 text-yellow-300 text-[10px] font-semibold"
+                                >
+                                  Pause
+                                </button>
+                              )}
+                              {isLiveStatus && isPaused && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'resume')}
+                                  className="px-2 py-1 rounded bg-blue-500/15 text-blue-300 text-[10px] font-semibold"
+                                >
+                                  Resume
+                                </button>
+                              )}
+                              {isLiveStatus && inHalftime && !liveClock.holdSecondHalf && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'hold_second_half')}
+                                  className="px-2 py-1 rounded bg-orange-500/15 text-orange-300 text-[10px] font-semibold"
+                                >
+                                  Hold 2nd
+                                </button>
+                              )}
+                              {isLiveStatus && (inHalftime || liveClock.holdSecondHalf) && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'start_second_half')}
+                                  className="px-2 py-1 rounded bg-indigo-500/15 text-indigo-300 text-[10px] font-semibold"
+                                >
+                                  Start 2nd
+                                </button>
+                              )}
+                              {(isLiveStatus || canonicalStatus === 'scheduled') && (
+                                <button
+                                  onClick={() => handleClockAction(fixture, 'end_match')}
+                                  className="px-2 py-1 rounded bg-red-500/15 text-red-300 text-[10px] font-semibold"
+                                >
+                                  End
+                                </button>
+                              )}
                             </div>
                           </div>
 
@@ -1511,7 +1856,7 @@ const AdminFixtures = () => {
                               <div className="flex items-center gap-3">
                                 <NewTeamAvatar team={homeTeam} size={24} className="flex-shrink-0" />
                                 <span className="text-xs font-bold text-white truncate flex-1">{homeTeam.name}</span>
-                                <span className={`text-sm font-bold ${fixture.status === 'live' ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
+                                <span className={`text-sm font-bold ${isLiveStatus ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
                                   {fixture.homeScore ?? '-'}
                                 </span>
                               </div>
@@ -1520,7 +1865,7 @@ const AdminFixtures = () => {
                               <div className="flex items-center gap-3">
                                 <NewTeamAvatar team={awayTeam} size={24} className="flex-shrink-0" />
                                 <span className="text-xs font-bold text-white truncate flex-1">{awayTeam.name}</span>
-                                <span className={`text-sm font-bold ${fixture.status === 'live' ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
+                                <span className={`text-sm font-bold ${isLiveStatus ? 'text-brand-purple' : 'text-white'} w-6 text-center bg-white/5 rounded py-0.5`}>
                                   {fixture.awayScore ?? '-'}
                                 </span>
                               </div>
@@ -1532,11 +1877,11 @@ const AdminFixtures = () => {
                                 <span className="text-xs font-bold text-white">{dateTime.time}</span>
                                 <span className="text-[9px] text-white/40 uppercase tracking-wider">{dateTime.date}</span>
                               </div>
-                              {fixture.status === 'live' ? (
+                              {isLiveStatus ? (
                                 <span className="mt-1 px-2 py-0.5 rounded-full bg-red-500/10 text-[9px] font-bold text-red-500 animate-pulse uppercase tracking-widest border border-red-500/20">
-                                  Live
+                                  {isPaused ? 'Paused' : inHalftime ? 'HT' : 'Live'}
                                 </span>
-                              ) : (fixture.status === 'finished' || fixture.status === 'completed') ? (
+                              ) : isCompletedStatus ? (
                                 <span className="mt-1 px-2 py-0.5 rounded-full bg-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest border border-white/10">
                                   FT
                                 </span>
@@ -1549,6 +1894,62 @@ const AdminFixtures = () => {
 
                             {/* Right: Actions */}
                             <div className="flex flex-col justify-center gap-2 h-full pl-2">
+                              <div className="flex flex-wrap justify-end gap-1">
+                                {canonicalStatus === 'scheduled' && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'start_live')}
+                                    className="p-1 rounded bg-emerald-500/15 text-emerald-300"
+                                    title="Start match"
+                                  >
+                                    <Play className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {isLiveStatus && !isPaused && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'pause')}
+                                    className="p-1 rounded bg-yellow-500/15 text-yellow-300"
+                                    title="Pause clock"
+                                  >
+                                    <Pause className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {isLiveStatus && isPaused && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'resume')}
+                                    className="p-1 rounded bg-blue-500/15 text-blue-300"
+                                    title="Resume clock"
+                                  >
+                                    <Play className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {isLiveStatus && inHalftime && !liveClock.holdSecondHalf && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'hold_second_half')}
+                                    className="p-1 rounded bg-orange-500/15 text-orange-300"
+                                    title="Hold second half"
+                                  >
+                                    <Clock className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {isLiveStatus && (inHalftime || liveClock.holdSecondHalf) && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'start_second_half')}
+                                    className="p-1 rounded bg-indigo-500/15 text-indigo-300"
+                                    title="Start second half"
+                                  >
+                                    <Play className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {(isLiveStatus || canonicalStatus === 'scheduled') && (
+                                  <button
+                                    onClick={() => handleClockAction(fixture, 'end_match')}
+                                    className="p-1 rounded bg-red-500/15 text-red-300"
+                                    title="End match"
+                                  >
+                                    <Flag className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
                               <button
                                 onClick={() => handleEdit(fixture)}
                                 className="p-1.5 rounded-lg bg-white/5 hover:bg-brand-purple hover:text-white text-white/40 transition-all duration-200 group"

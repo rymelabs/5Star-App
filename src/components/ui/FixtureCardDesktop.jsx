@@ -1,15 +1,17 @@
 import React from 'react';
 import { MapPin, Bell, Share2, ChevronRight } from 'lucide-react';
 import NewTeamAvatar from '../NewTeamAvatar';
-import { isFixtureLive } from '../../utils/helpers';
+import { getEffectiveFixtureStatus, getFixtureMinute, getFixtureLiveBadgeState, isFixtureLive } from '../../utils/helpers';
 import { formatDateTime, formatTime } from '../../utils/dateUtils';
 
 const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
   const home = fixture.homeTeam || fixture.homeTeamId || {};
   const away = fixture.awayTeam || fixture.awayTeamId || {};
-  const status = fixture.status || (isFixtureLive(fixture) ? 'live' : 'scheduled');
-  const isLive = status === 'live' || isFixtureLive(fixture);
-  const isCompleted = status === 'completed' || status === 'finished';
+  const status = getEffectiveFixtureStatus(fixture);
+  const liveBadge = getFixtureLiveBadgeState(fixture);
+  const isLive = liveBadge.live || isFixtureLive(fixture);
+  const isCompleted = status === 'completed';
+  const liveMinute = getFixtureMinute(fixture);
 
   const dateLabel = fixture.dateTime ? formatDateTime(fixture.dateTime) : '';
   const timeLabel = fixture.dateTime ? formatTime(fixture.dateTime) : '';
@@ -41,7 +43,9 @@ const FixtureCardDesktop = ({ fixture = {}, onClick = () => {} }) => {
           {isLive ? (
             <div className="flex flex-col items-center gap-1">
               <span className="text-red-500 font-bold text-sm animate-pulse">LIVE</span>
-              <span className="text-red-400 text-xs font-medium">{fixture.liveData?.minute ? `${fixture.liveData.minute}'` : 'ONGOING'}</span>
+              <span className="text-red-400 text-xs font-medium">
+                {liveBadge.text === 'HT' ? 'HT' : liveBadge.text === 'PAUSED' ? 'PAUSED' : `${liveMinute}'`}
+              </span>
             </div>
           ) : isCompleted ? (
             <div className="flex flex-col items-center gap-1">

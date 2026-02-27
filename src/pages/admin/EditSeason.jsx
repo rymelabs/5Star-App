@@ -14,6 +14,7 @@ import {
 import { seasonsCollection, teamsCollection } from '../../firebase/firestore';
 import { uploadImage, validateImageFile } from '../../services/imageUploadService';
 import { useAuth } from '../../context/AuthContext';
+import { MATCH_BREAK_RATIO, validateRegulationMinutes } from '../../utils/matchTiming';
 
 const EditSeason = () => {
   const navigate = useNavigate();
@@ -33,7 +34,8 @@ const EditSeason = () => {
     numberOfGroups: 4,
     teamsPerGroup: 4,
     matchesPerRound: 2,
-    qualifiersPerGroup: 2
+    qualifiersPerGroup: 2,
+    matchRegulationMinutes: ''
   });
 
   const [groups, setGroups] = useState([]);
@@ -73,6 +75,7 @@ const EditSeason = () => {
         teamsPerGroup: season.teamsPerGroup || 4,
         matchesPerRound: season.knockoutConfig?.matchesPerRound || 2,
         qualifiersPerGroup: season.knockoutConfig?.qualifiersPerGroup || 2,
+        matchRegulationMinutes: season.matchTimingOverride?.regulationMinutes ?? '',
         ownerId: season.ownerId || null,
         ownerName: season.ownerName || 'Unknown Admin',
         logo: season.logo || null
@@ -105,6 +108,8 @@ const EditSeason = () => {
     const { name, value } = e.target;
     const numValue = ['numberOfGroups', 'teamsPerGroup', 'year', 'matchesPerRound', 'qualifiersPerGroup'].includes(name)
       ? (value === '' ? '' : parseInt(value, 10))
+      : name === 'matchRegulationMinutes'
+        ? (value === '' ? '' : parseInt(value, 10))
       : value;
     
     setFormData(prev => ({
@@ -244,6 +249,12 @@ const EditSeason = () => {
       return;
     }
 
+    const timingValidation = validateRegulationMinutes(formData.matchRegulationMinutes, { allowNull: true });
+    if (!timingValidation.valid) {
+      showToast(timingValidation.error, 'error');
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -266,6 +277,9 @@ const EditSeason = () => {
           matchesPerRound: formData.matchesPerRound,
           qualifiersPerGroup: formData.qualifiersPerGroup,
           rounds: knockoutRounds
+        },
+        matchTimingOverride: {
+          regulationMinutes: timingValidation.minutes
         },
         logo: logoUrl,
         ownerId: seasonOwnerId,
@@ -462,6 +476,39 @@ const EditSeason = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="card p-4 sm:p-6">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-blue-400" />
+              Match Playtime Override
+            </h2>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Regulation Minutes (optional)
+              </label>
+              <input
+                type="number"
+                name="matchRegulationMinutes"
+                value={formData.matchRegulationMinutes}
+                onChange={handleChange}
+                min="30"
+                max="240"
+                step="2"
+                className="w-full px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                placeholder="Leave empty to inherit league default"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                {formData.matchRegulationMinutes === '' ? (
+                  'No season override. League defaults will apply.'
+                ) : (
+                  <>
+                    Half: {Number(formData.matchRegulationMinutes || 0) / 2 || 0} mins • Break: {Math.max(1, Math.round(Number(formData.matchRegulationMinutes || 0) * MATCH_BREAK_RATIO))} mins
+                  </>
+                )}
+              </p>
             </div>
           </div>
 

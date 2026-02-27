@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Users, MessageCircle, Heart, User, Shield, Target, Bell, BellOff, Info, ChevronRight, Clock, Star, Share2, Trophy, Play, Newspaper } from 'lucide-react';
 import { useFootball } from '../context/FootballContext';
@@ -7,10 +7,21 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { fixturesCollection, teamsCollection } from '../firebase/firestore';
-import { isFixtureLive, getEmbedUrl } from '../utils/helpers';
+import { getCanonicalFixtureStatus, getEmbedUrl, getFixtureLiveBadgeState, getFixtureMinute, isFixtureLive } from '../utils/helpers';
+import { resolveSystemCommentaryText } from '../utils/matchNarration';
 import { addFixtureToCalendar } from '../utils/calendar';
 import { trackFixtureView, trackPenaltiesView } from '../utils/analytics';
 import NewTeamAvatar from '../components/NewTeamAvatar';
+import GoalCelebrationOverlay from '../components/GoalCelebrationOverlay';
+
+const hashSeed = (value = '') => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
 
 const FixtureDetail = () => {
   const { id } = useParams();
@@ -40,7 +51,18 @@ const FixtureDetail = () => {
   const [momentumData, setMomentumData] = useState([]);
   const [currentMomentum, setCurrentMomentum] = useState(50);
   const [relatedNews, setRelatedNews] = useState([]);
+  const [goalCelebrationToken, setGoalCelebrationToken] = useState(0);
+  const goalWatcherReadyRef = useRef(false);
+  const knownGoalKeysRef = useRef(new Set());
   const { articles } = useNews();
+
+  const resolveEventTeamId = (event) => {
+    if (!event) return null;
+    if (event.teamId) return event.teamId;
+    if (event.team === 'home') return fixture?.homeTeamId;
+    if (event.team === 'away') return fixture?.awayTeamId;
+    return event.team || null;
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -124,13 +146,62 @@ const FixtureDetail = () => {
   }, [articles, fixture]);
 
   useEffect(() => {
-    if (fixture?.events) {
+    if (fixture) {
       calculateMomentum();
     }
-  }, [fixture?.events]);
+  }, [fixture?.id, fixture?.events, fixture?.homeScore, fixture?.awayScore, fixture?.status, fixture?.liveClock?.currentMinute]);
+
+  useEffect(() => {
+    goalWatcherReadyRef.current = false;
+    knownGoalKeysRef.current = new Set();
+  }, [fixture?.id]);
+
+  useEffect(() => {
+    if (!fixture) return;
+
+    const goals = [...(fixture.events || [])]
+      .filter((event) => event.type === 'goal' || event.type === 'penalty_scored')
+      .sort((a, b) => {
+        const minuteDiff = (a.minute || 0) - (b.minute || 0);
+        if (minuteDiff !== 0) return minuteDiff;
+        const aTime = new Date(a.createdAt || a.timestamp || 0).getTime();
+        const bTime = new Date(b.createdAt || b.timestamp || 0).getTime();
+        return aTime - bTime;
+      });
+
+    const goalKeys = goals.map((goal, index) => String(
+      goal.id ||
+      `${goal.type}-${goal.minute || 0}-${goal.playerId || ''}-${goal.timestamp || goal.createdAt || index}`
+    ));
+    const nextGoalSet = new Set(goalKeys);
+
+    if (!goalWatcherReadyRef.current) {
+      knownGoalKeysRef.current = nextGoalSet;
+      goalWatcherReadyRef.current = true;
+      return;
+    }
+
+    const previousGoalSet = knownGoalKeysRef.current;
+    const newlyAddedGoals = goalKeys.filter((goalKey) => !previousGoalSet.has(goalKey));
+    if (newlyAddedGoals.length > 0 && isFixtureLive(fixture)) {
+      setGoalCelebrationToken((prev) => prev + newlyAddedGoals.length);
+    }
+
+    knownGoalKeysRef.current = nextGoalSet;
+  }, [fixture?.id, fixture?.events, fixture?.status, fixture?.liveClock]);
 
   const calculateMomentum = () => {
-    if (!fixture?.events) return;
+    if (!fixture) return;
+    const regulationMinutesRaw = Number(fixture?.matchTiming?.regulationMinutes ?? fixture?.regulationMinutes ?? 30);
+    const regulationMinutes = Number.isInteger(regulationMinutesRaw) &&
+      regulationMinutesRaw >= 30 &&
+      regulationMinutesRaw <= 240 &&
+      regulationMinutesRaw % 2 === 0
+      ? regulationMinutesRaw
+      : 30;
+    const allEvents = Array.isArray(fixture.events) ? fixture.events : [];
+    const realEvents = allEvents.filter((event) => !event?.isSystem);
+    const eventWindowMinute = Number(getFixtureMinute(fixture) ?? fixture.minute ?? 0);
 
     // Weighting for match events
     const weights = {
@@ -145,38 +216,199 @@ const FixtureDetail = () => {
       dangerous_attack: 8
     };
 
-    let totalPointsHome = 50;
-    let totalPointsAway = 50;
-    const timeline = [];
+    const resolveMomentumSide = (event) => {
+      const eventTeamId = resolveEventTeamId(event);
+      const rawTeamValue = eventTeamId != null ? String(eventTeamId).toLowerCase() : '';
+      if (rawTeamValue === 'home') return 'home';
+      if (rawTeamValue === 'away') return 'away';
 
-    // Initialize timeline buckets (every 5 mins)
-    for (let i = 0; i <= 90; i += 5) {
-      timeline.push({ minute: i, home: 0, away: 0 });
-    }
+      const homeCandidates = [
+        fixture.homeTeamId,
+        fixture.homeTeam?.id,
+        fixture.homeTeam?.teamId,
+        fixture.homeTeam?.name
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
+      const awayCandidates = [
+        fixture.awayTeamId,
+        fixture.awayTeam?.id,
+        fixture.awayTeam?.teamId,
+        fixture.awayTeam?.name
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
 
-    fixture.events.forEach(event => {
+      if (homeCandidates.includes(rawTeamValue)) return 'home';
+      if (awayCandidates.includes(rawTeamValue)) return 'away';
+      return null;
+    };
+
+    const bucketLength = Math.floor(regulationMinutes / 5) + 1;
+    const bucketPoints = Array.from({ length: bucketLength }, (_, index) => ({
+      minute: Math.min(index * 5, regulationMinutes),
+      home: 0,
+      away: 0
+    }));
+    let overallHome = 0;
+    let overallAway = 0;
+    let recentHome = 0;
+    let recentAway = 0;
+    const recentWindowStart = Math.max(0, eventWindowMinute - 12);
+
+    realEvents.forEach((event) => {
       const weight = weights[event.type] || 0;
-      const bucket = Math.floor(event.minute / 5);
+      if (!weight) return;
 
-      if (timeline[bucket]) {
-        if (event.teamId === fixture.homeTeamId) {
-          timeline[bucket].home += weight;
-        } else {
-          timeline[bucket].away += weight;
-        }
+      const side = resolveMomentumSide(event);
+      if (!side) return;
+
+      const minute = Math.max(0, Math.min(regulationMinutes, Number(event.minute || 0)));
+      const bucket = Math.max(0, Math.min(bucketPoints.length - 1, Math.floor(minute / 5)));
+      const recencyBoost = 0.65 + (minute / regulationMinutes) * 0.7;
+      const weightedImpact = weight * recencyBoost;
+
+      if (side === 'home') {
+        bucketPoints[bucket].home += weightedImpact;
+        overallHome += weightedImpact;
+        if (minute >= recentWindowStart) recentHome += weightedImpact;
+      } else if (side === 'away') {
+        bucketPoints[bucket].away += weightedImpact;
+        overallAway += weightedImpact;
+        if (minute >= recentWindowStart) recentAway += weightedImpact;
       }
     });
 
-    const lastEvent = fixture.events[fixture.events.length - 1];
-    if (lastEvent) {
-      const homeRecent = fixture.events.filter(e => e.teamId === fixture.homeTeamId && e.minute > lastEvent.minute - 10).length;
-      const awayRecent = fixture.events.filter(e => e.teamId === fixture.awayTeamId && e.minute > lastEvent.minute - 10).length;
-      const totalRecent = homeRecent + awayRecent;
-      setCurrentMomentum(totalRecent ? (homeRecent / totalRecent) * 100 : 50);
+    const timeline = [];
+    let rollingHome = 0;
+    let rollingAway = 0;
+    bucketPoints.forEach((bucket) => {
+      rollingHome += bucket.home;
+      rollingAway += bucket.away;
+      timeline.push({
+        minute: bucket.minute,
+        home: rollingHome,
+        away: rollingAway
+      });
+    });
+
+    const scoreImpact = (Number(fixture.homeScore || 0) - Number(fixture.awayScore || 0)) * 15;
+    const recentDiff = recentHome - recentAway;
+    const overallDiff = overallHome - overallAway;
+    const signal = recentDiff + (overallDiff * 0.35) + scoreImpact;
+    const denominator = Math.max(25, Math.abs(recentDiff) + (Math.abs(overallDiff) * 0.35) + Math.abs(scoreImpact) + 15);
+    let momentum = 50 + ((signal / denominator) * 45);
+    if (!Number.isFinite(momentum)) {
+      momentum = 50;
     }
+    momentum = Math.max(5, Math.min(95, momentum));
+
+    if (realEvents.length === 0 && Number(fixture.homeScore || 0) === Number(fixture.awayScore || 0)) {
+      momentum = 50;
+    }
+
+    setCurrentMomentum(momentum);
 
     setMomentumData(timeline);
   };
+
+  const timelineEvents = React.useMemo(() => {
+    if (!fixture) return [];
+
+    const events = Array.isArray(fixture.events) ? [...fixture.events] : [];
+    const goalCommentaryIds = new Set(
+      events
+        .filter((event) => event?.isSystem && event.type === 'system_commentary' && event.transitionPhase === 'goal')
+        .map((event) => String(event.goalEventId || ''))
+    );
+
+    const resolveGoalSide = (event) => {
+      const teamRef = resolveEventTeamId(event);
+      const raw = teamRef != null ? String(teamRef).toLowerCase() : '';
+      if (raw === 'home') return 'home';
+      if (raw === 'away') return 'away';
+
+      const homeCandidates = [
+        fixture.homeTeamId,
+        fixture.homeTeam?.id,
+        fixture.homeTeam?.teamId,
+        fixture.homeTeam?.name
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
+      const awayCandidates = [
+        fixture.awayTeamId,
+        fixture.awayTeam?.id,
+        fixture.awayTeam?.teamId,
+        fixture.awayTeam?.name
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
+
+      if (homeCandidates.includes(raw)) return 'home';
+      if (awayCandidates.includes(raw)) return 'away';
+      return null;
+    };
+
+    const goals = events
+      .map((event, index) => ({ event, index }))
+      .filter(({ event }) => event && !event.isSystem && (event.type === 'goal' || event.type === 'penalty_scored'))
+      .sort((a, b) => {
+        const minuteDiff = Number(a.event?.minute || 0) - Number(b.event?.minute || 0);
+        if (minuteDiff !== 0) return minuteDiff;
+        const aTime = new Date(a.event?.createdAt || a.event?.timestamp || 0).getTime();
+        const bTime = new Date(b.event?.createdAt || b.event?.timestamp || 0).getTime();
+        return aTime - bTime;
+      });
+
+    const syntheticGoalFacts = [];
+    let runningHome = 0;
+    let runningAway = 0;
+
+    goals.forEach(({ event, index }) => {
+      const side = resolveGoalSide(event);
+      if (side === 'home') runningHome += 1;
+      if (side === 'away') runningAway += 1;
+
+      const fallbackGoalId = `${Number(event?.minute || 0)}-${event?.timestamp || event?.createdAt || index}-${side || 'unknown'}`;
+      const goalEventId = String(event?.id || fallbackGoalId);
+      if (goalCommentaryIds.has(goalEventId)) {
+        return;
+      }
+
+      const team = side === 'home'
+        ? fixture.homeTeam
+        : side === 'away'
+          ? fixture.awayTeam
+          : null;
+      const scorerName = event?.playerName ||
+        team?.players?.find((player) => String(player?.id) === String(event?.playerId))?.name ||
+        'The scorer';
+      const teamName = team?.name || event?.teamName || 'A team';
+      const minute = Number(event?.minute || 0);
+
+      syntheticGoalFacts.push({
+        id: `system-goal-fallback-${fixture.id || 'fixture'}-${goalEventId}`,
+        type: 'system_commentary',
+        isSystem: true,
+        templateKey: 'match.narration.goal.dynamic',
+        templateParams: {
+          teamName,
+          scorerName,
+          homeScore: runningHome,
+          awayScore: runningAway,
+          minute,
+          variantIndex: hashSeed(`${fixture.id || 'fixture'}:goal:${goalEventId}`) % 3600
+        },
+        transitionPhase: 'goal',
+        goalEventId,
+        goalSide: side,
+        minute,
+        createdAt: event?.createdAt || event?.timestamp || new Date().toISOString()
+      });
+      goalCommentaryIds.add(goalEventId);
+    });
+
+    return [...events, ...syntheticGoalFacts].sort((a, b) => {
+      const minuteDiff = (a.minute || 0) - (b.minute || 0);
+      if (minuteDiff !== 0) return minuteDiff;
+      const aTime = new Date(a.createdAt || a.timestamp || 0).getTime();
+      const bTime = new Date(b.createdAt || b.timestamp || 0).getTime();
+      return aTime - bTime;
+    });
+  }, [fixture]);
 
   const getPlayerMatchStats = (playerId) => {
     if (!fixture?.events) return null;
@@ -263,7 +495,7 @@ const FixtureDetail = () => {
 
   const [showShareModal, setShowShareModal] = useState(false);
   const handleShareMatch = async () => {
-    const shareText = `🔥 ${fixture.homeTeam.name} ${fixture.homeScore}-${fixture.awayScore} ${fixture.awayTeam.name} | Full Match Analysis on Fivescores`;
+    const shareText = `🔥 ${fixture.homeTeam.name} ${fixture.homeScore ?? 0}-${fixture.awayScore ?? 0} ${fixture.awayTeam.name} | Full Match Analysis on Fivescores`;
     const shareUrl = window.location.href;
 
     if (navigator.share) {
@@ -373,7 +605,10 @@ const FixtureDetail = () => {
 
   const fixtureComments = comments[`fixture_${id}`] || [];
   const isLiveMatch = isFixtureLive(fixture);
-  const isCompleted = fixture.status === 'completed';
+  const canonicalStatus = getCanonicalFixtureStatus(fixture);
+  const isCompleted = canonicalStatus === 'completed';
+  const liveBadgeState = getFixtureLiveBadgeState(fixture);
+  const displayMinute = getFixtureMinute(fixture);
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== undefined && fixture.penaltyHomeScore !== null && fixture.penaltyAwayScore !== undefined && fixture.penaltyAwayScore !== null;
 
   const TabButton = ({ id, label, icon: Icon }) => (
@@ -394,6 +629,7 @@ const FixtureDetail = () => {
 
   return (
     <div className="min-h-screen pb-20">
+      <GoalCelebrationOverlay trigger={goalCelebrationToken} />
       {/* Hero Section */}
       <div className="relative pt-8 pb-8 overflow-hidden rounded-t-3xl">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-purple/15 via-app/60 to-app pointer-events-none rounded-t-3xl" />
@@ -440,19 +676,27 @@ const FixtureDetail = () => {
 
           {/* Status Badge */}
           <div className="flex justify-center mb-8">
-            <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase backdrop-blur-md border ${isLiveMatch
+            <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase backdrop-blur-md border ${liveBadgeState.live
               ? 'bg-red-500/20 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
               : isCompleted
                 ? 'bg-white/5 border-white/10 text-gray-400'
                 : 'bg-brand-purple/20 border-brand-purple/30 text-brand-purple'
               }`}>
-              {isLiveMatch ? (
+              {liveBadgeState.live ? (
                 <span className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  {t('match.live')} • {fixture.minute}'
+                  {t('match.live')} • {liveBadgeState.text === 'HT'
+                    ? t('match.ht')
+                    : liveBadgeState.text === 'PAUSED'
+                      ? (t('match.paused') || 'PAUSED')
+                      : `${displayMinute}'`}
                 </span>
               ) : isCompleted ? (
                 t('match.ft')
+              ) : canonicalStatus === 'postponed' ? (
+                t('match.postponed')
+              ) : canonicalStatus === 'cancelled' ? (
+                t('match.cancelled')
               ) : (
                 new Date(fixture.dateTime).toLocaleDateString('en-US', {
                   weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -487,11 +731,11 @@ const FixtureDetail = () => {
                   <div className="absolute inset-0 bg-white/5 blur-3xl rounded-full -z-10" />
 
                   <span className="fixture-detail-score">
-                    {fixture.homeScore}
+                    {fixture.homeScore ?? 0}
                   </span>
                   <span className="fixture-detail-divider">:</span>
                   <span className="fixture-detail-score">
-                    {fixture.awayScore}
+                    {fixture.awayScore ?? 0}
                   </span>
                 </div>
               ) : (
@@ -776,17 +1020,36 @@ const FixtureDetail = () => {
             )}
 
             {/* Timeline */}
-            {fixture.events && fixture.events.length > 0 ? (
+            {timelineEvents.length > 0 ? (
               <div className="relative pl-8 space-y-8 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-brand-purple before:via-accent-green before:to-transparent">
-                {fixture.events
-                  .sort((a, b) => a.minute - b.minute)
-                  .map((event) => {
-                    const isHome = event.team === fixture.homeTeam?.id;
+                {timelineEvents
+                  .map((event, index) => {
+                    const eventKey = event.id || `event-${event.type || 'unknown'}-${event.minute || 0}-${index}`;
+                    if (event.isSystem && event.type === 'system_commentary') {
+                      const text = resolveSystemCommentaryText(event, t);
+                      return (
+                        <div key={eventKey} className="relative">
+                          <div className="absolute -left-[29px] w-7 h-7 rounded-full border-4 border-app flex items-center justify-center z-10 bg-blue-500">
+                            <Clock className="w-3 h-3 text-white" />
+                          </div>
+                          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-blue-300 font-bold text-lg">{event.minute}'</span>
+                              <span className="text-xs text-blue-200 uppercase tracking-wider">{t('match.fact') || 'Match Fact'}</span>
+                            </div>
+                            <p className="text-sm text-blue-100">{text}</p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const eventTeamId = resolveEventTeamId(event);
+                    const isHome = eventTeamId === fixture.homeTeam?.id || eventTeamId === fixture.homeTeamId;
                     const team = isHome ? fixture.homeTeam : fixture.awayTeam;
                     const player = team?.players?.find(p => p.id === event.playerId);
 
                     return (
-                      <div key={event.id} className="relative">
+                      <div key={eventKey} className="relative">
                         <div className={`absolute -left-[29px] w-7 h-7 rounded-full border-4 border-app flex items-center justify-center z-10 ${event.type === 'goal' ? 'bg-green-500' :
                           event.type === 'red_card' ? 'bg-red-500' :
                             event.type === 'yellow_card' ? 'bg-yellow-400' : 'bg-gray-600'

@@ -1,3 +1,5 @@
+import { LIVE_CLOCK_PHASES, getAutoFullTimeMinute, resolveMatchTimingFromFixture, toCanonicalFixtureStatus } from './matchTiming';
+
 // String utilities
 export const truncateText = (text, maxLength = 100) => {
   if (!text || typeof text !== 'string') return '';
@@ -52,26 +54,202 @@ export const abbreviateTeamName = (teamName) => {
   return initials;
 };
 
-// Check if a fixture is currently live
-export const isFixtureLive = (fixture) => {
-  if (!fixture) return false;
+export const getCanonicalFixtureStatus = (fixtureOrStatus) => {
+  if (typeof fixtureOrStatus === 'string') {
+    return toCanonicalFixtureStatus(fixtureOrStatus);
+  }
+  return toCanonicalFixtureStatus(fixtureOrStatus?.status);
+};
 
-  // If admin marked it as live or playing, it's live
-  if (fixture.status === 'live' || fixture.status === 'playing') {
-    return true;
+export const isFixtureCompleted = (fixture) => getCanonicalFixtureStatus(fixture) === 'completed';
+
+const toDateMs = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (value && typeof value.toDate === 'function') {
+    return value.toDate().getTime();
+  }
+  if (value && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (value && typeof value.seconds === 'number') {
+    return value.seconds * 1000;
+  }
+  return null;
+};
+
+const inferPhaseStartedAtMs = ({ phase, phaseStartedAt, kickoffMs, clockMinute, timing, nowMs }) => {
+  const explicitPhaseStartMs = toDateMs(phaseStartedAt);
+  if (explicitPhaseStartMs != null && explicitPhaseStartMs <= nowMs) {
+    return explicitPhaseStartMs;
   }
 
-  // Check if match time has started but less than 2 hours have passed
-  const matchTime = new Date(fixture.dateTime);
-  const now = new Date();
-  const timeDiff = now - matchTime; // milliseconds
+  if (phase === LIVE_CLOCK_PHASES.FIRST_HALF) {
+    if (kickoffMs != null && kickoffMs <= nowMs) {
+      return kickoffMs;
+    }
+    const elapsed = Math.max(0, Math.min(timing.halfMinutes, clockMinute));
+    return nowMs - (elapsed * 60000);
+  }
 
-  // Match is live if:
-  // - Current time is after match start time
-  // - Less than 2 hours (7200000 ms) have passed since match start
-  const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+  if (phase === LIVE_CLOCK_PHASES.SECOND_HALF) {
+    const secondHalfElapsed = Math.max(
+      0,
+      Math.min(timing.halfMinutes, clockMinute - timing.halfMinutes)
+    );
+    return nowMs - (secondHalfElapsed * 60000);
+  }
 
-  return timeDiff >= 0 && timeDiff <= twoHours;
+  if (phase === LIVE_CLOCK_PHASES.HALFTIME && kickoffMs != null) {
+    return Math.min(nowMs, kickoffMs + (timing.halfMinutes * 60000));
+  }
+
+  return nowMs;
+};
+
+export const getEffectiveFixtureStatus = (fixture) => {
+  const derived = getDerivedFixtureLiveState(fixture);
+  return derived.status;
+};
+
+export const getDerivedFixtureLiveState = (fixture) => {
+  if (!fixture) {
+    return { status: 'scheduled', isLive: false, minute: 0, phase: 'pre_match', paused: false };
+  }
+
+  const status = getCanonicalFixtureStatus(fixture);
+  const liveClock = fixture.liveClock || {};
+  const timing = resolveMatchTimingFromFixture(fixture);
+  const autoFullTimeMinute = getAutoFullTimeMinute(timing);
+  const nowMs = Date.now();
+  const kickoffMs = toDateMs(fixture.dateTime || fixture.date);
+  const paused = Boolean(liveClock.adminPause);
+
+  if (status === 'postponed' || status === 'cancelled') {
+    return { status, isLive: false, minute: 0, phase: 'pre_match', paused: false };
+  }
+
+  if (status === 'completed') {
+    const rawCompletedMinute = Number(liveClock.currentMinute ?? fixture.minute ?? 0);
+    const isManualFullTime = String(liveClock.lastTransitionKey || '').startsWith('manual_full_time');
+    const completedMinute = Number.isFinite(rawCompletedMinute) && rawCompletedMinute > 0
+      ? (isManualFullTime ? rawCompletedMinute : Math.max(rawCompletedMinute, autoFullTimeMinute))
+      : autoFullTimeMinute;
+    return {
+      status: 'completed',
+      isLive: false,
+      minute: completedMinute,
+      phase: LIVE_CLOCK_PHASES.FULL_TIME,
+      paused: false
+    };
+  }
+
+  const minuteFromClock = Number(liveClock.currentMinute);
+  const minuteFromFixture = Number(fixture.minute);
+  const fallbackMinute = Number.isFinite(minuteFromFixture) ? minuteFromFixture : 0;
+  const clockMinute = Number.isFinite(minuteFromClock) ? minuteFromClock : fallbackMinute;
+
+  const autoFromKickoff = () => {
+    if (!kickoffMs || nowMs < kickoffMs || liveClock.manualStartOnly) {
+      return { status: 'scheduled', isLive: false, minute: 0, phase: LIVE_CLOCK_PHASES.PRE_MATCH, paused: false };
+    }
+    const elapsed = Math.max(0, Math.floor((nowMs - kickoffMs) / 60000));
+    if (elapsed < timing.halfMinutes) {
+      return { status: 'live', isLive: true, minute: elapsed, phase: LIVE_CLOCK_PHASES.FIRST_HALF, paused: false };
+    }
+    if (liveClock.holdSecondHalf || elapsed < timing.halfMinutes + timing.breakMinutes) {
+      return { status: 'live', isLive: true, minute: timing.halfMinutes, phase: LIVE_CLOCK_PHASES.HALFTIME, paused: false };
+    }
+    if (elapsed < autoFullTimeMinute + timing.breakMinutes) {
+      const minute = Math.min(
+        autoFullTimeMinute,
+        timing.halfMinutes + (elapsed - timing.halfMinutes - timing.breakMinutes)
+      );
+      return { status: 'live', isLive: true, minute, phase: LIVE_CLOCK_PHASES.SECOND_HALF, paused: false };
+    }
+    return {
+      status: 'completed',
+      isLive: false,
+      minute: autoFullTimeMinute,
+      phase: LIVE_CLOCK_PHASES.FULL_TIME,
+      paused: false
+    };
+  };
+
+  if (status === 'scheduled') {
+    return autoFromKickoff();
+  }
+
+  if (status === 'live') {
+    const phase = liveClock.phase;
+    if (!phase || phase === LIVE_CLOCK_PHASES.PRE_MATCH) {
+      const inferred = autoFromKickoff();
+      return { ...inferred, status: 'live', isLive: true };
+    }
+
+    if (paused) {
+      return { status: 'live', isLive: true, minute: Math.max(0, clockMinute), phase, paused: true };
+    }
+
+    const phaseStartedAtMs = inferPhaseStartedAtMs({
+      phase,
+      phaseStartedAt: liveClock.phaseStartedAt,
+      kickoffMs,
+      clockMinute,
+      timing,
+      nowMs
+    });
+
+    const elapsed = Math.max(0, Math.floor((nowMs - phaseStartedAtMs) / 60000));
+    if (phase === LIVE_CLOCK_PHASES.FIRST_HALF) {
+      return {
+        status: 'live',
+        isLive: true,
+        minute: Math.min(timing.halfMinutes, elapsed),
+        phase,
+        paused: false
+      };
+    }
+    if (phase === LIVE_CLOCK_PHASES.HALFTIME) {
+      return { status: 'live', isLive: true, minute: timing.halfMinutes, phase, paused: false };
+    }
+    if (phase === LIVE_CLOCK_PHASES.SECOND_HALF) {
+      return {
+        status: 'live',
+        isLive: true,
+        minute: Math.min(autoFullTimeMinute, timing.halfMinutes + elapsed),
+        phase,
+        paused: false
+      };
+    }
+    return { status: 'live', isLive: true, minute: Math.max(0, clockMinute), phase, paused: false };
+  }
+
+  return { status, isLive: false, minute: Math.max(0, clockMinute), phase: LIVE_CLOCK_PHASES.PRE_MATCH, paused: false };
+};
+
+export const getFixtureLiveBadgeState = (fixture) => {
+  const derived = getDerivedFixtureLiveState(fixture);
+  if (derived.status === 'completed') return { live: false, text: 'FT' };
+  if (derived.status === 'postponed') return { live: false, text: 'Postponed' };
+  if (derived.status === 'cancelled') return { live: false, text: 'Cancelled' };
+  if (!derived.isLive) return { live: false, text: '' };
+  if (derived.paused) return { live: true, text: 'PAUSED' };
+  if (derived.phase === LIVE_CLOCK_PHASES.HALFTIME) return { live: true, text: 'HT' };
+  return { live: true, text: `${Math.max(0, derived.minute)}'` };
+};
+
+// Check if a fixture is currently live
+export const isFixtureLive = (fixture) => {
+  return getDerivedFixtureLiveState(fixture).isLive;
+};
+
+export const getFixtureMinute = (fixture) => {
+  return getDerivedFixtureLiveState(fixture).minute;
 };
 
 // Number utilities

@@ -5,7 +5,7 @@ import { Calendar, Filter, Trophy, ArrowUpDown, Radio, CheckCircle2, Clock, Chev
 import { useFootball } from '../context/FootballContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDate, isToday, getMatchDayLabel } from '../utils/dateUtils';
-import { abbreviateTeamName } from '../utils/helpers';
+import { abbreviateTeamName, getEffectiveFixtureStatus, isFixtureLive } from '../utils/helpers';
 import SeasonStandings from '../components/SeasonStandings';
 import SurfaceCard from '../components/ui/SurfaceCard';
 import PillChip from '../components/ui/PillChip';
@@ -60,6 +60,14 @@ const Fixtures = () => {
   const [recentSortOrder, setRecentSortOrder] = useState('desc');
 
   const getCompetitionInfo = (fixture) => {
+    if (fixture.competition) {
+      return {
+        id: `competition:${String(fixture.competition).toLowerCase()}`,
+        name: fixture.competition,
+        logo: null,
+        type: 'competition'
+      };
+    }
     if (fixture.leagueId) {
       const league = leagues.find(l => l.id === fixture.leagueId);
       if (league) return { id: league.id, name: league.name, logo: league.logo, type: 'league' };
@@ -128,11 +136,14 @@ const Fixtures = () => {
       filtered = filtered.filter(f => f.seasonId === selectedSeasonId);
     }
     if (statusFilter === 'upcoming') {
-      filtered = filtered.filter(f => new Date(f.dateTime) > new Date());
+      filtered = filtered.filter((f) => {
+        const status = getEffectiveFixtureStatus(f);
+        return new Date(f.dateTime) > new Date() && status === 'scheduled';
+      });
     } else if (statusFilter === 'completed') {
-      filtered = filtered.filter(f => f.status === 'completed');
+      filtered = filtered.filter((f) => getEffectiveFixtureStatus(f) === 'completed');
     } else if (statusFilter === 'live') {
-      filtered = filtered.filter(f => f.status === 'live');
+      filtered = filtered.filter((f) => isFixtureLive(f));
     } else if (statusFilter === 'today') {
       filtered = filtered.filter(f => isToday(f.dateTime));
     }
@@ -149,7 +160,7 @@ const Fixtures = () => {
 
   // Get live fixtures count for tab indicator
   const liveFixturesCount = useMemo(() => {
-    return fixtures.filter(f => f.status === 'live').length;
+    return fixtures.filter((f) => isFixtureLive(f)).length;
   }, [fixtures]);
 
   // Groupings
@@ -166,8 +177,9 @@ const Fixtures = () => {
     const today = [];
 
     filteredFixtures.forEach((fixture) => {
+      const status = getEffectiveFixtureStatus(fixture);
       // Collect live fixtures
-      if (fixture.status === 'live') {
+      if (isFixtureLive(fixture)) {
         live.push(fixture);
       }
 
@@ -179,7 +191,7 @@ const Fixtures = () => {
       const key = date.toISOString().split('T')[0];
       
       // Collect today's non-live upcoming fixtures
-      if (key === todayKey && fixture.status !== 'live' && fixture.status !== 'completed') {
+      if (key === todayKey && !isFixtureLive(fixture) && status !== 'completed') {
         today.push(fixture);
       }
 
@@ -212,7 +224,7 @@ const Fixtures = () => {
     }, {});
 
     const completedPastFixtures = pastFixtures
-      .filter((fixture) => fixture.status === 'completed')
+      .filter((fixture) => getEffectiveFixtureStatus(fixture) === 'completed')
       .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
     // Split: first 3 for prominent display, rest for carousel

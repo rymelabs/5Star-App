@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatTime } from '../utils/dateUtils';
-import { isFixtureLive } from '../utils/helpers';
+import { getEffectiveFixtureStatus, getFixtureMinute, getFixtureLiveBadgeState, isFixtureLive } from '../utils/helpers';
 import NewTeamAvatar from './NewTeamAvatar';
 
 // Compact fixture row used for season/competition/league fixtures
@@ -10,8 +10,11 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const timeLabel = formatTime(fixture.dateTime);
-  const isCompleted = fixture.status === 'completed';
-  const isLive = isFixtureLive(fixture);
+  const status = getEffectiveFixtureStatus(fixture);
+  const liveBadge = getFixtureLiveBadgeState(fixture);
+  const isCompleted = status === 'completed';
+  const isLive = liveBadge.live || isFixtureLive(fixture);
+  const minute = getFixtureMinute(fixture);
   const showPenalties = isCompleted && fixture.penaltyHomeScore !== null && fixture.penaltyHomeScore !== undefined && fixture.penaltyAwayScore !== null && fixture.penaltyAwayScore !== undefined;
 
   return (
@@ -22,7 +25,9 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
       {/* Time/Status Column */}
       <div className="w-14 flex-shrink-0 flex flex-col items-center justify-center px-2">
         {isLive ? (
-          <span className="text-[11px] font-bold text-red-500 animate-pulse">LIVE</span>
+          <span className="text-[11px] font-bold text-red-500 animate-pulse">
+            {liveBadge.text === 'HT' ? 'HT' : liveBadge.text === 'PAUSED' ? 'PAUSE' : `${minute}'`}
+          </span>
         ) : isCompleted ? (
           <span className="text-[11px] font-semibold text-gray-400">FT</span>
         ) : (
@@ -57,13 +62,13 @@ const CompactFixtureRow = ({ fixture, onClick }) => {
               <span className={`text-[15px] font-bold w-5 text-center ${
                 Number(fixture.homeScore) > Number(fixture.awayScore) ? 'text-white' : 'text-gray-400'
               }`}>
-                {fixture.homeScore}
+                {fixture.homeScore ?? 0}
               </span>
               <span className="text-[11px] text-gray-600">-</span>
               <span className={`text-[15px] font-bold w-5 text-center ${
                 Number(fixture.awayScore) > Number(fixture.homeScore) ? 'text-white' : 'text-gray-400'
               }`}>
-                {fixture.awayScore}
+                {fixture.awayScore ?? 0}
               </span>
             </div>
           ) : (
