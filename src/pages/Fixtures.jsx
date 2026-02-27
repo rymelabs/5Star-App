@@ -15,6 +15,7 @@ import NewTeamAvatar from '../components/NewTeamAvatar';
 
 const LAST_RESULTS_HIGHLIGHT = 3;
 const RECENT_RESULTS_LIMIT = 6;
+const UPCOMING_VISIBLE_STEP = 4;
 
 const CompetitionGroup = ({ group, onFixtureClick, onCompetitionClick }) => (
   <div className="bg-[#0a0a0a]/50 backdrop-blur-sm rounded-xl border border-white/[0.04] overflow-hidden mb-3 last:mb-0">
@@ -58,6 +59,7 @@ const Fixtures = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'group'
   const [recentSortOrder, setRecentSortOrder] = useState('desc');
+  const [upcomingVisibleByGroup, setUpcomingVisibleByGroup] = useState({});
 
   const getCompetitionInfo = (fixture) => {
     if (fixture.competition) {
@@ -114,6 +116,10 @@ const Fixtures = () => {
       }
     }
   }, [seasons, selectedSeasonId]);
+
+  useEffect(() => {
+    setUpcomingVisibleByGroup({});
+  }, [selectedSeasonId, statusFilter, viewMode]);
 
   const displayTableSeason = useMemo(
     () => seasons?.find((season) => season.id === selectedTableSeasonId) || null,
@@ -333,6 +339,22 @@ const Fixtures = () => {
       onClick={handleFixtureClick}
     />
   );
+
+  const getUpcomingGroupKey = (dateKey, competitionId) => `${dateKey}::${competitionId}`;
+
+  const handleLoadMoreUpcoming = (groupKey) => {
+    setUpcomingVisibleByGroup((prev) => ({
+      ...prev,
+      [groupKey]: (prev[groupKey] || UPCOMING_VISIBLE_STEP) + UPCOMING_VISIBLE_STEP,
+    }));
+  };
+
+  const handleShowLessUpcoming = (groupKey) => {
+    setUpcomingVisibleByGroup((prev) => ({
+      ...prev,
+      [groupKey]: UPCOMING_VISIBLE_STEP,
+    }));
+  };
 
   return (
     <motion.div 
@@ -571,9 +593,52 @@ const Fixtures = () => {
                       </div>
 
                       <div className="space-y-3 px-0 sm:px-2">
-                        {groupFixturesByCompetition(group.fixtures).map((compGroup) => (
-                          <CompetitionGroup key={compGroup.info.id} group={compGroup} onFixtureClick={handleFixtureClick} onCompetitionClick={handleCompetitionClick} />
-                        ))}
+                        {groupFixturesByCompetition(group.fixtures).map((compGroup) => {
+                          const compKey = getUpcomingGroupKey(group.key, compGroup.info.id);
+                          const visibleCount = upcomingVisibleByGroup[compKey] || UPCOMING_VISIBLE_STEP;
+                          const sortedFixtures = [...compGroup.fixtures]
+                            .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                          const visibleFixtures = sortedFixtures.slice(0, visibleCount);
+                          const hasMore = sortedFixtures.length > visibleCount;
+                          const canShowLess = visibleCount > UPCOMING_VISIBLE_STEP && sortedFixtures.length > UPCOMING_VISIBLE_STEP;
+
+                          return (
+                            <div key={compKey} className="space-y-2">
+                              <CompetitionGroup
+                                group={{
+                                  ...compGroup,
+                                  fixtures: visibleFixtures
+                                }}
+                                onFixtureClick={handleFixtureClick}
+                                onCompetitionClick={handleCompetitionClick}
+                              />
+                              {(hasMore || canShowLess) && (
+                                <div className="px-4 pb-1">
+                                  <div className="flex gap-2">
+                                    {hasMore && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleLoadMoreUpcoming(compKey)}
+                                        className="flex-1 py-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-semibold text-white/80 transition-colors"
+                                      >
+                                        {t('common.loadMore')}
+                                      </button>
+                                    )}
+                                    {canShowLess && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleShowLessUpcoming(compKey)}
+                                        className="flex-1 py-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-semibold text-white/80 transition-colors"
+                                      >
+                                        {t('common.showLess')}
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
