@@ -19,6 +19,8 @@ export const useFootball = () => {
   return context;
 };
 
+export const useOptionalFootball = () => useContext(FootballContext);
+
 export const FootballProvider = ({ children }) => {
   const { user } = useAuth();
   const [teams, setTeams] = useCachedState('football:teams', []);

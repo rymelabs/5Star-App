@@ -8,6 +8,7 @@ import ConsentBanner from './components/ConsentBanner';
 import usePageTracking from './hooks/usePageTracking';
 import { initAnalytics, getConsentStatus } from './utils/analytics';
 import Latest from './pages/Latest';
+import Stories from './pages/Stories';
 import Fixtures from './pages/Fixtures';
 import FixtureDetail from './pages/FixtureDetail';
 import Teams from './pages/Teams';
@@ -143,6 +144,8 @@ const AppContent = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Latest />} />
+          <Route path="/pitchsnaps" element={<Stories />} />
+          <Route path="/stories" element={<Navigate to="/pitchsnaps" replace />} />
           <Route path="/fixtures" element={<Fixtures />} />
           <Route path="/fixtures/:id" element={<FixtureDetail />} />
           <Route path="/teams" element={<Teams />} />

@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLocation } from 'react-router-dom';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import Header from './ui/Header';
 import BottomNav from './ui/BottomNav';
@@ -11,15 +9,15 @@ import MobileLayout from './layout/MobileLayout';
 import DesktopHeader from './desktop/DesktopHeader';
 
 const Layout = ({ children }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const { t } = useLanguage();
   const scrollContainerRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const authHiddenRoutes = ['/auth', '/email-auth', '/phone-auth', '/login', '/register'];
   const hideChrome = authHiddenRoutes.some((path) => location.pathname.startsWith(path));
+  const mobileHeaderHiddenRoutes = ['/pitchsnaps', '/stories'];
+  const hideMobileHeader = !isDesktop && mobileHeaderHiddenRoutes.some((path) => location.pathname.startsWith(path));
+  const shouldShowHeader = !hideChrome && !hideMobileHeader;
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.sessionStorage === 'undefined') {
@@ -61,7 +59,7 @@ const Layout = ({ children }) => {
   return (
     <AppShell
       ref={scrollContainerRef}
-      header={!hideChrome ? (isDesktop ? <DesktopHeader /> : <Header />) : null}
+      header={shouldShowHeader ? (isDesktop ? <DesktopHeader /> : <Header />) : null}
       bottomNav={!isDesktop && !hideChrome ? <BottomNav /> : null}
     >
       {isDesktop ? (

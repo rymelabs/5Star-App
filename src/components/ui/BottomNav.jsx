@@ -15,6 +15,7 @@ const BottomNav = () => {
   const [isSwiping, setIsSwiping] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const controls = useAnimation();
+  const compactMode = navItems.length > 5;
 
   const triggerShimmy = async (count = 1) => {
     if (!isFestiveSeason()) return;
@@ -150,7 +151,7 @@ const BottomNav = () => {
               to={item.path}
               onClick={handleNavClick}
               className={({ isActive }) => `
-                relative flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all duration-300
+                relative flex flex-col items-center justify-center ${compactMode ? 'w-11 h-14' : 'w-14 h-14'} rounded-xl transition-all duration-300
                 ${isActive ? 'text-brand-purple' : 'text-gray-400 hover:text-white hover:bg-white/5'}
                 active:scale-90
               `}
@@ -165,7 +166,7 @@ const BottomNav = () => {
                   
                   <div className={`relative ${isActive ? 'animate-icon-pop' : ''}`}>
                     <item.icon 
-                      className={`w-6 h-6 transition-colors duration-300`} 
+                      className={`${compactMode ? 'w-5 h-5' : 'w-6 h-6'} transition-colors duration-300`} 
                       strokeWidth={isActive ? 2.5 : 2}
                     />
                   </div>

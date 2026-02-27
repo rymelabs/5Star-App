@@ -616,6 +616,116 @@ export const usersCollection = {
   }
 };
 
+const normalizeStoryDate = (value) => {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') {
+    try {
+      return value.toDate();
+    } catch {
+      return null;
+    }
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const mapStoryDoc = (docSnap) => {
+  const data = docSnap.data() || {};
+  return {
+    id: docSnap.id,
+    ...data,
+    createdAt: normalizeStoryDate(data.createdAt),
+    updatedAt: normalizeStoryDate(data.updatedAt),
+    expiresAt: normalizeStoryDate(data.expiresAt)
+  };
+};
+
+// Stories collection functions
+export const storiesCollection = {
+  getActive: async (limitCount = 200) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'stories'),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      const snapshot = await getDocs(q);
+      const now = Date.now();
+
+      return snapshot.docs
+        .map(mapStoryDoc)
+        .filter((story) => story.expiresAt && story.expiresAt.getTime() > now);
+    } catch (error) {
+      console.error('Error fetching active stories:', error);
+      throw error;
+    }
+  },
+
+  onActiveSnapshot: (callback, limitCount = 200) => {
+    const database = checkFirebaseInit();
+    const q = query(
+      collection(database, 'stories'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const now = Date.now();
+      const stories = snapshot.docs
+        .map(mapStoryDoc)
+        .filter((story) => story.expiresAt && story.expiresAt.getTime() > now);
+      callback(stories);
+    });
+  },
+
+  add: async (storyData) => {
+    try {
+      const database = checkFirebaseInit();
+      const durationHours = Number(storyData.durationHours) === 48 ? 48 : 24;
+      const createdAtDate = new Date();
+      const expiresAt = new Date(createdAtDate.getTime() + durationHours * 60 * 60 * 1000);
+
+      const payload = {
+        ownerId: storyData.ownerId || null,
+        ownerName: storyData.ownerName || null,
+        contentType: storyData.contentType || 'text',
+        text: storyData.text || '',
+        mediaUrl: storyData.mediaUrl || '',
+        videoLink: storyData.videoLink || '',
+        durationHours,
+        entityType: storyData.entityType || 'general',
+        entityId: storyData.entityId || null,
+        entityName: storyData.entityName || '',
+        style: {
+          backgroundColor: storyData?.style?.backgroundColor || '#111827',
+          textColor: storyData?.style?.textColor || '#ffffff',
+          fontFamily: storyData?.style?.fontFamily || 'inherit'
+        },
+        expiresAt,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(database, 'stories'), payload);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding story:', error);
+      throw error;
+    }
+  },
+
+  delete: async (storyId) => {
+    try {
+      const database = checkFirebaseInit();
+      await deleteDoc(doc(database, 'stories', String(storyId)));
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      throw error;
+    }
+  }
+};
+
 // Fixtures collection functions
 export const fixturesCollection = {
   // Get all fixtures

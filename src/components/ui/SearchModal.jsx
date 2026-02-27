@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Search, Trophy, Users, Newspaper, Calendar, Shield, ArrowRight } from 'lucide-react';
-import { useNews } from '../../context/NewsContext';
-import { useFootball } from '../../context/FootballContext';
-import { useCompetitions } from '../../context/CompetitionsContext';
+import { useOptionalNews } from '../../context/NewsContext';
+import { useOptionalFootball } from '../../context/FootballContext';
+import { useOptionalCompetitions } from '../../context/CompetitionsContext';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../../context/LanguageContext';
+import { useOptionalLanguage } from '../../context/LanguageContext';
 
 // Inner component that uses the contexts
 const SearchModalContent = ({ isOpen, onClose }) => {
@@ -13,11 +13,16 @@ const SearchModalContent = ({ isOpen, onClose }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  const { articles = [] } = useNews() || {};
-  const { fixtures = [], teams = [], seasons = [] } = useFootball() || {};
-  const { competitions = [] } = useCompetitions() || {};
+  const newsContext = useOptionalNews() || {};
+  const footballContext = useOptionalFootball() || {};
+  const competitionsContext = useOptionalCompetitions() || {};
+  const languageContext = useOptionalLanguage() || {};
+
+  const { articles = [] } = newsContext;
+  const { fixtures = [], teams = [], seasons = [] } = footballContext;
+  const { competitions = [] } = competitionsContext;
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const t = languageContext.t || ((key) => key);
 
   // Memoized search function
   const performSearch = useCallback((searchQuery) => {
@@ -194,7 +199,7 @@ const SearchModalContent = ({ isOpen, onClose }) => {
     } catch (error) {
       setResults([]);
     }
-  }, [teams, fixtures, articles, competitions, seasons]);
+  }, [teams, fixtures, articles, competitions, seasons, t]);
 
   // Debounced search effect
   useEffect(() => {

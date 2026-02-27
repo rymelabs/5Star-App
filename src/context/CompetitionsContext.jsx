@@ -13,6 +13,8 @@ export const useCompetitions = () => {
   return context;
 };
 
+export const useOptionalCompetitions = () => useContext(CompetitionsContext);
+
 export const CompetitionsProvider = ({ children }) => {
   const { user } = useAuth();
   const [competitions, setCompetitions] = useCachedState('competitions:list', []);

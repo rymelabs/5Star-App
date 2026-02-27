@@ -10,6 +10,8 @@ export const useLanguage = () => {
   return context;
 };
 
+export const useOptionalLanguage = () => useContext(LanguageContext);
+
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     // Get saved language from localStorage or default to English

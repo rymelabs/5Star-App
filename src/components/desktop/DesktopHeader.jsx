@@ -13,6 +13,7 @@ const DesktopHeader = () => {
   
   const navItems = [
     { path: '/', label: 'Latest' },
+    { path: '/pitchsnaps', label: 'PitchSnaps' },
     { path: '/fixtures', label: 'Fixtures' },
     { path: '/teams', label: 'Teams' },
     { path: '/news', label: 'News' },
