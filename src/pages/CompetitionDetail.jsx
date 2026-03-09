@@ -34,36 +34,94 @@ const CompetitionDetail = () => {
     leagues = [], 
     fixtures = [], 
     teams = [],
-    getSeasonFixtures 
+    loading: footballLoading = false
   } = useFootball();
   
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [competitionFixtures, setCompetitionFixtures] = useState([]);
+  const normalizedType = useMemo(() => {
+    const value = String(type || '').toLowerCase();
+    if (value === 'season' || value === 'seasons') return 'season';
+    if (value === 'league' || value === 'leagues') return 'league';
+    if (value === 'competition' || value === 'competitions') return 'competition';
+    return value;
+  }, [type]);
+  const resolvedId = useMemo(() => {
+    if (!id) return '';
+    try {
+      return decodeURIComponent(id);
+    } catch (_error) {
+      return id;
+    }
+  }, [id]);
+  const normalizedCompetitionKey = useMemo(() => (
+    String(resolvedId || '')
+      .replace(/^competition:/i, '')
+      .trim()
+      .toLowerCase()
+  ), [resolvedId]);
 
   // Find the competition based on type and id
   const competition = useMemo(() => {
-    if (type === 'season') {
-      return seasons.find(s => s.id === id);
-    } else if (type === 'league') {
-      return leagues.find(l => l.id === id);
+    if (!resolvedId) return null;
+
+    if (normalizedType === 'season') {
+      return seasons.find(s => s.id === resolvedId) || null;
     }
+
+    if (normalizedType === 'league') {
+      return leagues.find(l => l.id === resolvedId) || null;
+    }
+
+    if (normalizedType === 'competition') {
+      const linkedFixtures = fixtures.filter((fixture) =>
+        String(fixture?.competition || '').trim().toLowerCase() === normalizedCompetitionKey
+      );
+      if (linkedFixtures.length === 0) return null;
+
+      const firstNamedFixture = linkedFixtures.find((fixture) => String(fixture?.competition || '').trim().length > 0);
+      const titleFromRoute = normalizedCompetitionKey
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      const competitionName = firstNamedFixture?.competition || titleFromRoute || 'Competition';
+
+      return {
+        id: resolvedId,
+        name: competitionName,
+        logo: null,
+        isActive: false,
+        groups: [],
+        knockoutRounds: []
+      };
+    }
+
     return null;
-  }, [type, id, seasons, leagues]);
+  }, [normalizedType, resolvedId, seasons, leagues, fixtures, normalizedCompetitionKey]);
+  const knockoutRounds = useMemo(
+    () => competition?.knockoutConfig?.rounds || competition?.knockoutRounds || [],
+    [competition]
+  );
 
   // Load fixtures for this competition
   useEffect(() => {
-    const loadFixtures = async () => {
+    const loadFixtures = () => {
       setLoading(true);
       try {
         let fixturesList = [];
         
-        if (type === 'season' && id) {
+        if (normalizedType === 'season' && resolvedId) {
           // Get fixtures for season
-          fixturesList = fixtures.filter(f => f.seasonId === id);
-        } else if (type === 'league' && id) {
+          fixturesList = fixtures.filter(f => f.seasonId === resolvedId);
+        } else if (normalizedType === 'league' && resolvedId) {
           // Get fixtures for league
-          fixturesList = fixtures.filter(f => f.leagueId === id);
+          fixturesList = fixtures.filter(f => f.leagueId === resolvedId);
+        } else if (normalizedType === 'competition' && normalizedCompetitionKey) {
+          fixturesList = fixtures.filter(
+            (fixture) => String(fixture?.competition || '').trim().toLowerCase() === normalizedCompetitionKey
+          );
         }
         
         // Populate with team data
@@ -87,7 +145,7 @@ const CompetitionDetail = () => {
     };
     
     loadFixtures();
-  }, [type, id, fixtures, teams]);
+  }, [normalizedType, resolvedId, normalizedCompetitionKey, fixtures, teams]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -152,17 +210,17 @@ const CompetitionDetail = () => {
 
   // Calculate group standings for seasons
   const groupStandings = useMemo(() => {
-    if (type !== 'season' || !competition?.groups) return null;
+    if (normalizedType !== 'season' || !competition?.groups) return null;
     
     const standings = {};
     const completedFixtures = competitionFixtures.filter(f => f.status === 'completed');
     
     competition.groups.forEach(group => {
-      standings[group.id] = calculateGroupStandings(group, completedFixtures, teams, id);
+      standings[group.id] = calculateGroupStandings(group, completedFixtures, teams, resolvedId);
     });
     
     return standings;
-  }, [type, competition, competitionFixtures, teams, id]);
+  }, [normalizedType, competition, competitionFixtures, teams, resolvedId]);
 
   // Separate fixtures by status
   const { upcomingFixtures, recentResults } = useMemo(() => {
@@ -216,7 +274,7 @@ const CompetitionDetail = () => {
     }
   };
 
-  if (!competition && !loading) {
+  if (!competition && !loading && !footballLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -238,8 +296,8 @@ const CompetitionDetail = () => {
     { id: 'overview', label: 'Overview' },
     { id: 'fixtures', label: 'Fixtures' },
     { id: 'teams', label: 'Teams' },
-    ...(type === 'season' && competition?.groups?.length > 0 ? [{ id: 'standings', label: 'Standings' }] : []),
-    ...(type === 'season' && competition?.knockoutRounds?.length > 0 ? [{ id: 'knockout', label: 'Knockout' }] : []),
+    ...(normalizedType === 'season' && competition?.groups?.length > 0 ? [{ id: 'standings', label: 'Standings' }] : []),
+    ...(normalizedType === 'season' && knockoutRounds.length > 0 ? [{ id: 'knockout', label: 'Knockout' }] : []),
     { id: 'stats', label: 'Stats' }
   ];
 
@@ -317,7 +375,7 @@ const CompetitionDetail = () => {
               transition={{ delay: 0.2 }}
               className="flex items-center gap-3 text-sm text-gray-400"
             >
-              <span className="capitalize">{type}</span>
+              <span className="capitalize">{normalizedType || 'competition'}</span>
               <span className="w-1 h-1 rounded-full bg-gray-600" />
               <span>{stats.teamsCount} Teams</span>
               <span className="w-1 h-1 rounded-full bg-gray-600" />
@@ -462,7 +520,7 @@ const CompetitionDetail = () => {
                       )}
 
                       {/* Format Info */}
-                      {type === 'season' && (
+                      {normalizedType === 'season' && (
                         <div className="bg-elevated-soft border border-white/5 rounded-xl p-5">
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Format</h3>
                           <div className="space-y-3">
@@ -472,10 +530,10 @@ const CompetitionDetail = () => {
                                 <span className="text-white font-medium">{competition.groups.length} Groups</span>
                               </div>
                             )}
-                            {competition?.knockoutRounds?.length > 0 && (
+                            {knockoutRounds.length > 0 && (
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-400">Knockout</span>
-                                <span className="text-white font-medium">{competition.knockoutRounds.length} Rounds</span>
+                                <span className="text-white font-medium">{knockoutRounds.length} Rounds</span>
                               </div>
                             )}
                             <div className="flex items-center justify-between text-sm pt-3 border-t border-white/5">
@@ -621,7 +679,7 @@ const CompetitionDetail = () => {
               )}
 
               {/* Standings Tab */}
-              {activeTab === 'standings' && type === 'season' && (
+              {activeTab === 'standings' && normalizedType === 'season' && (
                 <div className="space-y-8">
                   {competition?.groups?.map(group => (
                     <div key={group.id} className="bg-elevated-soft border border-white/5 rounded-xl overflow-hidden">
@@ -701,9 +759,9 @@ const CompetitionDetail = () => {
               )}
 
               {/* Knockout Tab */}
-              {activeTab === 'knockout' && type === 'season' && (
+              {activeTab === 'knockout' && normalizedType === 'season' && (
                 <div className="space-y-6">
-                  {competition?.knockoutRounds?.map((round, roundIndex) => (
+                  {knockoutRounds.map((round, roundIndex) => (
                     <div key={roundIndex} className="bg-elevated-soft border border-white/5 rounded-xl overflow-hidden">
                       <div className="px-5 py-4 bg-white/[0.02] border-b border-white/5">
                         <h3 className="text-base font-bold text-white">{round.name}</h3>
@@ -745,7 +803,7 @@ const CompetitionDetail = () => {
                     </div>
                   ))}
 
-                  {(!competition?.knockoutRounds || competition.knockoutRounds.length === 0) && (
+                  {knockoutRounds.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                         <Trophy className="w-8 h-8 text-gray-600" />

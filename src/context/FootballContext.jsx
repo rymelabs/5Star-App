@@ -357,6 +357,9 @@ export const FootballProvider = ({ children }) => {
         fixtureRegulationMinutes
       });
       const canonicalStatus = toCanonicalFixtureStatus(fixtureData.status || 'scheduled');
+      if (canonicalStatus === 'live' && seasonForFixture && seasonForFixture.isActive === false) {
+        throw new Error('Cannot start a live fixture while its season is paused. Activate the season first.');
+      }
 
       const fixturePayload = applyOwnerMetadata({
         ...fixtureData,
@@ -444,6 +447,9 @@ export const FootballProvider = ({ children }) => {
         season: seasonForFixture,
         fixtureRegulationMinutes
       });
+      if (nextStatus === 'live' && seasonForFixture && seasonForFixture.isActive === false) {
+        throw new Error('Cannot set fixture to live while its season is paused. Activate the season first.');
+      }
       
       const normalizedUpdates = {
         ...updates,

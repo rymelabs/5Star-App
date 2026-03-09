@@ -820,16 +820,25 @@ export const fixturesCollection = {
       const database = checkFirebaseInit();
       const q = query(
         collection(database, 'fixtures'),
-        where('seasonId', '==', seasonId),
-        orderBy('dateTime', 'desc')
+        where('seasonId', '==', seasonId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const fixtures = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         status: toCanonicalFixtureStatus(doc.data().status),
         dateTime: doc.data().dateTime?.toDate?.() || new Date(doc.data().dateTime)
       }));
+
+      return fixtures.sort((a, b) => {
+        const aTime = a.dateTime instanceof Date && !Number.isNaN(a.dateTime.getTime())
+          ? a.dateTime.getTime()
+          : 0;
+        const bTime = b.dateTime instanceof Date && !Number.isNaN(b.dateTime.getTime())
+          ? b.dateTime.getTime()
+          : 0;
+        return bTime - aTime;
+      });
     } catch (error) {
       console.error('Error fetching fixtures by season:', error);
       throw error;
@@ -1151,16 +1160,85 @@ export const fixturesCollection = {
         where('seasonId', '==', seasonId)
       );
       const querySnapshot = await getDocs(q);
+      const fixtures = querySnapshot.docs;
+      const batchSize = 450;
 
-      const batch = writeBatch(database);
-      querySnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
-      await batch.commit();
+      for (let i = 0; i < fixtures.length; i += batchSize) {
+        const batch = writeBatch(database);
+        fixtures.slice(i, i + batchSize).forEach((fixtureDoc) => {
+          batch.delete(fixtureDoc.ref);
+        });
+        await batch.commit();
+      }
       return querySnapshot.docs.length; // Return count of deleted fixtures
     } catch (error) {
       console.error('Error deleting fixtures by season:', error);
+      throw error;
+    }
+  },
+
+  // Sync fixture activation to a season's active state
+  setActivationBySeason: async (seasonId, isSeasonActive) => {
+    try {
+      const database = checkFirebaseInit();
+      const q = query(
+        collection(database, 'fixtures'),
+        where('seasonId', '==', seasonId)
+      );
+      const querySnapshot = await getDocs(q);
+      const fixtures = querySnapshot.docs;
+      const batchSize = 450;
+      let updatedCount = 0;
+      let stoppedLiveCount = 0;
+
+      for (let i = 0; i < fixtures.length; i += batchSize) {
+        const batch = writeBatch(database);
+        fixtures.slice(i, i + batchSize).forEach((fixtureDoc) => {
+          const fixtureData = fixtureDoc.data();
+          const canonicalStatus = toCanonicalFixtureStatus(fixtureData.status || 'scheduled');
+          const updates = {
+            isActive: Boolean(isSeasonActive),
+            seasonIsActive: Boolean(isSeasonActive),
+            updatedAt: serverTimestamp()
+          };
+
+          // On season pause, stop live fixtures and prevent auto-start until manually resumed.
+          if (!isSeasonActive && !['completed', 'postponed', 'cancelled'].includes(canonicalStatus)) {
+            const rawMinute = Number(fixtureData.liveClock?.currentMinute ?? fixtureData.minute ?? 0);
+            const currentMinute = Number.isFinite(rawMinute) ? Math.max(0, Math.floor(rawMinute)) : 0;
+            const currentClock = fixtureData.liveClock || createDefaultLiveClock({
+              ...fixtureData,
+              status: canonicalStatus,
+              minute: currentMinute
+            });
+
+            updates.liveClock = {
+              ...currentClock,
+              adminPause: true,
+              manualStartOnly: true,
+              currentMinute
+            };
+
+            if (canonicalStatus === 'live') {
+              updates.status = 'scheduled';
+              updates.minute = currentMinute;
+              stoppedLiveCount += 1;
+            }
+          }
+
+          batch.update(fixtureDoc.ref, updates);
+          updatedCount += 1;
+        });
+
+        await batch.commit();
+      }
+
+      return {
+        updatedCount,
+        stoppedLiveCount
+      };
+    } catch (error) {
+      console.error('Error syncing fixture activation by season:', error);
       throw error;
     }
   },
@@ -1994,10 +2072,11 @@ export const seasonsCollection = {
     }
   },
 
-  // Toggle a season's active state (does NOT affect other seasons)
+  // Toggle a season's active state and sync associated fixtures
   toggleActive: async (seasonId, isActive) => {
     try {
       const database = checkFirebaseInit();
+      const fixtureSyncResult = await fixturesCollection.setActivationBySeason(seasonId, isActive);
       const updates = {
         isActive,
         updatedAt: serverTimestamp()
@@ -2007,6 +2086,7 @@ export const seasonsCollection = {
         updates.status = 'ongoing';
       }
       await updateDoc(doc(database, 'seasons', seasonId), updates);
+      return fixtureSyncResult;
     } catch (error) {
       console.error('Error toggling season active state:', error);
       throw error;
@@ -2054,10 +2134,11 @@ export const seasonsCollection = {
     return seasonsCollection.toggleActive(seasonId, true);
   },
 
-  // Delete a season
+  // Delete a season and its associated fixtures
   delete: async (seasonId) => {
     try {
       const database = checkFirebaseInit();
+      await fixturesCollection.deleteBySeason(seasonId);
       await deleteDoc(doc(database, 'seasons', seasonId));
     } catch (error) {
       console.error('Error deleting season:', error);

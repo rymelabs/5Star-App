@@ -236,7 +236,7 @@ const SearchModalContent = ({ isOpen, onClose }) => {
         // Could navigate to competition page if implemented
         break;
       case 'season':
-        navigate(`/seasons/${result.id}`);
+        navigate(`/competitions/season/${result.id}`);
         break;
       default:
     }

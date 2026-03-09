@@ -62,6 +62,14 @@ const Fixtures = () => {
   const [upcomingVisibleByGroup, setUpcomingVisibleByGroup] = useState({});
 
   const getCompetitionInfo = (fixture) => {
+    if (fixture.seasonId) {
+      const season = seasons.find(s => s.id === fixture.seasonId);
+      if (season) return { id: season.id, name: season.name, logo: season.logo || null, type: 'season' };
+    }
+    if (fixture.leagueId) {
+      const league = leagues.find(l => l.id === fixture.leagueId);
+      if (league) return { id: league.id, name: league.name, logo: league.logo, type: 'league' };
+    }
     if (fixture.competition) {
       return {
         id: `competition:${String(fixture.competition).toLowerCase()}`,
@@ -69,14 +77,6 @@ const Fixtures = () => {
         logo: null,
         type: 'competition'
       };
-    }
-    if (fixture.leagueId) {
-      const league = leagues.find(l => l.id === fixture.leagueId);
-      if (league) return { id: league.id, name: league.name, logo: league.logo, type: 'league' };
-    }
-    if (fixture.seasonId) {
-      const season = seasons.find(s => s.id === fixture.seasonId);
-      if (season) return { id: season.id, name: season.name, logo: season.logo || null, type: 'season' };
     }
     return { id: 'unknown', name: 'Unknown Competition', logo: null, type: 'unknown' };
   };

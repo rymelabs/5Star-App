@@ -243,8 +243,16 @@ const SeasonDetail = () => {
   const handleToggleActive = async () => {
     try {
       const newActiveState = !season.isActive;
-      await seasonsCollection.toggleActive(seasonId, newActiveState);
-      showToast(newActiveState ? 'Season activated!' : 'Season deactivated!', 'success');
+      const result = await seasonsCollection.toggleActive(seasonId, newActiveState);
+      if (newActiveState) {
+        showToast('Season activated!', 'success');
+      } else {
+        const stoppedLive = result?.stoppedLiveCount || 0;
+        const message = stoppedLive > 0
+          ? `Season deactivated. ${stoppedLive} live fixture${stoppedLive === 1 ? '' : 's'} stopped.`
+          : 'Season deactivated. Fixtures are now deactivated.';
+        showToast(message, 'success');
+      }
       loadSeason();
     } catch (error) {
       console.error('Error toggling season active state:', error);

@@ -140,12 +140,13 @@ export const RecycleBinProvider = ({ children }) => {
   }, [ownerId, isAdmin, isSuperAdmin, retentionDays, loadRecycleBinItems]);
 
   // Move item to recycle bin (soft delete)
-  const moveToRecycleBin = async (item, itemType, collectionName) => {
+  const moveToRecycleBin = async (item, itemType, collectionName, options = {}) => {
     if (!ownerId) {
       throw new Error('User not authenticated');
     }
 
     try {
+      const { skipRefresh = false } = options;
       const database = getFirebaseDb();
       
       // Create a unique ID for the recycle bin item
@@ -171,8 +172,10 @@ export const RecycleBinProvider = ({ children }) => {
       // Delete from original collection
       await deleteDoc(doc(database, collectionName, item.id));
 
-      // Refresh recycle bin
-      loadRecycleBinItems();
+      // Refresh recycle bin unless intentionally skipped for bulk operations
+      if (!skipRefresh) {
+        loadRecycleBinItems();
+      }
 
       return recycleBinId;
     } catch (error) {

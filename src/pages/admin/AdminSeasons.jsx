@@ -62,8 +62,17 @@ const AdminSeasons = () => {
 
   const handleToggleActive = async (seasonId, currentlyActive) => {
     try {
-      await seasonsCollection.toggleActive(seasonId, !currentlyActive);
-      showToast(currentlyActive ? 'Season deactivated!' : 'Season activated!', 'success');
+      const nextActiveState = !currentlyActive;
+      const result = await seasonsCollection.toggleActive(seasonId, nextActiveState);
+      if (currentlyActive) {
+        const stoppedLive = result?.stoppedLiveCount || 0;
+        const message = stoppedLive > 0
+          ? `Season deactivated. ${stoppedLive} live fixture${stoppedLive === 1 ? '' : 's'} stopped.`
+          : 'Season deactivated. Fixtures are now deactivated.';
+        showToast(message, 'success');
+      } else {
+        showToast('Season activated!', 'success');
+      }
       loadSeasons();
     } catch (error) {
       console.error('Error toggling season active state:', error);
@@ -80,7 +89,7 @@ const AdminSeasons = () => {
 
     try {
       await softDeleteSeason(confirmDelete.season);
-      showToast(`"${confirmDelete.season.name}" moved to recycle bin`, 'success');
+      showToast(`"${confirmDelete.season.name}" and its fixtures moved to recycle bin`, 'success');
       loadSeasons();
     } catch (error) {
       console.error('Error deleting season:', error);
@@ -297,7 +306,7 @@ const AdminSeasons = () => {
         onClose={() => setConfirmDelete({ isOpen: false, season: null })}
         onConfirm={confirmDeleteSeason}
         title="Delete Season"
-        message={`Are you sure you want to delete "${confirmDelete.season?.name || 'this season'}"? It will be moved to the recycle bin.`}
+        message={`Are you sure you want to delete "${confirmDelete.season?.name || 'this season'}"? The season and all associated fixtures will be moved to the recycle bin.`}
         confirmText="Delete"
         cancelText="Cancel"
         type="danger"
