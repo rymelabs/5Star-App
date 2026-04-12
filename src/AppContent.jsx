@@ -186,6 +186,9 @@ const AppContent = () => {
           <Route path="/admin/league-settings" element={requireAdminElement(<AdminLeagueSettings />)} />
           <Route path="/admin/leagues" element={requireAdminElement(<AdminLeagues />)} />
           <Route path="/admin/leagues/create" element={requireAdminElement(<CreateLeague />)} />
+          <Route path="/admin/leagues/:id" element={requireAdminElement(<EditLeague />)} />
+          <Route path="/admin/leagues/:id/edit" element={requireAdminElement(<EditLeague />)} />
+          <Route path="/admin/leagues/:id/settings" element={requireAdminElement(<EditLeague />)} />
           <Route path="/admin/leagues/edit/:id" element={requireAdminElement(<EditLeague />)} />
           <Route path="/admin/seasons" element={requireAdminElement(<AdminSeasons />)} />
           <Route path="/admin/seasons/create" element={requireAdminElement(<CreateSeason />)} />

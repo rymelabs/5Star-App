@@ -184,20 +184,20 @@ const AdminLeagues = () => {
 
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => navigate(`/admin/leagues/${league.id}`)}
+                    onClick={() => navigate(`/admin/leagues/edit/${league.id}`)}
                     className="flex-1 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-medium text-white transition-colors"
                   >
                     Manage
                   </button>
                   <button
-                    onClick={() => navigate(`/admin/leagues/${league.id}/edit`)}
+                    onClick={() => navigate(`/admin/leagues/edit/${league.id}`)}
                     className="p-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors"
                     title="Edit"
                   >
                     <Edit className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => navigate(`/admin/leagues/${league.id}/settings`)}
+                    onClick={() => navigate(`/admin/leagues/edit/${league.id}`)}
                     className="p-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors"
                     title="Settings"
                   >
